@@ -5,7 +5,15 @@ app = Flask(__name__)
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        return "Invoice submitted (not saved yet)"
+        client = request.form.get("client")
+        amount = request.form.get("amount")
+
+        return f"""
+        <h1>Invoice Preview</h1>
+        <p><strong>Client:</strong> {client}</p>
+        <p><strong>Amount:</strong> ${amount}</p>
+        <a href="/">Create another invoice</a>
+        """
 
     return render_template("index.html")
 
