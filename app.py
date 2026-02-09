@@ -21,6 +21,10 @@ def init_db():
     conn.close()
 
 
+# ✅ IMPORTANT: initialize DB on import (works with Gunicorn)
+init_db()
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     if request.method == "POST":
@@ -49,8 +53,3 @@ def home():
 @app.route("/health")
 def health():
     return "OK", 200
-
-
-if __name__ == "__main__":
-    init_db()
-    app.run(host="0.0.0.0", port=10000)
