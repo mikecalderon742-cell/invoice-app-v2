@@ -1,10 +1,13 @@
-from flask import Flask
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return "Invoice App is running ✅"
+    if request.method == "POST":
+        return "Invoice submitted (not saved yet)"
+
+    return render_template("index.html")
 
 @app.route("/health")
 def health():
