@@ -21,7 +21,7 @@ def init_db():
     conn.close()
 
 
-# ✅ IMPORTANT: initialize DB on import (works with Gunicorn)
+# ✅ Initialize DB on import (important for Render / Gunicorn)
 init_db()
 
 
@@ -44,10 +44,23 @@ def home():
         <h1>Invoice Saved</h1>
         <p><strong>Client:</strong> {client}</p>
         <p><strong>Amount:</strong> ${amount}</p>
-        <a href="/">Create another invoice</a>
+        <a href="/">Create another invoice</a><br>
+        <a href="/invoices">View Invoice History</a>
         """
 
     return render_template("index.html")
+
+
+# ✅ STEP 3.1.1 — Invoice History (READ ONLY)
+@app.route("/invoices")
+def invoices():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, client, amount FROM invoices ORDER BY id DESC")
+    invoices = c.fetchall()
+    conn.close()
+
+    return render_template("invoices.html", invoices=invoices)
 
 
 @app.route("/health")
