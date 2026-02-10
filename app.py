@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 from pathlib import Path
 
@@ -25,33 +25,44 @@ def init_db():
 init_db()
 
 
-@app.route("/", methods=["GET", "POST"])
+# 🏠 HOME — shows form only
+@app.route("/", methods=["GET"])
 def home():
-    if request.method == "POST":
-        client = request.form.get("client")
-        amount = request.form.get("amount")
-
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO invoices (client, amount) VALUES (?, ?)",
-            (client, amount),
-        )
-        conn.commit()
-        conn.close()
-
-        return f"""
-        <h1>Invoice Saved</h1>
-        <p><strong>Client:</strong> {client}</p>
-        <p><strong>Amount:</strong> ${amount}</p>
-        <a href="/">Create another invoice</a><br>
-        <a href="/invoices">View Invoice History</a>
-        """
-
     return render_template("index.html")
 
 
-# ✅ STEP 3.1.1 — Invoice History (READ ONLY)
+# 👀 PREVIEW — shows invoice preview (no DB write)
+@app.route("/preview", methods=["POST"])
+def preview():
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+
+    return render_template(
+        "preview.html",
+        client=client,
+        amount=amount
+    )
+
+
+# 💾 SAVE — writes invoice to DB
+@app.route("/save", methods=["POST"])
+def save_invoice():
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO invoices (client, amount) VALUES (?, ?)",
+        (client, amount),
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("invoices"))
+
+
+# 📜 STEP 3.1.1 — Invoice History (READ ONLY)
 @app.route("/invoices")
 def invoices():
     conn = sqlite3.connect(DB_PATH)
@@ -63,6 +74,7 @@ def invoices():
     return render_template("invoices.html", invoices=invoices)
 
 
+# ❤️ HEALTH CHECK (Render)
 @app.route("/health")
 def health():
     return "OK", 200

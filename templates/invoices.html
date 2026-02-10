@@ -2,20 +2,12 @@
 <html>
 <head>
     <title>Invoice History</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 30px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 10px; }
-        th { background: #f5f5f5; }
-    </style>
 </head>
 <body>
 
 <h1>Invoice History</h1>
 
-<p><a href="/">← Back to Create Invoice</a></p>
-
-<table>
+<table border="1" cellpadding="8">
     <tr>
         <th>ID</th>
         <th>Client</th>
@@ -26,10 +18,13 @@
     <tr>
         <td>{{ invoice[0] }}</td>
         <td>{{ invoice[1] }}</td>
-        <td>${{ "%.2f"|format(invoice[2]) }}</td>
+        <td>${{ invoice[2] }}</td>
     </tr>
     {% endfor %}
 </table>
+
+<br>
+<a href="/">Create New Invoice</a>
 
 </body>
 </html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Preview</title>
+</head>
+<body>
+
+<h1>Invoice Preview</h1>
+
+<p><strong>Client:</strong> {{ client }}</p>
+<p><strong>Amount:</strong> ${{ amount }}</p>
+
+<form method="POST" action="/save">
+    <input type="hidden" name="client" value="{{ client }}">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <button type="submit">Save Invoice</button>
+</form>
+
+<br>
+<a href="/">Go Back</a>
+
+</body>
+</html>
