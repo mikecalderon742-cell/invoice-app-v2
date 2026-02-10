@@ -5,20 +5,48 @@ body {
     padding: 0;
 }
 
+/* Container card */
 .container {
-    max-width: 600px;
-    margin: 40px auto;
+    max-width: 640px;
+    margin: 50px auto;
     background: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
+/* Headings */
 h1, h2 {
     text-align: center;
     margin-bottom: 20px;
 }
 
+/* Navigation */
+.nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.nav a {
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #2563eb;
+    font-weight: bold;
+}
+
+.nav a:hover {
+    background-color: #e0e7ff;
+}
+
+.nav a.active {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* Forms */
 label {
     display: block;
     margin-top: 15px;
@@ -30,16 +58,18 @@ input {
     padding: 10px;
     margin-top: 6px;
     box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #ccc;
 }
 
 button {
-    margin-top: 20px;
+    margin-top: 25px;
     width: 100%;
     padding: 12px;
     background-color: #2563eb;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     font-size: 16px;
     cursor: pointer;
 }
@@ -48,26 +78,24 @@ button:hover {
     background-color: #1e40af;
 }
 
+/* Links */
 a {
-    display: block;
-    margin-top: 15px;
-    text-align: center;
     color: #2563eb;
-    text-decoration: none;
 }
 
 a:hover {
     text-decoration: underline;
 }
 
+/* Tables */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
 th, td {
-    padding: 10px;
+    padding: 12px;
     border-bottom: 1px solid #ddd;
     text-align: left;
 }

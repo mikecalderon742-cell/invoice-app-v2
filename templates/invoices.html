@@ -2,34 +2,38 @@
 <html>
 <head>
     <title>Invoice History</title>
- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-       <div class="container">
-        <!-- table + headings -->
-    </div>
-</body>
-<h1>Invoice History</h1>
 
-<table border="1" cellpadding="6">
-    <tr>
-        <th>ID</th>
-        <th>Client</th>
-        <th>Amount</th>
-    </tr>
+<div class="container">
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="/">Create Invoice</a>
+    </nav>
 
-    {% for invoice in invoices %}
-    <tr>
-        <td>{{ invoice[0] }}</td>
-        <td>{{ invoice[1] }}</td>
-        <td>${{ invoice[2] }}</td>
-    </tr>
-    {% endfor %}
-</table>
+    <h1>Invoice History</h1>
 
-<br>
-<a href="/">Back</a>
+    {% if invoices %}
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Client</th>
+                <th>Amount</th>
+            </tr>
+
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice[0] }}</td>
+                <td>{{ invoice[1] }}</td>
+                <td>${{ "%.2f"|format(invoice[2]) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No invoices found.</p>
+    {% endif %}
+</div>
 
 </body>
 </html>
