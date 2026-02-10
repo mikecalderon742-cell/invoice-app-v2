@@ -64,6 +64,17 @@ def save():
         amount=amount
     )
 
+@app.route("/pdf", methods=["POST"])
+def pdf():
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+
+    return f"""
+    <h1>PDF Generation Coming Next</h1>
+    <p>Client: {client}</p>
+    <p>Amount: ${amount}</p>
+    <a href="/">Back to Home</a>
+    """
 
 # 🔹 INVOICE HISTORY
 @app.route("/invoices")
