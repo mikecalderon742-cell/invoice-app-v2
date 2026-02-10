@@ -95,45 +95,38 @@ def pdf():
     client = request.form.get("client")
     amount = request.form.get("amount")
 
-    invoice_number = datetime.now().strftime("%Y%m%d%H%M%S")
-    invoice_date = datetime.now().strftime("%B %d, %Y")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute(
+        "SELECT id FROM invoices WHERE client = ? AND amount = ? ORDER BY id DESC LIMIT 1",
+        (client, amount),
+    )
+    invoice = c.fetchone()
+    conn.close()
+
+    invoice_number = invoice[0] if invoice else "N/A"
 
     buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=LETTER)
-    width, height = LETTER
+    pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
-    # Title
-    c.setFont("Helvetica-Bold", 24)
-    c.drawString(1 * inch, height - 1.5 * inch, "Invoice")
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(72, 720, "Invoice")
 
-    # Meta
-    c.setFont("Helvetica", 11)
-    c.drawString(1 * inch, height - 2.1 * inch, f"Invoice #: {invoice_number}")
-    c.drawString(1 * inch, height - 2.4 * inch, f"Date: {invoice_date}")
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(72, 690, f"Invoice #: {invoice_number}")
+    pdf.drawString(72, 660, f"Client: {client}")
+    pdf.drawString(72, 630, f"Amount Due: ${amount}")
 
-    # Divider
-    c.setLineWidth(2)
-    c.line(
-        1 * inch,
-        height - 2.7 * inch,
-        width - 1 * inch,
-        height - 2.7 * inch
-    )
-
-    # Body
-    c.setFont("Helvetica", 14)
-    c.drawString(1 * inch, height - 3.6 * inch, f"Client: {client}")
-    c.drawString(1 * inch, height - 4.3 * inch, f"Amount Due: ${amount}")
-
-    c.showPage()
-    c.save()
+    pdf.showPage()
+    pdf.save()
 
     buffer.seek(0)
 
     return send_file(
         buffer,
         as_attachment=True,
-        download_name="invoice.pdf",
+        download_name=f"invoice_{invoice_number}.pdf",
         mimetype="application/pdf"
     )
 
