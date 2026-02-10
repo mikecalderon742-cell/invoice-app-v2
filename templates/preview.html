@@ -2,11 +2,15 @@
 <html>
 <head>
     <title>Invoice Preview</title>
+   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 </head>
 <body>
-
+    <div class="container">
+        <!-- existing content -->
+    </div>
+<body>
 <h1>Invoice Preview</h1>
-
 <p><strong>Client:</strong> {{ client }}</p>
 <p><strong>Amount:</strong> ${{ amount }}</p>
 
