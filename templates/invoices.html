@@ -15,6 +15,7 @@
             <th>Client</th>
             <th>Amount</th>
             <th>Date</th>
+            <th>Actions</th>
         </tr>
 
         {% for invoice in invoices %}
@@ -23,6 +24,9 @@
             <td>{{ invoice[1] }}</td>
             <td>${{ invoice[2] }}</td>
             <td>{{ invoice[3] }}</td>
+            <td>
+                <a href="/edit/{{ invoice[0] }}">Edit</a>
+            </td>
         </tr>
         {% endfor %}
     </table>
