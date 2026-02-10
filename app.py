@@ -21,22 +21,31 @@ def init_db():
     conn.close()
 
 
-# IMPORTANT: initialize DB on startup (Render + Gunicorn safe)
+# Initialize DB on import (important for Render)
 init_db()
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def home():
-    if request.method == "POST":
-        client = request.form.get("client")
-        amount = request.form.get("amount")
-        return render_template("preview.html", client=client, amount=amount)
-
     return render_template("index.html")
 
 
+# 🔹 PREVIEW ROUTE (THIS WAS MISSING)
+@app.route("/preview", methods=["POST"])
+def preview():
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+
+    return render_template(
+        "preview.html",
+        client=client,
+        amount=amount
+    )
+
+
+# 🔹 SAVE INVOICE
 @app.route("/save", methods=["POST"])
-def save_invoice():
+def save():
     client = request.form.get("client")
     amount = request.form.get("amount")
 
@@ -44,14 +53,19 @@ def save_invoice():
     c = conn.cursor()
     c.execute(
         "INSERT INTO invoices (client, amount) VALUES (?, ?)",
-        (client, amount)
+        (client, amount),
     )
     conn.commit()
     conn.close()
 
-    return render_template("saved.html", client=client, amount=amount)
+    return render_template(
+        "saved.html",
+        client=client,
+        amount=amount
+    )
 
 
+# 🔹 INVOICE HISTORY
 @app.route("/invoices")
 def invoices():
     conn = sqlite3.connect(DB_PATH)
@@ -63,6 +77,7 @@ def invoices():
     return render_template("invoices.html", invoices=invoices)
 
 
+# 🔹 RENDER HEALTH CHECK
 @app.route("/health")
 def health():
     return "OK", 200
