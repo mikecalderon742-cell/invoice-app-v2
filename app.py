@@ -2,6 +2,11 @@ from flask import Flask, render_template, request
 import sqlite3
 from pathlib import Path
 
+from reportlab.lib.pagesizes import LETTER
+from reportlab.pdfgen import canvas
+from flask import send_file
+import io
+
 app = Flask(__name__)
 
 DB_PATH = Path("invoices.db")
@@ -69,12 +74,27 @@ def pdf():
     client = request.form.get("client")
     amount = request.form.get("amount")
 
-    return f"""
-    <h1>PDF Generation Coming Next</h1>
-    <p>Client: {client}</p>
-    <p>Amount: ${amount}</p>
-    <a href="/">Back to Home</a>
-    """
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=LETTER)
+
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(72, 720, "Invoice")
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(72, 680, f"Client: {client}")
+    pdf.drawString(72, 650, f"Amount Due: ${amount}")
+
+    pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="invoice.pdf",
+        mimetype="application/pdf"
+    )
 
 # 🔹 INVOICE HISTORY
 @app.route("/invoices")
