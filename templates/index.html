@@ -5,25 +5,27 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-     <div class="container"> 
-  <h1>Invoice Generator</h1>
-    <form method="POST">
-        
+
+<div class="container">
+    <h1>Invoice Generator</h1>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/invoices">Invoice History</a>
+    </nav>
+
+    <!-- Invoice Form -->
+    <form method="POST" action="/preview">
+        <label>Client Name:</label><br>
+        <input type="text" name="client" required><br><br>
+
+        <label>Amount:</label><br>
+        <input type="number" step="0.01" name="amount" required><br><br>
+
+        <button type="submit">Preview Invoice</button>
     </form>
-</body>
-
-<form method="POST">
-    <label>Client Name:</label><br>
-    <input type="text" name="client" required><br><br>
-
-    <label>Amount:</label><br>
-    <input type="number" step="0.01" name="amount" required><br><br>
-
-    <button type="submit">Preview Invoice</button>
-</form>
-
-<br>
-<a href="/invoices">View Invoice History</a>
+</div>
 
 </body>
 </html>
