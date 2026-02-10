@@ -145,6 +145,22 @@ def invoices():
 
     return render_template("invoices.html", invoices=invoices)
 
+@app.route("/edit/<int:invoice_id>", methods=["GET"])
+def edit(invoice_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute(
+        "SELECT id, client, amount, created_at FROM invoices WHERE id = ?",
+        (invoice_id,)
+    )
+    invoice = c.fetchone()
+    conn.close()
+
+    if invoice is None:
+        return "Invoice not found", 404
+
+    return render_template("edit.html", invoice=invoice)
 
 @app.route("/health")
 def health():
