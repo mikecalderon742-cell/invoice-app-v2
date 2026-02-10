@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, send_file
 import sqlite3
 from pathlib import Path
 import io
+from datetime import datetime
 
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
@@ -26,17 +27,15 @@ def init_db():
     conn.close()
 
 
-# ✅ Initialize DB on import (important for Render / Gunicorn)
+# ✅ Initialize DB on import
 init_db()
 
 
-# 🔹 HOME
 @app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
 
 
-# 🔹 PREVIEW
 @app.route("/preview", methods=["POST"])
 def preview():
     client = request.form.get("client")
@@ -49,7 +48,6 @@ def preview():
     )
 
 
-# 🔹 SAVE INVOICE
 @app.route("/save", methods=["POST"])
 def save():
     client = request.form.get("client")
@@ -71,34 +69,41 @@ def save():
     )
 
 
-# 🔹 PDF GENERATION (STEP 5.4 — POLISHED LAYOUT)
+# 🔹 STEP 5.5 — PDF WITH INVOICE # + DATE
 @app.route("/pdf", methods=["POST"])
 def pdf():
     client = request.form.get("client")
     amount = request.form.get("amount")
 
+    invoice_number = datetime.now().strftime("%Y%m%d%H%M%S")
+    invoice_date = datetime.now().strftime("%B %d, %Y")
+
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=LETTER)
-
     width, height = LETTER
 
     # Title
     c.setFont("Helvetica-Bold", 24)
     c.drawString(1 * inch, height - 1.5 * inch, "Invoice")
 
+    # Meta info
+    c.setFont("Helvetica", 11)
+    c.drawString(1 * inch, height - 2.1 * inch, f"Invoice #: {invoice_number}")
+    c.drawString(1 * inch, height - 2.4 * inch, f"Date: {invoice_date}")
+
     # Divider
     c.setLineWidth(2)
     c.line(
         1 * inch,
-        height - 1.7 * inch,
+        height - 2.7 * inch,
         width - 1 * inch,
-        height - 1.7 * inch
+        height - 2.7 * inch
     )
 
     # Body
     c.setFont("Helvetica", 14)
-    c.drawString(1 * inch, height - 2.6 * inch, f"Client: {client}")
-    c.drawString(1 * inch, height - 3.3 * inch, f"Amount Due: ${amount}")
+    c.drawString(1 * inch, height - 3.6 * inch, f"Client: {client}")
+    c.drawString(1 * inch, height - 4.3 * inch, f"Amount Due: ${amount}")
 
     c.showPage()
     c.save()
@@ -113,7 +118,6 @@ def pdf():
     )
 
 
-# 🔹 INVOICE HISTORY
 @app.route("/invoices")
 def invoices():
     conn = sqlite3.connect(DB_PATH)
@@ -125,7 +129,6 @@ def invoices():
     return render_template("invoices.html", invoices=invoices)
 
 
-# 🔹 HEALTH CHECK (RENDER)
 @app.route("/health")
 def health():
     return "OK", 200
