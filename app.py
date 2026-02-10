@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import sqlite3
 from pathlib import Path
+import io
 
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
-from flask import send_file
-import io
+from reportlab.lib.units import inch
 
 app = Flask(__name__)
 
@@ -26,16 +26,17 @@ def init_db():
     conn.close()
 
 
-# Initialize DB on import (important for Render)
+# ✅ Initialize DB on import (important for Render / Gunicorn)
 init_db()
 
 
+# 🔹 HOME
 @app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
 
 
-# 🔹 PREVIEW ROUTE (THIS WAS MISSING)
+# 🔹 PREVIEW
 @app.route("/preview", methods=["POST"])
 def preview():
     client = request.form.get("client")
@@ -69,23 +70,38 @@ def save():
         amount=amount
     )
 
+
+# 🔹 PDF GENERATION (STEP 5.4 — POLISHED LAYOUT)
 @app.route("/pdf", methods=["POST"])
 def pdf():
     client = request.form.get("client")
     amount = request.form.get("amount")
 
     buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=LETTER)
+    c = canvas.Canvas(buffer, pagesize=LETTER)
 
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(72, 720, "Invoice")
+    width, height = LETTER
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 680, f"Client: {client}")
-    pdf.drawString(72, 650, f"Amount Due: ${amount}")
+    # Title
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(1 * inch, height - 1.5 * inch, "Invoice")
 
-    pdf.showPage()
-    pdf.save()
+    # Divider
+    c.setLineWidth(2)
+    c.line(
+        1 * inch,
+        height - 1.7 * inch,
+        width - 1 * inch,
+        height - 1.7 * inch
+    )
+
+    # Body
+    c.setFont("Helvetica", 14)
+    c.drawString(1 * inch, height - 2.6 * inch, f"Client: {client}")
+    c.drawString(1 * inch, height - 3.3 * inch, f"Amount Due: ${amount}")
+
+    c.showPage()
+    c.save()
 
     buffer.seek(0)
 
@@ -95,6 +111,7 @@ def pdf():
         download_name="invoice.pdf",
         mimetype="application/pdf"
     )
+
 
 # 🔹 INVOICE HISTORY
 @app.route("/invoices")
@@ -108,7 +125,7 @@ def invoices():
     return render_template("invoices.html", invoices=invoices)
 
 
-# 🔹 RENDER HEALTH CHECK
+# 🔹 HEALTH CHECK (RENDER)
 @app.route("/health")
 def health():
     return "OK", 200
