@@ -10,14 +10,14 @@
 <p><strong>Client:</strong> {{ client }}</p>
 <p><strong>Amount:</strong> ${{ amount }}</p>
 
-<form method="POST" action="/">
+<form method="POST" action="/save">
     <input type="hidden" name="client" value="{{ client }}">
     <input type="hidden" name="amount" value="{{ amount }}">
     <button type="submit">Save Invoice</button>
 </form>
 
 <br>
-<a href="/">Go Back</a>
+<a href="/">Edit</a>
 
 </body>
 </html>
