@@ -5,17 +5,28 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<div class="container">
-    <h1>Invoice Saved ✅</h1>
 
-    <p><strong>Invoice #:</strong> {{ invoice_number }}</p>
-    <p><strong>Date:</strong> {{ created_at }}</p>
+<div class="navbar">
+    <div>
+        <a href="/">InvoicePro</a>
+    </div>
+    <div>
+        <a href="/">Create Invoice</a>
+        <a href="/invoices">Invoice History</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Invoice Saved Successfully</h1>
+
+    <p><strong>Invoice ID:</strong> {{ invoice_id }}</p>
     <p><strong>Client:</strong> {{ client }}</p>
     <p><strong>Amount:</strong> ${{ amount }}</p>
 
     <br>
-    <a href="/">New Invoice</a><br>
-    <a href="/invoices">Invoice History</a>
+
+    <a href="/invoices">View Invoice History</a>
 </div>
+
 </body>
 </html>
