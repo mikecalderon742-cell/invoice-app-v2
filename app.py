@@ -10,22 +10,33 @@ app = Flask(__name__)
 
 DB_PATH = Path("invoices.db")
 
-
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Invoices table
+    # Create invoices table if it doesn't exist
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             client TEXT NOT NULL,
-            total REAL NOT NULL,
+            total REAL,
             created_at TEXT
         )
     """)
 
-    # Invoice items table
+    # 🔥 Ensure 'total' column exists (for older databases)
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN total REAL")
+    except sqlite3.OperationalError:
+        pass
+
+    # 🔥 Ensure 'created_at' column exists
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN created_at TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    # Create invoice_items table
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoice_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
