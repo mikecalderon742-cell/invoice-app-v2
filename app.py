@@ -6,7 +6,6 @@ from datetime import datetime
 
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
 
 app = Flask(__name__)
 
@@ -17,31 +16,21 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Base table
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             client TEXT NOT NULL,
-            amount REAL NOT NULL
+            amount REAL NOT NULL,
+            invoice_number TEXT,
+            created_at TEXT
         )
     """)
-
-    # Add new columns safely (no crash if they exist)
-    try:
-        c.execute("ALTER TABLE invoices ADD COLUMN invoice_number TEXT")
-    except sqlite3.OperationalError:
-        pass
-
-    try:
-        c.execute("ALTER TABLE invoices ADD COLUMN created_at TEXT")
-    except sqlite3.OperationalError:
-        pass
 
     conn.commit()
     conn.close()
 
 
-# ✅ Initialize DB on import
+# ✅ Initialize DB on import (Render-safe)
 init_db()
 
 
@@ -95,18 +84,6 @@ def pdf():
     client = request.form.get("client")
     amount = request.form.get("amount")
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    c.execute(
-        "SELECT id FROM invoices WHERE client = ? AND amount = ? ORDER BY id DESC LIMIT 1",
-        (client, amount),
-    )
-    invoice = c.fetchone()
-    conn.close()
-
-    invoice_number = invoice[0] if invoice else "N/A"
-
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
@@ -114,9 +91,8 @@ def pdf():
     pdf.drawString(72, 720, "Invoice")
 
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 690, f"Invoice #: {invoice_number}")
-    pdf.drawString(72, 660, f"Client: {client}")
-    pdf.drawString(72, 630, f"Amount Due: ${amount}")
+    pdf.drawString(72, 690, f"Client: {client}")
+    pdf.drawString(72, 660, f"Amount Due: ${amount}")
 
     pdf.showPage()
     pdf.save()
@@ -126,7 +102,7 @@ def pdf():
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=f"invoice_{invoice_number}.pdf",
+        download_name="invoice.pdf",
         mimetype="application/pdf"
     )
 
@@ -145,14 +121,20 @@ def invoices():
 
     return render_template("invoices.html", invoices=invoices)
 
-@app.route("/edit/<int:invoice_id>", methods=["GET"])
-def edit(invoice_id):
+
+# ✅ STEP 6.1.3 — EDIT BY INVOICE NUMBER (FIXED)
+@app.route("/edit/<invoice_number>")
+def edit(invoice_number):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute(
-        "SELECT id, client, amount FROM invoices WHERE id = ?",
-        (invoice_id,)
+        """
+        SELECT invoice_number, client, amount
+        FROM invoices
+        WHERE invoice_number = ?
+        """,
+        (invoice_number,)
     )
     invoice = c.fetchone()
     conn.close()
@@ -160,7 +142,13 @@ def edit(invoice_id):
     if invoice is None:
         return "Invoice not found", 404
 
-    return render_template("edit.html", invoice=invoice)
+    return render_template(
+        "edit.html",
+        invoice_number=invoice[0],
+        client=invoice[1],
+        amount=invoice[2]
+    )
+
 
 @app.route("/health")
 def health():
