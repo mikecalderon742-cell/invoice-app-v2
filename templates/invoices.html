@@ -9,6 +9,15 @@
 <div class="container">
     <h1>Invoice History</h1>
 
+    <!-- SEARCH BAR -->
+    <form method="GET" action="/invoices" class="search-form">
+        <input type="text" name="search" placeholder="Search by client name"
+               value="{{ search if search else '' }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <br>
+
     <table>
         <tr>
             <th>Invoice #</th>

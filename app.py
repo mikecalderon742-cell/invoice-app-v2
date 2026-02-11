@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, send_file
 import sqlite3
-import os
 from datetime import datetime
 import io
 from reportlab.pdfgen import canvas
@@ -117,21 +116,32 @@ def pdf():
     )
 
 
-@app.route("/invoices")
+@app.route("/invoices", methods=["GET"])
 def invoices():
+    search = request.args.get("search")
+
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("""
-        SELECT invoice_number, client, amount, created_at
-        FROM invoices
-        ORDER BY id DESC
-    """)
+    if search:
+        c.execute("""
+            SELECT invoice_number, client, amount, created_at
+            FROM invoices
+            WHERE client LIKE ?
+            ORDER BY id DESC
+        """, ('%' + search + '%',))
+    else:
+        c.execute("""
+            SELECT invoice_number, client, amount, created_at
+            FROM invoices
+            ORDER BY id DESC
+        """)
 
     invoices = c.fetchall()
     conn.close()
 
-    return render_template("invoices.html", invoices=invoices)
+    return render_template("invoices.html", invoices=invoices, search=search)
+
 
 @app.route("/delete", methods=["POST"])
 def delete():
@@ -145,6 +155,7 @@ def delete():
     conn.close()
 
     return render_template("deleted.html")
+
 
 @app.route("/health")
 def health():
