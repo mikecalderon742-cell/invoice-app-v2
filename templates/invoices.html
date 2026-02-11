@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
 <div class="container">
     <h1>Invoice History</h1>
 
@@ -14,19 +15,28 @@
             <th>Client</th>
             <th>Amount</th>
             <th>Date</th>
+            <th>Action</th>
         </tr>
-        {% for i in invoices %}
+
+        {% for invoice in invoices %}
         <tr>
-            <td>{{ i[0] }}</td>
-            <td>{{ i[1] }}</td>
-            <td>${{ i[2] }}</td>
-            <td>{{ i[3] }}</td>
+            <td>{{ invoice[0] }}</td>
+            <td>{{ invoice[1] }}</td>
+            <td>${{ invoice[2] }}</td>
+            <td>{{ invoice[3] }}</td>
+            <td>
+                <form method="POST" action="/delete" style="display:inline;">
+                    <input type="hidden" name="invoice_number" value="{{ invoice[0] }}">
+                    <button type="submit" class="delete-btn">Delete</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>
 
     <br>
-    <a href="/">Back Home</a>
+    <a href="/">Back to Home</a>
 </div>
+
 </body>
 </html>

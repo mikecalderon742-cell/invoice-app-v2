@@ -133,6 +133,18 @@ def invoices():
 
     return render_template("invoices.html", invoices=invoices)
 
+@app.route("/delete", methods=["POST"])
+def delete():
+    invoice_number = request.form["invoice_number"]
+
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("DELETE FROM invoices WHERE invoice_number = ?", (invoice_number,))
+    conn.commit()
+    conn.close()
+
+    return render_template("deleted.html")
 
 @app.route("/health")
 def health():
