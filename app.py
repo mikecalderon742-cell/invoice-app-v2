@@ -115,42 +115,29 @@ def history_pdf(invoice_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
+    # 🔥 FIX: use "amount" not "total"
     c.execute(
-        "SELECT client, total FROM invoices WHERE id = ?",
+        "SELECT client, amount FROM invoices WHERE id = ?",
         (invoice_id,)
     )
     invoice = c.fetchone()
+    conn.close()
 
-    if invoice is None:
-        conn.close()
+    if not invoice:
         return "Invoice not found", 404
 
-    client, total = invoice
-
-    c.execute(
-        "SELECT description, amount FROM invoice_items WHERE invoice_id = ?",
-        (invoice_id,)
-    )
-    items = c.fetchall()
-    conn.close()
+    client, amount = invoice
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
     pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(72, 750, "Invoice")
+    pdf.drawString(72, 720, "Invoice")
 
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 720, f"Client: {client}")
-
-    y = 690
-    for desc, amt in items:
-        pdf.drawString(72, y, f"{desc}")
-        pdf.drawString(450, y, f"${amt:.2f}")
-        y -= 20
-
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(72, y - 10, f"Total: ${total:.2f}")
+    pdf.drawString(72, 690, f"Invoice ID: {invoice_id}")
+    pdf.drawString(72, 660, f"Client: {client}")
+    pdf.drawString(72, 630, f"Amount Due: ${amount}")
 
     pdf.showPage()
     pdf.save()
