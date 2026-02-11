@@ -1,32 +1,45 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, redirect, url_for
 import sqlite3
-from datetime import datetime
+from pathlib import Path
 import io
-from reportlab.pdfgen import canvas
+from datetime import datetime
+
 from reportlab.lib.pagesizes import LETTER
+from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 
-DB_PATH = "invoices.db"
-
-
-def get_db():
-    return sqlite3.connect(DB_PATH)
+DB_PATH = Path("invoices.db")
 
 
 def init_db():
-    conn = get_db()
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
+    # Base table
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            invoice_number TEXT,
-            client TEXT,
-            amount REAL,
-            created_at TEXT
+            client TEXT NOT NULL,
+            amount REAL NOT NULL
         )
     """)
+
+    # Safely add new columns if they don't exist
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN invoice_number TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN created_at TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN status TEXT DEFAULT 'Unpaid'")
+    except sqlite3.OperationalError:
+        pass
 
     conn.commit()
     conn.close()
@@ -42,35 +55,31 @@ def home():
 
 @app.route("/preview", methods=["POST"])
 def preview():
-    client = request.form["client"]
-    amount = request.form["amount"]
-
-    invoice_number = datetime.now().strftime("%Y%m%d%H%M%S")
-    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    client = request.form.get("client")
+    amount = request.form.get("amount")
 
     return render_template(
         "preview.html",
         client=client,
-        amount=amount,
-        invoice_number=invoice_number,
-        created_at=created_at
+        amount=amount
     )
 
 
 @app.route("/save", methods=["POST"])
 def save():
-    client = request.form["client"]
-    amount = request.form["amount"]
-    invoice_number = request.form["invoice_number"]
-    created_at = request.form["created_at"]
+    client = request.form.get("client")
+    amount = request.form.get("amount")
 
-    conn = get_db()
+    invoice_number = datetime.now().strftime("%Y%m%d%H%M%S")
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute(
-        "INSERT INTO invoices (invoice_number, client, amount, created_at) VALUES (?, ?, ?, ?)",
-        (invoice_number, client, amount, created_at)
-    )
+    c.execute("""
+        INSERT INTO invoices (client, amount, invoice_number, created_at, status)
+        VALUES (?, ?, ?, ?, ?)
+    """, (client, amount, invoice_number, created_at, "Unpaid"))
 
     conn.commit()
     conn.close()
@@ -86,53 +95,49 @@ def save():
 
 @app.route("/pdf", methods=["POST"])
 def pdf():
-    client = request.form["client"]
-    amount = request.form["amount"]
-    invoice_number = request.form["invoice_number"]
-    created_at = request.form["created_at"]
+    client = request.form.get("client")
+    amount = request.form.get("amount")
 
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=LETTER)
+    pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
-    p.setFont("Helvetica-Bold", 20)
-    p.drawString(72, 720, "Invoice")
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(72, 720, "Invoice")
 
-    p.setFont("Helvetica", 12)
-    p.drawString(72, 690, f"Invoice #: {invoice_number}")
-    p.drawString(72, 670, f"Date: {created_at}")
-    p.drawString(72, 650, f"Client: {client}")
-    p.drawString(72, 630, f"Amount Due: ${amount}")
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(72, 690, f"Client: {client}")
+    pdf.drawString(72, 660, f"Amount Due: ${amount}")
 
-    p.showPage()
-    p.save()
+    pdf.showPage()
+    pdf.save()
 
     buffer.seek(0)
 
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=f"invoice_{invoice_number}.pdf",
+        download_name="invoice.pdf",
         mimetype="application/pdf"
     )
 
 
-@app.route("/invoices", methods=["GET"])
+@app.route("/invoices")
 def invoices():
-    search = request.args.get("search")
+    search = request.args.get("search", "")
 
-    conn = get_db()
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     if search:
         c.execute("""
-            SELECT invoice_number, client, amount, created_at
+            SELECT id, invoice_number, client, amount, created_at, status
             FROM invoices
             WHERE client LIKE ?
             ORDER BY id DESC
-        """, ('%' + search + '%',))
+        """, (f"%{search}%",))
     else:
         c.execute("""
-            SELECT invoice_number, client, amount, created_at
+            SELECT id, invoice_number, client, amount, created_at, status
             FROM invoices
             ORDER BY id DESC
         """)
@@ -140,21 +145,7 @@ def invoices():
     invoices = c.fetchall()
     conn.close()
 
-    return render_template("invoices.html", invoices=invoices, search=search)
-
-
-@app.route("/delete", methods=["POST"])
-def delete():
-    invoice_number = request.form["invoice_number"]
-
-    conn = get_db()
-    c = conn.cursor()
-
-    c.execute("DELETE FROM invoices WHERE invoice_number = ?", (invoice_number,))
-    conn.commit()
-    conn.close()
-
-    return render_template("deleted.html")
+    return render_template("invoices.html", invoices=invoices)
 
 
 @app.route("/health")

@@ -9,10 +9,8 @@
 <div class="container">
     <h1>Invoice History</h1>
 
-    <!-- SEARCH BAR -->
-    <form method="GET" action="/invoices" class="search-form">
-        <input type="text" name="search" placeholder="Search by client name"
-               value="{{ search if search else '' }}">
+    <form method="GET" action="/invoices">
+        <input type="text" name="search" placeholder="Search by client">
         <button type="submit">Search</button>
     </form>
 
@@ -20,25 +18,22 @@
 
     <table>
         <tr>
+            <th>ID</th>
             <th>Invoice #</th>
             <th>Client</th>
             <th>Amount</th>
             <th>Date</th>
-            <th>Action</th>
+            <th>Status</th>
         </tr>
 
         {% for invoice in invoices %}
         <tr>
             <td>{{ invoice[0] }}</td>
             <td>{{ invoice[1] }}</td>
-            <td>${{ invoice[2] }}</td>
-            <td>{{ invoice[3] }}</td>
-            <td>
-                <form method="POST" action="/delete" style="display:inline;">
-                    <input type="hidden" name="invoice_number" value="{{ invoice[0] }}">
-                    <button type="submit" class="delete-btn">Delete</button>
-                </form>
-            </td>
+            <td>{{ invoice[2] }}</td>
+            <td>${{ invoice[3] }}</td>
+            <td>{{ invoice[4] }}</td>
+            <td>{{ invoice[5] }}</td>
         </tr>
         {% endfor %}
     </table>
