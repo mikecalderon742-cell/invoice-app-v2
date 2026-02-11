@@ -15,17 +15,16 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Invoices table
+    # Use amount column (this matches your live DB)
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             client TEXT NOT NULL,
-            total REAL NOT NULL,
+            amount REAL NOT NULL,
             created_at TEXT
         )
     """)
 
-    # Invoice items table
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoice_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,8 +89,9 @@ def save():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
+    # 🔥 INSERT INTO amount (NOT total)
     c.execute(
-        "INSERT INTO invoices (client, total, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO invoices (client, amount, created_at) VALUES (?, ?, ?)",
         (client, total, created_at),
     )
     invoice_id = c.lastrowid
@@ -114,7 +114,7 @@ def history_pdf(invoice_id):
     c = conn.cursor()
 
     c.execute(
-        "SELECT client, total FROM invoices WHERE id = ?",
+        "SELECT client, amount FROM invoices WHERE id = ?",
         (invoice_id,)
     )
     invoice = c.fetchone()
@@ -182,7 +182,7 @@ def invoices():
     c = conn.cursor()
 
     c.execute("""
-        SELECT id, client, total, created_at
+        SELECT id, client, amount, created_at
         FROM invoices
         ORDER BY id DESC
     """)
