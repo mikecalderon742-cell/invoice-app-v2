@@ -181,20 +181,15 @@ def delete(invoice_id):
 
 @app.route("/invoices")
 def invoices():
-    search = request.args.get("search")
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    if search:
-        c.execute(
-            "SELECT id, client, total, created_at FROM invoices WHERE client LIKE ? ORDER BY id DESC",
-            (f"%{search}%",)
-        )
-    else:
-        c.execute(
-            "SELECT id, client, total, created_at FROM invoices ORDER BY id DESC"
-        )
+    # 🔥 FIX: select "amount" (your real DB column)
+    c.execute("""
+        SELECT id, client, amount, created_at
+        FROM invoices
+        ORDER BY id DESC
+    """)
 
     invoices = c.fetchall()
     conn.close()
