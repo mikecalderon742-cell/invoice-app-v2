@@ -7,10 +7,11 @@
 <body>
 
 <div class="container">
+
     <h1>Invoice History</h1>
 
     <form method="GET" action="/invoices">
-        <input type="text" name="search" placeholder="Search by client">
+        <input type="text" name="search" placeholder="Search by client name">
         <button type="submit">Search</button>
     </form>
 
@@ -18,28 +19,33 @@
 
     <table>
         <tr>
-            <th>ID</th>
             <th>Invoice #</th>
             <th>Client</th>
             <th>Amount</th>
             <th>Date</th>
-            <th>Status</th>
+            <th>Actions</th>
         </tr>
 
         {% for invoice in invoices %}
         <tr>
             <td>{{ invoice[0] }}</td>
             <td>{{ invoice[1] }}</td>
-            <td>{{ invoice[2] }}</td>
-            <td>${{ invoice[3] }}</td>
-            <td>{{ invoice[4] }}</td>
-            <td>{{ invoice[5] }}</td>
+            <td>${{ invoice[2] }}</td>
+            <td>{{ invoice[3] }}</td>
+            <td>
+                <a href="/pdf/{{ invoice[0] }}">PDF</a> |
+                <a href="/delete/{{ invoice[0] }}" 
+                   onclick="return confirm('Delete this invoice?');">
+                   Delete
+                </a>
+            </td>
         </tr>
         {% endfor %}
     </table>
 
     <br>
     <a href="/">Back to Home</a>
+
 </div>
 
 </body>
