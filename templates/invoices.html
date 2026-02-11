@@ -1,21 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 <div class="container">
-<h1>Invoice History</h1>
+    <h1>Invoice History</h1>
 
-<table>
-<tr>
-    <th>#</th><th>Client</th><th>Amount</th><th>Date</th><th>Action</th>
-</tr>
+    <table>
+        <tr>
+            <th>Invoice #</th>
+            <th>Client</th>
+            <th>Amount</th>
+            <th>Date</th>
+        </tr>
+        {% for i in invoices %}
+        <tr>
+            <td>{{ i[0] }}</td>
+            <td>{{ i[1] }}</td>
+            <td>${{ i[2] }}</td>
+            <td>{{ i[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-{% for i in invoices %}
-<tr>
-    <td>{{ i.invoice_number }}</td>
-    <td>{{ i.client }}</td>
-    <td>${{ i.amount }}</td>
-    <td>{{ i.created_at }}</td>
-    <td><a href="/edit/{{ i.id }}">Edit</a></td>
-</tr>
-{% endfor %}
-</table>
-
-<a href="/">Home</a>
+    <br>
+    <a href="/">Back Home</a>
 </div>
+</body>
+</html>

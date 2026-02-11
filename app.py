@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file
 import sqlite3
 from pathlib import Path
 from datetime import datetime
@@ -12,9 +12,7 @@ DB_PATH = Path("invoices.db")
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return sqlite3.connect(DB_PATH)
 
 
 def init_db():
@@ -43,11 +41,14 @@ def home():
 
 @app.route("/preview", methods=["POST"])
 def preview():
-    client = request.form["client"]
-    amount = request.form["amount"]
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+
+    if not client or not amount:
+        return redirect(url_for("home"))
 
     invoice_number = datetime.now().strftime("%Y%m%d%H%M%S")
-    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     return render_template(
         "preview.html",
@@ -60,13 +61,13 @@ def preview():
 
 @app.route("/save", methods=["POST"])
 def save():
-    if "client" not in request.form:
-        return redirect(url_for("home"))
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+    invoice_number = request.form.get("invoice_number")
+    created_at = request.form.get("created_at")
 
-    client = request.form["client"]
-    amount = request.form["amount"]
-    invoice_number = request.form["invoice_number"]
-    created_at = request.form["created_at"]
+    if not all([client, amount, invoice_number, created_at]):
+        return redirect(url_for("home"))
 
     conn = get_db()
     c = conn.cursor()
@@ -88,9 +89,9 @@ def save():
 
 @app.route("/pdf", methods=["POST"])
 def pdf():
-    client = request.form["client"]
-    amount = request.form["amount"]
-    invoice_number = request.form["invoice_number"]
+    client = request.form.get("client")
+    amount = request.form.get("amount")
+    invoice_number = request.form.get("invoice_number")
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
@@ -99,9 +100,9 @@ def pdf():
     pdf.drawString(72, 720, "Invoice")
 
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 680, f"Invoice #: {invoice_number}")
-    pdf.drawString(72, 650, f"Client: {client}")
-    pdf.drawString(72, 620, f"Amount Due: ${amount}")
+    pdf.drawString(72, 690, f"Invoice #: {invoice_number}")
+    pdf.drawString(72, 660, f"Client: {client}")
+    pdf.drawString(72, 630, f"Amount Due: ${amount}")
 
     pdf.showPage()
     pdf.save()
@@ -118,40 +119,14 @@ def pdf():
 @app.route("/invoices")
 def invoices():
     conn = get_db()
-    invoices = conn.execute(
-        "SELECT * FROM invoices ORDER BY id DESC"
-    ).fetchall()
+    c = conn.cursor()
+    c.execute(
+        "SELECT invoice_number, client, amount, created_at FROM invoices ORDER BY id DESC"
+    )
+    invoices = c.fetchall()
     conn.close()
 
     return render_template("invoices.html", invoices=invoices)
-
-
-@app.route("/edit/<int:invoice_id>", methods=["GET", "POST"])
-def edit(invoice_id):
-    conn = get_db()
-    c = conn.cursor()
-
-    if request.method == "POST":
-        client = request.form["client"]
-        amount = request.form["amount"]
-        c.execute(
-            "UPDATE invoices SET client=?, amount=? WHERE id=?",
-            (client, amount, invoice_id)
-        )
-        conn.commit()
-        conn.close()
-        return redirect(url_for("invoices"))
-
-    invoice = c.execute(
-        "SELECT * FROM invoices WHERE id=?",
-        (invoice_id,)
-    ).fetchone()
-    conn.close()
-
-    if not invoice:
-        return "Invoice not found", 404
-
-    return render_template("edit.html", invoice=invoice)
 
 
 @app.route("/health")
