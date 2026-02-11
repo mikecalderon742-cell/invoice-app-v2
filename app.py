@@ -18,20 +18,29 @@ def get_db():
 def init_db():
     conn = get_db()
     c = conn.cursor()
+
+    # Create base table if it doesn't exist
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            invoice_number TEXT,
             client TEXT,
-            amount REAL,
-            created_at TEXT
+            amount REAL
         )
     """)
+
+    # Add new columns safely (won’t crash if they exist)
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN invoice_number TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN created_at TEXT")
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()
-
-
-init_db()
 
 
 @app.route("/")
