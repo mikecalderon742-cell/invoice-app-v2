@@ -1,16 +1,15 @@
-@app.route("/edit/<int:invoice_id>", methods=["GET"])
-def edit(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+<div class="container">
+<h1>Edit Invoice</h1>
 
-    c.execute(
-        "SELECT id, client, amount, created_at FROM invoices WHERE id = ?",
-        (invoice_id,)
-    )
-    invoice = c.fetchone()
-    conn.close()
+<form method="POST">
+    <label>Client</label><br>
+    <input type="text" name="client" value="{{ invoice.client }}"><br><br>
 
-    if invoice is None:
-        return "Invoice not found", 404
+    <label>Amount</label><br>
+    <input type="number" step="0.01" name="amount" value="{{ invoice.amount }}"><br><br>
 
-    return render_template("edit.html", invoice=invoice)
+    <button type="submit">Save Changes</button>
+</form>
+
+<a href="/invoices">Cancel</a>
+</div>

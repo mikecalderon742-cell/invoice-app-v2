@@ -1,34 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Invoice Preview</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-
 <div class="container">
-    <h1>Invoice Preview</h1>
+<h1>Invoice Preview</h1>
 
-    <p><strong>Client:</strong> {{ client }}</p>
-    <p><strong>Amount:</strong> ${{ amount }}</p>
+<p><strong>Invoice #:</strong> {{ invoice_number }}</p>
+<p><strong>Date:</strong> {{ created_at }}</p>
+<p><strong>Client:</strong> {{ client }}</p>
+<p><strong>Amount:</strong> ${{ amount }}</p>
 
-    <form method="POST" action="/save">
-        <input type="hidden" name="client" value="{{ client }}">
-        <input type="hidden" name="amount" value="{{ amount }}">
+<form method="POST" action="/save">
+    <input type="hidden" name="client" value="{{ client }}">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <input type="hidden" name="invoice_number" value="{{ invoice_number }}">
+    <input type="hidden" name="created_at" value="{{ created_at }}">
+    <button type="submit">Save Invoice</button>
+</form>
 
-        <button type="submit">Save Invoice</button>
-    </form>
+<form method="POST" action="/pdf">
+    <input type="hidden" name="client" value="{{ client }}">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <input type="hidden" name="invoice_number" value="{{ invoice_number }}">
+    <button type="submit">Download PDF</button>
+</form>
 
-    <form method="POST" action="/pdf">
-        <input type="hidden" name="client" value="{{ client }}">
-        <input type="hidden" name="amount" value="{{ amount }}">
-
-        <button type="submit">Download PDF</button>
-    </form>
-
-    <br>
-    <a href="/">Back to Home</a>
+<a href="/">Back</a>
 </div>
-
-</body>
-</html>
