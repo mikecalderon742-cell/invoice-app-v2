@@ -1,14 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, send_file
 import sqlite3
-from pathlib import Path
+import os
 from datetime import datetime
 import io
-
-from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import LETTER
 
 app = Flask(__name__)
-DB_PATH = Path("invoices.db")
+
+DB_PATH = "invoices.db"
 
 
 def get_db():
@@ -19,28 +19,21 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
-    # Create base table if it doesn't exist
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            invoice_number TEXT,
             client TEXT,
-            amount REAL
+            amount REAL,
+            created_at TEXT
         )
     """)
 
-    # Add new columns safely (won’t crash if they exist)
-    try:
-        c.execute("ALTER TABLE invoices ADD COLUMN invoice_number TEXT")
-    except sqlite3.OperationalError:
-        pass
-
-    try:
-        c.execute("ALTER TABLE invoices ADD COLUMN created_at TEXT")
-    except sqlite3.OperationalError:
-        pass
-
     conn.commit()
     conn.close()
+
+
+init_db()
 
 
 @app.route("/")
@@ -50,14 +43,11 @@ def home():
 
 @app.route("/preview", methods=["POST"])
 def preview():
-    client = request.form.get("client")
-    amount = request.form.get("amount")
-
-    if not client or not amount:
-        return redirect(url_for("home"))
+    client = request.form["client"]
+    amount = request.form["amount"]
 
     invoice_number = datetime.now().strftime("%Y%m%d%H%M%S")
-    created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     return render_template(
         "preview.html",
@@ -70,20 +60,19 @@ def preview():
 
 @app.route("/save", methods=["POST"])
 def save():
-    client = request.form.get("client")
-    amount = request.form.get("amount")
-    invoice_number = request.form.get("invoice_number")
-    created_at = request.form.get("created_at")
-
-    if not all([client, amount, invoice_number, created_at]):
-        return redirect(url_for("home"))
+    client = request.form["client"]
+    amount = request.form["amount"]
+    invoice_number = request.form["invoice_number"]
+    created_at = request.form["created_at"]
 
     conn = get_db()
     c = conn.cursor()
+
     c.execute(
         "INSERT INTO invoices (invoice_number, client, amount, created_at) VALUES (?, ?, ?, ?)",
         (invoice_number, client, amount, created_at)
     )
+
     conn.commit()
     conn.close()
 
@@ -98,23 +87,26 @@ def save():
 
 @app.route("/pdf", methods=["POST"])
 def pdf():
-    client = request.form.get("client")
-    amount = request.form.get("amount")
-    invoice_number = request.form.get("invoice_number")
+    client = request.form["client"]
+    amount = request.form["amount"]
+    invoice_number = request.form["invoice_number"]
+    created_at = request.form["created_at"]
 
     buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=LETTER)
+    p = canvas.Canvas(buffer, pagesize=LETTER)
 
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(72, 720, "Invoice")
+    p.setFont("Helvetica-Bold", 20)
+    p.drawString(72, 720, "Invoice")
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 690, f"Invoice #: {invoice_number}")
-    pdf.drawString(72, 660, f"Client: {client}")
-    pdf.drawString(72, 630, f"Amount Due: ${amount}")
+    p.setFont("Helvetica", 12)
+    p.drawString(72, 690, f"Invoice #: {invoice_number}")
+    p.drawString(72, 670, f"Date: {created_at}")
+    p.drawString(72, 650, f"Client: {client}")
+    p.drawString(72, 630, f"Amount Due: ${amount}")
 
-    pdf.showPage()
-    pdf.save()
+    p.showPage()
+    p.save()
+
     buffer.seek(0)
 
     return send_file(
@@ -129,9 +121,13 @@ def pdf():
 def invoices():
     conn = get_db()
     c = conn.cursor()
-    c.execute(
-        "SELECT invoice_number, client, amount, created_at FROM invoices ORDER BY id DESC"
-    )
+
+    c.execute("""
+        SELECT invoice_number, client, amount, created_at
+        FROM invoices
+        ORDER BY id DESC
+    """)
+
     invoices = c.fetchall()
     conn.close()
 
@@ -141,3 +137,7 @@ def invoices():
 @app.route("/health")
 def health():
     return "OK", 200
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
