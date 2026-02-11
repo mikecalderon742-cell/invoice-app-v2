@@ -90,9 +90,9 @@ def save():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Insert invoice
+    # 🔥 FIX: use "amount" column instead of "total"
     c.execute(
-        "INSERT INTO invoices (client, total, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO invoices (client, amount, created_at) VALUES (?, ?, ?)",
         (client, total, created_at),
     )
     invoice_id = c.lastrowid
