@@ -83,6 +83,7 @@ def save():
 def pdf():
     client = request.form.get("client")
     amount = request.form.get("amount")
+    invoice_number = request.form.get("invoice_number")
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
@@ -91,18 +92,18 @@ def pdf():
     pdf.drawString(72, 720, "Invoice")
 
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 690, f"Client: {client}")
-    pdf.drawString(72, 660, f"Amount Due: ${amount}")
+    pdf.drawString(72, 690, f"Invoice #: {invoice_number}")
+    pdf.drawString(72, 660, f"Client: {client}")
+    pdf.drawString(72, 630, f"Amount Due: ${amount}")
 
     pdf.showPage()
     pdf.save()
-
     buffer.seek(0)
 
     return send_file(
         buffer,
         as_attachment=True,
-        download_name="invoice.pdf",
+        download_name=f"invoice_{invoice_number}.pdf",
         mimetype="application/pdf"
     )
 
