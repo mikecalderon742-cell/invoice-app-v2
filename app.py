@@ -151,7 +151,7 @@ def edit(invoice_id):
     c = conn.cursor()
 
     c.execute(
-        "SELECT id, client, amount, created_at FROM invoices WHERE id = ?",
+        "SELECT id, client, amount FROM invoices WHERE id = ?",
         (invoice_id,)
     )
     invoice = c.fetchone()
