@@ -60,6 +60,9 @@ def preview():
 
 @app.route("/save", methods=["POST"])
 def save():
+    if "client" not in request.form:
+        return redirect(url_for("home"))
+
     client = request.form["client"]
     amount = request.form["amount"]
     invoice_number = request.form["invoice_number"]
