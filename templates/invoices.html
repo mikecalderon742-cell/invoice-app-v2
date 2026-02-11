@@ -6,25 +6,8 @@
 </head>
 <body>
 
-<div class="navbar">
-    <div>
-        <a href="/">InvoicePro</a>
-    </div>
-    <div>
-        <a href="/">Create Invoice</a>
-        <a href="/invoices">Invoice History</a>
-    </div>
-</div>
-
 <div class="container">
     <h1>Invoice History</h1>
-
-    <form method="GET">
-        <input type="text" name="search" placeholder="Search client...">
-        <button type="submit">Search</button>
-    </form>
-
-    <br>
 
     <table>
         <tr>
@@ -42,13 +25,15 @@
             <td>${{ invoice[2] }}</td>
             <td>{{ invoice[3] }}</td>
             <td>
-                <a href="/history-pdf/{{ invoice[0] }}">Download PDF</a> |
-                <a href="/delete/{{ invoice[0] }}">Delete</a>
+                <a href="/edit/{{ invoice[0] }}">Edit</a> |
+                <a href="/history-pdf/{{ invoice[0] }}">PDF</a>
             </td>
         </tr>
         {% endfor %}
     </table>
 
+    <br>
+    <a href="/">Back to Home</a>
 </div>
 
 </body>

@@ -90,9 +90,9 @@ def save():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # 🔥 FIX: use "amount" column instead of "total"
+    # Insert invoice
     c.execute(
-        "INSERT INTO invoices (client, amount, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO invoices (client, total, created_at) VALUES (?, ?, ?)",
         (client, total, created_at),
     )
     invoice_id = c.lastrowid
@@ -110,23 +110,105 @@ def save():
     return redirect("/invoices")
 
 
+# ✅ NEW: EDIT INVOICE PAGE
+@app.route("/edit/<int:invoice_id>")
+def edit(invoice_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute(
+        "SELECT id, client FROM invoices WHERE id = ?",
+        (invoice_id,)
+    )
+    invoice = c.fetchone()
+
+    if not invoice:
+        conn.close()
+        return "Invoice not found", 404
+
+    c.execute(
+        "SELECT description, amount FROM invoice_items WHERE invoice_id = ?",
+        (invoice_id,)
+    )
+    items = c.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "edit.html",
+        invoice=invoice,
+        items=items
+    )
+
+
+# ✅ NEW: UPDATE INVOICE
+@app.route("/update/<int:invoice_id>", methods=["POST"])
+def update(invoice_id):
+    client = request.form.get("client")
+    descriptions = request.form.getlist("description")
+    amounts = request.form.getlist("amount")
+
+    total = 0
+    cleaned_items = []
+
+    for desc, amt in zip(descriptions, amounts):
+        if desc and amt:
+            amt = float(amt)
+            total += amt
+            cleaned_items.append((desc, amt))
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    # Update invoice main info
+    c.execute(
+        "UPDATE invoices SET client = ?, total = ? WHERE id = ?",
+        (client, total, invoice_id)
+    )
+
+    # Delete old items
+    c.execute(
+        "DELETE FROM invoice_items WHERE invoice_id = ?",
+        (invoice_id,)
+    )
+
+    # Reinsert items
+    for desc, amt in cleaned_items:
+        c.execute(
+            "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (?, ?, ?)",
+            (invoice_id, desc, amt),
+        )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/invoices")
+
+
 @app.route("/history-pdf/<int:invoice_id>")
 def history_pdf(invoice_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # 🔥 FIX: use "amount" not "total"
     c.execute(
-        "SELECT client, amount FROM invoices WHERE id = ?",
+        "SELECT client, total FROM invoices WHERE id = ?",
         (invoice_id,)
     )
     invoice = c.fetchone()
-    conn.close()
 
     if not invoice:
+        conn.close()
         return "Invoice not found", 404
 
-    client, amount = invoice
+    client, total = invoice
+
+    c.execute(
+        "SELECT description, amount FROM invoice_items WHERE invoice_id = ?",
+        (invoice_id,)
+    )
+    items = c.fetchall()
+
+    conn.close()
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
@@ -137,7 +219,13 @@ def history_pdf(invoice_id):
     pdf.setFont("Helvetica", 12)
     pdf.drawString(72, 690, f"Invoice ID: {invoice_id}")
     pdf.drawString(72, 660, f"Client: {client}")
-    pdf.drawString(72, 630, f"Amount Due: ${amount}")
+
+    y = 620
+    for desc, amt in items:
+        pdf.drawString(72, y, f"{desc} - ${amt}")
+        y -= 20
+
+    pdf.drawString(72, y - 10, f"Total: ${total}")
 
     pdf.showPage()
     pdf.save()
@@ -171,9 +259,8 @@ def invoices():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # 🔥 FIX: select "amount" (your real DB column)
     c.execute("""
-        SELECT id, client, amount, created_at
+        SELECT id, client, total, created_at
         FROM invoices
         ORDER BY id DESC
     """)
