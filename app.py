@@ -10,33 +10,22 @@ app = Flask(__name__)
 
 DB_PATH = Path("invoices.db")
 
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Create invoices table if it doesn't exist
+    # Invoices table
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             client TEXT NOT NULL,
-            total REAL,
+            total REAL NOT NULL,
             created_at TEXT
         )
     """)
 
-    # 🔥 Ensure 'total' column exists (for older databases)
-    try:
-        c.execute("ALTER TABLE invoices ADD COLUMN total REAL")
-    except sqlite3.OperationalError:
-        pass
-
-    # 🔥 Ensure 'created_at' column exists
-    try:
-        c.execute("ALTER TABLE invoices ADD COLUMN created_at TEXT")
-    except sqlite3.OperationalError:
-        pass
-
-    # Create invoice_items table
+    # Invoice items table
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoice_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,89 +90,12 @@ def save():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Insert invoice
     c.execute(
         "INSERT INTO invoices (client, total, created_at) VALUES (?, ?, ?)",
         (client, total, created_at),
     )
     invoice_id = c.lastrowid
 
-    # Insert items
-    for desc, amt in cleaned_items:
-        c.execute(
-            "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (?, ?, ?)",
-            (invoice_id, desc, amt),
-        )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/invoices")
-
-
-# ✅ NEW: EDIT INVOICE PAGE
-@app.route("/edit/<int:invoice_id>")
-def edit(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    c.execute(
-        "SELECT id, client FROM invoices WHERE id = ?",
-        (invoice_id,)
-    )
-    invoice = c.fetchone()
-
-    if not invoice:
-        conn.close()
-        return "Invoice not found", 404
-
-    c.execute(
-        "SELECT description, amount FROM invoice_items WHERE invoice_id = ?",
-        (invoice_id,)
-    )
-    items = c.fetchall()
-
-    conn.close()
-
-    return render_template(
-        "edit.html",
-        invoice=invoice,
-        items=items
-    )
-
-
-# ✅ NEW: UPDATE INVOICE
-@app.route("/update/<int:invoice_id>", methods=["POST"])
-def update(invoice_id):
-    client = request.form.get("client")
-    descriptions = request.form.getlist("description")
-    amounts = request.form.getlist("amount")
-
-    total = 0
-    cleaned_items = []
-
-    for desc, amt in zip(descriptions, amounts):
-        if desc and amt:
-            amt = float(amt)
-            total += amt
-            cleaned_items.append((desc, amt))
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    # Update invoice main info
-    c.execute(
-        "UPDATE invoices SET client = ?, total = ? WHERE id = ?",
-        (client, total, invoice_id)
-    )
-
-    # Delete old items
-    c.execute(
-        "DELETE FROM invoice_items WHERE invoice_id = ?",
-        (invoice_id,)
-    )
-
-    # Reinsert items
     for desc, amt in cleaned_items:
         c.execute(
             "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (?, ?, ?)",
@@ -218,7 +130,6 @@ def history_pdf(invoice_id):
         (invoice_id,)
     )
     items = c.fetchall()
-
     conn.close()
 
     buffer = io.BytesIO()
@@ -236,7 +147,7 @@ def history_pdf(invoice_id):
         pdf.drawString(72, y, f"{desc} - ${amt}")
         y -= 20
 
-    pdf.drawString(72, y - 10, f"Total: ${total}")
+    pdf.drawString(72, y - 20, f"Total Due: ${total}")
 
     pdf.showPage()
     pdf.save()
