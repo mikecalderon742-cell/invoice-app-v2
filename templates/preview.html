@@ -10,32 +10,36 @@
     <div>
         <a href="/">InvoicePro</a>
     </div>
-    <div>
-        <a href="/">Create Invoice</a>
-        <a href="/invoices">Invoice History</a>
-    </div>
 </div>
 
 <div class="container">
     <h1>Invoice Preview</h1>
 
     <p><strong>Client:</strong> {{ client }}</p>
-    <p><strong>Amount:</strong> ${{ amount }}</p>
 
-    <br>
+    <table>
+        <tr>
+            <th>Description</th>
+            <th>Amount</th>
+        </tr>
+
+        {% for item in items %}
+        <tr>
+            <td>{{ item[0] }}</td>
+            <td>${{ item[1] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Total: ${{ total }}</h3>
 
     <form method="POST" action="/save">
         <input type="hidden" name="client" value="{{ client }}">
-        <input type="hidden" name="amount" value="{{ amount }}">
+        {% for item in items %}
+            <input type="hidden" name="description" value="{{ item[0] }}">
+            <input type="hidden" name="amount" value="{{ item[1] }}">
+        {% endfor %}
         <button type="submit">Save Invoice</button>
-    </form>
-
-    <br>
-
-    <form method="POST" action="/pdf">
-        <input type="hidden" name="client" value="{{ client }}">
-        <input type="hidden" name="amount" value="{{ amount }}">
-        <button type="submit">Download PDF</button>
     </form>
 
 </div>

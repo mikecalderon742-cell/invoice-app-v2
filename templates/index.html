@@ -1,8 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Invoice Generator</title>
+    <title>Create Invoice</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function addItem() {
+            const container = document.getElementById("items");
+            const row = document.createElement("div");
+            row.innerHTML = `
+                <input type="text" name="description" placeholder="Item description" required>
+                <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+                <br><br>
+            `;
+            container.appendChild(row);
+        }
+    </script>
 </head>
 <body>
 
@@ -17,14 +29,21 @@
 </div>
 
 <div class="container">
-    <h1>Invoice Generator</h1>
+    <h1>Create Invoice</h1>
 
     <form method="POST" action="/preview">
-        <label>Client Name:</label><br>
-        <input type="text" name="client" required><br><br>
 
-        <label>Amount:</label><br>
-        <input type="number" step="0.01" name="amount" required><br><br>
+        <input type="text" name="client" placeholder="Client Name" required>
+        <br><br>
+
+        <div id="items">
+            <input type="text" name="description" placeholder="Item description" required>
+            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+            <br><br>
+        </div>
+
+        <button type="button" onclick="addItem()">+ Add Item</button>
+        <br><br>
 
         <button type="submit">Preview Invoice</button>
     </form>
