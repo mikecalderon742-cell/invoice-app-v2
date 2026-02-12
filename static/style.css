@@ -146,3 +146,51 @@ a:hover {
     margin-top: 20px;
     color: #6b7280;
 }
+
+/* ===== Navbar ===== */
+
+.navbar {
+    background: #111827;
+    color: white;
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.navbar a {
+    color: #e5e7eb;
+    margin-left: 20px;
+    font-weight: 500;
+}
+
+.navbar a:hover {
+    color: white;
+}
+
+/* ===== Footer ===== */
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* ===== Search Bar Layout ===== */
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-bar input {
+    flex: 1;
+}

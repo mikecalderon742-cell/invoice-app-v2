@@ -1,61 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Invoice History</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
-<div class="container">
-    <h1>Invoice History</h1>
+{% block content %}
 
-    <form method="GET">
+<h1>Invoice History</h1>
+
+<div class="search-bar">
+    <form method="GET" action="/invoices" style="display:flex; gap:10px; width:100%;">
         <input type="text" name="search" placeholder="Search by client name">
         <button type="submit">Search</button>
     </form>
-
-    <br>
-
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Client</th>
-            <th>Total</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-
-        {% for invoice in invoices %}
-        <tr>
-            <td>{{ invoice[0] }}</td>
-            <td>{{ invoice[1] }}</td>
-            <td>${{ invoice[2] }}</td>
-            <td>{{ invoice[3] }}</td>
-
-            <!-- STATUS BADGE -->
-            <td>
-                {% if invoice[4] == "Paid" %}
-                    <span class="badge paid">Paid</span>
-                {% elif invoice[4] == "Sent" %}
-                    <span class="badge sent">Sent</span>
-                {% else %}
-                    <span class="badge draft">Draft</span>
-                {% endif %}
-            </td>
-
-            <td>
-              <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
-              <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-              <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
-           </td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <br>
-    <a href="/">Back to Home</a>
 </div>
 
-</body>
-</html>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Client</th>
+        <th>Total</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for invoice in invoices %}
+    <tr>
+        <td>{{ invoice[0] }}</td>
+        <td>{{ invoice[1] }}</td>
+        <td>${{ invoice[2] }}</td>
+        <td>{{ invoice[3] }}</td>
+
+        <td>
+            {% if invoice[4] == "Paid" %}
+                <span class="badge paid">Paid</span>
+            {% elif invoice[4] == "Sent" %}
+                <span class="badge sent">Sent</span>
+            {% else %}
+                <span class="badge draft">Draft</span>
+            {% endif %}
+        </td>
+
+        <td>
+            <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
+            <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+            <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="/">Back to Home</a>
+
+{% endblock %}
