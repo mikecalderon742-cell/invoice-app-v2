@@ -45,10 +45,10 @@
             </td>
 
             <td>
-                <a href="/edit/{{ invoice[0] }}">Edit</a> |
-                <a href="/delete/{{ invoice[0] }}">Delete</a> |
-                <a href="/history-pdf/{{ invoice[0] }}">PDF</a>
-            </td>
+              <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
+              <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+              <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
+           </td>
         </tr>
         {% endfor %}
     </table>

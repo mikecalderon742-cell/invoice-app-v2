@@ -1,0 +1,63 @@
+[33m65f1922[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fixed invoice_id NameError in save route
+[33mb25d00a[m Added status system and toggle route
+[33m3a04795[m Added status badge styling
+[33m9d8eb1c[m Add invoice status system with color badges
+[33mecc672a[m Add invoice status system
+[33mab118c7[m Add edit button to invoice history
+[33m1826089[m Add edit invoice page UI
+[33m9fe70a6[m Add edit and update routes
+[33m7465c75[m Activate invoice search filter
+[33m3a25d06[m Restore delete and search in invoice history
+[33me6ad852[m Fix schema mismatch - use amount column
+[33m184f369[m Rollback to stable version before edit feature
+[33m92c1ae4[m Fix missing total column for existing database
+[33m2238d50[m Add full edit functionality with item support
+[33m479987a[m Fix history PDF column mismatch (amount not total)
+[33mf6c76a6[m Fix invoices route column mismatch
+[33mb98a3a5[m Fix save route column mismatch
+[33m2ef7c17[m Add multi-item invoice system
+[33mff8760c[m Fix history PDF properly
+[33m4518090[m Fix broken history PDF link
+[33ma03ae2d[m Added professional navbar layout
+[33mdeab9ef[m Added delete and PDF download in invoice history
+[33mf9f77bd[m Step 7.3 - Added invoice status and improved history view
+[33m0b8ef6b[m Step 7.2 - Add search/filter feature
+[33mea9669b[m Step 7.1 Add delete invoice feature
+[33mbc57ffe[m Clean production reset
+[33ma018dc2[m Fix database schema migration
+[33me9de8d8[m Stable full invoice app baseline
+[33mb0ef51e[m Stable full invoice app baseline
+[33mac23fd5[m Gaurd save route against direct access
+[33m3c8ca81[m Stable full invoice app baseline
+[33ma42cd86[m Fix save flow, restore invoice number/date, stabilize app
+[33m4349679[m Fix preview form action (POST to /preview)
+[33mff9572c[m Step 6.1.3 fix edit route to use invoice_number
+[33m9ee0e7c[m Fix invoice history table (remove non-existent date column)
+[33m8d275af[m Fix edit invoice query (remove missing created_at)
+[33m006a426[m Step 6.1.1: add edit invoice page
+[33m5d494c4[m Step 6.1.1: add edit invoice link
+[33m834fc83[m Step 5.6.3: include invoice number in PDF
+[33mc6dcb08[m Step 5.6.2: display invoice number and date across UI
+[33m38fddbc[m Step 5.6.1: store number and date in database
+[33mf74948b[m Step 5.5: add invoice number and date to PDF
+[33m74304f4[m Step 5.4: polish PDF layout
+[33med58c25[m Add reportlab dependancy for PDF generation
+[33me1963e0[m Generate invoice PDF using ReportLab
+[33m80c41b5[m Add PDF preview button and placeholder /pdf route
+[33m1a4a472[m Add preview route to fix invoice preview
+[33m9e7cb4c[m Add navigation to invoice history
+[33m82e6f61[m Fix homepage HTML structure and add navigation
+[33m0392906[m Remove placeholder dots from homepage
+[33meb20678[m Remove duplicate Invoice Generator title
+[33m0113a3f[m Polish layout styling
+[33me87c533[m Step 4.1 add CSS styling
+[33m1b7252e[m Stable invoice app with preview, save, history
+[33mdb54c87[m Add invoice preview template
+[33m14e1a86[m Wire templates and invoice preview flow
+[33m1937b5f[m Step 3.1.1 invoice history working
+[33m1bd12d2[m Step 3.1.2: add imvoice history page
+[33me85908c[m Fix DB init for Gunicorn (SQLite persoistence)
+[33m3146762[m Phase 4: persist invoices with SQLite
+[33mdf98d10[m Phase 3: show submitted invoice data
+[33m2f3fcc2[m Phase 2: render index.html invoice form
+[33m4c39172[m Phase 1: minimal Flask app with health check
