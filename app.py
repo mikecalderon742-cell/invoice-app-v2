@@ -250,32 +250,40 @@ def delete(invoice_id):
     return redirect("/invoices")
 
 
+from datetime import datetime
+
 @app.route("/invoices")
 def invoices():
     search = request.args.get("search")
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    conn = sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
 
     if search:
-        c.execute("""
-            SELECT id, client, amount, created_at
-            FROM invoices
-            WHERE client LIKE ?
-            ORDER BY id DESC
-        """, ('%' + search + '%',))
+        cursor.execute("SELECT * FROM invoices WHERE client LIKE ?", ('%' + search + '%',))
     else:
-        c.execute("""
-            SELECT id, client, amount, created_at
-            FROM invoices
-            ORDER BY id DESC
-        """)
+        cursor.execute("SELECT * FROM invoices")
 
-    invoices = c.fetchall()
+    invoices = cursor.fetchall()
     conn.close()
 
-    return render_template("invoices.html", invoices=invoices)
+    # ---- Monthly Calculations (Safe Python Logic) ----
+    current_month = datetime.now().strftime("%Y-%m")
 
+    monthly_invoices = [
+        invoice for invoice in invoices
+        if invoice[3].startswith(current_month)
+    ]
+
+    monthly_revenue = sum(invoice[2] for invoice in monthly_invoices)
+    monthly_count = len(monthly_invoices)
+
+    return render_template(
+        "invoices.html",
+        invoices=invoices,
+        monthly_revenue=monthly_revenue,
+        monthly_count=monthly_count
+    )
 
 @app.route("/health")
 def health():

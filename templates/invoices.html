@@ -18,18 +18,15 @@
         <p>Total Revenue</p>
     </div>
 
-    {% set current_month = now().strftime("%Y-%m") %}
-    {% set monthly_invoices = invoices | selectattr(3, "startswith", current_month) | list %}
-
     <div class="card">
         <h2>
-            ${{ "{:,.2f}".format(monthly_invoices | sum(attribute=2)) if monthly_invoices else "0.00" }}
+            ${{ "{:,.2f}".format(monthly_revenue) }}
         </h2>
         <p>This Month Revenue</p>
     </div>
 
     <div class="card">
-        <h2>{{ monthly_invoices | length }}</h2>
+        <h2>{{ monthly_count }}</h2>
         <p>This Month Invoices</p>
     </div>
 
