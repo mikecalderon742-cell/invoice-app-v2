@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, send_file, redirect
+from datetime import datetime
 import sqlite3
 from pathlib import Path
 import io
@@ -7,6 +8,9 @@ from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now}
 
 DB_PATH = Path("invoices.db")
 
