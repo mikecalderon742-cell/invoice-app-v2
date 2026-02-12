@@ -221,3 +221,18 @@ body.dark .card {
 .card.purple {
     background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
+
+/* ========================= */
+/* FIX ACTION BUTTON LAYOUT */
+/* ========================= */
+
+table td:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 180px;
+}
+
+table td:last-child .btn {
+    white-space: nowrap;
+}
