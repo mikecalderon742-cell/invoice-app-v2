@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect
+from flask import Flask, render_template, request, send_file, redirect, url_for
 from datetime import datetime
 import sqlite3
 from pathlib import Path
@@ -271,8 +271,8 @@ def invoices():
     current_month = datetime.now().strftime("%Y-%m")
 
     monthly_invoices = [
-        invoice for invoice in invoices
-        if invoice[3].startswith(current_month)
+    invoice for invoice in invoices
+    if invoice[3] and invoice[3].startswith(current_month)
     ]
 
     monthly_revenue = sum(invoice[2] for invoice in monthly_invoices)
