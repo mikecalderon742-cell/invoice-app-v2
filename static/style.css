@@ -109,3 +109,30 @@ input[type="number"] {
     width: 250px;
     margin-right: 10px;
 }
+
+.status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status.draft {
+    background-color: #999;
+    color: white;
+}
+
+.status.sent {
+    background-color: #007bff;
+    color: white;
+}
+
+.status.paid {
+    background-color: #28a745;
+    color: white;
+}
+
+.status.overdue {
+    background-color: #dc3545;
+    color: white;
+}

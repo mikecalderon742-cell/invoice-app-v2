@@ -18,29 +18,34 @@
     <br>
 
     <table>
-        <tr>
-            <th>ID</th>
-            <th>Client</th>
-            <th>Total</th>
-            <th>Date</th>
-            <th>Actions</th>
-        </tr>
+    <tr>
+        <th>ID</th>
+        <th>Client</th>
+        <th>Total</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
 
-        {% for invoice in invoices %}
-        <tr>
-            <td>{{ invoice[0] }}</td>
-            <td>{{ invoice[1] }}</td>
-            <td>${{ invoice[2] }}</td>
-            <td>{{ invoice[3] }}</td>
-            <td>
-                <a href="/edit/{{ invoice[0] }}">Edit</a> |
-                <a href="/history-pdf/{{ invoice[0] }}">PDF</a> |
-                <a href="/delete/{{ invoice[0] }}" onclick="return confirm('Delete this invoice?')">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
-
-    </table>
+    {% for invoice in invoices %}
+    <tr>
+        <td>{{ invoice[0] }}</td>
+        <td>{{ invoice[1] }}</td>
+        <td>${{ invoice[2] }}</td>
+        <td>{{ invoice[3] }}</td>
+        <td>
+            <span class="status {{ invoice[4]|lower }}">
+                {{ invoice[4] }}
+            </span>
+        </td>
+        <td>
+            <a href="/edit/{{ invoice[0] }}">Edit</a> |
+            <a href="/history-pdf/{{ invoice[0] }}">PDF</a> |
+            <a href="/delete/{{ invoice[0] }}" onclick="return confirm('Delete this invoice?')">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 
     <br>
     <a href="/">Back to Home</a>
