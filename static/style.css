@@ -208,8 +208,14 @@ a:hover {
 
 .dashboard-cards {
     display: flex;
+    flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 30px;
+}
+
+.dashboard-cards .card {
+    flex: 1 1 220px;
+    min-width: 220px;
 }
 
 .card {
