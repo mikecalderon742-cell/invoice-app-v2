@@ -160,3 +160,23 @@ input[type="number"] {
 .status.overdue {
     background-color: red;
 }
+
+.badge {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.badge.draft {
+    background-color: gray;
+}
+
+.badge.sent {
+    background-color: orange;
+}
+
+.badge.paid {
+    background-color: green;
+}
