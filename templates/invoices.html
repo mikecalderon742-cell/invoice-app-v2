@@ -5,6 +5,7 @@
 <h1>Invoice History</h1>
 
 <div class="dashboard-cards">
+
     <div class="card">
         <h2>{{ invoices|length }}</h2>
         <p>Total Invoices</p>
@@ -12,10 +13,42 @@
 
     <div class="card">
         <h2>
-            ${{ invoices | sum(attribute=2) if invoices else 0 }}
+            ${{ "{:,.2f}".format(invoices | sum(attribute=2)) if invoices else "0.00" }}
         </h2>
         <p>Total Revenue</p>
     </div>
+
+    <div class="card">
+        <h2>
+            {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
+        </h2>
+        <p>Paid</p>
+    </div>
+
+    <div class="card">
+        <h2>
+            {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
+        </h2>
+        <p>Draft</p>
+    </div>
+
+    <div class="card">
+        <h2>
+            {% if invoices %}
+                ${{ "{:,.2f}".format((invoices | sum(attribute=2)) / (invoices|length)) }}
+            {% else %}
+                0.00
+            {% endif %}
+        </h2>
+        <p>Avg Invoice</p>
+    </div>
+
+</div>
+
+<div style="margin-bottom:20px; font-size:14px;">
+    <strong>Status Legend:</strong>
+    <span class="badge paid">Paid</span>
+    <span class="badge draft">Draft</span>
 </div>
 
 <div class="search-bar">
@@ -24,6 +57,8 @@
         <button type="submit">Search</button>
     </form>
 </div>
+
+{% if invoices %}
 
 <table>
     <tr>
@@ -39,7 +74,7 @@
     <tr>
         <td>{{ invoice[0] }}</td>
         <td>{{ invoice[1] }}</td>
-        <td>${{ invoice[2] }}</td>
+        <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
         <td>{{ invoice[3] }}</td>
 
         <td>
@@ -60,6 +95,16 @@
     </tr>
     {% endfor %}
 </table>
+
+{% else %}
+
+<div style="text-align:center; padding:40px 0;">
+    <h3>No invoices yet</h3>
+    <p>Create your first invoice to get started.</p>
+    <a class="btn" href="/">Create Invoice</a>
+</div>
+
+{% endif %}
 
 <br>
 <a href="/">Back to Home</a>
