@@ -32,26 +32,6 @@
 
     <div class="card">
         <h2>
-            {% if invoices %}
-                ${{ "{:,.2f}".format((invoices | sum(attribute=2)) / (invoices|length)) }}
-            {% else %}
-                0.00
-            {% endif %}
-        </h2>
-        <p>Avg Invoice</p>
-    </div>
-
-</div>
-
-    <div class="card">
-        <h2>
-            ${{ "{:,.2f}".format(invoices | sum(attribute=2)) if invoices else "0.00" }}
-        </h2>
-        <p>Total Revenue</p>
-    </div>
-
-    <div class="card">
-        <h2>
             {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
         </h2>
         <p>Paid</p>

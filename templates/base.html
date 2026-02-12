@@ -3,10 +3,7 @@
 <head>
     <title>InvoicePro</title>
 
-    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -30,10 +27,11 @@
 </div>
 
 <footer class="footer">
-    © 2026 InvoicePro — Professional Invoice Management
+    InvoicePro v2.1 • Built with Flask • 2026
 </footer>
 
 <script>
+    // DARK MODE
     const toggleBtn = document.getElementById('themeToggle');
 
     function setTheme(theme) {
@@ -47,9 +45,36 @@
         setTheme(current === 'dark' ? 'light' : 'dark');
     });
 
-    // Load saved theme
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
+
+    // KPI COUNT-UP ANIMATION
+    document.addEventListener("DOMContentLoaded", () => {
+        const counters = document.querySelectorAll(".kpi-number");
+
+        counters.forEach(counter => {
+            const target = parseFloat(counter.innerText.replace(/[^0-9.-]+/g,""));
+            const isMoney = counter.innerText.includes("$");
+            let count = 0;
+            const increment = target / 40;
+
+            function update() {
+                count += increment;
+                if (count < target) {
+                    counter.innerText = isMoney
+                        ? "$" + count.toFixed(2)
+                        : Math.floor(count);
+                    requestAnimationFrame(update);
+                } else {
+                    counter.innerText = isMoney
+                        ? "$" + target.toFixed(2)
+                        : target;
+                }
+            }
+
+            update();
+        });
+    });
 </script>
 
 </body>
