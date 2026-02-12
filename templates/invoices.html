@@ -4,6 +4,20 @@
 
 <h1>Invoice History</h1>
 
+<div class="dashboard-cards">
+    <div class="card">
+        <h2>{{ invoices|length }}</h2>
+        <p>Total Invoices</p>
+    </div>
+
+    <div class="card">
+        <h2>
+            ${{ invoices | sum(attribute=2) if invoices else 0 }}
+        </h2>
+        <p>Total Revenue</p>
+    </div>
+</div>
+
 <div class="search-bar">
     <form method="GET" action="/invoices" style="display:flex; gap:10px; width:100%;">
         <input type="text" name="search" placeholder="Search by client name">
