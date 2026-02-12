@@ -6,45 +6,40 @@
 
 <div class="dashboard-cards">
 
-    <div class="card">
+    <div class="card blue">
         <h2>{{ invoices|length }}</h2>
         <p>Total Invoices</p>
     </div>
 
-    <div class="card">
+    <div class="card green">
         <h2>
             ${{ "{:,.2f}".format(invoices | sum(attribute=2)) if invoices else "0.00" }}
         </h2>
         <p>Total Revenue</p>
     </div>
 
-    <div class="card">
+    <div class="card blue">
         <h2>
             ${{ "{:,.2f}".format(monthly_revenue) }}
         </h2>
         <p>This Month Revenue</p>
     </div>
 
-    <div class="card">
-        <h2>{{ monthly_count }}</h2>
-        <p>This Month Invoices</p>
-    </div>
-
-    <div class="card">
+    <div class="card teal">
         <h2>
             {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
         </h2>
         <p>Paid</p>
     </div>
 
-    <div class="card">
+    <div class="card orange">
         <h2>
             {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
         </h2>
         <p>Draft</p>
     </div>
 
-    <div class="card">
+    <div class="card purple">
         <h2>
             {% if invoices %}
                 ${{ "{:,.2f}".format((invoices | sum(attribute=2)) / (invoices|length)) }}

@@ -175,3 +175,49 @@ body.dark .card {
     font-size: 13px;
     color: #777;
 }
+
+/* ========================= */
+/* PROFESSIONAL DASHBOARD CARDS */
+/* ========================= */
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.card {
+    padding: 22px;
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    transition: all 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+}
+
+/* Color Variants */
+
+.card.blue {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.card.green {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.card.teal {
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+}
+
+.card.orange {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.card.purple {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
