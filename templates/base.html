@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    
+    <div class="hamburger" onclick="toggleMenu()">☰</div>
+
+    <div id="sidebar" class="sidebar">
+       <a href="/">Create Invoice</a>
+       <a href="/invoices">Invoice History</a>
+    </div>
 
 <nav class="navbar">
     <div class="nav-left">
@@ -75,6 +82,10 @@
             update();
         });
     });
+<script>
+function toggleMenu() {
+    document.getElementById("sidebar").classList.toggle("active");
+}
 </script>
 
 </body>

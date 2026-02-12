@@ -236,3 +236,44 @@ table td:last-child {
 table td:last-child .btn {
     white-space: nowrap;
 }
+
+/* ========================= */
+/* HAMBURGER SIDEBAR MENU   */
+/* ========================= */
+
+.hamburger {
+    font-size: 24px;
+    cursor: pointer;
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 1100;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -240px;
+    width: 220px;
+    height: 100%;
+    background: #1f2937;
+    padding-top: 80px;
+    transition: left 0.3s ease;
+    z-index: 1050;
+}
+
+.sidebar a {
+    display: block;
+    padding: 14px 25px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.sidebar a:hover {
+    background: #374151;
+}
+
+.sidebar.active {
+    left: 0;
+}
