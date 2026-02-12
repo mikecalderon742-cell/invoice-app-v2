@@ -136,3 +136,27 @@ input[type="number"] {
     background-color: #dc3545;
     color: white;
 }
+
+.status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.status.draft {
+    background-color: gray;
+}
+
+.status.sent {
+    background-color: blue;
+}
+
+.status.paid {
+    background-color: green;
+}
+
+.status.overdue {
+    background-color: red;
+}
