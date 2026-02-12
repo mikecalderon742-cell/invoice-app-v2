@@ -178,14 +178,24 @@ def delete(invoice_id):
 
 @app.route("/invoices")
 def invoices():
+    search = request.args.get("search")
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute("""
-        SELECT id, client, amount, created_at
-        FROM invoices
-        ORDER BY id DESC
-    """)
+    if search:
+        c.execute("""
+            SELECT id, client, amount, created_at
+            FROM invoices
+            WHERE client LIKE ?
+            ORDER BY id DESC
+        """, ('%' + search + '%',))
+    else:
+        c.execute("""
+            SELECT id, client, amount, created_at
+            FROM invoices
+            ORDER BY id DESC
+        """)
 
     invoices = c.fetchall()
     conn.close()
