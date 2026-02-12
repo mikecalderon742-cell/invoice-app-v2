@@ -17,9 +17,11 @@
     <div class="nav-left">
         <span class="logo">InvoicePro</span>
     </div>
+
     <div class="nav-right">
         <a href="/">Create Invoice</a>
         <a href="/invoices">Invoice History</a>
+        <button id="themeToggle" class="theme-toggle">🌙</button>
     </div>
 </nav>
 
@@ -31,4 +33,24 @@
     © 2026 InvoicePro — Professional Invoice Management
 </footer>
 
-</body
+<script>
+    const toggleBtn = document.getElementById('themeToggle');
+
+    function setTheme(theme) {
+        document.body.className = theme;
+        localStorage.setItem('theme', theme);
+        toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        const current = document.body.classList.contains('dark') ? 'dark' : 'light';
+        setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+</script>
+
+</body>
+</html>
