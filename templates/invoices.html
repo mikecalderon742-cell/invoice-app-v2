@@ -45,6 +45,50 @@
 
 </div>
 
+{% if invoices %}
+<div style="background:white; padding:20px; border-radius:14px; margin-bottom:25px; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+    <h3 style="margin-bottom:15px;">Revenue Overview</h3>
+    <canvas id="revenueChart"></canvas>
+</div>
+
+<script>
+    const ctx = document.getElementById('revenueChart');
+
+    const labels = [
+        {% for invoice in invoices %}
+            "Invoice #{{ invoice[0] }}",
+        {% endfor %}
+    ];
+
+    const data = [
+        {% for invoice in invoices %}
+            {{ invoice[2] }},
+        {% endfor %}
+    ];
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Invoice Revenue',
+                data: data,
+                borderWidth: 3,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+
 <div style="margin-bottom:20px; font-size:14px;">
     <strong>Status Legend:</strong>
     <span class="badge paid">Paid</span>
