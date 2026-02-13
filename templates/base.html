@@ -51,145 +51,139 @@
     InvoicePro v2.1 • Built with Flask • 2026
 </footer>
 
+<div id="loader" class="loader"></div>
+
+<a href="/" class="floating-btn">+</a>
+
+<div id="welcomeModal" class="welcome-modal hidden">
+    <div class="welcome-content">
+        <h2>Welcome to InvoicePro 🚀</h2>
+        <p>You're now using a modern invoicing platform.</p>
+        <button id="closeWelcome" class="btn">Let's Go</button>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-/* KPI ANIMATION */
-const counters = document.querySelectorAll(".kpi-number");
+    /* PAGE FADE IN */
+    document.body.classList.remove("fade-out");
 
-counters.forEach(counter => {
-    const target = parseFloat(counter.innerText.replace(/[^0-9.-]+/g,""));
-    const isMoney = counter.innerText.includes("$");
-    let count = 0;
-    const increment = target / 50;
+    /* KPI ANIMATION */
+    const counters = document.querySelectorAll(".kpi-number");
+    counters.forEach(counter => {
+        const target = parseFloat(counter.innerText.replace(/[^0-9.-]+/g,""));
+        const isMoney = counter.innerText.includes("$");
+        let count = 0;
+        const increment = target / 50;
 
-    function update() {
-        count += increment;
-        if (count < target) {
-            counter.innerText = isMoney
-                ? "$" + count.toFixed(2)
-                : Math.floor(count);
-            requestAnimationFrame(update);
-        } else {
-            counter.innerText = isMoney
-                ? "$" + target.toFixed(2)
-                : target;
+        function update() {
+            count += increment;
+            if (count < target) {
+                counter.innerText = isMoney
+                    ? "$" + count.toFixed(2)
+                    : Math.floor(count);
+                requestAnimationFrame(update);
+            } else {
+                counter.innerText = isMoney
+                    ? "$" + target.toFixed(2)
+                    : target;
+            }
         }
-    }
+        update();
+    });
 
-    update();
-});
-
-/* HERO PARALLAX */
-const hero = document.querySelector(".hero");
-
-window.addEventListener("scroll", () => {
-    if (hero) {
-        hero.style.backgroundPositionY = window.scrollY * 0.3 + "px";
-    }
-});
-
- /* SCROLL REVEAL */
-const reveals = document.querySelectorAll(".reveal");
-
-function revealOnScroll() {
-    reveals.forEach((el) => {
-        const windowHeight = window.innerHeight;
-        const elementTop = el.getBoundingClientRect().top;
-        const revealPoint = 100;
-
-        if (elementTop < windowHeight - revealPoint) {
-            el.classList.add("active");
+    /* HERO PARALLAX */
+    const hero = document.querySelector(".hero");
+    window.addEventListener("scroll", () => {
+        if (hero) {
+            hero.style.backgroundPositionY = window.scrollY * 0.3 + "px";
         }
     });
-}
 
-window.addEventListener("scroll", revealOnScroll);
-revealOnScroll();
-   
-    /* PAGE FADE IN */
-document.body.classList.remove("fade-out");
+    /* SCROLL REVEAL */
+    const reveals = document.querySelectorAll(".reveal");
+    function revealOnScroll() {
+        reveals.forEach((el) => {
+            const windowHeight = window.innerHeight;
+            const elementTop = el.getBoundingClientRect().top;
+            const revealPoint = 100;
+            if (elementTop < windowHeight - revealPoint) {
+                el.classList.add("active");
+            }
+        });
+    }
+    window.addEventListener("scroll", revealOnScroll);
+    revealOnScroll();
 
-    /* ========================= */
     /* DARK MODE */
-    /* ========================= */
-
     const toggleBtn = document.getElementById("themeToggle");
-
     function setTheme(theme) {
         document.body.classList.remove("light", "dark");
         document.body.classList.add(theme);
         localStorage.setItem("theme", theme);
-
         if (toggleBtn) {
             toggleBtn.textContent = theme === "dark" ? "☀️" : "🌙";
         }
     }
-
     if (toggleBtn) {
         toggleBtn.addEventListener("click", function () {
             const isDark = document.body.classList.contains("dark");
             setTheme(isDark ? "light" : "dark");
         });
     }
-
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
 
-    /* ========================= */
-    /* SIDEBAR + OVERLAY */
-    /* ========================= */
-
+    /* SIDEBAR */
     const hamburger = document.getElementById("hamburgerBtn");
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("overlay");
 
     function openSidebar() {
-    sidebar.classList.add("active");
-    overlay.classList.add("active");
-    hamburger.classList.add("active");
-}
+        sidebar.classList.add("active");
+        overlay.classList.add("active");
+        hamburger.classList.add("active");
+    }
 
-function closeSidebar() {
-    sidebar.classList.remove("active");
-    overlay.classList.remove("active");
-    hamburger.classList.remove("active");
-}
+    function closeSidebar() {
+        sidebar.classList.remove("active");
+        overlay.classList.remove("active");
+        hamburger.classList.remove("active");
+    }
 
     if (hamburger && sidebar && overlay) {
         hamburger.addEventListener("click", openSidebar);
         overlay.addEventListener("click", closeSidebar);
     }
 
+    /* REVENUE TICKER */
+    const ticker = document.getElementById("revenueTicker");
+    if (ticker) {
+        let value = 12450;
+        setInterval(() => {
+            value += Math.floor(Math.random() * 50);
+            ticker.innerText = "$" + value.toLocaleString() + ".00";
+        }, 3000);
+    }
+
+    /* ONBOARDING MODAL */
+    const modal = document.getElementById("welcomeModal");
+    const closeBtn = document.getElementById("closeWelcome");
+
+    if (modal && !localStorage.getItem("invoiceProWelcomeSeen")) {
+        modal.classList.remove("hidden");
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function () {
+            modal.classList.add("hidden");
+            localStorage.setItem("invoiceProWelcomeSeen", "true");
+        });
+    }
+
 });
 </script>
-<div id="loader" class="loader"></div>
-
-/* REVENUE TICKER */
-const ticker = document.getElementById("revenueTicker");
-
-if (ticker) {
-    let value = 12450;
-
-    setInterval(() => {
-        value += Math.floor(Math.random() * 50);
-        ticker.innerText = "$" + value.toLocaleString() + ".00";
-    }, 3000);
-}
-
-<a href="/" class="floating-btn">+</a>
-
-<div id="welcomeModal" class="welcome-modal">
-    <div class="welcome-content">
-        <h2>Welcome to InvoicePro 🚀</h2>
-        <p>You're now using a modern invoicing platform.</p>
-        <button onclick="closeModal()" class="btn">Let's Go</button>
-    </div>
-</div>
-
-function closeModal() {
-    document.getElementById("welcomeModal").style.display = "none";
-}
 
 </body>
 </html>
