@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="light">
+<body class="light fade-out">
 
 <!-- HAMBURGER -->
 <div id="hamburgerBtn" class="hamburger">
@@ -53,6 +53,10 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    
+    
+    /* PAGE FADE IN */
+document.body.classList.remove("fade-out");
 
     /* ========================= */
     /* DARK MODE */
