@@ -11,7 +11,11 @@
 <body class="light">
 
 <!-- HAMBURGER -->
-<div id="hamburgerBtn" class="hamburger">☰</div>
+<div id="hamburgerBtn" class="hamburger">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
 
 <!-- SIDEBAR -->
 <div id="sidebar" class="sidebar">
@@ -85,14 +89,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const overlay = document.getElementById("overlay");
 
     function openSidebar() {
-        sidebar.classList.add("active");
-        overlay.classList.add("active");
-    }
+    sidebar.classList.add("active");
+    overlay.classList.add("active");
+    hamburger.classList.add("active");
+}
 
-    function closeSidebar() {
-        sidebar.classList.remove("active");
-        overlay.classList.remove("active");
-    }
+function closeSidebar() {
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+    hamburger.classList.remove("active");
+}
 
     if (hamburger && sidebar && overlay) {
         hamburger.addEventListener("click", openSidebar);
