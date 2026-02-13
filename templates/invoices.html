@@ -6,40 +6,40 @@
 
 <div class="dashboard-cards">
 
-    <div class="card blue">
+    <div class="card card-success">
         <h2>{{ invoices|length }}</h2>
         <p>Total Invoices</p>
     </div>
 
-    <div class="card green">
+    <div class="card card-success">
         <h2>
             ${{ "{:,.2f}".format(invoices | sum(attribute=2)) if invoices else "0.00" }}
         </h2>
         <p>Total Revenue</p>
     </div>
 
-    <div class="card blue">
+    <div class="card card-info">
         <h2>
             ${{ "{:,.2f}".format(monthly_revenue) }}
         </h2>
         <p>This Month Revenue</p>
     </div>
 
-    <div class="card teal">
+    <div class="card card-info">
         <h2>
             {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
         </h2>
         <p>Paid</p>
     </div>
 
-    <div class="card orange">
+    <div class="card card-warning">
         <h2>
             {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
         </h2>
         <p>Draft</p>
     </div>
 
-    <div class="card purple">
+    <div class="card card-danger">
         <h2>
             {% if invoices %}
                 ${{ "{:,.2f}".format((invoices | sum(attribute=2)) / (invoices|length)) }}
@@ -53,7 +53,7 @@
 </div>
 
 {% if invoices %}
-<div style="background:white; padding:20px; border-radius:14px; margin-bottom:25px; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+<div class="card" style="margin-bottom:25px;">
     <h3 style="margin-bottom:15px;">Revenue Overview</h3>
     <canvas id="revenueChart"></canvas>
 </div>
@@ -105,7 +105,7 @@
 <div class="search-bar">
     <form method="GET" action="/invoices" style="display:flex; gap:10px; width:100%;">
         <input type="text" name="search" placeholder="Search by client name">
-        <button type="submit">Search</button>
+        <button type="submit" class="btn">Search</button>
     </form>
 </div>
 
@@ -138,7 +138,7 @@
             {% endif %}
         </td>
 
-        <td>
+        <td style="display:flex; gap:8px; flex-wrap:wrap;">
             <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
             <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
             <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>

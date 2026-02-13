@@ -3,7 +3,7 @@
 /* ========================= */
 
 :root {
-    --accent: #2563eb;          /* primary brand */
+    --accent: #10b981;          /* primary brand */
     --accent-dark: #1d4ed8;     /* darker shade */
     --accent-light: #3b82f6;    /* lighter hover */
 }
@@ -249,8 +249,8 @@ table td:last-child .btn {
 /* ========================= */
 
 .hamburger {
-    width: 17px;
-    height: 17px;
+    width: 15px;
+    height: 15px;
     position: fixed;
     top: 20px;
     left: 18px;
@@ -370,4 +370,57 @@ body {
 
 body.fade-out {
     opacity: 0;
+}
+
+/* ========================= */
+/* GLOBAL MICRO ANIMATIONS */
+/* ========================= */
+
+button,
+.btn,
+a,
+.sidebar-link {
+    transition: all 0.2s ease;
+}
+
+button:hover,
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+a:hover {
+    opacity: 0.85;
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+:root {
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #6366f1;
+}
+
+.card-success {
+    border-top: 4px solid var(--success);
+}
+
+.card-warning {
+    border-top: 4px solid var(--warning);
+}
+
+.card-danger {
+    border-top: 4px solid var(--danger);
+}
+
+.card-info {
+    border-top: 4px solid var(--info);
 }
