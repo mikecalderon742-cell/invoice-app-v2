@@ -53,8 +53,60 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    
-    
+
+/* KPI ANIMATION */
+const counters = document.querySelectorAll(".kpi-number");
+
+counters.forEach(counter => {
+    const target = parseFloat(counter.innerText.replace(/[^0-9.-]+/g,""));
+    const isMoney = counter.innerText.includes("$");
+    let count = 0;
+    const increment = target / 50;
+
+    function update() {
+        count += increment;
+        if (count < target) {
+            counter.innerText = isMoney
+                ? "$" + count.toFixed(2)
+                : Math.floor(count);
+            requestAnimationFrame(update);
+        } else {
+            counter.innerText = isMoney
+                ? "$" + target.toFixed(2)
+                : target;
+        }
+    }
+
+    update();
+});
+
+/* HERO PARALLAX */
+const hero = document.querySelector(".hero");
+
+window.addEventListener("scroll", () => {
+    if (hero) {
+        hero.style.backgroundPositionY = window.scrollY * 0.3 + "px";
+    }
+});
+
+ /* SCROLL REVEAL */
+const reveals = document.querySelectorAll(".reveal");
+
+function revealOnScroll() {
+    reveals.forEach((el) => {
+        const windowHeight = window.innerHeight;
+        const elementTop = el.getBoundingClientRect().top;
+        const revealPoint = 100;
+
+        if (elementTop < windowHeight - revealPoint) {
+            el.classList.add("active");
+        }
+    });
+}
+
+window.addEventListener("scroll", revealOnScroll);
+revealOnScroll();
+   
     /* PAGE FADE IN */
 document.body.classList.remove("fade-out");
 
