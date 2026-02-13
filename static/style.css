@@ -242,7 +242,7 @@ table td:last-child .btn {
 /* ========================= */
 
 .hamburger {
-    font-size: 20px;
+    font-size: 17px;
     cursor: pointer;
     position: fixed;
     top: 22px;
@@ -250,32 +250,49 @@ table td:last-child .btn {
     z-index: 1200;
 }
 
+/* ========================= */
+/* PREMIUM SIDEBAR */
+/* ========================= */
+
 .sidebar {
     position: fixed;
     top: 0;
-    left: -240px;
-    width: 220px;
+    left: -260px;
+    width: 240px;
     height: 100%;
     background: #1f2937;
     padding-top: 80px;
-    transition: left 0.3s ease;
-    z-index: 1050;
-}
-
-.sidebar a {
-    display: block;
-    padding: 14px 25px;
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.sidebar a:hover {
-    background: #374151;
+    transition: left 0.35s ease;
+    z-index: 1100;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
 }
 
 .sidebar.active {
     left: 0;
+}
+
+.sidebar-header {
+    position: absolute;
+    top: 20px;
+    left: 25px;
+    color: #9ca3af;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 14px 25px;
+    color: #f3f4f6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: #374151;
+    padding-left: 32px;
 }
 
 /* ========================= */
