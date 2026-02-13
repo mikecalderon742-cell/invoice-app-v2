@@ -3,7 +3,7 @@
 /* ========================= */
 
 :root {
-    --accent: #157DEC;          /* primary brand */
+    --accent: #151B54;          /* primary brand */
     --accent-dark: #1d4ed8;     /* darker shade */
     --accent-light: #3b82f6;    /* lighter hover */
 }
@@ -423,4 +423,165 @@ a:hover {
 
 .card-info {
     border-top: 4px solid var(--info);
+}
+
+/* ========================= */
+/* NUCLEAR HERO */
+/* ========================= */
+
+.hero {
+    background: linear-gradient(-45deg, var(--accent), var(--accent-dark), #6366f1, #8b5cf6);
+    background-size: 400% 400%;
+    animation: gradientShift 12s ease infinite;
+    padding: 70px 20px;
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.hero h1 {
+    font-size: 40px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    font-size: 18px;
+    opacity: 0.95;
+}
+
+/* ========================= */
+/* HOME STATS */
+/* ========================= */
+
+.home-stats {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.home-stats .card {
+    width: 240px;
+    text-align: center;
+}
+
+/* ========================= */
+/* GLASS FORM */
+/* ========================= */
+
+.form-wrapper {
+    backdrop-filter: blur(18px);
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+    border: 1px solid rgba(255,255,255,0.3);
+    margin-bottom: 50px;
+    transition: transform 0.3s ease;
+}
+
+.form-wrapper:hover {
+    transform: translateY(-4px);
+}
+
+body.dark .form-wrapper {
+    background: rgba(31, 41, 55, 0.7);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ========================= */
+/* PREMIUM INPUTS */
+/* ========================= */
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+body.dark input {
+    background: #111827;
+    border: 1px solid #374151;
+    color: white;
+}
+
+/* ========================= */
+/* FADE + SLIDE ENTRANCE */
+/* ========================= */
+
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+}
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================= */
+/* BACKGROUND GLOW */
+/* ========================= */
+
+body::before {
+    content: "";
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--accent-light), transparent 70%);
+    opacity: 0.15;
+    z-index: -1;
+}
+
+/* ========================= */
+/* FLOATING BUTTON */
+/* ========================= */
+
+.floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    z-index: 1200;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+    background: var(--accent-dark);
 }
