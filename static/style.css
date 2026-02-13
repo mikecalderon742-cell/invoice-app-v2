@@ -242,12 +242,12 @@ table td:last-child .btn {
 /* ========================= */
 
 .hamburger {
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     position: fixed;
-    top: 18px;
-    left: 18px;
-    z-index: 1100;
+    top: 22px;
+    left: 20px;
+    z-index: 1200;
 }
 
 .sidebar {

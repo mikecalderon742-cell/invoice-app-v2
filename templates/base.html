@@ -82,10 +82,46 @@
             update();
         });
     });
+
 <script>
-function toggleMenu() {
-    document.getElementById("sidebar").classList.toggle("active");
-}
+document.addEventListener("DOMContentLoaded", function() {
+
+    /* ========================= */
+    /* DARK MODE */
+    /* ========================= */
+
+    const toggleBtn = document.getElementById("themeToggle");
+
+    function setTheme(theme) {
+        document.body.className = theme;
+        localStorage.setItem("theme", theme);
+        toggleBtn.textContent = theme === "dark" ? "☀️" : "🌙";
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", function() {
+            const current = document.body.classList.contains("dark") ? "dark" : "light";
+            setTheme(current === "dark" ? "light" : "dark");
+        });
+    }
+
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
+
+    /* ========================= */
+    /* HAMBURGER MENU */
+    /* ========================= */
+
+    const hamburger = document.getElementById("hamburgerBtn");
+    const sidebar = document.getElementById("sidebar");
+
+    if (hamburger && sidebar) {
+        hamburger.addEventListener("click", function() {
+            sidebar.classList.toggle("active");
+        });
+    }
+
+});
 </script>
 
 </body>
