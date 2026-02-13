@@ -163,8 +163,33 @@ function closeSidebar() {
 
 });
 </script>
+<div id="loader" class="loader"></div>
+
+/* REVENUE TICKER */
+const ticker = document.getElementById("revenueTicker");
+
+if (ticker) {
+    let value = 12450;
+
+    setInterval(() => {
+        value += Math.floor(Math.random() * 50);
+        ticker.innerText = "$" + value.toLocaleString() + ".00";
+    }, 3000);
+}
 
 <a href="/" class="floating-btn">+</a>
+
+<div id="welcomeModal" class="welcome-modal">
+    <div class="welcome-content">
+        <h2>Welcome to InvoicePro 🚀</h2>
+        <p>You're now using a modern invoicing platform.</p>
+        <button onclick="closeModal()" class="btn">Let's Go</button>
+    </div>
+</div>
+
+function closeModal() {
+    document.getElementById("welcomeModal").style.display = "none";
+}
 
 </body>
 </html>

@@ -430,33 +430,51 @@ a:hover {
 /* ========================= */
 
 .hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
     background: linear-gradient(-45deg, var(--accent), var(--accent-dark), #6366f1, #8b5cf6);
     background-size: 400% 400%;
     animation: gradientShift 12s ease infinite;
-    padding: 70px 20px;
+    padding: 70px 40px;
     border-radius: 20px;
     color: white;
-    margin-bottom: 50px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 60px;
 }
 
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+.hero-left {
+    flex: 1;
 }
 
-.hero h1 {
-    font-size: 40px;
+.hero-left h1 {
+    font-size: 42px;
     font-weight: 800;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.hero p {
+.hero-left p {
     font-size: 18px;
-    opacity: 0.95;
+    margin-bottom: 25px;
+}
+
+.hero-cta {
+    font-size: 16px;
+}
+
+.hero-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.mock-card {
+    background: rgba(255,255,255,0.15);
+    padding: 30px;
+    border-radius: 18px;
+    backdrop-filter: blur(20px);
+    text-align: center;
+    width: 280px;
 }
 
 /* ========================= */
@@ -662,4 +680,53 @@ document.addEventListener("mousemove", e => {
 body::after {
     left: var(--x);
     top: var(--y);
+}
+
+.cta-section {
+    text-align: center;
+    padding: 60px 20px;
+    margin-top: 60px;
+}
+
+.cta-btn {
+    margin-top: 20px;
+    font-size: 18px;
+    padding: 14px 30px;
+}
+
+.welcome-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.welcome-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+body.dark .welcome-content {
+    background: #1f2937;
+}
+
+body {
+    transition: background 0.4s ease, color 0.4s ease;
+}
+
+.loader {
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 3000;
+    animation: fadeLoader 0.5s ease forwards;
+}
+
+@keyframes fadeLoader {
+    to { opacity: 0; visibility: hidden; }
 }

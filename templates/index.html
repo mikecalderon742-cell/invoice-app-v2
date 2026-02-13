@@ -2,12 +2,24 @@
 
 {% block content %}
 
-<!-- HERO SECTION -->
+<!-- SPLIT HERO SECTION -->
 <div class="hero fade-in-up">
-    <div class="hero-content">
+
+    <div class="hero-left">
         <h1>Simple Invoicing. Powerful Results.</h1>
         <p>Create, track, and manage invoices with ease.</p>
+
+        <a href="/invoices" class="btn hero-cta">View Invoice Dashboard</a>
     </div>
+
+    <div class="hero-right">
+        <div class="mock-card">
+            <h3>Live Revenue</h3>
+            <h2 id="revenueTicker">$12,450.00</h2>
+            <p>+12% this month</p>
+        </div>
+    </div>
+
 </div>
 
 <!-- FORM WRAPPER -->
@@ -27,6 +39,13 @@
             </div>
             <br>
         </div>
+
+<!-- PREMIUM CTA -->
+<div class="cta-section reveal">
+    <h2>Ready to take control of your invoicing?</h2>
+    <p>Join thousands of professionals simplifying their workflow.</p>
+    <a href="/" class="btn cta-btn">Start Creating Invoices</a>
+</div>
 
         <button type="button" class="btn btn-secondary" onclick="addItem()">+ Add Item</button>
         <br><br>
