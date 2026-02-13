@@ -2,29 +2,45 @@
 
 {% block content %}
 
-<h1>Create Invoice</h1>
-
-<form method="POST" action="/preview">
-
-    <input type="text" name="client" placeholder="Client Name" required>
-    <br><br>
-
-    <div id="items">
-        <input type="text" name="description" placeholder="Item description" required>
-        <input type="number" step="0.01" name="amount" placeholder="Amount" required>
-        <br><br>
+<!-- HERO SECTION -->
+<div class="hero">
+    <div class="hero-content">
+        <h1>Simple Invoicing. Powerful Results.</h1>
+        <p>Create, track, and manage invoices with ease.</p>
     </div>
+</div>
 
-    <button type="button" onclick="addItem()">+ Add Item</button>
-    <br><br>
+<!-- FORM WRAPPER -->
+<div class="form-wrapper">
 
-    <button type="submit">Preview Invoice</button>
-</form>
+    <h2 style="margin-bottom:25px;">Create Invoice</h2>
+
+    <form method="POST" action="/preview">
+
+        <input type="text" name="client" placeholder="Client Name" required>
+        <br><br>
+
+        <div id="items">
+            <div class="item-row">
+                <input type="text" name="description" placeholder="Item description" required>
+                <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+            </div>
+            <br>
+        </div>
+
+        <button type="button" class="btn btn-secondary" onclick="addItem()">+ Add Item</button>
+        <br><br>
+
+        <button type="submit" class="btn">Preview Invoice</button>
+    </form>
+
+</div>
 
 <script>
     function addItem() {
         const container = document.getElementById("items");
         const row = document.createElement("div");
+        row.classList.add("item-row");
         row.innerHTML = `
             <input type="text" name="description" placeholder="Item description" required>
             <input type="number" step="0.01" name="amount" placeholder="Amount" required>
