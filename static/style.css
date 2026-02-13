@@ -1,3 +1,13 @@
+/* ========================= */
+/* GLOBAL ACCENT SYSTEM */
+/* ========================= */
+
+:root {
+    --accent: #2563eb;          /* primary brand */
+    --accent-dark: #1d4ed8;     /* darker shade */
+    --accent-light: #3b82f6;    /* lighter hover */
+}
+
 body {
     font-family: 'Inter', sans-serif;
     margin: 0;
@@ -99,7 +109,7 @@ tr:hover {
 /* BUTTONS */
 button,
 .btn {
-    background: #4f46e5;
+    background: var(--accent);
     color: white;
     padding: 10px 18px;
     border: none;
@@ -111,7 +121,7 @@ button,
 
 button:hover,
 .btn:hover {
-    transform: translateY(-2px);
+    background: var(--accent-dark);
 }
 
 button:active,
@@ -188,16 +198,13 @@ body.dark .card {
 }
 
 .card {
-    padding: 22px;
-    border-radius: 16px;
-    color: white;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    transition: all 0.25s ease;
+    border-top: 4px solid var(--accent);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 /* Color Variants */
@@ -323,6 +330,11 @@ body.dark .hamburger span {
 .sidebar-link:hover {
     background: #374151;
     padding-left: 32px;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    color: white;
 }
 
 /* ========================= */
