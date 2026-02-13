@@ -19,6 +19,9 @@
     <a href="/invoices">Invoice History</a>
 </div>
 
+<!-- OVERLAY -->
+<div id="overlay" class="overlay"></div>
+
 <!-- NAVBAR -->
 <nav class="navbar">
     <div class="nav-left">
@@ -43,7 +46,9 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    /* ========================= */
     /* DARK MODE */
+    /* ========================= */
 
     const toggleBtn = document.getElementById("themeToggle");
 
@@ -67,15 +72,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
 
-    /* HAMBURGER */
+    /* ========================= */
+    /* SIDEBAR + OVERLAY */
+    /* ========================= */
 
     const hamburger = document.getElementById("hamburgerBtn");
     const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
 
-    if (hamburger && sidebar) {
-        hamburger.addEventListener("click", function () {
-            sidebar.classList.toggle("active");
-        });
+    function openSidebar() {
+        sidebar.classList.add("active");
+        overlay.classList.add("active");
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove("active");
+        overlay.classList.remove("active");
+    }
+
+    if (hamburger && sidebar && overlay) {
+        hamburger.addEventListener("click", openSidebar);
+        overlay.addEventListener("click", closeSidebar);
     }
 
 });

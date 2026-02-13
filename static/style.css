@@ -38,7 +38,7 @@ body {
 
 .logo {
     font-weight: 700;
-    font-size: 20px;
+    font-size: 18px;
 }
 
 /* CARDS */
@@ -276,4 +276,26 @@ table td:last-child .btn {
 
 .sidebar.active {
     left: 0;
+}
+
+/* ========================= */
+/* OVERLAY EFFECT */
+/* ========================= */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
 }
