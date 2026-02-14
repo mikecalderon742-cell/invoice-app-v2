@@ -50,11 +50,15 @@
 </div>
 
 <!-- PREMIUM CTA (MOVED OUTSIDE FORM) -->
+
+{% if not request.path == "/preview" %}
 <div class="cta-section reveal">
     <h2>Ready to take control of your invoicing?</h2>
     <p>Join thousands of professionals simplifying their workflow.</p>
     <a href="/" class="btn cta-btn">Start Creating Invoices</a>
 </div>
+{% endif %}
+
 
 <script>
     function addItem() {
