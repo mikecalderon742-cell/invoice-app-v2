@@ -748,3 +748,44 @@ body {
 .hidden {
     display: none !important;
 }
+
+/* =========================
+   MOBILE RESPONSIVENESS FIX
+========================= */
+
+@media (max-width: 768px) {
+
+    .hero {
+        flex-direction: column !important;
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .hero-left,
+    .hero-right {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .hero-left h1 {
+        font-size: 28px;
+    }
+
+    .hero-left p {
+        font-size: 16px;
+    }
+
+    .hero-cta {
+        display: inline-block;
+        width: 100%;
+        max-width: 320px;
+        margin: 20px auto 0 auto;
+    }
+
+    .mock-card {
+        width: 100%;
+        max-width: 350px;
+        margin: 30px auto 0 auto;
+    }
+
+}
