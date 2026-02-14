@@ -789,3 +789,241 @@ body {
     }
 
 }
+
+/* ===============================
+   DASHBOARD HEADER
+================================ */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dashboard-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+/* ===============================
+   KPI CARDS (ENHANCED)
+================================ */
+.dashboard-cards.enhanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+.card.kpi {
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,0.85),
+        rgba(255,255,255,0.55)
+    );
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,0.08);
+
+    transition: all 0.25s ease;
+}
+
+.dark .card.kpi {
+    background: linear-gradient(
+        145deg,
+        rgba(30,30,30,0.9),
+        rgba(30,30,30,0.65)
+    );
+}
+
+.card.kpi:hover {
+    transform: translateY(-6px);
+    box-shadow:
+        0 14px 40px rgba(0,0,0,0.15);
+}
+
+.card.kpi h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.card.kpi p {
+    font-size: 14px;
+    opacity: 0.75;
+}
+
+
+/* COLOR ACCENTS */
+.card.kpi.green { border-left: 5px solid #22c55e; }
+.card.kpi.blue { border-left: 5px solid #3b82f6; }
+.card.kpi.purple { border-left: 5px solid #a855f7; }
+.card.kpi.teal { border-left: 5px solid #14b8a6; }
+
+
+/* ===============================
+   CHART CARD
+================================ */
+.chart-card {
+    padding: 26px;
+    border-radius: 18px;
+    margin-bottom: 28px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-sub {
+    font-size: 13px;
+    opacity: 0.6;
+}
+
+
+/* ===============================
+   SEARCH BAR MODERN
+================================ */
+.search-bar.modern {
+    margin-bottom: 22px;
+}
+
+.search-bar.modern form {
+    display: flex;
+    gap: 10px;
+}
+
+.search-bar.modern input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.1);
+    font-size: 14px;
+}
+
+.dark .search-bar.modern input {
+    background: rgba(40,40,40,0.8);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+}
+
+
+/* ===============================
+   MODERN TABLE
+================================ */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.modern-table thead {
+    background: rgba(0,0,0,0.05);
+}
+
+.dark .modern-table thead {
+    background: rgba(255,255,255,0.05);
+}
+
+.modern-table th {
+    text-align: left;
+    padding: 14px;
+    font-size: 13px;
+    letter-spacing: .4px;
+}
+
+.modern-table td {
+    padding: 14px;
+    font-size: 14px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.dark .modern-table td {
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.modern-table tbody tr {
+    transition: background .2s ease;
+}
+
+.modern-table tbody tr:hover {
+    background: rgba(0,0,0,0.03);
+}
+
+.dark .modern-table tbody tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+
+/* ===============================
+   ACTION BUTTON GROUP
+================================ */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+
+/* ===============================
+   EMPTY STATE
+================================ */
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+    opacity: 0.85;
+}
+
+.empty-state h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
+
+/* ===============================
+   MOBILE OPTIMIZATION
+================================ */
+@media (max-width: 768px) {
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .card.kpi h2 {
+        font-size: 22px;
+    }
+
+}
