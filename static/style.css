@@ -730,3 +730,11 @@ body {
 @keyframes fadeLoader {
     to { opacity: 0; visibility: hidden; }
 }
+
+.form-actions {
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none !important;
+}
