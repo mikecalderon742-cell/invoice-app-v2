@@ -48,7 +48,7 @@
 </div>
 
 <footer class="footer">
-    InvoicePro v2.1 • Built with Flask • 2026
+   © • InvoicePro v2.1 • Mike Calderon • 2026
 </footer>
 
 <div id="loader" class="loader"></div>
@@ -168,23 +168,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /* ONBOARDING MODAL */
-const modal = document.getElementById("welcomeModal");
-const closeBtn = document.getElementById("closeWelcome");
+    const modal = document.getElementById("welcomeModal");
+    const closeBtn = document.getElementById("closeWelcome");
 
-if (modal) {
-    if (!localStorage.getItem("invoiceProWelcomeSeen")) {
+    if (modal && !localStorage.getItem("invoiceProWelcomeSeen")) {
         modal.classList.remove("hidden");
-    } else {
-        modal.classList.add("hidden");
     }
-}
 
-if (closeBtn && modal) {
-    closeBtn.addEventListener("click", function () {
-        modal.classList.add("hidden");
-        localStorage.setItem("invoiceProWelcomeSeen", "true");
-    });
-}
+    if (closeBtn && modal) {
+        closeBtn.addEventListener("click", function () {
+            modal.classList.add("hidden");
+            localStorage.setItem("invoiceProWelcomeSeen", "true");
+        });
+    }
 
 });
 </script>
