@@ -76,7 +76,14 @@
     </div>
 
     <div class="chart-filters">
-        <button class="filter-btn active" data-range="30">30D</button>
+        <button class="filter-btn {% if active_range == '30' %}active{% endif %}" 
+        onclick="window.location='?range=30'">30D</button>
+
+<button class="filter-btn {% if active_range == '90' %}active{% endif %}" 
+        onclick="window.location='?range=90'">90D</button>
+
+<button class="filter-btn {% if active_range == 'all' %}active{% endif %}" 
+        onclick="window.location='?range=all'">All</button>
         <button class="filter-btn" data-range="90">90D</button>
         <button class="filter-btn" data-range="all">All</button>
     </div>

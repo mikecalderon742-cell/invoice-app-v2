@@ -250,39 +250,42 @@ def delete(invoice_id):
     return redirect("/invoices")
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 @app.route("/invoices")
-def invoices():
-    search = request.args.get("search")
+def invoices_page():
+    range_filter = request.args.get("range", "30")
 
-    conn = sqlite3.connect("invoices.db")
+    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-
-    if search:
-        cursor.execute("SELECT * FROM invoices WHERE client LIKE ?", ('%' + search + '%',))
-    else:
-        cursor.execute("SELECT * FROM invoices")
-
+    cursor.execute("SELECT * FROM invoices ORDER BY date DESC")
     invoices = cursor.fetchall()
     conn.close()
 
-    # ---- Monthly Calculations (Safe Python Logic) ----
-    current_month = datetime.now().strftime("%Y-%m")
+    # Filter by date range
+    if range_filter != "all":
+        days = int(range_filter)
+        cutoff = datetime.now() - timedelta(days=days)
 
-    monthly_invoices = [
-    invoice for invoice in invoices
-    if invoice[3] and invoice[3].startswith(current_month)
-    ]
+        filtered = []
+        for invoice in invoices:
+            invoice_date = datetime.strptime(invoice[3], "%Y-%m-%d")
+            if invoice_date >= cutoff:
+                filtered.append(invoice)
+        invoices = filtered
 
-    monthly_revenue = sum(invoice[2] for invoice in monthly_invoices)
-    monthly_count = len(monthly_invoices)
+    # Monthly revenue (current month only)
+    current_month = datetime.now().month
+    monthly_revenue = sum(
+        invoice[2] for invoice in invoices
+        if datetime.strptime(invoice[3], "%Y-%m-%d").month == current_month
+    )
 
     return render_template(
         "invoices.html",
         invoices=invoices,
         monthly_revenue=monthly_revenue,
-        monthly_count=monthly_count
+        active_range=range_filter
     )
 
 @app.route("/health")
