@@ -1,45 +1,23 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for
-from datetime import datetime
+from flask import Flask, render_template, request, send_file, redirect
+from datetime import datetime, timedelta
 import sqlite3
 from pathlib import Path
 import io
-from datetime import datetime
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
-import sqlite3
-
-def init_db():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS invoices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        client_name TEXT NOT NULL,
-        amount REAL NOT NULL,
-        date TEXT NOT NULL
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-init_db()
-
 app = Flask(__name__)
-@app.context_processor
-def inject_now():
-    return {'now': datetime.now}
 
 DB_PATH = Path("invoices.db")
 
 
+# -------------------------
+# DATABASE INITIALIZATION
+# -------------------------
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Use amount column (this matches your live DB)
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,11 +44,22 @@ def init_db():
 init_db()
 
 
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now}
+
+
+# -------------------------
+# HOME
+# -------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
+# -------------------------
+# PREVIEW
+# -------------------------
 @app.route("/preview", methods=["POST"])
 def preview():
     client = request.form.get("client")
@@ -94,6 +83,9 @@ def preview():
     )
 
 
+# -------------------------
+# SAVE INVOICE
+# -------------------------
 @app.route("/save", methods=["POST"])
 def save():
     client = request.form.get("client")
@@ -113,7 +105,6 @@ def save():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # 🔥 INSERT INTO amount (NOT total)
     c.execute(
         "INSERT INTO invoices (client, amount, created_at) VALUES (?, ?, ?)",
         (client, total, created_at),
@@ -132,15 +123,140 @@ def save():
     return redirect("/invoices")
 
 
+# -------------------------
+# INVOICES DASHBOARD
+# -------------------------
+@app.route("/invoices")
+def invoices_page():
+    range_filter = request.args.get("range", "30")
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, client, amount, created_at FROM invoices ORDER BY created_at DESC")
+    invoices = cursor.fetchall()
+    conn.close()
+
+    # Filter by date range
+    if range_filter != "all":
+        days = int(range_filter)
+        cutoff = datetime.now() - timedelta(days=days)
+
+        filtered = []
+        for invoice in invoices:
+            invoice_date = datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S")
+            if invoice_date >= cutoff:
+                filtered.append(invoice)
+        invoices = filtered
+
+    # Monthly revenue
+    current_month = datetime.now().month
+    monthly_revenue = sum(
+        invoice[2] for invoice in invoices
+        if datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S").month == current_month
+    )
+
+    return render_template(
+        "invoices.html",
+        invoices=invoices,
+        monthly_revenue=monthly_revenue,
+        active_range=range_filter
+    )
+
+
+# -------------------------
+# EDIT
+# -------------------------
+@app.route("/edit/<int:invoice_id>")
+def edit(invoice_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("SELECT id, client FROM invoices WHERE id = ?", (invoice_id,))
+    invoice = c.fetchone()
+
+    if not invoice:
+        conn.close()
+        return "Invoice not found", 404
+
+    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+    items = c.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "edit.html",
+        invoice_id=invoice_id,
+        client=invoice[1],
+        items=items
+    )
+
+
+# -------------------------
+# UPDATE
+# -------------------------
+@app.route("/update/<int:invoice_id>", methods=["POST"])
+def update(invoice_id):
+    client = request.form.get("client")
+    descriptions = request.form.getlist("description")
+    amounts = request.form.getlist("amount")
+
+    total = 0
+    cleaned_items = []
+
+    for desc, amt in zip(descriptions, amounts):
+        if desc and amt:
+            amt = float(amt)
+            total += amt
+            cleaned_items.append((desc, amt))
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute(
+        "UPDATE invoices SET client = ?, amount = ? WHERE id = ?",
+        (client, total, invoice_id)
+    )
+
+    c.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+
+    for desc, amt in cleaned_items:
+        c.execute(
+            "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (?, ?, ?)",
+            (invoice_id, desc, amt)
+        )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/invoices")
+
+
+# -------------------------
+# DELETE
+# -------------------------
+@app.route("/delete/<int:invoice_id>")
+def delete(invoice_id):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+    c.execute("DELETE FROM invoices WHERE id = ?", (invoice_id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/invoices")
+
+
+# -------------------------
+# PDF
+# -------------------------
 @app.route("/history-pdf/<int:invoice_id>")
 def history_pdf(invoice_id):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    c.execute(
-        "SELECT client, amount FROM invoices WHERE id = ?",
-        (invoice_id,)
-    )
+    c.execute("SELECT client, amount FROM invoices WHERE id = ?", (invoice_id,))
     invoice = c.fetchone()
 
     if not invoice:
@@ -149,10 +265,7 @@ def history_pdf(invoice_id):
 
     client, total = invoice
 
-    c.execute(
-        "SELECT description, amount FROM invoice_items WHERE invoice_id = ?",
-        (invoice_id,)
-    )
+    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
     items = c.fetchall()
     conn.close()
 
@@ -185,128 +298,6 @@ def history_pdf(invoice_id):
         mimetype="application/pdf"
     )
 
-@app.route("/edit/<int:invoice_id>", methods=["GET"])
-def edit(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    # Get invoice
-    c.execute(
-        "SELECT id, client FROM invoices WHERE id = ?",
-        (invoice_id,)
-    )
-    invoice = c.fetchone()
-
-    if not invoice:
-        conn.close()
-        return "Invoice not found", 404
-
-    # Get items
-    c.execute(
-        "SELECT description, amount FROM invoice_items WHERE invoice_id = ?",
-        (invoice_id,)
-    )
-    items = c.fetchall()
-
-    conn.close()
-
-    return render_template(
-        "edit.html",
-        invoice_id=invoice_id,
-        client=invoice[1],
-        items=items
-    )
-
-@app.route("/update/<int:invoice_id>", methods=["POST"])
-def update(invoice_id):
-    client = request.form.get("client")
-    descriptions = request.form.getlist("description")
-    amounts = request.form.getlist("amount")
-
-    total = 0
-    cleaned_items = []
-
-    for desc, amt in zip(descriptions, amounts):
-        if desc and amt:
-            amt = float(amt)
-            total += amt
-            cleaned_items.append((desc, amt))
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    # Update invoice total + client
-    c.execute(
-        "UPDATE invoices SET client = ?, amount = ? WHERE id = ?",
-        (client, total, invoice_id)
-    )
-
-    # Delete old items
-    c.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
-
-    # Insert updated items
-    for desc, amt in cleaned_items:
-        c.execute(
-            "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (?, ?, ?)",
-            (invoice_id, desc, amt)
-        )
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/invoices")
-
-@app.route("/delete/<int:invoice_id>")
-def delete(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    c.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
-    c.execute("DELETE FROM invoices WHERE id = ?", (invoice_id,))
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/invoices")
-
-
-from datetime import datetime, timedelta
-
-@app.route("/invoices")
-def invoices_page():
-    range_filter = request.args.get("range", "30")
-
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM invoices ORDER BY date DESC")
-    invoices = cursor.fetchall()
-    conn.close()
-
-    # Filter by date range
-    if range_filter != "all":
-        days = int(range_filter)
-        cutoff = datetime.now() - timedelta(days=days)
-
-        filtered = []
-        for invoice in invoices:
-            invoice_date = datetime.strptime(invoice[3], "%Y-%m-%d")
-            if invoice_date >= cutoff:
-                filtered.append(invoice)
-        invoices = filtered
-
-    # Monthly revenue (current month only)
-    current_month = datetime.now().month
-    monthly_revenue = sum(
-        invoice[2] for invoice in invoices
-        if datetime.strptime(invoice[3], "%Y-%m-%d").month == current_month
-    )
-
-    return render_template(
-        "invoices.html",
-        invoices=invoices,
-        monthly_revenue=monthly_revenue,
-        active_range=range_filter
-    )
 
 @app.route("/health")
 def health():
