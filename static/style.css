@@ -1220,3 +1220,35 @@ table th {
         opacity: 1;
     }
 }
+
+/* === PERFORMANCE FILTER BUTTONS === */
+
+.chart-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid #2d2d2d;
+    background: #1e1e1e;
+    color: #cccccc;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background: #2a2a2a;
+    color: white;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    border-color: #00c6ff;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(0, 114, 255, 0.5);
+}
