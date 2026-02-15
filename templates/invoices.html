@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 
 <div class="dashboard-header">
@@ -13,55 +12,55 @@
 <!-- KPI STRIP -->
 <div class="dashboard-cards enhanced">
 
+    <!-- TOTAL INVOICES -->
     <div class="card kpi">
-        <h2>{{ invoices|length }}</h2>
+        <h2 class="count-up" data-target="{{ invoices|length }}">0</h2>
         <p>Total Invoices</p>
-        <small class="card-sub">Across last 30 days</small>
+        <small class="card-sub">Last 30 Days</small>
     </div>
 
+    <!-- TOTAL REVENUE -->
     <div class="card kpi green">
-        <h2>
-            ${{ "{:,.2f}".format(invoices | sum(attribute=2)) if invoices else "0.00" }}
-        </h2>
+        {% set total_revenue = invoices | sum(attribute=2) if invoices else 0 %}
+        <h2>${{ "{:,.2f}".format(total_revenue) }}</h2>
         <p>Total Revenue</p>
-        <small class="card-sub">Across last 30 days</small>
+        <small class="card-sub">Last 30 Days</small>
     </div>
 
+    <!-- THIS MONTH -->
     <div class="card kpi blue">
         <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
 
-        {% set total_revenue = invoices | sum(attribute=2) if invoices else 0 %}
         {% if total_revenue > 0 %}
             {% set growth = ((monthly_revenue / total_revenue) * 100) | round(1) %}
             <small class="card-sub">
                 {{ growth }}% of total revenue
             </small>
         {% else %}
-            <small class="card-sub">
-                No revenue data yet
-            </small>
+            <small class="card-sub">No revenue data yet</small>
         {% endif %}
     </div>
 
+    <!-- AVG INVOICE -->
     <div class="card kpi purple">
         <h2>
             {% if invoices %}
-                ${{ "{:,.2f}".format((invoices | sum(attribute=2)) / (invoices|length)) }}
+                ${{ "{:,.2f}".format(total_revenue / (invoices|length)) }}
             {% else %}
-                0.00
+                $0.00
             {% endif %}
         </h2>
         <p>Avg Invoice</p>
-        <small class="card-sub">Across last 30 days</small>
+        <small class="card-sub">Last 30 Days</small>
     </div>
 
+    <!-- PAID COUNT -->
     <div class="card kpi teal">
-        <h2>
-            {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
-        </h2>
+        {% set paid_count = invoices | selectattr(4, "equalto", "Paid") | list | length %}
+        <h2>{{ paid_count }}</h2>
         <p>Paid</p>
-        <small class="card-sub">Across last 30 days</small>
+        <small class="card-sub">Invoices Completed</small>
     </div>
 
 </div>
@@ -102,8 +101,14 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
     }
 });
 </script>
@@ -134,25 +139,16 @@ new Chart(statusCtx, {
     },
     options: {
         responsive: true,
-        plugins: { legend: { position: 'bottom' } }
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
     }
 });
 </script>
 
 {% endif %}
-
-<!-- STATUS SUMMARY -->
-<div class="status-summary">
-    <div class="status-item paid">
-        Paid: {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
-    </div>
-    <div class="status-item sent">
-        Sent: {{ invoices | selectattr(4, "equalto", "Sent") | list | length }}
-    </div>
-    <div class="status-item draft">
-        Draft: {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
-    </div>
-</div>
 
 <!-- SEARCH -->
 <div class="search-bar modern">
@@ -168,16 +164,16 @@ new Chart(statusCtx, {
 <div class="card chart-card">
     <div class="chart-header">
         <h3>Top Clients</h3>
-        <span class="chart-sub">By total revenue</span>
+        <span class="chart-sub">Ranked by revenue</span>
     </div>
 
-    <ul class="leaderboard">
-        {% set clients = {} %}
-        {% for invoice in invoices %}
-            {% set _ = clients.update({invoice[1]: clients.get(invoice[1], 0) + invoice[2]}) %}
-        {% endfor %}
+    {% set clients = {} %}
+    {% for invoice in invoices %}
+        {% set _ = clients.update({invoice[1]: clients.get(invoice[1], 0) + invoice[2]}) %}
+    {% endfor %}
 
-        {% for client, total in clients.items() | sort(attribute=1, reverse=True) %}
+    <ul class="leaderboard">
+        {% for client, total in clients|dictsort(by='value', reverse=True) %}
             <li>
                 <span>{{ client }}</span>
                 <strong>${{ "{:,.2f}".format(total) }}</strong>
@@ -186,6 +182,7 @@ new Chart(statusCtx, {
     </ul>
 </div>
 
+<!-- TABLE -->
 <div class="table-wrapper">
 <table class="modern-table">
     <thead>
