@@ -30,7 +30,18 @@
     <div class="card kpi blue">
         <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
-        <small class="card-sub">Across last 30 days</small>
+
+        {% set total_revenue = invoices | sum(attribute=2) if invoices else 0 %}
+        {% if total_revenue > 0 %}
+            {% set growth = ((monthly_revenue / total_revenue) * 100) | round(1) %}
+            <small class="card-sub">
+                {{ growth }}% of total revenue
+            </small>
+        {% else %}
+            <small class="card-sub">
+                No revenue data yet
+            </small>
+        {% endif %}
     </div>
 
     <div class="card kpi purple">
@@ -107,7 +118,59 @@ new Chart(ctx, {
 });
 </script>
 
+<!-- STATUS DISTRIBUTION DONUT -->
+<div class="card chart-card">
+    <div class="chart-header">
+        <h3>Status Distribution</h3>
+        <span class="chart-sub">Paid vs Sent vs Draft</span>
+    </div>
+    <canvas id="statusChart"></canvas>
+</div>
+
+<script>
+const statusCtx = document.getElementById('statusChart');
+
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Paid', 'Sent', 'Draft'],
+        datasets: [{
+            data: [
+                {{ invoices | selectattr(4, "equalto", "Paid") | list | length }},
+                {{ invoices | selectattr(4, "equalto", "Sent") | list | length }},
+                {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+
 {% endif %}
+
+<div class="status-summary">
+    <div class="status-item paid">
+        Paid:
+        {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
+    </div>
+
+    <div class="status-item sent">
+        Sent:
+        {{ invoices | selectattr(4, "equalto", "Sent") | list | length }}
+    </div>
+
+    <div class="status-item draft">
+        Draft:
+        {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
+    </div>
+</div>
 
 <!-- SEARCH -->
 <div class="search-bar modern">
@@ -119,58 +182,28 @@ new Chart(ctx, {
 
 {% if invoices %}
 
+<!-- TOP CLIENTS LEADERBOARD -->
+<div class="card chart-card">
+    <div class="chart-header">
+        <h3>Top Clients</h3>
+        <span class="chart-sub">By total revenue</span>
+    </div>
+
+    <ul class="leaderboard">
+        {% set clients = {} %}
+        {% for invoice in invoices %}
+            {% set _ = clients.update({invoice[1]: clients.get(invoice[1], 0) + invoice[2]}) %}
+        {% endfor %}
+
+        {% for client, total in clients.items() | sort(attribute=1, reverse=True) %}
+            <li>
+                <span>{{ client }}</span>
+                <strong>${{ "{:,.2f}".format(total) }}</strong>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
 <div class="table-wrapper">
 
 <table class="modern-table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Client</th>
-            <th>Total</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-
-    <tbody>
-    {% for invoice in invoices %}
-        <tr>
-            <td>#{{ invoice[0] }}</td>
-            <td>{{ invoice[1] }}</td>
-            <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-            <td>{{ invoice[3] }}</td>
-
-            <td>
-                {% if invoice[4] == "Paid" %}
-                    <span class="badge paid">Paid</span>
-                {% elif invoice[4] == "Sent" %}
-                    <span class="badge sent">Sent</span>
-                {% else %}
-                    <span class="badge draft">Draft</span>
-                {% endif %}
-            </td>
-
-            <td class="action-buttons">
-                <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
-                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-                <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-</div>
-
-{% else %}
-
-<div class="empty-state">
-    <h3>No invoices yet</h3>
-    <p>Create your first invoice to get started.</p>
-    <a class="btn" href="/">Create Invoice</a>
-</div>
-
-{% endif %}
-
-{% endblock %}
