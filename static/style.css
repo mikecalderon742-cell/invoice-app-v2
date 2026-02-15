@@ -1159,3 +1159,64 @@ table th {
     padding: 10px 0;
     border-bottom: 1px solid rgba(255,255,255,.05);
 }
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-filters {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.kpi {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.kpi:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.dashboard-cards,
+.chart-card,
+.table-wrapper {
+    animation: fadeUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+.dashboard-cards { animation-delay: 0.1s; }
+.chart-card { animation-delay: 0.2s; }
+.table-wrapper { animation-delay: 0.3s; }
+
+@keyframes fadeUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

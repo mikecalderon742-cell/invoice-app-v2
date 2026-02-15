@@ -70,30 +70,42 @@
 <!-- REVENUE CHART -->
 <div class="card chart-card">
     <div class="chart-header">
+    <div>
         <h3>Revenue Trend</h3>
         <span class="chart-sub">Performance by Invoice</span>
     </div>
+
+    <div class="chart-filters">
+        <button class="filter-btn active" data-range="30">30D</button>
+        <button class="filter-btn" data-range="90">90D</button>
+        <button class="filter-btn" data-range="all">All</button>
+    </div>
+</div>
     <canvas id="revenueChart"></canvas>
 </div>
 
 <script>
-const ctx = document.getElementById('revenueChart');
+const revenueCtx = document.getElementById('revenueChart');
 
-new Chart(ctx, {
+const allLabels = [
+    {% for invoice in invoices %}
+        "Invoice #{{ invoice[0] }}",
+    {% endfor %}
+];
+
+const allData = [
+    {% for invoice in invoices %}
+        {{ invoice[2] }},
+    {% endfor %}
+];
+
+const revenueChart = new Chart(revenueCtx, {
     type: 'line',
     data: {
-        labels: [
-            {% for invoice in invoices %}
-                "Invoice #{{ invoice[0] }}",
-            {% endfor %}
-        ],
+        labels: allLabels,
         datasets: [{
             label: 'Revenue',
-            data: [
-                {% for invoice in invoices %}
-                    {{ invoice[2] }},
-                {% endfor %}
-            ],
+            data: allData,
             borderWidth: 3,
             tension: 0.4,
             fill: true
@@ -101,15 +113,34 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
-        plugins: {
-            legend: { display: false }
+        animation: {
+            duration: 1000,
+            easing: 'easeOutQuart'
         },
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
     }
+});
+
+// Filter logic
+document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+
+        const range = this.dataset.range;
+
+        if (range === "all") {
+            revenueChart.data.labels = allLabels;
+            revenueChart.data.datasets[0].data = allData;
+        } else {
+            const limit = parseInt(range);
+            revenueChart.data.labels = allLabels.slice(-limit);
+            revenueChart.data.datasets[0].data = allData.slice(-limit);
+        }
+
+        revenueChart.update();
+    });
 });
 </script>
 
