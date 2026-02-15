@@ -68,7 +68,7 @@
 
 {% if invoices %}
 
-<!-- REVENUE CHART CARD -->
+<!-- REVENUE CHART -->
 <div class="card chart-card">
     <div class="chart-header">
         <h3>Revenue Trend</h3>
@@ -80,25 +80,21 @@
 <script>
 const ctx = document.getElementById('revenueChart');
 
-const labels = [
-{% for invoice in invoices %}
-"Invoice #{{ invoice[0] }}",
-{% endfor %}
-];
-
-const data = [
-{% for invoice in invoices %}
-{{ invoice[2] }},
-{% endfor %}
-];
-
 new Chart(ctx, {
     type: 'line',
     data: {
-        labels: labels,
+        labels: [
+            {% for invoice in invoices %}
+                "Invoice #{{ invoice[0] }}",
+            {% endfor %}
+        ],
         datasets: [{
             label: 'Revenue',
-            data: data,
+            data: [
+                {% for invoice in invoices %}
+                    {{ invoice[2] }},
+                {% endfor %}
+            ],
             borderWidth: 3,
             tension: 0.4,
             fill: true
@@ -106,19 +102,13 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
     }
 });
 </script>
 
-<!-- STATUS DISTRIBUTION DONUT -->
+<!-- STATUS DONUT -->
 <div class="card chart-card">
     <div class="chart-header">
         <h3>Status Distribution</h3>
@@ -144,31 +134,23 @@ new Chart(statusCtx, {
     },
     options: {
         responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
+        plugins: { legend: { position: 'bottom' } }
     }
 });
 </script>
 
 {% endif %}
 
+<!-- STATUS SUMMARY -->
 <div class="status-summary">
     <div class="status-item paid">
-        Paid:
-        {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
+        Paid: {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
     </div>
-
     <div class="status-item sent">
-        Sent:
-        {{ invoices | selectattr(4, "equalto", "Sent") | list | length }}
+        Sent: {{ invoices | selectattr(4, "equalto", "Sent") | list | length }}
     </div>
-
     <div class="status-item draft">
-        Draft:
-        {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
+        Draft: {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
     </div>
 </div>
 
@@ -182,7 +164,7 @@ new Chart(statusCtx, {
 
 {% if invoices %}
 
-<!-- TOP CLIENTS LEADERBOARD -->
+<!-- TOP CLIENTS -->
 <div class="card chart-card">
     <div class="chart-header">
         <h3>Top Clients</h3>
@@ -205,5 +187,52 @@ new Chart(statusCtx, {
 </div>
 
 <div class="table-wrapper">
-
 <table class="modern-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Client</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for invoice in invoices %}
+        <tr>
+            <td>#{{ invoice[0] }}</td>
+            <td>{{ invoice[1] }}</td>
+            <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
+            <td>{{ invoice[3] }}</td>
+            <td>
+                {% if invoice[4] == "Paid" %}
+                    <span class="badge paid">Paid</span>
+                {% elif invoice[4] == "Sent" %}
+                    <span class="badge sent">Sent</span>
+                {% else %}
+                    <span class="badge draft">Draft</span>
+                {% endif %}
+            </td>
+            <td class="action-buttons">
+                <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
+                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+                <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% else %}
+
+<div class="empty-state">
+    <h3>No invoices yet</h3>
+    <p>Create your first invoice to get started.</p>
+    <a class="btn" href="/">Create Invoice</a>
+</div>
+
+{% endif %}
+
+{% endblock %}
