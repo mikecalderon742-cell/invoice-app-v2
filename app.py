@@ -7,6 +7,26 @@ from datetime import datetime
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
 app = Flask(__name__)
 @app.context_processor
 def inject_now():
