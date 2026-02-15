@@ -16,6 +16,7 @@
     <div class="card kpi">
         <h2>{{ invoices|length }}</h2>
         <p>Total Invoices</p>
+        <small class="card-sub">Across last 30 days</small>
     </div>
 
     <div class="card kpi green">
@@ -23,11 +24,13 @@
             ${{ "{:,.2f}".format(invoices | sum(attribute=2)) if invoices else "0.00" }}
         </h2>
         <p>Total Revenue</p>
+        <small class="card-sub">Across last 30 days</small>
     </div>
 
     <div class="card kpi blue">
         <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
+        <small class="card-sub">Across last 30 days</small>
     </div>
 
     <div class="card kpi purple">
@@ -39,6 +42,7 @@
             {% endif %}
         </h2>
         <p>Avg Invoice</p>
+        <small class="card-sub">Across last 30 days</small>
     </div>
 
     <div class="card kpi teal">
@@ -46,6 +50,7 @@
             {{ invoices | selectattr(4, "equalto", "Paid") | list | length }}
         </h2>
         <p>Paid</p>
+        <small class="card-sub">Across last 30 days</small>
     </div>
 
 </div>

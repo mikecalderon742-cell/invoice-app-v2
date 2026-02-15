@@ -1027,3 +1027,102 @@ body {
     }
 
 }
+
+/* ===== DASHBOARD CARD ULTRA POLISH ===== */
+
+.dashboard-cards .card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    backdrop-filter: blur(14px);
+    transition: all .35s ease;
+}
+
+.dashboard-cards .card:hover {
+    transform: translateY(-6px) scale(1.02);
+}
+
+/* Shine sweep */
+.dashboard-cards .card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(
+        110deg,
+        transparent,
+        rgba(255,255,255,0.25),
+        transparent
+    );
+    transition: 0.7s;
+}
+
+.dashboard-cards .card:hover::after {
+    left: 140%;
+}
+
+/* ===== COLOR IDENTITY (UPGRADED) ===== */
+
+.card.blue {
+    background: linear-gradient(135deg,#2563eb,#1e40af);
+    box-shadow: 0 10px 30px rgba(37,99,235,.35);
+}
+
+.card.green {
+    background: linear-gradient(135deg,#10b981,#047857);
+    box-shadow: 0 10px 30px rgba(16,185,129,.35);
+}
+
+.card.orange {
+    background: linear-gradient(135deg,#f97316,#c2410c);
+    box-shadow: 0 10px 30px rgba(249,115,22,.35);
+}
+
+.card.purple {
+    background: linear-gradient(135deg,#8b5cf6,#6d28d9);
+    box-shadow: 0 10px 30px rgba(139,92,246,.35);
+}
+
+.card.teal {
+    background: linear-gradient(135deg,#14b8a6,#0f766e);
+    box-shadow: 0 10px 30px rgba(20,184,166,.35);
+}
+
+/* ===== CARD TEXT POLISH ===== */
+
+.card h2 {
+    font-size: 32px;
+    margin-bottom: 6px;
+}
+
+.card p {
+    opacity: .9;
+    font-weight: 500;
+}
+
+/* ===== TABLE PREMIUM FEEL ===== */
+
+table tr {
+    transition: background .2s ease, transform .2s ease;
+}
+
+table tr:hover {
+    background: rgba(255,255,255,.04);
+    transform: scale(1.01);
+}
+
+/* Sticky header */
+table th {
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(8px);
+}
+
+.card-sub {
+    display: block;
+    font-size: 13px;
+    opacity: .8;
+    margin-top: 6px;
+}
