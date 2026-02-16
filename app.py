@@ -179,7 +179,7 @@ def invoices_page():
             overdue_list.append(invoice_id)
 
         processed_invoices.append(
-            (invoice_id, client, amount, created_at status)
+            (invoice_id, client, amount, created_at, status)
         )
 
     overdue_count = len(overdue_list)
