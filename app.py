@@ -261,7 +261,7 @@ def invoices_page():
     status_distribution=status_distribution,
     top_clients=top_clients,
     overdue_list=overdue_list,
-    overdue_count=overdue_count
+    overdue_count=overdue_count,
     revenue_growth=revenue_growth
 )
 
