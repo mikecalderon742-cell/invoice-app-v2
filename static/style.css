@@ -1337,3 +1337,9 @@ body.dark .btn-secondary {
 body.dark .chart-card.brand-accent {
     border-top: 4px solid #151B54;
 }
+
+.analytics-card {
+    border: 2px solid #151B54;
+    border-radius: 12px;
+    padding: 20px;
+}
