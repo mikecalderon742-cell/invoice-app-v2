@@ -11,16 +11,6 @@
 
 <!-- STEP 1: Overdue Detection Logic -->
 {% if invoices %}
-    {% set today = namespace(value=now().date()) %}
-    {% set overdue_list = [] %}
-
-    {% for invoice in invoices %}
-        {% if invoice[4] != "Paid" and invoice[3] < today.value %}
-            {% set _ = overdue_list.append(invoice) %}
-        {% endif %}
-    {% endfor %}
-
-    {% set overdue_count = overdue_list | length %}
 {% else %}
     {% set overdue_count = 0 %}
 {% endif %}
@@ -276,7 +266,7 @@ new Chart(statusCtx, {
         {% for invoice in invoices %}
         <!-- STEP 4: Row Highlight Logic -->
         <tr class="
-            {% if invoice in overdue_list %}row-overdue
+            {% if invoice[0] in overdue_list %}row-overdue
             {% elif invoice[4] == 'Paid' %}row-paid
             {% elif invoice[4] == 'Draft' %}row-draft
             {% endif %}

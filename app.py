@@ -148,6 +148,36 @@ def invoices_page():
             if invoice_date >= cutoff:
                 filtered.append(invoice)
         invoices = filtered
+    # -------------------------
+    # OVERDUE DETECTION (Phase 3A Fix)
+    # -------------------------
+
+    from datetime import date
+
+    today = date.today()
+    overdue_list = []
+
+    processed_invoices = []
+
+    for invoice in invoices:
+        invoice_id, client, amount, created_at = invoice
+
+        # Convert stored string to date object
+        invoice_datetime = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+        invoice_date = invoice_datetime.date()
+
+        # Since you don't have a status column yet,
+        # we treat all invoices as unpaid for overdue logic
+        if invoice_date < today:
+            overdue_list.append(invoice_id)
+
+        processed_invoices.append(
+            (invoice_id, client, amount, created_at)
+        )
+
+    overdue_count = len(overdue_list)
+
+    invoices = processed_invoices
 
     # -------------------------
     # ANALYTICS (NEW - STEP A)
@@ -191,15 +221,16 @@ def invoices_page():
     )
 
     return render_template(
-        "invoices.html",
-        invoices=invoices,
-        monthly_revenue=monthly_revenue,
-        active_range=range_filter,
-        revenue_trend=revenue_trend,
-        status_distribution=status_distribution,
-        top_clients=top_clients
-    )
-
+    "invoices.html",
+    invoices=invoices,
+    monthly_revenue=monthly_revenue,
+    active_range=range_filter,
+    revenue_trend=revenue_trend,
+    status_distribution=status_distribution,
+    top_clients=top_clients,
+    overdue_list=overdue_list,
+    overdue_count=overdue_count
+)
 
 # -------------------------
 # EDIT
