@@ -135,7 +135,7 @@ const revenueChart = new Chart(revenueCtx, {
 </script>
 
 <!-- STATUS DONUT -->
-<div class="chart-card brand-accent">
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
     <div class="chart-header">
         <h3>Status Distribution</h3>
         <span class="chart-sub">Paid vs Sent vs Draft</span>
@@ -155,14 +155,28 @@ new Chart(statusCtx, {
                 {{ invoices | selectattr(4, "equalto", "Paid") | list | length }},
                 {{ invoices | selectattr(4, "equalto", "Sent") | list | length }},
                 {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
-            ]
+            ],
+            borderWidth: 2,
+            hoverOffset: 12
         }]
     },
     options: {
         responsive: true,
+        cutout: '65%',
+        animation: {
+            animateScale: true,
+            animateRotate: true,
+            duration: 1000
+        },
         plugins: {
             legend: {
-                position: 'bottom'
+                position: 'bottom',
+                labels: {
+                    font: {
+                        weight: 'bold'
+                    },
+                    padding: 20
+                }
             }
         }
     }
