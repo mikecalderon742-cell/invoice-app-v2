@@ -21,12 +21,19 @@ def init_db():
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            client TEXT NOT NULL,
-            amount REAL NOT NULL,
-            created_at TEXT
-        )
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client TEXT NOT NULL,
+    amount REAL NOT NULL,
+    created_at TEXT,
+    status TEXT DEFAULT 'Sent'
+)
     """)
+
+    # Add status column if it doesn't exist (safe migration)
+    try:
+        c.execute("ALTER TABLE invoices ADD COLUMN status TEXT DEFAULT 'Sent'")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoice_items (
@@ -107,9 +114,9 @@ def save():
     c = conn.cursor()
 
     c.execute(
-        "INSERT INTO invoices (client, amount, created_at) VALUES (?, ?, ?)",
-        (client, total, created_at),
-    )
+    "INSERT INTO invoices (client, amount, created_at, status) VALUES (?, ?, ?, ?)",
+    (client, total, created_at, "Sent"),
+)
     invoice_id = c.lastrowid
 
     for desc, amt in cleaned_items:
@@ -133,7 +140,7 @@ def invoices_page():
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, client, amount, created_at FROM invoices ORDER BY created_at DESC")
+    cursor.execute("SELECT id, client, amount, created_at, status FROM invoices ORDER BY created_at DESC")
     invoices = cursor.fetchall()
     conn.close()
 
@@ -160,7 +167,7 @@ def invoices_page():
     processed_invoices = []
 
     for invoice in invoices:
-        invoice_id, client, amount, created_at = invoice
+        invoice_id, client, amount, created_at, status = invoice
 
         # Convert stored string to date object
         invoice_datetime = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
@@ -168,11 +175,11 @@ def invoices_page():
 
         # Since you don't have a status column yet,
         # we treat all invoices as unpaid for overdue logic
-        if invoice_date < today:
+        if status != "Paid" and invoice_date < today:
             overdue_list.append(invoice_id)
 
         processed_invoices.append(
-            (invoice_id, client, amount, created_at)
+            (invoice_id, client, amount, created_at status)
         )
 
     overdue_count = len(overdue_list)
