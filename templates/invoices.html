@@ -68,24 +68,31 @@
 {% if invoices %}
 
 <!-- REVENUE CHART -->
-<div class="card analytics-card" style="border: 2px solid #151B54;">
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
     <div class="chart-header">
-        <div>
-            <h3>Revenue Trend</h3>
-            <span class="chart-sub">Performance by Invoice</span>
-        </div>
-
-        <div class="chart-filters">
-            <button class="filter-btn {% if active_range == '30' %}active{% endif %}" data-range="30">30D</button>
-            <button class="filter-btn {% if active_range == '90' %}active{% endif %}" data-range="90">90D</button>
-            <button class="filter-btn {% if active_range == 'all' %}active{% endif %}" data-range="all">All</button>
-        </div>
+    <div>
+        <h3>Revenue Trend</h3>
+        <span class="chart-sub">Performance by Invoice</span>
     </div>
+
+    <div class="chart-filters">
+        <button class="filter-btn {% if active_range == '30' %}active{% endif %}" 
+        onclick="window.location='?range=30'">30D</button>
+
+<button class="filter-btn {% if active_range == '90' %}active{% endif %}" 
+        onclick="window.location='?range=90'">90D</button>
+
+<button class="filter-btn {% if active_range == 'all' %}active{% endif %}" 
+        onclick="window.location='?range=all'">All</button>
+    </div>
+</div>
     <canvas id="revenueChart"></canvas>
 </div>
 
+<!-- STEP 1: Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- STEP 2 & 3: Safer Chart Script (No structural changes) -->
 <script>
 const revenueCtx = document.getElementById('revenueChart');
 
@@ -109,7 +116,7 @@ const revenueChart = new Chart(revenueCtx, {
             label: 'Revenue',
             data: allData,
             borderColor: '#151B54',
-            backgroundColor: 'rgba(21,27,84,0.1)',
+            backgroundColor: 'rgba(21,27,84,0.08)',
             borderWidth: 3,
             tension: 0.4,
             fill: true
@@ -125,30 +132,7 @@ const revenueChart = new Chart(revenueCtx, {
         scales: { y: { beginAtZero: true } }
     }
 });
-
-// Filter logic
-document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", function() {
-        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-        this.classList.add("active");
-
-        const range = this.dataset.range;
-
-        if (range === "all") {
-            revenueChart.data.labels = allLabels;
-            revenueChart.data.datasets[0].data = allData;
-        } else {
-            const limit = parseInt(range);
-            revenueChart.data.labels = allLabels.slice(-limit);
-            revenueChart.data.datasets[0].data = allData.slice(-limit);
-        }
-
-        revenueChart.update();
-    });
-});
 </script>
-
-{% endif %}
 
 <!-- STATUS DONUT -->
 <div class="chart-card brand-accent">
@@ -185,6 +169,88 @@ new Chart(statusCtx, {
 });
 </script>
 
-<!-- ... rest of your template remains completely unchanged ... -->
+{% endif %}
+
+<!-- SEARCH -->
+<div class="search-bar modern">
+    <form method="GET" action="/invoices">
+        <input type="text" name="search" placeholder="Search by client name">
+        <button type="submit" class="btn">Search</button>
+    </form>
+</div>
+
+{% if invoices %}
+
+<!-- TOP CLIENTS -->
+<div class="chart-card brand-accent">
+    <div class="chart-header">
+        <h3>Top Clients</h3>
+        <span class="chart-sub">Ranked by revenue</span>
+    </div>
+
+    {% set clients = {} %}
+    {% for invoice in invoices %}
+        {% set _ = clients.update({invoice[1]: clients.get(invoice[1], 0) + invoice[2]}) %}
+    {% endfor %}
+
+    <ul class="leaderboard">
+        {% for client, total in clients|dictsort(by='value', reverse=True) %}
+            <li>
+                <span>{{ client }}</span>
+                <strong>${{ "{:,.2f}".format(total) }}</strong>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrapper">
+<table class="modern-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Client</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for invoice in invoices %}
+        <tr>
+            <td>#{{ invoice[0] }}</td>
+            <td>{{ invoice[1] }}</td>
+            <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
+            <td>{{ invoice[3] }}</td>
+            <td>
+                {% if invoice[4] == "Paid" %}
+                    <span class="badge paid">Paid</span>
+                {% elif invoice[4] == "Sent" %}
+                    <span class="badge sent">Sent</span>
+                {% else %}
+                    <span class="badge draft">Draft</span>
+                {% endif %}
+            </td>
+            <td class="action-buttons">
+                <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
+                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+                <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% else %}
+
+<div class="empty-state">
+    <h3>No invoices yet</h3>
+    <p>Create your first invoice to get started.</p>
+    <a class="btn" href="/">Create Invoice</a>
+</div>
+
+{% endif %}
 
 {% endblock %}
