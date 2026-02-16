@@ -356,10 +356,21 @@ new Chart(statusCtx, {
                 {% endif %}
             </td>
             <td class="action-buttons">
-                <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
-                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-                <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
-            </td>
+    <a class="btn btn-secondary" href="/edit/{{ invoice[0] }}">Edit</a>
+
+    {% if invoice[4] != "Paid" %}
+        <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
+            Mark Paid
+        </a>
+    {% else %}
+        <a class="btn btn-warning" href="/update-status/{{ invoice[0] }}/Sent">
+            Mark Sent
+        </a>
+    {% endif %}
+
+    <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+    <a class="btn" href="/history-pdf/{{ invoice[0] }}">PDF</a>
+</td>
         </tr>
         {% endfor %}
     </tbody>

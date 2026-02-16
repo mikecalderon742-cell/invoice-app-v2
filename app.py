@@ -339,6 +339,23 @@ def update(invoice_id):
 
     return redirect("/invoices")
 
+# -------------------------
+# UPDATE STATUS
+# -------------------------
+@app.route("/update-status/<int:invoice_id>/<string:new_status>")
+def update_status(invoice_id, new_status):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute(
+        "UPDATE invoices SET status = ? WHERE id = ?",
+        (new_status, invoice_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/invoices")
 
 # -------------------------
 # DELETE
