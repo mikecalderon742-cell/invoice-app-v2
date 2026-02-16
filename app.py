@@ -167,31 +167,27 @@ def invoices_page():
     processed_invoices = []
 
     for invoice in invoices:
-        invoice_id, client, amount, created_at, status = invoice
+    invoice_id, client, amount, created_at, due_date, status = invoice
 
-        # Convert stored string to date object
-        invoice_datetime = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
-        invoice_date = invoice_datetime.date()
+    due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
 
-        # Since you don't have a status column yet,
-        # we treat all invoices as unpaid for overdue logic
-        if status != "Paid" and invoice_date < today:
-    status = "Overdue"
-    overdue_list.append(invoice_id)
+    if status != "Paid" and due_date_obj < today:
+        status = "Overdue"
 
-    # Update DB status automatically
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(
-        "UPDATE invoices SET status = ? WHERE id = ?",
-        ("Overdue", invoice_id)
-    )
-    conn.commit()
-    conn.close()
-
-        processed_invoices.append(
-            (invoice_id, client, amount, created_at, status)
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute(
+            "UPDATE invoices SET status = ? WHERE id = ?",
+            ("Overdue", invoice_id)
         )
+        conn.commit()
+        conn.close()
+
+        overdue_list.append(invoice_id)
+
+    processed_invoices.append(
+        (invoice_id, client, amount, created_at, due_date, status)
+    )
 
     overdue_count = len(overdue_list)
 
