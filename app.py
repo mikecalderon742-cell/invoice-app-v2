@@ -176,7 +176,18 @@ def invoices_page():
         # Since you don't have a status column yet,
         # we treat all invoices as unpaid for overdue logic
         if status != "Paid" and invoice_date < today:
-            overdue_list.append(invoice_id)
+    status = "Overdue"
+    overdue_list.append(invoice_id)
+
+    # Update DB status automatically
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        "UPDATE invoices SET status = ? WHERE id = ?",
+        ("Overdue", invoice_id)
+    )
+    conn.commit()
+    conn.close()
 
         processed_invoices.append(
             (invoice_id, client, amount, created_at, status)
