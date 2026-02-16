@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import sqlite3
 from pathlib import Path
 import io
+from collections import defaultdict
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
@@ -148,7 +149,41 @@ def invoices_page():
                 filtered.append(invoice)
         invoices = filtered
 
-    # Monthly revenue
+    # -------------------------
+    # ANALYTICS (NEW - STEP A)
+    # -------------------------
+
+    # 1. Revenue Trend (last 6 months)
+    revenue_by_month = defaultdict(float)
+
+    for invoice in invoices:
+        invoice_date = datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S")
+        month_key = invoice_date.strftime("%Y-%m")
+        revenue_by_month[month_key] += invoice[2]
+
+    sorted_months = sorted(revenue_by_month.keys())
+    revenue_trend = [
+        {"month": month, "total": revenue_by_month[month]}
+        for month in sorted_months
+    ]
+
+    # 2. Status Distribution (placeholder: all Paid)
+    status_distribution = {
+        "Paid": len(invoices)
+    }
+
+    # 3. Top Clients
+    client_totals = defaultdict(float)
+    for invoice in invoices:
+        client_totals[invoice[1]] += invoice[2]
+
+    top_clients = sorted(
+        client_totals.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:5]
+
+    # 4. Monthly Revenue (current month)
     current_month = datetime.now().month
     monthly_revenue = sum(
         invoice[2] for invoice in invoices
@@ -159,7 +194,10 @@ def invoices_page():
         "invoices.html",
         invoices=invoices,
         monthly_revenue=monthly_revenue,
-        active_range=range_filter
+        active_range=range_filter,
+        revenue_trend=revenue_trend,
+        status_distribution=status_distribution,
+        top_clients=top_clients
     )
 
 
