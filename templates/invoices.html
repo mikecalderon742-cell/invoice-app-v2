@@ -152,6 +152,63 @@ const revenueChart = new Chart(revenueCtx, {
 });
 </script>
 
+<!-- MONTHLY REVENUE GROUPED CHART -->
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
+    <div class="chart-header">
+        <div>
+            <h3>Monthly Revenue</h3>
+            <span class="chart-sub">Grouped by month</span>
+        </div>
+    </div>
+    <canvas id="monthlyRevenueChart"></canvas>
+</div>
+
+<script>
+const monthlyCtx = document.getElementById('monthlyRevenueChart');
+
+const monthlyLabels = [
+    {% for entry in revenue_trend %}
+        "{{ entry.month }}",
+    {% endfor %}
+];
+
+const monthlyData = [
+    {% for entry in revenue_trend %}
+        {{ entry.total }},
+    {% endfor %}
+];
+
+new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: monthlyLabels,
+        datasets: [{
+            label: 'Monthly Revenue',
+            data: monthlyData,
+            backgroundColor: 'rgba(21,27,84,0.7)',
+            borderColor: '#151B54',
+            borderWidth: 2,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        animation: {
+            duration: 1000,
+            easing: 'easeOutQuart'
+        },
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+
 <!-- STATUS DONUT -->
 <div class="chart-card brand-accent" style="border: 2px solid #151B54;">
     <div class="chart-header">
