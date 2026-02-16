@@ -9,6 +9,29 @@
     </div>
 </div>
 
+<!-- STEP 1: Overdue Detection Logic -->
+{% if invoices %}
+    {% set today = namespace(value=now().date()) %}
+    {% set overdue_list = [] %}
+
+    {% for invoice in invoices %}
+        {% if invoice[4] != "Paid" and invoice[3] < today.value %}
+            {% set _ = overdue_list.append(invoice) %}
+        {% endif %}
+    {% endfor %}
+
+    {% set overdue_count = overdue_list | length %}
+{% else %}
+    {% set overdue_count = 0 %}
+{% endif %}
+
+<!-- STEP 2: Overdue Alert Banner -->
+{% if overdue_count > 0 %}
+<div class="alert-overdue">
+    ⚠ {{ overdue_count }} invoice{{ 's' if overdue_count > 1 else '' }} overdue.
+</div>
+{% endif %}
+
 <!-- KPI STRIP -->
 <div class="dashboard-cards enhanced">
 
@@ -63,6 +86,13 @@
         <small class="card-sub">Invoices Completed</small>
     </div>
 
+    <!-- STEP 3: OVERDUE KPI -->
+    <div class="card kpi red">
+        <h2>{{ overdue_count }}</h2>
+        <p>Overdue</p>
+        <small class="card-sub">Requires Attention</small>
+    </div>
+
 </div>
 
 {% if invoices %}
@@ -89,10 +119,8 @@
     <canvas id="revenueChart"></canvas>
 </div>
 
-<!-- STEP 1: Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- STEP 2 & 3: Safer Chart Script (No structural changes) -->
 <script>
 const revenueCtx = document.getElementById('revenueChart');
 
@@ -208,27 +236,27 @@ new Chart(statusCtx, {
     {% endfor %}
 
     {% set sorted_clients = clients|dictsort(by='value', reverse=True) %}
-{% set max_value = sorted_clients[0][1] if sorted_clients else 1 %}
+    {% set max_value = sorted_clients[0][1] if sorted_clients else 1 %}
 
-<ul class="leaderboard premium">
-    {% for client, total in sorted_clients %}
-        {% set percentage = ((total / max_value) * 100) | round(1) %}
-        <li class="leader-item">
-            <div class="leader-left">
-                <span class="rank">#{{ loop.index }}</span>
-                <span class="client-name">{{ client }}</span>
-            </div>
+    <ul class="leaderboard premium">
+        {% for client, total in sorted_clients %}
+            {% set percentage = ((total / max_value) * 100) | round(1) %}
+            <li class="leader-item">
+                <div class="leader-left">
+                    <span class="rank">#{{ loop.index }}</span>
+                    <span class="client-name">{{ client }}</span>
+                </div>
 
-            <div class="leader-right">
-                <span class="amount">${{ "{:,.2f}".format(total) }}</span>
-            </div>
+                <div class="leader-right">
+                    <span class="amount">${{ "{:,.2f}".format(total) }}</span>
+                </div>
 
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: {{ percentage }}%;"></div>
-            </div>
-        </li>
-    {% endfor %}
-</ul>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ percentage }}%;"></div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
 </div>
 
 <!-- TABLE -->
@@ -246,7 +274,13 @@ new Chart(statusCtx, {
     </thead>
     <tbody>
         {% for invoice in invoices %}
-        <tr>
+        <!-- STEP 4: Row Highlight Logic -->
+        <tr class="
+            {% if invoice in overdue_list %}row-overdue
+            {% elif invoice[4] == 'Paid' %}row-paid
+            {% elif invoice[4] == 'Draft' %}row-draft
+            {% endif %}
+        ">
             <td>#{{ invoice[0] }}</td>
             <td>{{ invoice[1] }}</td>
             <td>${{ "{:,.2f}".format(invoice[2]) }}</td>

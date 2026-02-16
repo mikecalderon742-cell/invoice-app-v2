@@ -1397,3 +1397,31 @@ body.dark .chart-card.brand-accent {
     background: #151B54;
     transition: width 0.6s ease;
 }
+
+/* ===== Phase 3A Status Intelligence ===== */
+
+.alert-overdue {
+    background: #3a0000;
+    color: #ff4d4d;
+    padding: 12px 18px;
+    border: 2px solid #151B54;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.card.kpi.red {
+    border: 2px solid #151B54;
+}
+
+.row-overdue {
+    background: rgba(255, 0, 0, 0.08);
+}
+
+.row-paid {
+    background: rgba(0, 255, 100, 0.05);
+}
+
+.row-draft {
+    background: rgba(255, 255, 255, 0.03);
+}
