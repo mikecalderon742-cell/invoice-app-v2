@@ -1252,3 +1252,76 @@ table th {
     font-weight: 700;
     box-shadow: 0 0 12px rgba(0, 114, 255, 0.5);
 }
+
+/* ==================================================
+   STRUCTURE UPGRADE — STRONGER VISUAL SEPARATION
+   (Non-breaking overrides only)
+================================================== */
+
+/* 1️⃣ Stronger Card Borders */
+.card {
+    border: 2px solid rgba(0,0,0,0.08);
+}
+
+body.dark .card {
+    border: 2px solid rgba(255,255,255,0.08);
+}
+
+/* 2️⃣ Stronger Table Container */
+.table-wrapper {
+    border: 2px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+}
+
+body.dark .table-wrapper {
+    border: 2px solid rgba(255,255,255,0.08);
+}
+
+/* 3️⃣ Stronger Table Internal Lines */
+.modern-table thead {
+    border-bottom: 2px solid rgba(0,0,0,0.08);
+}
+
+body.dark .modern-table thead {
+    border-bottom: 2px solid rgba(255,255,255,0.08);
+}
+
+.modern-table td {
+    border-top: 1.5px solid rgba(0,0,0,0.06);
+}
+
+body.dark .modern-table td {
+    border-top: 1.5px solid rgba(255,255,255,0.06);
+}
+
+/* 4️⃣ Stronger KPI Card Structure */
+.card.kpi {
+    border: 2px solid rgba(0,0,0,0.08);
+}
+
+body.dark .card.kpi {
+    border: 2px solid rgba(255,255,255,0.08);
+}
+
+/* 5️⃣ Stronger Chart Card Definition */
+.chart-card {
+    border: 2px solid rgba(0,0,0,0.08);
+}
+
+body.dark .chart-card {
+    border: 2px solid rgba(255,255,255,0.08);
+}
+
+/* 6️⃣ Slightly Stronger Buttons */
+button,
+.btn {
+    border: 2px solid transparent;
+}
+
+.btn-secondary {
+    border: 2px solid rgba(0,0,0,0.15);
+}
+
+body.dark .btn-secondary {
+    border: 2px solid rgba(255,255,255,0.15);
+}
