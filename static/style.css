@@ -1343,3 +1343,57 @@ body.dark .chart-card.brand-accent {
     border-radius: 12px;
     padding: 20px;
 }
+
+/* ===== Premium Leaderboard ===== */
+
+.leaderboard.premium {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.leader-item {
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+}
+
+.leader-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+}
+
+.rank {
+    background: #151B54;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.client-name {
+    font-size: 14px;
+}
+
+.leader-right {
+    position: absolute;
+    right: 0;
+    top: 14px;
+    font-weight: bold;
+}
+
+.progress-bar {
+    margin-top: 8px;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #151B54;
+    transition: width 0.6s ease;
+}

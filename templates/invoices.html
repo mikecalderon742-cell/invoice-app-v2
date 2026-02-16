@@ -196,7 +196,7 @@ new Chart(statusCtx, {
 {% if invoices %}
 
 <!-- TOP CLIENTS -->
-<div class="chart-card brand-accent">
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
     <div class="chart-header">
         <h3>Top Clients</h3>
         <span class="chart-sub">Ranked by revenue</span>
@@ -207,14 +207,28 @@ new Chart(statusCtx, {
         {% set _ = clients.update({invoice[1]: clients.get(invoice[1], 0) + invoice[2]}) %}
     {% endfor %}
 
-    <ul class="leaderboard">
-        {% for client, total in clients|dictsort(by='value', reverse=True) %}
-            <li>
-                <span>{{ client }}</span>
-                <strong>${{ "{:,.2f}".format(total) }}</strong>
-            </li>
-        {% endfor %}
-    </ul>
+    {% set sorted_clients = clients|dictsort(by='value', reverse=True) %}
+{% set max_value = sorted_clients[0][1] if sorted_clients else 1 %}
+
+<ul class="leaderboard premium">
+    {% for client, total in sorted_clients %}
+        {% set percentage = ((total / max_value) * 100) | round(1) %}
+        <li class="leader-item">
+            <div class="leader-left">
+                <span class="rank">#{{ loop.index }}</span>
+                <span class="client-name">{{ client }}</span>
+            </div>
+
+            <div class="leader-right">
+                <span class="amount">${{ "{:,.2f}".format(total) }}</span>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ percentage }}%;"></div>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
 </div>
 
 <!-- TABLE -->
