@@ -53,11 +53,17 @@
         {% else %}
             <small class="card-sub">
     {% if revenue_growth > 0 %}
-        ↑ {{ revenue_growth }}% vs last month
+        <span style="color:#16a34a; font-weight:600;">
+            ↑ {{ revenue_growth }}% vs last month
+        </span>
     {% elif revenue_growth < 0 %}
-        ↓ {{ revenue_growth | abs }}% vs last month
+        <span style="color:#dc2626; font-weight:600;">
+            ↓ {{ revenue_growth | abs }}% vs last month
+        </span>
     {% else %}
-        0% change vs last month
+        <span style="color:#6b7280;">
+            0% change vs last month
+        </span>
     {% endif %}
 </small>
         {% endif %}
