@@ -167,12 +167,12 @@ def invoices_page():
     processed_invoices = []
 
     for invoice in invoices:
-    invoice_id, client, amount, created_at, due_date, status = invoice
+        invoice_id, client, amount, created_at, due_date, status = invoice
 
-    due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
+        due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
 
-    if status != "Paid" and due_date_obj < today:
-        status = "Overdue"
+        if status != "Paid" and due_date_obj < today:
+            status = "Overdue"
 
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
