@@ -220,6 +220,38 @@ def invoices_page():
         if datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S").month == current_month
     )
 
+    # -------------------------
+    # MONTH-OVER-MONTH GROWTH
+    # -------------------------
+
+    now_dt = datetime.now()
+    current_year = now_dt.year
+    current_month = now_dt.month
+
+    # Handle January rollover
+    if current_month == 1:
+        prev_month = 12
+        prev_year = current_year - 1
+    else:
+        prev_month = current_month - 1
+        prev_year = current_year
+
+    previous_month_revenue = sum(
+        invoice[2] for invoice in invoices
+        if (
+            datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S").month == prev_month
+            and datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S").year == prev_year
+        )
+    )
+
+    if previous_month_revenue > 0:
+        revenue_growth = round(
+            ((monthly_revenue - previous_month_revenue) / previous_month_revenue) * 100,
+            1
+        )
+    else:
+        revenue_growth = 100 if monthly_revenue > 0 else 0
+
     return render_template(
     "invoices.html",
     invoices=invoices,
@@ -230,6 +262,7 @@ def invoices_page():
     top_clients=top_clients,
     overdue_list=overdue_list,
     overdue_count=overdue_count
+    revenue_growth=revenue_growth
 )
 
 # -------------------------

@@ -51,7 +51,15 @@
                 {{ growth }}% of total revenue
             </small>
         {% else %}
-            <small class="card-sub">No revenue data yet</small>
+            <small class="card-sub">
+    {% if revenue_growth > 0 %}
+        ↑ {{ revenue_growth }}% vs last month
+    {% elif revenue_growth < 0 %}
+        ↓ {{ revenue_growth | abs }}% vs last month
+    {% else %}
+        0% change vs last month
+    {% endif %}
+</small>
         {% endif %}
     </div>
 
