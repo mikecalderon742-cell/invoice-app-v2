@@ -13,7 +13,7 @@
 <div class="dashboard-cards enhanced">
 
     <!-- TOTAL INVOICES -->
-    <div class="card kpi">
+    <div class="card kpi orange">
         <h2 class="count-up" data-target="{{ invoices|length }}">0</h2>
         <p>Total Invoices</p>
         <small class="card-sub">Last 30 Days</small>
@@ -68,7 +68,7 @@
 {% if invoices %}
 
 <!-- REVENUE CHART -->
-<div class="card chart-card">
+<div class="chart-card brand-accent">
     <div class="chart-header">
     <div>
         <h3>Revenue Trend</h3>
@@ -150,7 +150,7 @@ document.querySelectorAll(".filter-btn").forEach(btn => {
 </script>
 
 <!-- STATUS DONUT -->
-<div class="card chart-card">
+<div class="chart-card brand-accent">
     <div class="chart-header">
         <h3>Status Distribution</h3>
         <span class="chart-sub">Paid vs Sent vs Draft</span>
@@ -197,7 +197,7 @@ new Chart(statusCtx, {
 {% if invoices %}
 
 <!-- TOP CLIENTS -->
-<div class="card chart-card">
+<div class="chart-card brand-accent">
     <div class="chart-header">
         <h3>Top Clients</h3>
         <span class="chart-sub">Ranked by revenue</span>

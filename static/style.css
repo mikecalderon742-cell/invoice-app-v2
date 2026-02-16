@@ -1325,3 +1325,15 @@ button,
 body.dark .btn-secondary {
     border: 2px solid rgba(255,255,255,0.15);
 }
+
+/* ==================================================
+   BRAND ACCENT FOR ANALYTICS SECTIONS
+================================================== */
+
+.chart-card.brand-accent {
+    border-top: 4px solid #151B54;
+}
+
+body.dark .chart-card.brand-accent {
+    border-top: 4px solid #151B54;
+}
