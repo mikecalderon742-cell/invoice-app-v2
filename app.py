@@ -21,19 +21,24 @@ def init_db():
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    client TEXT NOT NULL,
-    amount REAL NOT NULL,
-    created_at TEXT,
-    status TEXT DEFAULT 'Sent'
-)
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client TEXT NOT NULL,
+            amount REAL NOT NULL,
+            created_at TEXT,
+            due_date TEXT,
+            status TEXT DEFAULT 'Sent'
+        )
     """)
 
-    # Add status column if it doesn't exist (safe migration)
-    try:
+    # --- SAFE COLUMN MIGRATION ---
+    c.execute("PRAGMA table_info(invoices)")
+    columns = [col[1] for col in c.fetchall()]
+
+    if "status" not in columns:
         c.execute("ALTER TABLE invoices ADD COLUMN status TEXT DEFAULT 'Sent'")
-    except sqlite3.OperationalError:
-        pass  # Column already exists
+
+    if "due_date" not in columns:
+        c.execute("ALTER TABLE invoices ADD COLUMN due_date TEXT")
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoice_items (
