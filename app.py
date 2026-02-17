@@ -140,7 +140,9 @@ def invoices_page():
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, client, amount, created_at, status FROM invoices ORDER BY created_at DESC")
+    cursor.execute(
+    "SELECT id, client, amount, created_at, due_date, status FROM invoices ORDER BY created_at DESC"
+)
     invoices = cursor.fetchall()
     conn.close()
 
