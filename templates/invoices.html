@@ -25,12 +25,14 @@
 <!-- KPI STRIP -->
 <div class="dashboard-cards enhanced">
 
+    <!-- TOTAL INVOICES -->
     <div class="card kpi orange">
         <h2 class="count-up" data-target="{{ invoices|length }}">0</h2>
         <p>Total Invoices</p>
         <small class="card-sub">Last 30 Days</small>
     </div>
 
+    <!-- TOTAL REVENUE -->
     <div class="card kpi green">
         {% set total_revenue = invoices | sum(attribute=2) if invoices else 0 %}
         <h2>${{ "{:,.2f}".format(total_revenue) }}</h2>
@@ -38,6 +40,7 @@
         <small class="card-sub">Last 30 Days</small>
     </div>
 
+    <!-- THIS MONTH -->
     <div class="card kpi blue">
         <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
@@ -66,6 +69,7 @@
         {% endif %}
     </div>
 
+    <!-- AVG INVOICE -->
     <div class="card kpi purple">
         <h2>
             {% if invoices %}
@@ -78,7 +82,7 @@
         <small class="card-sub">Last 30 Days</small>
     </div>
 
-    <!-- ✅ FIXED INDEX -->
+    <!-- PAID COUNT -->
     <div class="card kpi teal">
         {% set paid_count = invoices | selectattr(5, "equalto", "Paid") | list | length %}
         <h2>{{ paid_count }}</h2>
@@ -86,6 +90,7 @@
         <small class="card-sub">Invoices Completed</small>
     </div>
 
+    <!-- STEP 3: OVERDUE KPI -->
     <div class="card kpi red">
         <h2>{{ overdue_count }}</h2>
         <p>Overdue</p>
@@ -96,7 +101,217 @@
 
 {% if invoices %}
 
-<!-- (ALL YOUR CHARTS REMAIN EXACTLY AS YOU SENT THEM — UNCHANGED) -->
+<!-- REVENUE CHART -->
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
+    <div class="chart-header">
+    <div>
+        <h3>Revenue Trend</h3>
+        <span class="chart-sub">Performance by Invoice</span>
+    </div>
+
+    <div class="chart-filters">
+        <button class="filter-btn {% if active_range == '30' %}active{% endif %}" 
+        onclick="window.location='?range=30'">30D</button>
+
+<button class="filter-btn {% if active_range == '90' %}active{% endif %}" 
+        onclick="window.location='?range=90'">90D</button>
+
+<button class="filter-btn {% if active_range == 'all' %}active{% endif %}" 
+        onclick="window.location='?range=all'">All</button>
+    </div>
+</div>
+    <canvas id="revenueChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const revenueCtx = document.getElementById('revenueChart');
+
+const allLabels = [
+    {% for invoice in invoices %}
+        "Invoice #{{ invoice[0] }}",
+    {% endfor %}
+];
+
+const allData = [
+    {% for invoice in invoices %}
+        {{ invoice[2] }},
+    {% endfor %}
+];
+
+const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: allLabels,
+        datasets: [{
+            label: 'Revenue',
+            data: allData,
+            borderColor: '#151B54',
+            backgroundColor: 'rgba(21,27,84,0.08)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        animation: {
+            duration: 1000,
+            easing: 'easeOutQuart'
+        },
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+
+<!-- MONTHLY REVENUE GROUPED CHART -->
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
+    <div class="chart-header">
+        <div>
+            <h3>Monthly Revenue</h3>
+            <span class="chart-sub">Grouped by month</span>
+        </div>
+    </div>
+    <canvas id="monthlyRevenueChart"></canvas>
+</div>
+
+<script>
+const monthlyCtx = document.getElementById('monthlyRevenueChart');
+
+const monthlyLabels = [
+    {% for entry in revenue_trend %}
+        "{{ entry.month }}",
+    {% endfor %}
+];
+
+const monthlyData = [
+    {% for entry in revenue_trend %}
+        {{ entry.total }},
+    {% endfor %}
+];
+
+new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: monthlyLabels,
+        datasets: [{
+            label: 'Monthly Revenue',
+            data: monthlyData,
+            backgroundColor: 'rgba(21,27,84,0.7)',
+            borderColor: '#151B54',
+            borderWidth: 2,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        animation: {
+            duration: 1000,
+            easing: 'easeOutQuart'
+        },
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+
+<!-- STATUS DONUT -->
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
+    <div class="chart-header">
+        <h3>Status Distribution</h3>
+        <span class="chart-sub">Paid vs Sent vs Draft</span>
+    </div>
+    <canvas id="statusChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+const statusChart = new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+        labels: ["Paid", "Sent", "Overdue"],
+        datasets: [{
+            data: [
+                {{ status_distribution["Paid"] }},
+                {{ status_distribution["Sent"] }},
+                {{ status_distribution["Overdue"] }}
+            ],
+            backgroundColor: [
+                "#28a745",   // Paid - green
+                "#007bff",   // Sent - blue
+                "#dc3545"    // Overdue - red
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+
+{% endif %}
+
+<!-- SEARCH -->
+<div class="search-bar modern">
+    <form method="GET" action="/invoices">
+        <input type="text" name="search" placeholder="Search by client name">
+        <button type="submit" class="btn">Search</button>
+    </form>
+</div>
+
+{% if invoices %}
+
+<!-- TOP CLIENTS -->
+<div class="chart-card brand-accent" style="border: 2px solid #151B54;">
+    <div class="chart-header">
+        <h3>Top Clients</h3>
+        <span class="chart-sub">Ranked by revenue</span>
+    </div>
+
+    {% set clients = {} %}
+    {% for invoice in invoices %}
+        {% set _ = clients.update({invoice[1]: clients.get(invoice[1], 0) + invoice[2]}) %}
+    {% endfor %}
+
+    {% set sorted_clients = clients|dictsort(by='value', reverse=True) %}
+    {% set max_value = sorted_clients[0][1] if sorted_clients else 1 %}
+
+    <ul class="leaderboard premium">
+        {% for client, total in sorted_clients %}
+            {% set percentage = ((total / max_value) * 100) | round(1) %}
+            <li class="leader-item">
+                <div class="leader-left">
+                    <span class="rank">#{{ loop.index }}</span>
+                    <span class="client-name">{{ client }}</span>
+                </div>
+
+                <div class="leader-right">
+                    <span class="amount">${{ "{:,.2f}".format(total) }}</span>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ percentage }}%;"></div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
 
 <!-- TABLE -->
 <div class="table-wrapper">
@@ -113,6 +328,7 @@
     </thead>
     <tbody>
         {% for invoice in invoices %}
+        <!-- STEP 4: Row Highlight Logic -->
         <tr class="
             {% if invoice[0] in overdue_list %}row-overdue
             {% elif invoice[5] == 'Paid' %}row-paid
@@ -123,35 +339,31 @@
             <td>{{ invoice[1] }}</td>
             <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
             <td>{{ invoice[3] }}</td>
-
-            <!-- ✅ FIXED STATUS INDEX -->
             <td>
-                {% if invoice[5] == "Paid" %}
-                    <span class="badge paid">Paid</span>
-                {% elif invoice[5] == "Overdue" %}
-                    <span class="badge overdue">Overdue</span>
-                {% else %}
-                    <span class="badge sent">Sent</span>
-                {% endif %}
-            </td>
-
-            <!-- ✅ CLEANER UX TOGGLE -->
+    {% if invoice[5] == "Paid" %}
+        <span class="badge paid">Paid</span>
+    {% elif invoice[5] == "Overdue" %}
+        <span class="badge overdue">Overdue</span>
+    {% else %}
+        <span class="badge sent">Sent</span>
+    {% endif %}
+</td>
             <td class="action-buttons">
-                <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
+    <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
-                {% if invoice[5] == "Paid" %}
-                    <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
-                        Mark Sent
-                    </a>
-                {% else %}
-                    <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
-                        Mark Paid
-                    </a>
-                {% endif %}
+    {% if invoice[5] == "Paid" %}
+        <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
+            Mark Sent
+        </a>
+    {% else %}
+        <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
+            Mark Paid
+        </a>
+    {% endif %}
 
-                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-                <a class="btn btn-brand" href="/history-pdf/{{ invoice[0] }}">PDF</a>
-            </td>
+    <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+    <a class="btn btn-brand" href="/history-pdf/{{ invoice[0] }}">PDF</a>
+</td>
         </tr>
         {% endfor %}
     </tbody>
