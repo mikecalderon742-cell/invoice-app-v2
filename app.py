@@ -198,7 +198,7 @@ def invoices_page():
             conn_fix.close()
 
         # --- Overdue logic ---
-        if status != "Paid" and due_date_obj < today:
+        if status == "Sent" and due_date_obj < today:
             status = "Overdue"
 
             conn_update = sqlite3.connect(DB_PATH)
