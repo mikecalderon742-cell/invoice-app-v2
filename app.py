@@ -157,6 +157,7 @@ def invoices_page():
         cutoff = datetime.now() - timedelta(days=days)
 
         filtered = []
+
         for invoice in invoices:
             invoice_date = datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S")
             if invoice_date >= cutoff:
@@ -174,41 +175,45 @@ def invoices_page():
     processed_invoices = []
 
     for invoice in invoices:
-        invoice_id, client, amount, created_at, due_date, status = invoice
+    invoice_id, client, amount, created_at, due_date, status = invoice
 
-        if due_date:
-    due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
-else:
-    # Fallback for old invoices without due_date
-    created_date_obj = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S").date()
-    due_date_obj = created_date_obj + timedelta(days=14)
+    # -------- DUE DATE SAFE HANDLING --------
+    if due_date:
+        due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
+    else:
+        created_date_obj = datetime.strptime(
+            created_at, "%Y-%m-%d %H:%M:%S"
+        ).date()
 
-    # Update DB so it never happens again
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(
-        "UPDATE invoices SET due_date = ? WHERE id = ?",
-        (due_date_obj.strftime("%Y-%m-%d"), invoice_id)
-    )
-    conn.commit()
-    conn.close()
+        due_date_obj = created_date_obj + timedelta(days=14)
 
-        if status != "Paid" and due_date_obj < today:
-            status = "Overdue"
-
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute(
-            "UPDATE invoices SET status = ? WHERE id = ?",
-            ("Overdue", invoice_id)
+        # Persist generated due_date
+        conn_fix = sqlite3.connect(DB_PATH)
+        c_fix = conn_fix.cursor()
+        c_fix.execute(
+            "UPDATE invoices SET due_date = ? WHERE id = ?",
+            (due_date_obj.strftime("%Y-%m-%d"), invoice_id),
         )
-        conn.commit()
-        conn.close()
+        conn_fix.commit()
+        conn_fix.close()
+
+    # -------- OVERDUE LOGIC --------
+    if status != "Paid" and due_date_obj < today:
+        status = "Overdue"
+
+        conn_update = sqlite3.connect(DB_PATH)
+        c_update = conn_update.cursor()
+        c_update.execute(
+            "UPDATE invoices SET status = ? WHERE id = ?",
+            ("Overdue", invoice_id),
+        )
+        conn_update.commit()
+        conn_update.close()
 
         overdue_list.append(invoice_id)
 
     processed_invoices.append(
-        (invoice_id, client, amount, created_at, due_date, status)
+        (invoice_id, client, amount, created_at, due_date_obj.strftime("%Y-%m-%d"), status)
     )
 
     overdue_count = len(overdue_list)
