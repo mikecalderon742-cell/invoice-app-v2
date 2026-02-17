@@ -176,7 +176,22 @@ def invoices_page():
     for invoice in invoices:
         invoice_id, client, amount, created_at, due_date, status = invoice
 
-        due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
+        if due_date:
+    due_date_obj = datetime.strptime(due_date, "%Y-%m-%d").date()
+else:
+    # Fallback for old invoices without due_date
+    created_date_obj = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S").date()
+    due_date_obj = created_date_obj + timedelta(days=14)
+
+    # Update DB so it never happens again
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        "UPDATE invoices SET due_date = ? WHERE id = ?",
+        (due_date_obj.strftime("%Y-%m-%d"), invoice_id)
+    )
+    conn.commit()
+    conn.close()
 
         if status != "Paid" and due_date_obj < today:
             status = "Overdue"
