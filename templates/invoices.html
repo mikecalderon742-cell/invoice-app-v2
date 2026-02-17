@@ -232,40 +232,33 @@ new Chart(monthlyCtx, {
     <canvas id="statusChart"></canvas>
 </div>
 
-<script>
-const statusCtx = document.getElementById('statusChart');
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-new Chart(statusCtx, {
-    type: 'doughnut',
+<script>
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+const statusChart = new Chart(statusCtx, {
+    type: 'pie',
     data: {
-        labels: ['Paid', 'Sent', 'Draft'],
+        labels: ["Paid", "Sent", "Overdue"],
         datasets: [{
             data: [
-                {{ invoices | selectattr(4, "equalto", "Paid") | list | length }},
-                {{ invoices | selectattr(4, "equalto", "Sent") | list | length }},
-                {{ invoices | selectattr(4, "equalto", "Draft") | list | length }}
+                {{ status_distribution["Paid"] }},
+                {{ status_distribution["Sent"] }},
+                {{ status_distribution["Overdue"] }}
             ],
-            borderWidth: 2,
-            hoverOffset: 12
+            backgroundColor: [
+                "#28a745",   // Paid - green
+                "#007bff",   // Sent - blue
+                "#dc3545"    // Overdue - red
+            ]
         }]
     },
     options: {
         responsive: true,
-        cutout: '65%',
-        animation: {
-            animateScale: true,
-            animateRotate: true,
-            duration: 1000
-        },
         plugins: {
             legend: {
-                position: 'bottom',
-                labels: {
-                    font: {
-                        weight: 'bold'
-                    },
-                    padding: 20
-                }
+                position: 'bottom'
             }
         }
     }
