@@ -175,7 +175,7 @@ def invoices_page():
     processed_invoices = []
 
     for invoice in invoices:
-    invoice_id, client, amount, created_at, due_date, status = invoice
+        invoice_id, client, amount, created_at, due_date, status = invoice
 
     # -------- DUE DATE SAFE HANDLING --------
     if due_date:
