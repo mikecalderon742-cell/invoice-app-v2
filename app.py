@@ -121,14 +121,14 @@ def save():
     c = conn.cursor()
 
     c.execute(
-    "INSERT INTO invoices (client, amount, created_at, status) VALUES (?, ?, ?, ?)",
+    "INSERT INTO invoices (client, amount, created_at, status) VALUES (%s, %s, %s, %s)",
     (client, total, created_at, "Sent"),
 )
     invoice_id = c.lastrowid
 
     for desc, amt in cleaned_items:
         c.execute(
-            "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (?, ?, ?)",
+            "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (%s, %s, %s)",
             (invoice_id, desc, amt),
         )
 
@@ -193,7 +193,7 @@ def invoices_page():
             conn_fix = get_db_connection()
             c_fix = conn_fix.cursor()
             c_fix.execute(
-                "UPDATE invoices SET due_date = ? WHERE id = ?",
+                "UPDATE invoices SET due_date = %s WHERE id = %s",
                 (due_date_obj.strftime("%Y-%m-%d"), invoice_id),
             )
             conn_fix.commit()
@@ -206,7 +206,7 @@ def invoices_page():
             conn_update = get_db_connection()
             c_update = conn_update.cursor()
             c_update.execute(
-                "UPDATE invoices SET status = ? WHERE id = ?",
+                "UPDATE invoices SET status = %s WHERE id = %s",
                 ("Overdue", invoice_id),
             )
             conn_update.commit()
@@ -371,7 +371,7 @@ def update(invoice_id):
     c = conn.cursor()
 
     c.execute(
-        "UPDATE invoices SET client = ?, amount = ? WHERE id = ?",
+        "UPDATE invoices SET client = %s, amount = %s WHERE id = %s",
         (client, total, invoice_id)
     )
 
@@ -397,7 +397,7 @@ def update_status(invoice_id, new_status):
     c = conn.cursor()
 
     c.execute(
-        "UPDATE invoices SET status = ? WHERE id = ?",
+        "UPDATE invoices SET status = %s WHERE id = %s",
         (new_status, invoice_id)
     )
 
