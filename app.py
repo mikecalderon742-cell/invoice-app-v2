@@ -217,6 +217,9 @@ def invoices_page():
         )
     )
 
+   overdue_list = []
+   overdue_count = 0 
+
     return render_template(
         "invoices.html",
         invoices=invoices,
@@ -224,6 +227,8 @@ def invoices_page():
         revenue_trend=revenue_trend,
         status_distribution=status_distribution,
         top_clients=top_clients,
+        overdue_list=overdue_list,
+        overdue_count=overdue_count,
     )
 
 
