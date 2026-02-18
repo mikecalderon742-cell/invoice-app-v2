@@ -161,17 +161,16 @@ def invoices_page():
 
     conn.close()
 
-    # -------------------------
-    # ANALYTICS
-    # -------------------------
     from collections import defaultdict
     from datetime import datetime
 
+    # -------------------------
     # Revenue Trend
+    # -------------------------
     revenue_by_month = defaultdict(float)
 
     for invoice in invoices:
-        invoice_date = datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S")
+        invoice_date = invoice[3]  # Already a datetime object
         month_key = invoice_date.strftime("%Y-%m")
         revenue_by_month[month_key] += invoice[2]
 
@@ -181,13 +180,17 @@ def invoices_page():
         for month in sorted_months
     ]
 
+    # -------------------------
     # Status Distribution
+    # -------------------------
     status_distribution = {
         "Paid": sum(1 for inv in invoices if inv[4] == "Paid"),
         "Sent": sum(1 for inv in invoices if inv[4] == "Sent"),
     }
 
+    # -------------------------
     # Top Clients
+    # -------------------------
     client_totals = defaultdict(float)
     for invoice in invoices:
         client_totals[invoice[1]] += invoice[2]
@@ -198,7 +201,9 @@ def invoices_page():
         reverse=True,
     )[:5]
 
+    # -------------------------
     # Monthly Revenue
+    # -------------------------
     now_dt = datetime.now()
     current_year = now_dt.year
     current_month = now_dt.month
@@ -207,8 +212,8 @@ def invoices_page():
         invoice[2]
         for invoice in invoices
         if (
-            datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S").month == current_month
-            and datetime.strptime(invoice[3], "%Y-%m-%d %H:%M:%S").year == current_year
+            invoice[3].month == current_month
+            and invoice[3].year == current_year
         )
     )
 
