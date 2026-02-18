@@ -219,6 +219,12 @@ def invoices_page():
     
     total_revenue = sum(float(invoice[2]) for invoice in invoices)
 
+    if total_revenue > 0:
+        growth = round((monthly_revenue / total_revenue) * 100, 1)
+    else:
+        growth = 0
+
+
     overdue_list = []
     overdue_count = 0 
 
@@ -228,6 +234,7 @@ def invoices_page():
         invoices=invoices,
         monthly_revenue=monthly_revenue,
         total_revenue=total_revenue,
+        grow=grow
         revenue_trend=revenue_trend,
         status_distribution=status_distribution,
         top_clients=top_clients,

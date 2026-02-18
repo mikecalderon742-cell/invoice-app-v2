@@ -45,11 +45,7 @@
         <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
 
-        {% if total_revenue > 0 %}
-            {% set growth = ((monthly_revenue / total_revenue) * 100) | round(1) %}
-        {% else %}
-            {% set growth = 0 %}
-        {% endif %}
+        {{ growth }}%
 
             <small class="card-sub">
                 {{ growth }}% of total revenue
