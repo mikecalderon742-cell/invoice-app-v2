@@ -45,7 +45,14 @@ def init_db():
     """)
 
     # --- SAFE COLUMN MIGRATION ---
-    c.execute("PRAGMA table_info(invoices)")
+    cursor.execute("""
+CREATE TABLE IF NOT EXISTS invoices (
+    id SERIAL PRIMARY KEY,
+    customer_name TEXT,
+    amount NUMERIC,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+""")
     columns = [col[1] for col in c.fetchall()]
 
     if "status" not in columns:
