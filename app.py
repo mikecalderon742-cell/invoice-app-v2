@@ -107,6 +107,7 @@ def save():
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    status = "Sent"
 
     total = 0
     cleaned_items = []
@@ -118,23 +119,26 @@ def save():
             cleaned_items.append((desc, amt))
 
     conn = get_db_connection()
-    c = conn.cursor()
+    cursor = conn.cursor()
 
+    # Insert invoice and get its ID
     cursor.execute("""
-    INSERT INTO invoices (client, amount, created_at, status)
-    VALUES (%s, %s, %s, %s)
-    RETURNING id
-""", (client, amount, created_at, status))
+        INSERT INTO invoices (client, amount, created_at, status)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+    """, (client, total, created_at, status))
 
-invoice_id = cursor.fetchone()[0]
+    invoice_id = cursor.fetchone()[0]
 
-for desc, amt in cleaned_items:
-     c.execute(
+    # Insert invoice items
+    for desc, amt in cleaned_items:
+        cursor.execute(
             "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (%s, %s, %s)",
             (invoice_id, desc, amt),
         )
 
     conn.commit()
+    cursor.close()
     conn.close()
 
     return redirect("/invoices")
