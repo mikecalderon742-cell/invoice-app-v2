@@ -31,49 +31,30 @@ DB_PATH = Path("invoices.db")
 # -------------------------
 def init_db():
     conn = get_db_connection()
-    c = conn.cursor()
+    cursor = conn.cursor()
 
-    c.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id SERIAL PRIMARY KEY,
             client TEXT NOT NULL,
             amount NUMERIC NOT NULL,
-            created_at TEXT,
-            due_date TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             status TEXT DEFAULT 'Sent'
-        )
+        );
     """)
 
-    # --- SAFE COLUMN MIGRATION ---
     cursor.execute("""
-CREATE TABLE IF NOT EXISTS invoices (
-    id SERIAL PRIMARY KEY,
-    customer_name TEXT,
-    amount NUMERIC,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-""")
-    columns = [col[1] for col in c.fetchall()]
-
-    if "status" not in columns:
-        c.execute("ALTER TABLE invoices ADD COLUMN status TEXT DEFAULT 'Sent'")
-
-    if "due_date" not in columns:
-        c.execute("ALTER TABLE invoices ADD COLUMN due_date TEXT")
-
-    c.execute("""
         CREATE TABLE IF NOT EXISTS invoice_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            invoice_id INTEGER,
+            id SERIAL PRIMARY KEY,
+            invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
             description TEXT,
-            amount REAL,
-            FOREIGN KEY (invoice_id) REFERENCES invoices(id)
-        )
+            amount NUMERIC
+        );
     """)
 
     conn.commit()
+    cursor.close()
     conn.close()
-
 
 init_db()
 
