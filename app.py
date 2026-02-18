@@ -1,11 +1,26 @@
 from flask import Flask, render_template, request, send_file, redirect
 from datetime import datetime, timedelta
-import sqlite3
+import as 
+imort psycopg2
+from urllib.pase import urlparse
 from pathlib import Path
 import io
 from collections import defaultdict
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_db_connection():
+    result = urlparse(DATABASE_URL)
+    conn = psycopg2.connect(
+        dbname=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port
+    )
+    return conn
 
 app = Flask(__name__)
 
@@ -16,14 +31,14 @@ DB_PATH = Path("invoices.db")
 # DATABASE INITIALIZATION
 # -------------------------
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             client TEXT NOT NULL,
-            amount REAL NOT NULL,
+            amount NUMERIC NOT NULL,
             created_at TEXT,
             due_date TEXT,
             status TEXT DEFAULT 'Sent'
@@ -115,7 +130,7 @@ def save():
             total += amt
             cleaned_items.append((desc, amt))
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute(
@@ -143,7 +158,7 @@ def save():
 def invoices_page():
     range_filter = request.args.get("range", "30")
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection_db_()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, client, amount, created_at, due_date, status FROM invoices ORDER BY created_at DESC"
@@ -188,7 +203,7 @@ def invoices_page():
             due_date_obj = created_date_obj + timedelta(days=14)
 
             # Persist generated due_date
-            conn_fix = sqlite3.connect(DB_PATH)
+            conn_fix = get_db_connection()
             c_fix = conn_fix.cursor()
             c_fix.execute(
                 "UPDATE invoices SET due_date = ? WHERE id = ?",
@@ -201,7 +216,7 @@ def invoices_page():
         if status == "Sent" and due_date_obj < today:
             status = "Overdue"
 
-            conn_update = sqlite3.connect(DB_PATH)
+            conn_update = get_db_connection()
             c_update = conn_update.cursor()
             c_update.execute(
                 "UPDATE invoices SET status = ? WHERE id = ?",
@@ -324,17 +339,17 @@ def invoices_page():
 # -------------------------
 @app.route("/edit/<int:invoice_id>")
 def edit(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute("SELECT id, client FROM invoices WHERE id = ?", (invoice_id,))
+    c.execute("SELECT id, client FROM invoices WHERE id = %s", (invoice_id,))
     invoice = c.fetchone()
 
     if not invoice:
         conn.close()
         return "Invoice not found", 404
 
-    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
     items = c.fetchall()
 
     conn.close()
@@ -365,7 +380,7 @@ def update(invoice_id):
             total += amt
             cleaned_items.append((desc, amt))
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute(
@@ -373,7 +388,7 @@ def update(invoice_id):
         (client, total, invoice_id)
     )
 
-    c.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+    c.execute("DELETE FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
 
     for desc, amt in cleaned_items:
         c.execute(
@@ -391,7 +406,7 @@ def update(invoice_id):
 # -------------------------
 @app.route("/update-status/<int:invoice_id>/<string:new_status>")
 def update_status(invoice_id, new_status):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute(
@@ -409,11 +424,11 @@ def update_status(invoice_id, new_status):
 # -------------------------
 @app.route("/delete/<int:invoice_id>")
 def delete(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
-    c.execute("DELETE FROM invoices WHERE id = ?", (invoice_id,))
+    c.execute("DELETE FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
+    c.execute("DELETE FROM invoices WHERE id = %s", (invoice_id,))
 
     conn.commit()
     conn.close()
@@ -426,10 +441,10 @@ def delete(invoice_id):
 # -------------------------
 @app.route("/history-pdf/<int:invoice_id>")
 def history_pdf(invoice_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute("SELECT client, amount FROM invoices WHERE id = ?", (invoice_id,))
+    c.execute("SELECT client, amount FROM invoices WHERE id = %s", (invoice_id,))
     invoice = c.fetchone()
 
     if not invoice:
@@ -438,7 +453,7 @@ def history_pdf(invoice_id):
 
     client, total = invoice
 
-    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
     items = c.fetchall()
     conn.close()
 
