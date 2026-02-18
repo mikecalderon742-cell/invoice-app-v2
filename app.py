@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, send_file, redirect
 from datetime import datetime, timedelta
 import psycopg2
-from urllib.pase import urlparse
+from urllib.parse import urlparse
 from pathlib import Path
 import io
 from collections import defaultdict
