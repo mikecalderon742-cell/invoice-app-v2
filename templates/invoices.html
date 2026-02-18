@@ -47,6 +47,10 @@
 
         {% if total_revenue > 0 %}
             {% set growth = ((monthly_revenue / total_revenue) * 100) | round(1) %}
+        {% else %}
+            {% set growth = 0 %}
+        {% endif %}
+
             <small class="card-sub">
                 {{ growth }}% of total revenue
             </small>
@@ -354,6 +358,10 @@ const statusChart = new Chart(statusCtx, {
     {% if invoice[5] == "Paid" %}
         <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
             Mark Sent
+        </a>
+    {% else %}
+        <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
+            Mark Paid
         </a>
     {% else %}
         <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">

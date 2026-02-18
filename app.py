@@ -216,6 +216,8 @@ def invoices_page():
             and invoice[3].year == current_year
         )
     )
+    
+    total_revenue = sum(float(invoice[2]) for invoice in invoices)
 
     overdue_list = []
     overdue_count = 0 
@@ -225,6 +227,7 @@ def invoices_page():
         "invoices.html",
         invoices=invoices,
         monthly_revenue=monthly_revenue,
+        total_revenue=total_revenue,
         revenue_trend=revenue_trend,
         status_distribution=status_distribution,
         top_clients=top_clients,
