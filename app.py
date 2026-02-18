@@ -120,11 +120,13 @@ def save():
     conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute(
-    "INSERT INTO invoices (client, amount, created_at, status) VALUES (%s, %s, %s, %s)",
-    (client, total, created_at, "Sent"),
-)
-    invoice_id = c.lastrowid
+    cursor.execute("""
+    INSERT INTO invoices (client, amount, created_at, status)
+    VALUES (%s, %s, %s, %s)
+    RETURNING id
+""", (client, amount, created_at, status))
+
+invoice_id = cursor.fetchone()[0]
 
     for desc, amt in cleaned_items:
         c.execute(
