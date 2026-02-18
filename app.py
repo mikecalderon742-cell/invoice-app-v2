@@ -128,8 +128,8 @@ def save():
 
 invoice_id = cursor.fetchone()[0]
 
-    for desc, amt in cleaned_items:
-        c.execute(
+for desc, amt in cleaned_items:
+     c.execute(
             "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (%s, %s, %s)",
             (invoice_id, desc, amt),
         )
