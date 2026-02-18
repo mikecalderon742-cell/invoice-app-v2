@@ -151,7 +151,7 @@ def save():
 def invoices_page():
     range_filter = request.args.get("range", "30")
 
-    conn = get_connection_db_()
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, client, amount, created_at, due_date, status FROM invoices ORDER BY created_at DESC"
