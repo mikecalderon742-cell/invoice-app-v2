@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, send_file, redirect
 from datetime import datetime, timedelta
-imort psycopg2
+import psycopg2
 from urllib.pase import urlparse
 from pathlib import Path
 import io
