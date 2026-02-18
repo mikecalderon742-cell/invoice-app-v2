@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import psycopg2
 from urllib.parse import urlparse
 from pathlib import Path
-import io
+import os
 from collections import defaultdict
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
