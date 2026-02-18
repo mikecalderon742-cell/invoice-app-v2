@@ -170,9 +170,9 @@ def invoices_page():
     revenue_by_month = defaultdict(float)
 
     for invoice in invoices:
-        invoice_date = invoice[3]  # Already a datetime object
+        invoice_date = invoice[3]
         month_key = invoice_date.strftime("%Y-%m")
-        revenue_by_month[month_key] += invoice[2]
+        revenue_by_month[month_key] += float(invoice[2])
 
     sorted_months = sorted(revenue_by_month.keys())
     revenue_trend = [
@@ -193,7 +193,7 @@ def invoices_page():
     # -------------------------
     client_totals = defaultdict(float)
     for invoice in invoices:
-        client_totals[invoice[1]] += invoice[2]
+        client_totals[invoice[1]] += float(invoice[2])
 
     top_clients = sorted(
         client_totals.items(),
@@ -209,7 +209,7 @@ def invoices_page():
     current_month = now_dt.month
 
     monthly_revenue = sum(
-        invoice[2]
+        float(invoice[2])
         for invoice in invoices
         if (
             invoice[3].month == current_month
