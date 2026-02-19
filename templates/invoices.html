@@ -15,7 +15,7 @@
 <div class="dashboard-cards enhanced">
 
     <div class="card kpi orange">
-        <h2>{{ invoices|length }}</h2>
+        <h2>{{ total_invoices }}</h2>
         <p>Total Invoices</p>
     </div>
 
@@ -27,18 +27,16 @@
     <div class="card kpi blue">
         <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
-        <small>{{ growth }}% of total</small>
+        <small>{{ growth }}% of total revenue</small>
     </div>
 
     <div class="card kpi purple">
-        <h2>
-            ${{ "{:,.2f}".format(total_revenue / invoices|length) }}
-        </h2>
-        <p>Avg Invoice</p>
+        <h2>${{ "{:,.2f}".format(avg_invoice) }}</h2>
+        <p>Average Invoice</p>
     </div>
 
     <div class="card kpi teal">
-        <h2>{{ status_distribution["Paid"] }}</h2>
+        <h2>{{ paid_count }}</h2>
         <p>Paid</p>
     </div>
 
