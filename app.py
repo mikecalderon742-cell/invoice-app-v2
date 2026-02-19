@@ -158,7 +158,6 @@ def invoices_page():
         ORDER BY created_at DESC
     """)
     invoices = cursor.fetchall()
-
     conn.close()
 
     # ---- STANDARDIZE NUMBERS (Convert Decimal to float) ----
@@ -185,18 +184,18 @@ def invoices_page():
         if inv[3].month == current_month and inv[3].year == current_year
     )
 
-    if total_revenue > 0:
-        growth = round((monthly_revenue / total_revenue) * 100, 1)
-    else:
-        growth = 0
-
-    if total_invoices > 0:
-        avg_invoice = round(total_revenue / total_invoices, 2)
-    else:
-        avg_invoice = 0
+    growth = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
+    avg_invoice = round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
 
     paid_count = sum(1 for inv in invoices if inv[4] == "Paid")
     overdue_count = sum(1 for inv in invoices if inv[4] == "Overdue")
+
+    # ---- STATUS DISTRIBUTION (FOR TEMPLATE) ----
+    status_distribution = {
+        "Paid": paid_count,
+        "Sent": sum(1 for inv in invoices if inv[4] == "Sent"),
+        "Overdue": overdue_count,
+    }
 
     return render_template(
         "invoices.html",
@@ -207,7 +206,8 @@ def invoices_page():
         growth=growth,
         avg_invoice=avg_invoice,
         paid_count=paid_count,
-        overdue_count=overdue_count
+        overdue_count=overdue_count,
+        status_distribution=status_distribution
     )
 
 
