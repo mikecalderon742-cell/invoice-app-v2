@@ -159,6 +159,45 @@ def invoices_page():
     """)
     invoices = cursor.fetchall()
 
+    # ---- STANDARDIZE NUMBERS (Convert Decimal to float) ----
+cleaned_invoices = []
+
+for invoice in invoices:
+    invoice_list = list(invoice)
+    invoice_list[2] = float(invoice_list[2])  # Ensure total is float
+    cleaned_invoices.append(invoice_list)
+
+invoices = cleaned_invoices
+
+    # ---- KPI CALCULATIONS ----
+total_invoices = len(invoices)
+
+total_revenue = sum(inv[2] for inv in invoices)
+
+from datetime import datetime
+current_month = datetime.now().month
+current_year = datetime.now().year
+
+monthly_revenue = sum(
+    inv[2]
+    for inv in invoices
+    if inv[3].month == current_month and inv[3].year == current_year
+)
+
+if total_revenue > 0:
+    growth = round((monthly_revenue / total_revenue) * 100, 1)
+else:
+    growth = 0
+
+if total_invoices > 0:
+    avg_invoice = round(total_revenue / total_invoices, 2)
+else:
+    avg_invoice = 0
+
+paid_count = sum(1 for inv in invoices if inv[5] == "Paid")
+overdue_count = sum(1 for inv in invoices if inv[5] == "Overdue")
+
+
     conn.close()
 
     from collections import defaultdict
@@ -230,17 +269,16 @@ def invoices_page():
 
 
     return render_template(
-        "invoices.html",
-        invoices=invoices,
-        monthly_revenue=monthly_revenue,
-        total_revenue=total_revenue,
-        growth=growth,
-        revenue_trend=revenue_trend,
-        status_distribution=status_distribution,
-        top_clients=top_clients,
-        overdue_list=overdue_list,
-        overdue_count=overdue_count,
-    )
+    "invoices.html",
+    invoices=invoices,
+    total_invoices=total_invoices,
+    total_revenue=total_revenue,
+    monthly_revenue=monthly_revenue,
+    growth=growth,
+    avg_invoice=avg_invoice,
+    paid_count=paid_count,
+    overdue_count=overdue_count
+)
 
 
 # -------------------------
