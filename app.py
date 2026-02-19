@@ -234,7 +234,7 @@ def invoices_page():
         invoices=invoices,
         monthly_revenue=monthly_revenue,
         total_revenue=total_revenue,
-        grow=grow
+        grow=grow,
         revenue_trend=revenue_trend,
         status_distribution=status_distribution,
         top_clients=top_clients,
