@@ -1411,7 +1411,14 @@ body.dark .chart-card.brand-accent {
 }
 
 .card.kpi.red {
-    border: 2px solid #151B54;
+    background: #dc2626;
+    color: white;
+}
+
+.card.kpi.red h2,
+.card.kpi.red p,
+.card.kpi.red small {
+    color: white;
 }
 
 .row-overdue {
@@ -1464,4 +1471,39 @@ body.dark .chart-card.brand-accent {
 .badge.overdue {
     background: #fee2e2;
     color: #991b1b;
+}
+
+/* Row Status Highlighting */
+.row-paid {
+    background-color: #ecfdf5;
+}
+
+.row-overdue {
+    background-color: #fef2f2;
+}
+
+.row-sent {
+    background-color: #eff6ff;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge.paid {
+    background: #16a34a;
+    color: white;
+}
+
+.badge.overdue {
+    background: #dc2626;
+    color: white;
+}
+
+.badge.sent {
+    background: #2563eb;
+    color: white;
 }
