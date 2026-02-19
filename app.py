@@ -197,7 +197,6 @@ else:
 paid_count = sum(1 for inv in invoices if inv[5] == "Paid")
 overdue_count = sum(1 for inv in invoices if inv[5] == "Overdue")
 
-
     conn.close()
 
     from collections import defaultdict
