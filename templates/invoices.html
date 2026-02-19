@@ -58,11 +58,25 @@
     {% elif invoice[4] == 'Sent' %}row-sent
     {% endif %}
 ">
-    <td>#{{ invoice[0] }}</td>
-    <td>{{ invoice[1] }}</td>
-    <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-    <td>{{ invoice[3].strftime('%Y-%m-%d') }}</td>
-    <td>
+    <td class="action-buttons">
+
+    <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
+
+    {% if invoice[4] != "Paid" %}
+        <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
+            Mark Paid
+        </a>
+    {% endif %}
+
+    {% if invoice[4] == "Draft" %}
+        <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
+            Mark Sent
+        </a>
+    {% endif %}
+
+    <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+
+</td>
         {% if invoice[4] == "Paid" %}
             <span class="badge paid">Paid</span>
         {% elif invoice[4] == "Overdue" %}

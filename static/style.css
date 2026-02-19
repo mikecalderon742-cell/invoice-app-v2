@@ -1448,6 +1448,30 @@ body.dark .chart-card.brand-accent {
     color: white;
 }
 
+.table-wrapper {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    background: #f3f4f6;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.modern-table td {
+    padding: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+
 .btn-danger {
     background: #dc2626;
     color: white;
