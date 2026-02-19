@@ -11,16 +11,13 @@
 
 <!-- STEP 1: Overdue Detection Logic -->
 {% if invoices %}
-{% else %}
     {% set overdue_count = 0 %}
-{% endif %}
 
 <!-- STEP 2: Overdue Alert Banner -->
 {% if overdue_count > 0 %}
 <div class="alert-overdue">
     ⚠ {{ overdue_count }} invoice{{ 's' if overdue_count > 1 else '' }} overdue.
 </div>
-{% endif %}
 
 <!-- KPI STRIP -->
 <div class="dashboard-cards enhanced">
@@ -50,7 +47,6 @@
             <small class="card-sub">
                 {{ growth }}% of total revenue
             </small>
-        {% else %}
             <small class="card-sub">
     {% if revenue_growth > 0 %}
         <span style="color:#16a34a; font-weight:600;">
@@ -60,13 +56,10 @@
         <span style="color:#dc2626; font-weight:600;">
             ↓ {{ revenue_growth | abs }}% vs last month
         </span>
-    {% else %}
         <span style="color:#6b7280;">
             0% change vs last month
         </span>
-    {% endif %}
 </small>
-        {% endif %}
     </div>
 
     <!-- AVG INVOICE -->
@@ -74,9 +67,7 @@
         <h2>
             {% if invoices %}
                 ${{ "{:,.2f}".format(total_revenue / (invoices|length)) }}
-            {% else %}
                 $0.00
-            {% endif %}
         </h2>
         <p>Avg Invoice</p>
         <small class="card-sub">Last 30 Days</small>
@@ -110,13 +101,13 @@
     </div>
 
     <div class="chart-filters">
-        <button class="filter-btn {% if active_range == '30' %}active{% endif %}" 
+        <button class="filter-btn {% if active_range == '30' %}active" 
         onclick="window.location='?range=30'">30D</button>
 
-<button class="filter-btn {% if active_range == '90' %}active{% endif %}" 
+<button class="filter-btn {% if active_range == '90' %}active" 
         onclick="window.location='?range=90'">90D</button>
 
-<button class="filter-btn {% if active_range == 'all' %}active{% endif %}" 
+<button class="filter-btn {% if active_range == 'all' %}active" 
         onclick="window.location='?range=all'">All</button>
     </div>
 </div>
@@ -190,7 +181,7 @@ const monthlyData = [
     {% for entry in revenue_trend %}
         {{ entry.total }},
     {% endfor %}
-];
+]; 
 
 new Chart(monthlyCtx, {
     type: 'bar',
@@ -265,7 +256,6 @@ const statusChart = new Chart(statusCtx, {
 });
 </script>
 
-{% endif %}
 
 <!-- SEARCH -->
 <div class="search-bar modern">
@@ -333,7 +323,6 @@ const statusChart = new Chart(statusCtx, {
             {% if invoice[0] in overdue_list %}row-overdue
             {% elif invoice[5] == 'Paid' %}row-paid
             {% elif invoice[5] == 'Draft' %}row-draft
-            {% endif %}
         ">
             <td>#{{ invoice[0] }}</td>
             <td>{{ invoice[1] }}</td>
@@ -344,9 +333,7 @@ const statusChart = new Chart(statusCtx, {
         <span class="badge paid">Paid</span>
     {% elif invoice[5] == "Overdue" %}
         <span class="badge overdue">Overdue</span>
-    {% else %}
         <span class="badge sent">Sent</span>
-    {% endif %}
 </td>
             <td class="action-buttons">
     <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
@@ -355,15 +342,12 @@ const statusChart = new Chart(statusCtx, {
         <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
             Mark Sent
         </a>
-    {% else %}
         <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
             Mark Paid
         </a>
-    {% else %}
         <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
             Mark Paid
         </a>
-    {% endif %}
 
     <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
     <a class="btn btn-brand" href="/history-pdf/{{ invoice[0] }}">PDF</a>
@@ -374,14 +358,11 @@ const statusChart = new Chart(statusCtx, {
 </table>
 </div>
 
-{% else %}
-
 <div class="empty-state">
     <h3>No invoices yet</h3>
     <p>Create your first invoice to get started.</p>
     <a class="btn" href="/">Create Invoice</a>
 </div>
 
-{% endif %}
 
 {% endblock %}
