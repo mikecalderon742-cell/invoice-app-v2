@@ -159,125 +159,56 @@ def invoices_page():
     """)
     invoices = cursor.fetchall()
 
-    # ---- STANDARDIZE NUMBERS (Convert Decimal to float) ----
-cleaned_invoices = []
-
-for invoice in invoices:
-    invoice_list = list(invoice)
-    invoice_list[2] = float(invoice_list[2])  # Ensure total is float
-    cleaned_invoices.append(invoice_list)
-
-invoices = cleaned_invoices
-
-    # ---- KPI CALCULATIONS ----
-total_invoices = len(invoices)
-
-total_revenue = sum(inv[2] for inv in invoices)
-
-from datetime import datetime
-current_month = datetime.now().month
-current_year = datetime.now().year
-
-monthly_revenue = sum(
-    inv[2]
-    for inv in invoices
-    if inv[3].month == current_month and inv[3].year == current_year
-)
-
-if total_revenue > 0:
-    growth = round((monthly_revenue / total_revenue) * 100, 1)
-else:
-    growth = 0
-
-if total_invoices > 0:
-    avg_invoice = round(total_revenue / total_invoices, 2)
-else:
-    avg_invoice = 0
-
-paid_count = sum(1 for inv in invoices if inv[5] == "Paid")
-overdue_count = sum(1 for inv in invoices if inv[5] == "Overdue")
-
     conn.close()
 
-    from collections import defaultdict
+    # ---- STANDARDIZE NUMBERS (Convert Decimal to float) ----
+    cleaned_invoices = []
+    for invoice in invoices:
+        invoice_list = list(invoice)
+        invoice_list[2] = float(invoice_list[2])  # amount column
+        cleaned_invoices.append(invoice_list)
+
+    invoices = cleaned_invoices
+
+    # ---- KPI CALCULATIONS ----
+    total_invoices = len(invoices)
+    total_revenue = sum(inv[2] for inv in invoices)
+
     from datetime import datetime
-
-    # -------------------------
-    # Revenue Trend
-    # -------------------------
-    revenue_by_month = defaultdict(float)
-
-    for invoice in invoices:
-        invoice_date = invoice[3]
-        month_key = invoice_date.strftime("%Y-%m")
-        revenue_by_month[month_key] += float(invoice[2])
-
-    sorted_months = sorted(revenue_by_month.keys())
-    revenue_trend = [
-        {"month": month, "total": revenue_by_month[month]}
-        for month in sorted_months
-    ]
-
-    # -------------------------
-    # Status Distribution
-    # -------------------------
-    status_distribution = {
-        "Paid": sum(1 for inv in invoices if inv[4] == "Paid"),
-        "Sent": sum(1 for inv in invoices if inv[4] == "Sent"),
-    }
-
-    # -------------------------
-    # Top Clients
-    # -------------------------
-    client_totals = defaultdict(float)
-    for invoice in invoices:
-        client_totals[invoice[1]] += float(invoice[2])
-
-    top_clients = sorted(
-        client_totals.items(),
-        key=lambda x: x[1],
-        reverse=True,
-    )[:5]
-
-    # -------------------------
-    # Monthly Revenue
-    # -------------------------
-    now_dt = datetime.now()
-    current_year = now_dt.year
-    current_month = now_dt.month
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
 
     monthly_revenue = sum(
-        float(invoice[2])
-        for invoice in invoices
-        if (
-            invoice[3].month == current_month
-            and invoice[3].year == current_year
-        )
+        inv[2]
+        for inv in invoices
+        if inv[3].month == current_month and inv[3].year == current_year
     )
-    
-    total_revenue = sum(float(invoice[2]) for invoice in invoices)
 
     if total_revenue > 0:
         growth = round((monthly_revenue / total_revenue) * 100, 1)
     else:
         growth = 0
 
+    if total_invoices > 0:
+        avg_invoice = round(total_revenue / total_invoices, 2)
+    else:
+        avg_invoice = 0
 
-    overdue_list = []
-    overdue_count = 0 
-
+    paid_count = sum(1 for inv in invoices if inv[4] == "Paid")
+    overdue_count = sum(1 for inv in invoices if inv[4] == "Overdue")
 
     return render_template(
-    "invoices.html",
-    invoices=invoices,
-    total_invoices=total_invoices,
-    total_revenue=total_revenue,
-    monthly_revenue=monthly_revenue,
-    growth=growth,
-    avg_invoice=avg_invoice,
-    paid_count=paid_count,
-    overdue_count=overdue_count
-)
+        "invoices.html",
+        invoices=invoices,
+        total_invoices=total_invoices,
+        total_revenue=total_revenue,
+        monthly_revenue=monthly_revenue,
+        growth=growth,
+        avg_invoice=avg_invoice,
+        paid_count=paid_count,
+        overdue_count=overdue_count
+    )
 
 
 # -------------------------
