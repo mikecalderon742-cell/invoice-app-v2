@@ -47,55 +47,56 @@
 
 </div>
 
-<!-- TABLE -->
+</table>
+</div><!-- TABLE -->
 <div class="table-wrapper">
 <table class="modern-table">
     <thead>
-        {% for invoice in invoices %}
-<tr class="
-    {% if invoice[4] == 'Paid' %}row-paid
-    {% elif invoice[4] == 'Overdue' %}row-overdue
-    {% elif invoice[4] == 'Sent' %}row-sent
-    {% endif %}
-">
-    <td class="action-buttons">
-
-    <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
-
-    {% if invoice[4] != "Paid" %}
-        <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
-            Mark Paid
-        </a>
-    {% endif %}
-
-    {% if invoice[4] == "Draft" %}
-        <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
-            Mark Sent
-        </a>
-    {% endif %}
-
-    <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-
-</td>
-        {% if invoice[4] == "Paid" %}
-            <span class="badge paid">Paid</span>
-        {% elif invoice[4] == "Overdue" %}
-            <span class="badge overdue">Overdue</span>
-        {% elif invoice[4] == "Sent" %}
-            <span class="badge sent">Sent</span>
-        {% else %}
-            {{ invoice[4] }}
+        <tbody>
+{% for invoice in invoices %}
+    <tr class="
+        {% if invoice[4] == 'Paid' %}row-paid
+        {% elif invoice[4] == 'Overdue' %}row-overdue
+        {% elif invoice[4] == 'Sent' %}row-sent
         {% endif %}
-    </td>
-    <td>
-        <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
-        <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-    </td>
-</tr>
+    ">
+        <td>#{{ invoice[0] }}</td>
+        <td>{{ invoice[1] }}</td>
+        <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
+        <td>{{ invoice[3].strftime('%Y-%m-%d') }}</td>
+
+        <td>
+            {% if invoice[4] == "Paid" %}
+                <span class="badge paid">Paid</span>
+            {% elif invoice[4] == "Overdue" %}
+                <span class="badge overdue">Overdue</span>
+            {% elif invoice[4] == "Sent" %}
+                <span class="badge sent">Sent</span>
+            {% else %}
+                {{ invoice[4] }}
+            {% endif %}
+        </td>
+
+        <td class="action-buttons">
+            <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
+
+            {% if invoice[4] != "Paid" %}
+                <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
+                    Mark Paid
+                </a>
+            {% endif %}
+
+            {% if invoice[4] == "Draft" %}
+                <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
+                    Mark Sent
+                </a>
+            {% endif %}
+
+            <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+        </td>
+    </tr>
 {% endfor %}
-    </tbody>
-</table>
-</div>
+</tbody>
 
 {% else %}
 
