@@ -1545,3 +1545,159 @@ tbody tr:nth-child(even) {
 .dark-mode tbody tr:nth-child(odd) {
     background-color: rgba(255, 255, 255, 0.02) !important;
 }
+
+/* =========================================  
+TABLE + DARK MODE + FOOTER FIX OVERRIDES  
+(Place at the BOTTOM of style.css)  
+========================================= */
+/* TABLE WRAPPER - restore strong card + border */  
+.table-wrapper {  
+margin-top: 2rem;  
+margin-bottom: 3rem;  
+border-radius: 16px;  
+border: 2px solid #151B54;  
+overflow: hidden;  
+background-color: #ffffff;  
+box-shadow: 0 14px 30px rgba(0,0,0,0.18);  
+}
+/* Dark mode wrapper */  
+html.dark-mode .table-wrapper,  
+body.dark-mode .table-wrapper,  
+html.dark .table-wrapper,  
+body.dark .table-wrapper {  
+background-color: #050816;  
+border-color: rgba(148, 163, 184, 0.6);  
+box-shadow: 0 16px 40px rgba(0,0,0,0.6);  
+}
+/* BASE TABLE */  
+.modern-table {  
+width: 100%;  
+border-collapse: collapse;  
+font-size: 0.92rem;  
+}
+/* Header */  
+.modern-table thead {  
+background: #151B54;  
+color: #fff;  
+}
+.modern-table thead th {  
+padding: 12px 16px;  
+text-align: left;  
+font-weight: 600;  
+}
+/* Body cells */  
+.modern-table tbody td {  
+padding: 10px 16px;  
+border-bottom: 1px solid rgba(0,0,0,0.06);  
+}
+/* LIGHT MODE alternating rows */  
+.modern-table tbody tr:nth-child(odd) {  
+background: #ffffff;  
+}
+.modern-table tbody tr:nth-child(even) {  
+background: #f5f6fa;  
+}
+/* DARK MODE alternating rows – override BOTH, no white rows */  
+html.dark-mode .modern-table tbody tr:nth-child(odd),  
+body.dark-mode .modern-table tbody tr:nth-child(odd),  
+html.dark .modern-table tbody tr:nth-child(odd),  
+body.dark .modern-table tbody tr:nth-child(odd) {  
+background: rgba(15, 23, 42, 0.90);  
+}
+html.dark-mode .modern-table tbody tr:nth-child(even),  
+body.dark-mode .modern-table tbody tr:nth-child(even),  
+html.dark .modern-table tbody tr:nth-child(even),  
+body.dark .modern-table tbody tr:nth-child(even) {  
+background: rgba(15, 23, 42, 0.96);  
+}
+/* Hover */  
+.modern-table tbody tr:hover {  
+background: rgba(21, 27, 84, 0.08);  
+}
+html.dark-mode .modern-table tbody tr:hover,  
+body.dark-mode .modern-table tbody tr:hover,  
+html.dark .modern-table tbody tr:hover,  
+body.dark .modern-table tbody tr:hover {  
+background: rgba(255,255,255,0.06);  
+}
+/* ROW HIGHLIGHT ACCENTS */  
+.row-paid {  
+border-left: 4px solid #16a34a;  
+}
+.row-overdue {  
+border-left: 4px solid #dc2626;  
+}
+.row-sent {  
+border-left: 4px solid #0ea5e9;  
+}
+/* BADGES */  
+.badge {  
+padding: 4px 10px;  
+border-radius: 999px;  
+font-size: 0.75rem;  
+font-weight: 600;  
+}
+.badge.paid {  
+background: rgba(22,163,74,0.12);  
+color: #166534;  
+}
+.badge.overdue {  
+background: rgba(220,38,38,0.12);  
+color: #b91c1c;  
+}
+.badge.sent {  
+background: rgba(37,99,235,0.12);  
+color: #1d4ed8;  
+}
+.badge.draft {  
+background: rgba(148,163,184,0.15);  
+color: #4b5563;  
+}
+/* Dark mode badge colors */  
+html.dark-mode .badge.paid,  
+body.dark-mode .badge.paid,  
+html.dark .badge.paid,  
+body.dark .badge.paid {  
+background: rgba(22,163,74,0.25);  
+color: #bbf7d0;  
+}
+html.dark-mode .badge.overdue,  
+body.dark-mode .badge.overdue,  
+html.dark .badge.overdue,  
+body.dark .badge.overdue {  
+background: rgba(220,38,38,0.25);  
+color: #fecaca;  
+}
+html.dark-mode .badge.sent,  
+body.dark-mode .badge.sent,  
+html.dark .badge.sent,  
+body.dark .badge.sent {  
+background: rgba(37,99,235,0.25);  
+color: #bfdbfe;  
+}
+html.dark-mode .badge.draft,  
+body.dark-mode .badge.draft,  
+html.dark .badge.draft,  
+body.dark .badge.draft {  
+background: rgba(148,163,184,0.25);  
+color: #e5e7eb;  
+}
+/* ACTION BUTTONS – keep them tidy in the row */  
+.action-buttons .btn {  
+padding: 6px 10px;  
+font-size: 0.8rem;  
+border-radius: 10px;  
+}
+.action-buttons .btn + .btn {  
+margin-left: 6px;  
+}
+/* FOOTER FIX – stop overlapping table */  
+footer,  
+.site-footer {  
+position: static !important;  
+margin-top: 2rem;  
+}
+/* if you previously added padding-bottom on body for a fixed footer, this neutralizes it */  
+body {  
+padding-bottom: 0;  
+}
