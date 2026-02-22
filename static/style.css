@@ -1701,3 +1701,49 @@ margin-top: 2rem;
 body {  
 padding-bottom: 0;  
 }
+
+/* ===== HARD RESET FOOTER POSITIONING ===== */
+footer,  
+.footer,  
+.site-footer,  
+.app-footer {  
+position: static !important;  
+bottom: auto !important;  
+top: auto !important;  
+left: 0 !important;  
+right: 0 !important;  
+width: 100%;  
+margin-top: 3rem;  
+clear: both;  
+z-index: 0 !important;  
+}
+/* In case layout was set up for a fixed footer */  
+body,  
+html {  
+height: auto;  
+}
+main,  
+.main,  
+.main-content {  
+min-height: auto;  
+padding-bottom: 0;  
+}
+/* ===== TABLE CARD EMPHASIS ===== */
+.table-wrapper {  
+margin-top: 2.5rem;  
+margin-bottom: 3.5rem;  
+padding: 1rem 1.25rem;  
+border-radius: 18px;  
+border: 2px solid #151B54;  
+background: #ffffff;  
+box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);  
+}
+/* Dark mode version of the card */  
+html.dark-mode .table-wrapper,  
+body.dark-mode .table-wrapper,  
+html.dark .table-wrapper,  
+body.dark .table-wrapper {  
+background: #020617;  
+border-color: rgba(148, 163, 184, 0.7);  
+box-shadow: 0 22px 50px rgba(0, 0, 0, 0.8);  
+}
