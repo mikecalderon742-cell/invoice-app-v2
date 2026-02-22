@@ -51,8 +51,7 @@
 </div><!-- TABLE -->
 <div class="table-wrapper">
 <table class="modern-table">
-    <thead>
-        <tbody>
+         <tbody>
 {% for invoice in invoices %}
     <tr class="
         {% if invoice[4] == 'Paid' %}row-paid
@@ -97,6 +96,8 @@
     </tr>
 {% endfor %}
 </tbody>
+
+<thead>
 
 {% else %}
 

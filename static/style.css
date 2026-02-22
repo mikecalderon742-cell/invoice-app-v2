@@ -1531,3 +1531,17 @@ body.dark .chart-card.brand-accent {
     background: #2563eb;
     color: white;
 }
+
+/* Default light mode */
+tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Dark mode fix */
+.dark-mode tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark-mode tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
