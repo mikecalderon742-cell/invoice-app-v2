@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>InvoicePro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -90,7 +92,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     : target;
             }
         }
-        update();
+        if (!isNaN(target)) {
+            update();
+        }
     });
 
     /* HERO PARALLAX */
@@ -153,7 +157,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (hamburger && sidebar && overlay) {
-        hamburger.addEventListener("click", openSidebar);
+        hamburger.addEventListener("click", () => {
+            const isActive = sidebar.classList.contains("active");
+            if (isActive) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
         overlay.addEventListener("click", closeSidebar);
     }
 
@@ -182,6 +193,41 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    /* FLOATING ACTION BUTTON SHOW ON SCROLL */
+    const fab = document.querySelector(".floating-btn");
+    if (fab) {
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > 200) {
+                fab.classList.add("show");
+            } else {
+                fab.classList.remove("show");
+            }
+        });
+    }
+
+    /* SMOOTH PAGE EXIT */
+    document.querySelectorAll("a").forEach(link => {
+        if (link.hostname === window.location.hostname) {
+            link.addEventListener("click", function (e) {
+                const href = this.getAttribute("href");
+                // Don't intercept anchor-only or JS links
+                if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
+                    return;
+                }
+                e.preventDefault();
+                document.body.classList.add("fade-exit");
+                setTimeout(() => {
+                    window.location = this.href;
+                }, 200);
+            });
+        }
+    });
+
+    /* CURSOR SPOTLIGHT */
+    document.addEventListener("mousemove", e => {
+        document.body.style.setProperty('--x', e.clientX + 'px');
+        document.body.style.setProperty('--y', e.clientY + 'px');
+    });
 });
 </script>
 

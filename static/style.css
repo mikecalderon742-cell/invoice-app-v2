@@ -12,7 +12,7 @@ body {
     font-family: 'Inter', sans-serif;
     margin: 0;
     background: radial-gradient(circle at top left, #eef2ff, #ffffff);
-    transition: background 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -581,9 +581,24 @@ body::before {
 /* ========================= */
 
 .floating-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    text-decoration: none;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.25);
     opacity: 0;
     transform: scale(0.8);
     transition: all 0.3s ease;
+    z-index: 1500;
 }
 
 .floating-btn.show {
@@ -630,35 +645,13 @@ body::before {
     }
 }
 
-/* SHOW FAB AFTER SCROLL */
-const fab = document.querySelector(".floating-btn");
-
-window.addEventListener("scroll", () => {
-    if (window.scrollY > 200) {
-        fab.classList.add("show");
-    } else {
-        fab.classList.remove("show");
-    }
-});
-
+/* Smooth page exit state */
 body.fade-exit {
     opacity: 0;
     transition: opacity 0.2s ease;
 }
 
-/* SMOOTH PAGE EXIT */
-document.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", function(e) {
-        if (this.hostname === window.location.hostname) {
-            e.preventDefault();
-            document.body.classList.add("fade-exit");
-            setTimeout(() => {
-                window.location = this.href;
-            }, 200);
-        }
-    });
-});
-
+/* Cursor spotlight (positioned via --x, --y from JS) */
 body::after {
     content: "";
     position: fixed;
@@ -669,18 +662,11 @@ body::after {
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
-}
-
-/* CURSOR SPOTLIGHT */
-document.addEventListener("mousemove", e => {
-    document.body.style.setProperty('--x', e.clientX + 'px');
-    document.body.style.setProperty('--y', e.clientY + 'px');
-});
-
-body::after {
     left: var(--x);
     top: var(--y);
 }
+
+/* CTA section */
 
 .cta-section {
     text-align: center;
@@ -694,19 +680,18 @@ body::after {
     padding: 14px 30px;
 }
 
+/* WELCOME MODAL */
+
 .welcome-modal {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: 100% !important;
-
     background: rgba(0, 0, 0, 0.65) !important;
-
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-
     z-index: 100000 !important;
 }
 
@@ -725,9 +710,7 @@ body.dark .welcome-content {
     background: #1f2937;
 }
 
-body {
-    transition: background 0.4s ease, color 0.4s ease;
-}
+/* LOADER */
 
 .loader {
     position: fixed;
@@ -743,10 +726,6 @@ body {
 
 .form-actions {
     margin-top: 10px;
-}
-
-.hidden {
-    display: none !important;
 }
 
 /* =========================
@@ -843,7 +822,7 @@ body {
     transition: all 0.25s ease;
 }
 
-.dark .card.kpi {
+body.dark .card.kpi {
     background: linear-gradient(
         145deg,
         rgba(30,30,30,0.9),
@@ -918,7 +897,7 @@ body {
     font-size: 14px;
 }
 
-.dark .search-bar.modern input {
+body.dark .search-bar.modern input {
     background: rgba(40,40,40,0.8);
     border: 1px solid rgba(255,255,255,0.08);
     color: white;
@@ -943,7 +922,7 @@ body {
     background: rgba(0,0,0,0.05);
 }
 
-.dark .modern-table thead {
+body.dark .modern-table thead {
     background: rgba(255,255,255,0.05);
 }
 
@@ -960,7 +939,7 @@ body {
     border-top: 1px solid rgba(0,0,0,0.05);
 }
 
-.dark .modern-table td {
+body.dark .modern-table td {
     border-top: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -972,7 +951,7 @@ body {
     background: rgba(0,0,0,0.03);
 }
 
-.dark .modern-table tbody tr:hover {
+body.dark .modern-table tbody tr:hover {
     background: rgba(255,255,255,0.03);
 }
 
@@ -1421,16 +1400,21 @@ body.dark .chart-card.brand-accent {
     color: white;
 }
 
+/* Row Status Highlighting */
 .row-overdue {
-    background: rgba(255, 0, 0, 0.08);
+    background-color: #fef2f2;
 }
 
 .row-paid {
-    background: rgba(0, 255, 100, 0.05);
+    background-color: #ecfdf5;
 }
 
 .row-draft {
     background: rgba(255, 255, 255, 0.03);
+}
+
+.row-sent {
+    background-color: #eff6ff;
 }
 
 .btn-edit {
@@ -1448,30 +1432,6 @@ body.dark .chart-card.brand-accent {
     color: white;
 }
 
-.table-wrapper {
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    overflow: hidden;
-    background: white;
-}
-
-.modern-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.modern-table th {
-    background: #f3f4f6;
-    padding: 12px;
-    text-align: left;
-    font-weight: 600;
-}
-
-.modern-table td {
-    padding: 12px;
-    border-top: 1px solid #e5e7eb;
-}
-
 .btn-danger {
     background: #dc2626;
     color: white;
@@ -1482,34 +1442,7 @@ body.dark .chart-card.brand-accent {
     color: white;
 }
 
-.badge.paid {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.badge.sent {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.badge.overdue {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-/* Row Status Highlighting */
-.row-paid {
-    background-color: #ecfdf5;
-}
-
-.row-overdue {
-    background-color: #fef2f2;
-}
-
-.row-sent {
-    background-color: #eff6ff;
-}
-
+/* Status badges refined */
 .badge {
     padding: 4px 10px;
     border-radius: 12px;
@@ -1537,213 +1470,195 @@ tbody tr:nth-child(even) {
     background-color: rgba(0, 0, 0, 0.03);
 }
 
-/* Dark mode fix */
-.dark-mode tbody tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-.dark-mode tbody tr:nth-child(odd) {
-    background-color: rgba(255, 255, 255, 0.02) !important;
-}
-
 /* =========================================  
 TABLE + DARK MODE + FOOTER FIX OVERRIDES  
-(Place at the BOTTOM of style.css)  
 ========================================= */
+
 /* TABLE WRAPPER - restore strong card + border */  
 .table-wrapper {  
-margin-top: 2rem;  
-margin-bottom: 3rem;  
-border-radius: 16px;  
-border: 2px solid #151B54;  
-overflow: hidden;  
-background-color: #ffffff;  
-box-shadow: 0 14px 30px rgba(0,0,0,0.18);  
-}
-/* Dark mode wrapper */  
-html.dark-mode .table-wrapper,  
-body.dark-mode .table-wrapper,  
-html.dark .table-wrapper,  
-body.dark .table-wrapper {  
-background-color: #050816;  
-border-color: rgba(148, 163, 184, 0.6);  
-box-shadow: 0 16px 40px rgba(0,0,0,0.6);  
-}
-/* BASE TABLE */  
-.modern-table {  
-width: 100%;  
-border-collapse: collapse;  
-font-size: 0.92rem;  
-}
-/* Header */  
-.modern-table thead {  
-background: #151B54;  
-color: #fff;  
-}
-.modern-table thead th {  
-padding: 12px 16px;  
-text-align: left;  
-font-weight: 600;  
-}
-/* Body cells */  
-.modern-table tbody td {  
-padding: 10px 16px;  
-border-bottom: 1px solid rgba(0,0,0,0.06);  
-}
-/* LIGHT MODE alternating rows */  
-.modern-table tbody tr:nth-child(odd) {  
-background: #ffffff;  
-}
-.modern-table tbody tr:nth-child(even) {  
-background: #f5f6fa;  
-}
-/* DARK MODE alternating rows – override BOTH, no white rows */  
-html.dark-mode .modern-table tbody tr:nth-child(odd),  
-body.dark-mode .modern-table tbody tr:nth-child(odd),  
-html.dark .modern-table tbody tr:nth-child(odd),  
-body.dark .modern-table tbody tr:nth-child(odd) {  
-background: rgba(15, 23, 42, 0.90);  
-}
-html.dark-mode .modern-table tbody tr:nth-child(even),  
-body.dark-mode .modern-table tbody tr:nth-child(even),  
-html.dark .modern-table tbody tr:nth-child(even),  
-body.dark .modern-table tbody tr:nth-child(even) {  
-background: rgba(15, 23, 42, 0.96);  
-}
-/* Hover */  
-.modern-table tbody tr:hover {  
-background: rgba(21, 27, 84, 0.08);  
-}
-html.dark-mode .modern-table tbody tr:hover,  
-body.dark-mode .modern-table tbody tr:hover,  
-html.dark .modern-table tbody tr:hover,  
-body.dark .modern-table tbody tr:hover {  
-background: rgba(255,255,255,0.06);  
-}
-/* ROW HIGHLIGHT ACCENTS */  
-.row-paid {  
-border-left: 4px solid #16a34a;  
-}
-.row-overdue {  
-border-left: 4px solid #dc2626;  
-}
-.row-sent {  
-border-left: 4px solid #0ea5e9;  
-}
-/* BADGES */  
-.badge {  
-padding: 4px 10px;  
-border-radius: 999px;  
-font-size: 0.75rem;  
-font-weight: 600;  
-}
-.badge.paid {  
-background: rgba(22,163,74,0.12);  
-color: #166534;  
-}
-.badge.overdue {  
-background: rgba(220,38,38,0.12);  
-color: #b91c1c;  
-}
-.badge.sent {  
-background: rgba(37,99,235,0.12);  
-color: #1d4ed8;  
-}
-.badge.draft {  
-background: rgba(148,163,184,0.15);  
-color: #4b5563;  
-}
-/* Dark mode badge colors */  
-html.dark-mode .badge.paid,  
-body.dark-mode .badge.paid,  
-html.dark .badge.paid,  
-body.dark .badge.paid {  
-background: rgba(22,163,74,0.25);  
-color: #bbf7d0;  
-}
-html.dark-mode .badge.overdue,  
-body.dark-mode .badge.overdue,  
-html.dark .badge.overdue,  
-body.dark .badge.overdue {  
-background: rgba(220,38,38,0.25);  
-color: #fecaca;  
-}
-html.dark-mode .badge.sent,  
-body.dark-mode .badge.sent,  
-html.dark .badge.sent,  
-body.dark .badge.sent {  
-background: rgba(37,99,235,0.25);  
-color: #bfdbfe;  
-}
-html.dark-mode .badge.draft,  
-body.dark-mode .badge.draft,  
-html.dark .badge.draft,  
-body.dark .badge.draft {  
-background: rgba(148,163,184,0.25);  
-color: #e5e7eb;  
-}
-/* ACTION BUTTONS – keep them tidy in the row */  
-.action-buttons .btn {  
-padding: 6px 10px;  
-font-size: 0.8rem;  
-border-radius: 10px;  
-}
-.action-buttons .btn + .btn {  
-margin-left: 6px;  
-}
-/* FOOTER FIX – stop overlapping table */  
-footer,  
-.site-footer {  
-position: static !important;  
-margin-top: 2rem;  
-}
-/* if you previously added padding-bottom on body for a fixed footer, this neutralizes it */  
-body {  
-padding-bottom: 0;  
+    margin-top: 2rem;  
+    margin-bottom: 3rem;  
+    border-radius: 16px;  
+    border: 2px solid #151B54;  
+    overflow: hidden;  
+    background-color: #ffffff;  
+    box-shadow: 0 14px 30px rgba(0,0,0,0.18);  
 }
 
-/* ===== HARD RESET FOOTER POSITIONING ===== */
+/* Dark mode wrapper */  
+body.dark .table-wrapper {  
+    background-color: #050816;  
+    border-color: rgba(148, 163, 184, 0.6);  
+    box-shadow: 0 16px 40px rgba(0,0,0,0.6);  
+}
+
+/* BASE TABLE */  
+.modern-table {  
+    width: 100%;  
+    border-collapse: collapse;  
+    font-size: 0.92rem;  
+}
+
+/* Header */  
+.modern-table thead {  
+    background: #151B54;  
+    color: #fff;  
+}
+
+.modern-table thead th {  
+    padding: 12px 16px;  
+    text-align: left;  
+    font-weight: 600;  
+}
+
+/* Body cells */  
+.modern-table tbody td {  
+    padding: 10px 16px;  
+    border-bottom: 1px solid rgba(0,0,0,0.06);  
+}
+
+/* LIGHT MODE alternating rows */  
+.modern-table tbody tr:nth-child(odd) {  
+    background: #ffffff;  
+}
+
+.modern-table tbody tr:nth-child(even) {  
+    background: #f5f6fa;  
+}
+
+/* DARK MODE alternating rows – override BOTH, no white rows */  
+body.dark .modern-table tbody tr:nth-child(odd) {  
+    background: rgba(15, 23, 42, 0.90);  
+}
+
+body.dark .modern-table tbody tr:nth-child(even) {  
+    background: rgba(15, 23, 42, 0.96);  
+}
+
+/* Hover */  
+.modern-table tbody tr:hover {  
+    background: rgba(21, 27, 84, 0.08);  
+}
+
+body.dark .modern-table tbody tr:hover {  
+    background: rgba(255,255,255,0.06);  
+}
+
+/* ROW HIGHLIGHT ACCENTS */  
+.row-paid {  
+    border-left: 4px solid #16a34a;  
+}
+
+.row-overdue {  
+    border-left: 4px solid #dc2626;  
+}
+
+.row-sent {  
+    border-left: 4px solid #0ea5e9;  
+}
+
+/* Refined badges for table */  
+.badge {  
+    padding: 4px 10px;  
+    border-radius: 999px;  
+    font-size: 0.75rem;  
+    font-weight: 600;  
+}
+
+.badge.paid {  
+    background: rgba(22,163,74,0.12);  
+    color: #166534;  
+}
+
+.badge.overdue {  
+    background: rgba(220,38,38,0.12);  
+    color: #b91c1c;  
+}
+
+.badge.sent {  
+    background: rgba(37,99,235,0.12);  
+    color: #1d4ed8;  
+}
+
+.badge.draft {  
+    background: rgba(148,163,184,0.15);  
+    color: #4b5563;  
+}
+
+/* Dark mode badge colors */  
+body.dark .badge.paid {  
+    background: rgba(22,163,74,0.25);  
+    color: #bbf7d0;  
+}
+
+body.dark .badge.overdue {  
+    background: rgba(220,38,38,0.25);  
+    color: #fecaca;  
+}
+
+body.dark .badge.sent {  
+    background: rgba(37,99,235,0.25);  
+    color: #bfdbfe;  
+}
+
+body.dark .badge.draft {  
+    background: rgba(148,163,184,0.25);  
+    color: #e5e7eb;  
+}
+
+/* ACTION BUTTONS – keep them tidy in the row */  
+.action-buttons .btn {  
+    padding: 6px 10px;  
+    font-size: 0.8rem;  
+    border-radius: 10px;  
+}
+
+.action-buttons .btn + .btn {  
+    margin-left: 6px;  
+}
+
+/* FOOTER FIX – stop overlapping table */  
 footer,  
 .footer,  
 .site-footer,  
 .app-footer {  
-position: static !important;  
-bottom: auto !important;  
-top: auto !important;  
-left: 0 !important;  
-right: 0 !important;  
-width: 100%;  
-margin-top: 3rem;  
-clear: both;  
-z-index: 0 !important;  
+    position: static !important;  
+    bottom: auto !important;  
+    top: auto !important;  
+    left: 0 !important;  
+    right: 0 !important;  
+    width: 100%;  
+    margin-top: 3rem;  
+    clear: both;  
+    z-index: 0 !important;  
 }
+
 /* In case layout was set up for a fixed footer */  
 body,  
 html {  
-height: auto;  
+    height: auto;  
 }
+
 main,  
 .main,  
 .main-content {  
-min-height: auto;  
-padding-bottom: 0;  
+    min-height: auto;  
+    padding-bottom: 0;  
 }
-/* ===== TABLE CARD EMPHASIS ===== */
+
+/* Emphasized table card */  
 .table-wrapper {  
-margin-top: 2.5rem;  
-margin-bottom: 3.5rem;  
-padding: 1rem 1.25rem;  
-border-radius: 18px;  
-border: 2px solid #151B54;  
-background: #ffffff;  
-box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);  
+    margin-top: 2.5rem;  
+    margin-bottom: 3.5rem;  
+    padding: 1rem 1.25rem;  
+    border-radius: 18px;  
+    border: 2px solid #151B54;  
+    background: #ffffff;  
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);  
 }
-/* Dark mode version of the card */  
-html.dark-mode .table-wrapper,  
-body.dark-mode .table-wrapper,  
-html.dark .table-wrapper,  
+
 body.dark .table-wrapper {  
-background: #020617;  
-border-color: rgba(148, 163, 184, 0.7);  
-box-shadow: 0 22px 50px rgba(0, 0, 0, 0.8);  
+    background: #020617;  
+    border-color: rgba(148, 163, 184, 0.7);  
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.8);  
 }
