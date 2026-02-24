@@ -60,7 +60,7 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
+                <tbody>
         {% for invoice in invoices %}
             <tr class="
                 {% if invoice[4] == 'Paid' %}row-paid
@@ -68,12 +68,12 @@
                 {% elif invoice[4] == 'Sent' %}row-sent
                 {% endif %}
             ">
-                <td>#{{ invoice[0] }}</td>
-                <td>{{ invoice[1] }}</td>
-                <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-                <td>{{ invoice[3].strftime('%Y-%m-%d') }}</td>
+                <td data-label="Invoice #">#{{ invoice[0] }}</td>
+                <td data-label="Client">{{ invoice[1] }}</td>
+                <td data-label="Amount">${{ "{:,.2f}".format(invoice[2]) }}</td>
+                <td data-label="Date">{{ invoice[3].strftime('%Y-%m-%d') }}</td>
 
-                <td>
+                <td data-label="Status">
                     {% if invoice[4] == "Paid" %}
                         <span class="badge paid">Paid</span>
                     {% elif invoice[4] == "Overdue" %}
@@ -85,7 +85,7 @@
                     {% endif %}
                 </td>
 
-                <td class="action-buttons">
+                <td class="action-buttons" data-label="Actions">
                     <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
                     {% if invoice[4] != "Paid" %}
