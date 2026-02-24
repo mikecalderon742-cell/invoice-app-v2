@@ -46,7 +46,6 @@
     </div>
 
 </div>
-
 <!-- TABLE -->
 <div class="table-wrapper">
     <table class="modern-table">
@@ -55,12 +54,13 @@
                 <th>Invoice #</th>
                 <th>Client</th>
                 <th>Amount</th>
-                <th>Date</th>
+                <th>Created</th>
+                <th>Due</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
-                <tbody>
+        <tbody>
         {% for invoice in invoices %}
             <tr class="
                 {% if invoice[4] == 'Paid' %}row-paid
@@ -68,11 +68,36 @@
                 {% elif invoice[4] == 'Sent' %}row-sent
                 {% endif %}
             ">
-                <td data-label="Invoice #">#{{ invoice[0] }}</td>
-                <td data-label="Client">{{ invoice[1] }}</td>
-                <td data-label="Amount">${{ "{:,.2f}".format(invoice[2]) }}</td>
-                <td data-label="Date">{{ invoice[3].strftime('%Y-%m-%d') }}</td>
+                <!-- Invoice number (fallback to #id if null) -->
+                <td data-label="Invoice #">
+                    {% if invoice[5] %}
+                        {{ invoice[5] }}
+                    {% else %}
+                        #{{ invoice[0] }}
+                    {% endif %}
+                </td>
 
+                <!-- Client -->
+                <td data-label="Client">{{ invoice[1] }}</td>
+
+                <!-- Amount -->
+                <td data-label="Amount">${{ "{:,.2f}".format(invoice[2]) }}</td>
+
+                <!-- Created date -->
+                <td data-label="Created">
+                    {{ invoice[3].strftime('%Y-%m-%d') }}
+                </td>
+
+                <!-- Due date (may be empty for older invoices) -->
+                <td data-label="Due">
+                    {% if invoice[6] %}
+                        {{ invoice[6].strftime('%Y-%m-%d') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+
+                <!-- Status badge -->
                 <td data-label="Status">
                     {% if invoice[4] == "Paid" %}
                         <span class="badge paid">Paid</span>
@@ -85,6 +110,7 @@
                     {% endif %}
                 </td>
 
+                <!-- Actions -->
                 <td class="action-buttons" data-label="Actions">
                     <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
