@@ -1,16 +1,19 @@
 from flask import Flask, render_template, request, send_file, redirect
-from datetime import datetime, timedelta
+from datetime import datetime
 import psycopg2
 from urllib.parse import urlparse
 from pathlib import Path
 import os
-from collections import defaultdict
+import io  # <-- needed for BytesIO in history_pdf
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
+    if not DATABASE_URL:
+        # Fail fast with a clear error if DATABASE_URL is not set
+        raise RuntimeError("DATABASE_URL environment variable is not set.")
     result = urlparse(DATABASE_URL)
     conn = psycopg2.connect(
         dbname=result.path[1:],
@@ -20,6 +23,7 @@ def get_db_connection():
         port=result.port
     )
     return conn
+
 
 app = Flask(__name__)
 
@@ -173,7 +177,6 @@ def invoices_page():
     total_invoices = len(invoices)
     total_revenue = sum(inv[2] for inv in invoices)
 
-    from datetime import datetime
     now = datetime.now()
     current_month = now.month
     current_year = now.year
@@ -380,8 +383,6 @@ def history_pdf(invoice_id):
 def health():
     return "OK", 200
 
-
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
