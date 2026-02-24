@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Clients</h1>
+    <div class="quick-actions">
+        <a href="/" class="btn btn-secondary">+ New Invoice</a>
+        <a href="/invoices" class="btn btn-secondary">Invoice History</a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up" style="margin-bottom:30px;">
+    <h2 style="margin-top:0;">Add New Client</h2>
+    <form method="POST" action="/clients/add">
+        <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px; margin-bottom:12px;">
+            <div>
+                <label for="name" style="font-weight:600; font-size:14px;">Name *</label>
+                <input type="text" id="name" name="name" required placeholder="Client name">
+            </div>
+            <div>
+                <label for="email" style="font-weight:600; font-size:14px;">Email</label>
+                <input type="email" id="email" name="email" placeholder="client@example.com">
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div>
+                <label for="company" style="font-weight:600; font-size:14px;">Company</label>
+                <input type="text" id="company" name="company" placeholder="Company (optional)">
+            </div>
+            <div>
+                <label for="phone" style="font-weight:600; font-size:14px;">Phone</label>
+                <input type="text" id="phone" name="phone" placeholder="Phone (optional)">
+            </div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label for="address" style="font-weight:600; font-size:14px;">Address</label>
+            <input type="text" id="address" name="address" placeholder="Address (optional)">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label for="notes" style="font-weight:600; font-size:14px;">Notes</label>
+            <input type="text" id="notes" name="notes" placeholder="e.g. Prefers PayPal, pay in 7 days">
+        </div>
+
+        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="submit" class="btn btn-brand">Add Client</button>
+        </div>
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if clients %}
+            {% for client in clients %}
+            <tr>
+                <td>{{ client[1] }}</td>
+                <td>{{ client[2] or "—" }}</td>
+                <td>{{ client[3] or "—" }}</td>
+                <td>{{ client[4].strftime('%Y-%m-%d') if client[4] else "—" }}</td>
+                <td class="action-buttons">
+                    <a href="/" class="btn btn-edit">New Invoice</a>
+                    <a href="/clients/delete/{{ client[0] }}" class="btn btn-danger"
+                       onclick="return confirm('Delete this client? This does NOT delete their invoices, but may orphan references.');">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="5" style="text-align:center; padding:20px;">
+                    No clients yet. Add your first client above.
+                </td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

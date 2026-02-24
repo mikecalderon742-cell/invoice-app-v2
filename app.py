@@ -36,6 +36,7 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Base invoices + items tables
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id SERIAL PRIMARY KEY,
@@ -55,7 +56,7 @@ def init_db():
         );
     """)
 
-    # New: clients table (future-proofing)
+    # New: clients table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS clients (
             id SERIAL PRIMARY KEY,
@@ -69,7 +70,7 @@ def init_db():
         );
     """)
 
-    # New: extra columns on invoices (safe even if they already exist)
+    # New: extra columns on invoices (safe if already exist)
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;")
@@ -82,7 +83,10 @@ def init_db():
 
 
 def update_overdue_statuses():
-    """Mark invoices as Overdue when past due_date and not already Paid/Overdue."""
+    """
+    Mark invoices as Overdue when past due_date and not already Paid/Overdue.
+    Runs each time the invoices page is loaded.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -106,15 +110,28 @@ def inject_now():
 
 
 # -------------------------
-# HOME
+# HOME (NEW INVOICE FORM)
 # -------------------------
 @app.route("/")
 def home():
-    return render_template("index.html")
+    """
+    Show the New Invoice form with a dropdown of existing clients.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, name, email
+        FROM clients
+        ORDER BY created_at DESC
+    """)
+    clients = cursor.fetchall()
+    conn.close()
+
+    return render_template("index.html", clients=clients)
 
 
 # -------------------------
-# PREVIEW
+# PREVIEW (currently not used by the form, kept for future)
 # -------------------------
 @app.route("/preview", methods=["POST"])
 def preview():
@@ -144,18 +161,30 @@ def preview():
 # -------------------------
 @app.route("/save", methods=["POST"])
 def save():
-    client = request.form.get("client")
+    """
+    Save a new invoice:
+    - Uses existing client if client_id is provided
+    - Or creates a new client if new_client_name is provided
+    - Falls back to plain 'client' text if needed
+    """
+    # Client selection
+    selected_client_id = request.form.get("client_id")
+    new_client_name = request.form.get("new_client_name")
+    new_client_email = request.form.get("new_client_email")
+    new_client_company = request.form.get("new_client_company")
+    new_client_phone = request.form.get("new_client_phone")
+    new_client_address = request.form.get("new_client_address")
+    new_client_notes = request.form.get("new_client_notes")
+
+    # Optional invoice meta
+    notes = request.form.get("invoice_notes") or ""
+    terms = request.form.get("invoice_terms") or "Payment due within 30 days."
+
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
-    # Optional new fields (we can wire these into index.html later)
-    notes = request.form.get("notes") or ""
-    terms = request.form.get("terms") or "Payment due within 30 days."
-
     created_at = datetime.now()
     status = "Sent"
-
-    # Default due date: 30 days from now
     due_date = created_at + timedelta(days=30)
 
     total = 0
@@ -170,12 +199,54 @@ def save():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Figure out which client to use
+    client_name_for_invoice = None
+    client_id = None
+
+    # 1) If an existing client is selected
+    if selected_client_id:
+        try:
+            cid_int = int(selected_client_id)
+            cursor.execute(
+                "SELECT id, name FROM clients WHERE id = %s",
+                (cid_int,)
+            )
+            row = cursor.fetchone()
+            if row:
+                client_id, client_name_for_invoice = row
+        except ValueError:
+            pass
+
+    # 2) If new client details are provided, create a client
+    if not client_name_for_invoice and new_client_name:
+        cursor.execute(
+            """
+            INSERT INTO clients (name, email, company, phone, address, notes)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            (
+                new_client_name,
+                new_client_email or None,
+                new_client_company or None,
+                new_client_phone or None,
+                new_client_address or None,
+                new_client_notes or None
+            )
+        )
+        client_id = cursor.fetchone()[0]
+        client_name_for_invoice = new_client_name
+
+    # 3) Fallback: free-text client field (for safety)
+    if not client_name_for_invoice:
+        client_name_for_invoice = request.form.get("client") or "Unknown client"
+
     # Insert invoice and get its ID
     cursor.execute("""
-        INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms, client_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
-    """, (client, total, created_at, status, due_date, notes, terms))
+    """, (client_name_for_invoice, total, created_at, status, due_date, notes, terms, client_id))
 
     invoice_id = cursor.fetchone()[0]
 
@@ -205,7 +276,7 @@ def save():
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
-    # First, auto-update overdue statuses
+    # Auto-update overdue statuses
     update_overdue_statuses()
 
     conn = get_db_connection()
@@ -219,7 +290,7 @@ def invoices_page():
     invoices = cursor.fetchall()
     conn.close()
 
-    # ---- STANDARDIZE NUMBERS (Convert Decimal to float) ----
+    # Convert Decimal to float
     cleaned_invoices = []
     for invoice in invoices:
         invoice_list = list(invoice)
@@ -228,7 +299,7 @@ def invoices_page():
 
     invoices = cleaned_invoices
 
-    # ---- KPI CALCULATIONS ----
+    # KPI CALCULATIONS
     total_invoices = len(invoices)
     total_revenue = sum(inv[2] for inv in invoices)
 
@@ -248,7 +319,6 @@ def invoices_page():
     paid_count = sum(1 for inv in invoices if inv[4] == "Paid")
     overdue_count = sum(1 for inv in invoices if inv[4] == "Overdue")
 
-    # ---- STATUS DISTRIBUTION (FOR TEMPLATE) ----
     status_distribution = {
         "Paid": paid_count,
         "Sent": sum(1 for inv in invoices if inv[4] == "Sent"),
@@ -270,7 +340,74 @@ def invoices_page():
 
 
 # -------------------------
-# EDIT
+# CLIENTS PAGE
+# -------------------------
+@app.route("/clients")
+def clients_page():
+    """
+    Simple clients listing + quick add form.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, name, email, company, created_at
+        FROM clients
+        ORDER BY created_at DESC
+    """)
+    clients = cursor.fetchall()
+    conn.close()
+
+    return render_template("clients.html", clients=clients)
+
+
+@app.route("/clients/add", methods=["POST"])
+def add_client():
+    """
+    Add a new client from the Clients page.
+    """
+    name = request.form.get("name")
+    email = request.form.get("email")
+    company = request.form.get("company")
+    phone = request.form.get("phone")
+    address = request.form.get("address")
+    notes = request.form.get("notes")
+
+    if not name:
+        return redirect("/clients")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO clients (name, email, company, phone, address, notes)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """, (name, email, company, phone, address, notes))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect("/clients")
+
+
+@app.route("/clients/delete/<int:client_id>")
+def delete_client(client_id):
+    """
+    Delete a client (only if no invoices reference them ideally, but
+    for now we won't enforce that).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Optional: you could null out client_id on invoices instead of blocking
+    cursor.execute("DELETE FROM clients WHERE id = %s", (client_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect("/clients")
+
+
+# -------------------------
+# EDIT INVOICE
 # -------------------------
 @app.route("/edit/<int:invoice_id>")
 def edit(invoice_id):
@@ -301,7 +438,7 @@ def edit(invoice_id):
 
 
 # -------------------------
-# UPDATE
+# UPDATE INVOICE
 # -------------------------
 @app.route("/update/<int:invoice_id>", methods=["POST"])
 def update(invoice_id):
@@ -363,7 +500,7 @@ def update_status(invoice_id, new_status):
 
 
 # -------------------------
-# DELETE
+# DELETE INVOICE
 # -------------------------
 @app.route("/delete/<int:invoice_id>")
 def delete(invoice_id):

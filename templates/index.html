@@ -1,78 +1,127 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<!-- SPLIT HERO SECTION -->
-<div class="hero fade-in-up">
-
+<div class="hero reveal">
     <div class="hero-left">
-        <h1>Simple Invoicing. Powerful Results.</h1>
-        <p>Create, track, and manage invoices with ease.</p>
-
-        <a href="/invoices" class="btn hero-cta">View Invoice Dashboard</a>
+        <h1>Create a New Invoice</h1>
+        <p>Pick a client, add your services, and track your revenue with a clean dashboard.</p>
+        <a href="/invoices" class="btn hero-cta">View Invoice History</a>
     </div>
-
     <div class="hero-right">
         <div class="mock-card">
-            <h3>Live Revenue</h3>
-            <h2 id="revenueTicker">$12,450.00</h2>
-            <p>+12% this month</p>
+            <h3>InvoicePro Snapshot</h3>
+            <p style="margin: 10px 0;">Fast, modern, and built for solo devs and small teams.</p>
+            <p><strong>Tip:</strong> Add your frequent clients once, then select them in a click.</p>
         </div>
     </div>
-
 </div>
 
-<!-- FORM WRAPPER -->
 <div class="form-wrapper fade-in-up">
+    <h2 style="margin-top:0;">New Invoice</h2>
 
-    <h2 style="margin-bottom:25px;">Create Invoice</h2>
+    <form method="POST" action="/save">
 
-    <form method="POST" action="/preview">
+        <!-- CLIENT SECTION -->
+        <h3>Client</h3>
+        <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
 
-        <input type="text" name="client" placeholder="Client Name" required>
-        <br><br>
-
-        <div id="items">
-            <div class="item-row">
-                <input type="text" name="description" placeholder="Item description" required>
-                <input type="number" step="0.01" name="amount" placeholder="Amount" required>
+            <!-- Existing client dropdown -->
+            <div>
+                <label for="client_id" style="font-weight:600; font-size:14px;">Existing Client (optional)</label>
+                <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+                    <option value="">-- Select existing client --</option>
+                    {% for client in clients %}
+                        <option value="{{ client[0] }}">
+                            {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+                <small style="font-size:12px; opacity:0.7;">Choose a client you've already worked with, or add a new one below.</small>
             </div>
-            <br>
+
+            <!-- New client fields -->
+            <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
+                <div>
+                    <label for="new_client_name" style="font-weight:600; font-size:14px;">New Client Name</label>
+                    <input type="text" id="new_client_name" name="new_client_name" placeholder="e.g. Acme Corp or Jane Doe">
+                </div>
+                <div>
+                    <label for="new_client_email" style="font-weight:600; font-size:14px;">Client Email</label>
+                    <input type="email" id="new_client_email" name="new_client_email" placeholder="client@example.com">
+                </div>
+            </div>
+
+            <div>
+                <label for="new_client_company" style="font-weight:600; font-size:14px;">Company (optional)</label>
+                <input type="text" id="new_client_company" name="new_client_company" placeholder="Company name">
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                    <label for="new_client_phone" style="font-weight:600; font-size:14px;">Phone (optional)</label>
+                    <input type="text" id="new_client_phone" name="new_client_phone" placeholder="+1 (555) 123-4567">
+                </div>
+                <div>
+                    <label for="new_client_address" style="font-weight:600; font-size:14px;">Address (optional)</label>
+                    <input type="text" id="new_client_address" name="new_client_address" placeholder="City, Country">
+                </div>
+            </div>
+
+            <div>
+                <label for="new_client_notes" style="font-weight:600; font-size:14px;">Client Notes (optional)</label>
+                <input type="text" id="new_client_notes" name="new_client_notes" placeholder="e.g. Prefers bank transfer, pay within 7 days">
+            </div>
+
         </div>
 
-        <button type="button" class="btn btn-secondary" onclick="addItem()">+ Add Item</button>
-        <br><br>
+        <!-- INVOICE META -->
+        <h3>Invoice Details</h3>
+        <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
+            <div>
+                <label for="invoice_notes" style="font-weight:600; font-size:14px;">Invoice Notes (optional)</label>
+                <input type="text" id="invoice_notes" name="invoice_notes" placeholder="e.g. Thanks for your business!">
+            </div>
+            <div>
+                <label for="invoice_terms" style="font-weight:600; font-size:14px;">Payment Terms</label>
+                <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
+            </div>
+        </div>
 
-        <button type="submit" class="btn">Preview Invoice</button>
+        <!-- LINE ITEMS -->
+        <h3>Line Items</h3>
+        <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+            Add at least one service or product. You can leave unused rows blank.
+        </p>
+
+        <div class="table-wrapper" style="margin-top:12px;">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="width:180px;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(3) %}
+                    <tr>
+                        <td>
+                            <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <a href="/invoices" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-brand">Save Invoice</button>
+        </div>
 
     </form>
-
 </div>
-
-<!-- PREMIUM CTA (MOVED OUTSIDE FORM) -->
-
-{% if not request.path == "/preview" %}
-<div class="cta-section reveal">
-    <h2>Ready to take control of your invoicing?</h2>
-    <p>Join thousands of professionals simplifying their workflow.</p>
-    
-    <a href="/" class="btn cta-btn">Start Creating Invoices</a>
-</div>
-{% endif %}
-
-
-<script>
-    function addItem() {
-        const container = document.getElementById("items");
-        const row = document.createElement("div");
-        row.classList.add("item-row");
-        row.innerHTML = `
-            <input type="text" name="description" placeholder="Item description" required>
-            <input type="number" step="0.01" name="amount" placeholder="Amount" required>
-            <br><br>
-        `;
-        container.appendChild(row);
-    }
-</script>
 
 {% endblock %}
