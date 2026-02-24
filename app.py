@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, send_file, redirect
-from datetime import datetime
+from datetime import datetime, timedelta
 import psycopg2
 from urllib.parse import urlparse
 from pathlib import Path
 import os
-import io  # <-- needed for BytesIO in history_pdf
+import io
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
@@ -12,7 +12,6 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
     if not DATABASE_URL:
-        # Fail fast with a clear error if DATABASE_URL is not set
         raise RuntimeError("DATABASE_URL environment variable is not set.")
     result = urlparse(DATABASE_URL)
     conn = psycopg2.connect(
@@ -56,9 +55,47 @@ def init_db():
         );
     """)
 
+    # New: clients table (future-proofing)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS clients (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT,
+            company TEXT,
+            phone TEXT,
+            address TEXT,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+
+    # New: extra columns on invoices (safe even if they already exist)
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS terms TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id);")
+
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def update_overdue_statuses():
+    """Mark invoices as Overdue when past due_date and not already Paid/Overdue."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE invoices
+        SET status = 'Overdue'
+        WHERE status NOT IN ('Paid', 'Overdue')
+          AND due_date IS NOT NULL
+          AND due_date < NOW();
+    """)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 
 init_db()
 
@@ -110,8 +147,16 @@ def save():
     client = request.form.get("client")
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
-    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Optional new fields (we can wire these into index.html later)
+    notes = request.form.get("notes") or ""
+    terms = request.form.get("terms") or "Payment due within 30 days."
+
+    created_at = datetime.now()
     status = "Sent"
+
+    # Default due date: 30 days from now
+    due_date = created_at + timedelta(days=30)
 
     total = 0
     cleaned_items = []
@@ -127,12 +172,19 @@ def save():
 
     # Insert invoice and get its ID
     cursor.execute("""
-        INSERT INTO invoices (client, amount, created_at, status)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING id
-    """, (client, total, created_at, status))
+    """, (client, total, created_at, status, due_date, notes, terms))
 
     invoice_id = cursor.fetchone()[0]
+
+    # Compute invoice_number based on ID, e.g. INV-00001
+    invoice_number = f"INV-{invoice_id:05d}"
+    cursor.execute(
+        "UPDATE invoices SET invoice_number = %s WHERE id = %s",
+        (invoice_number, invoice_id)
+    )
 
     # Insert invoice items
     for desc, amt in cleaned_items:
@@ -153,11 +205,14 @@ def save():
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
+    # First, auto-update overdue statuses
+    update_overdue_statuses()
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, client, amount, created_at, status
+        SELECT id, client, amount, created_at, status, invoice_number, due_date
         FROM invoices
         ORDER BY created_at DESC
     """)
