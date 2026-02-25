@@ -921,13 +921,15 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     )
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        # ⬇⬇ key change: add an explicit timeout so it fails fast instead of hanging until Gunicorn kills the worker
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
             server.starttls()
             if smtp_user and smtp_password:
                 server.login(smtp_user, smtp_password)
             server.send_message(msg)
     except Exception as e:
-        return False, f"Error sending email: {e}"
+        # This error gets surfaced nicely in your UI on /send-email/<id>
+        return False, f"Error sending email (connection or SMTP error): {e}"
 
     # Update invoice with last emailed info
     conn = get_db_connection()
