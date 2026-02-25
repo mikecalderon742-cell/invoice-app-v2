@@ -893,12 +893,24 @@ def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes
     Returns (success: bool, error_message: str or None)
     """
     api_key = os.environ.get("RESEND_API_KEY")
-    resend_from = os.environ.get("RESEND_FROM") or os.environ.get("SMTP_FROM")
+    resend_from = os.environ.get("RESEND_FROM")
 
-    if not api_key or not resend_from:
+    if not api_key:
+        return False, "Resend configuration missing: RESEND_API_KEY is not set."
+
+    if not resend_from:
         return False, (
-            "Resend configuration missing. Please set RESEND_API_KEY and RESEND_FROM "
-            "(or SMTP_FROM as a fallback)."
+            "Resend configuration missing: RESEND_FROM is not set. "
+            "Set RESEND_FROM to something like 'InvoicePro <billing@mikeinvoices.com>'."
+        )
+
+    # Extra guard: don't let gmail.com slip through by mistake
+    if "gmail.com" in resend_from.lower():
+        return False, (
+            "Resend cannot send from a gmail.com address. "
+            f"Current RESEND_FROM value is: '{resend_from}'. "
+            "Please change RESEND_FROM to use your verified domain, e.g. "
+            "'InvoicePro <billing@mikeinvoices.com>'."
         )
 
     # Resend expects attachments in base64
@@ -928,7 +940,14 @@ def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes
         )
 
         if resp.status_code >= 400:
-            return False, f"Resend API error {resp.status_code}: {resp.text}"
+            # Try to give a clearer explanation for common cases
+            try:
+                data = resp.json()
+                msg = data.get("message", "")
+            except Exception:
+                msg = resp.text
+
+            return False, f"Resend API error {resp.status_code}: {msg or resp.text}"
 
         return True, None
 
