@@ -79,6 +79,20 @@ def init_db():
     """
     )
 
+    # Payments table
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
+            amount NUMERIC NOT NULL,
+            method TEXT,
+            note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """
+    )
+
     # Extra columns on invoices (safe if already exist)
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;"
@@ -304,7 +318,7 @@ def save():
 
 
 # -------------------------
-# INVOICES PAGE (with search & filters)
+# INVOICES PAGE (with search, filters, payments, charts)
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
@@ -382,10 +396,44 @@ def invoices_page():
         "Overdue": overdue_count,
     }
 
-    # 2) Build filtered query for the table
-    base_sql = """
-        SELECT id, client, amount, created_at, status, invoice_number, due_date
+    # 1b) Monthly revenue data for chart (last 6 months)
+    cursor.execute(
+        """
+        SELECT date_trunc('month', created_at) AS month, SUM(amount) AS total
         FROM invoices
+        GROUP BY month
+        ORDER BY month DESC
+        LIMIT 6
+    """
+    )
+    monthly_rows = cursor.fetchall()
+
+    monthly_chart_labels = []
+    monthly_chart_totals = []
+    for month_dt, total_amt in reversed(monthly_rows):
+        monthly_chart_labels.append(month_dt.strftime("%b %Y"))
+        monthly_chart_totals.append(float(total_amt))
+
+    status_chart_labels = ["Paid", "Sent", "Overdue"]
+    status_chart_values = [
+        paid_count,
+        status_distribution.get("Sent", 0),
+        overdue_count,
+    ]
+
+    # 2) Build filtered query for the table, with payments aggregated
+    base_sql = """
+        SELECT
+            i.id,
+            i.client,
+            i.amount,
+            i.created_at,
+            i.status,
+            i.invoice_number,
+            i.due_date,
+            COALESCE(SUM(p.amount), 0) AS total_paid
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id
     """
     conditions = []
     params = []
@@ -394,28 +442,38 @@ def invoices_page():
     if q:
         like = f"%{q.lower()}%"
         conditions.append(
-            "(LOWER(client) LIKE %s OR LOWER(COALESCE(invoice_number, '')) LIKE %s)"
+            "(LOWER(i.client) LIKE %s OR LOWER(COALESCE(i.invoice_number, '')) LIKE %s)"
         )
         params.extend([like, like])
 
     # Status filter
     allowed_statuses = {"Paid", "Sent", "Overdue"}
     if status_filter in allowed_statuses:
-        conditions.append("status = %s")
+        conditions.append("i.status = %s")
         params.append(status_filter)
 
     # Date range filters
     if from_dt:
-        conditions.append("created_at >= %s")
+        conditions.append("i.created_at >= %s")
         params.append(from_dt)
     if to_dt:
-        conditions.append("created_at < %s")
+        conditions.append("i.created_at < %s")
         params.append(to_dt)
 
     filtered_sql = base_sql
     if conditions:
         filtered_sql += " WHERE " + " AND ".join(conditions)
-    filtered_sql += " ORDER BY created_at DESC"
+    filtered_sql += """
+        GROUP BY
+            i.id,
+            i.client,
+            i.amount,
+            i.created_at,
+            i.status,
+            i.invoice_number,
+            i.due_date
+        ORDER BY i.created_at DESC
+    """
 
     cursor.execute(filtered_sql, tuple(params))
     filtered_rows = cursor.fetchall()
@@ -426,6 +484,7 @@ def invoices_page():
     for row in filtered_rows:
         row_list = list(row)
         row_list[2] = float(row_list[2])  # amount
+        row_list[7] = float(row_list[7])  # total_paid
         invoices.append(row_list)
 
     filtered_count = len(invoices)
@@ -447,6 +506,11 @@ def invoices_page():
         from_date_str=from_date_str,
         to_date_str=to_date_str,
         filtered_count=filtered_count,
+        # Chart data
+        monthly_chart_labels=monthly_chart_labels,
+        monthly_chart_totals=monthly_chart_totals,
+        status_chart_labels=status_chart_labels,
+        status_chart_values=status_chart_values,
     )
 
 
@@ -519,6 +583,111 @@ def delete_client(client_id):
     conn.close()
 
     return redirect("/clients")
+
+
+# -------------------------
+# ADD PAYMENT
+# -------------------------
+@app.route("/add-payment/<int:invoice_id>", methods=["GET", "POST"])
+def add_payment(invoice_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, client, amount, status, invoice_number
+        FROM invoices
+        WHERE id = %s
+    """,
+        (invoice_id,),
+    )
+    invoice = cursor.fetchone()
+
+    if not invoice:
+        conn.close()
+        return "Invoice not found", 404
+
+    invoice_id_db, client_name, amount, status, invoice_number = invoice
+    amount_float = float(amount)
+    inv_label = invoice_number or f"#{invoice_id_db}"
+
+    feedback_message = None
+    feedback_type = None
+
+    if request.method == "POST":
+        try:
+            amt_str = (request.form.get("amount") or "").strip()
+            pay_amount = float(amt_str)
+        except ValueError:
+            pay_amount = 0.0
+
+        method = (request.form.get("method") or "").strip()
+        note = (request.form.get("note") or "").strip()
+
+        if pay_amount <= 0:
+            feedback_message = "Payment amount must be greater than zero."
+            feedback_type = "error"
+        else:
+            cursor.execute(
+                """
+                INSERT INTO payments (invoice_id, amount, method, note)
+                VALUES (%s, %s, %s, %s)
+            """,
+                (invoice_id_db, pay_amount, method or None, note or None),
+            )
+
+            # Recompute total paid
+            cursor.execute(
+                "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
+                (invoice_id_db,),
+            )
+            total_paid = float(cursor.fetchone()[0])
+
+            # Auto-mark as Paid if fully covered
+            if total_paid >= amount_float:
+                cursor.execute(
+                    "UPDATE invoices SET status = 'Paid' WHERE id = %s",
+                    (invoice_id_db,),
+                )
+
+            conn.commit()
+            feedback_message = (
+                f"Recorded payment of ${pay_amount:,.2f} on invoice {inv_label}."
+            )
+            feedback_type = "success"
+
+    # Fetch payments list for display
+    cursor.execute(
+        """
+        SELECT amount, method, note, created_at
+        FROM payments
+        WHERE invoice_id = %s
+        ORDER BY created_at DESC
+    """,
+        (invoice_id_db,),
+    )
+    payments = cursor.fetchall()
+
+    # Compute total paid & balance
+    total_paid = sum(float(p[0]) for p in payments)
+    balance = amount_float - total_paid
+
+    conn.close()
+
+    return render_template(
+        "add_payment.html",
+        invoice_id=invoice_id_db,
+        client_name=client_name,
+        amount=amount_float,
+        status=status,
+        invoice_number=invoice_number,
+        inv_label=inv_label,
+        payments=payments,
+        total_paid=total_paid,
+        balance=balance,
+        feedback_message=feedback_message,
+        feedback_type=feedback_type,
+    )
 
 
 # -------------------------

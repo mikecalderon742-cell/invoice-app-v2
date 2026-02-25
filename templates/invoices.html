@@ -96,6 +96,27 @@
 
 </div>
 
+<!-- CHARTS ROW -->
+<div class="chart-card brand-accent">
+    <div class="chart-header">
+        <div>
+            <h2>Revenue (Last 6 Months)</h2>
+            <span class="chart-sub">Track your billed revenue month over month.</span>
+        </div>
+    </div>
+    <canvas id="revenueChart" height="120"></canvas>
+</div>
+
+<div class="chart-card">
+    <div class="chart-header">
+        <div>
+            <h2>Status Breakdown</h2>
+            <span class="chart-sub">Paid vs Sent vs Overdue invoices.</span>
+        </div>
+    </div>
+    <canvas id="statusChart" height="140"></canvas>
+</div>
+
 <!-- TABLE -->
 <div class="table-wrapper">
     <table class="modern-table">
@@ -104,6 +125,8 @@
                 <th>Invoice #</th>
                 <th>Client</th>
                 <th>Amount</th>
+                <th>Paid</th>
+                <th>Balance</th>
                 <th>Created</th>
                 <th>Due</th>
                 <th>Status</th>
@@ -112,6 +135,7 @@
         </thead>
         <tbody>
         {% for invoice in invoices %}
+            {% set balance = invoice[2] - invoice[7] %}
             <tr class="
                 {% if invoice[4] == 'Paid' %}row-paid
                 {% elif invoice[4] == 'Overdue' %}row-overdue
@@ -132,6 +156,14 @@
 
                 <!-- Amount -->
                 <td data-label="Amount">${{ "{:,.2f}".format(invoice[2]) }}</td>
+
+                <!-- Paid -->
+                <td data-label="Paid">${{ "{:,.2f}".format(invoice[7]) }}</td>
+
+                <!-- Balance -->
+                <td data-label="Balance">
+                    ${{ "{:,.2f}".format(balance) }}
+                </td>
 
                 <!-- Created date -->
                 <td data-label="Created">
@@ -160,7 +192,7 @@
                     {% endif %}
                 </td>
 
-                                <!-- Actions -->
+                <!-- Actions -->
                 <td class="action-buttons" data-label="Actions">
                     <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
@@ -168,7 +200,13 @@
                         Send Email
                     </a>
 
-                    {% if invoice[4] != "Paid" %}
+                    {% if balance > 0.01 %}
+                        <a class="btn btn-success" href="/add-payment/{{ invoice[0] }}">
+                            Record Payment
+                        </a>
+                    {% endif %}
+
+                    {% if invoice[4] != "Paid" and balance > 0.01 %}
                         <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
                             Mark Paid
                         </a>
@@ -197,5 +235,74 @@
 </div>
 
 {% endif %}
+
+<!-- CHART.JS WIRING -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.Chart) {
+        const monthlyLabels = {{ monthly_chart_labels | tojson }};
+        const monthlyTotals = {{ monthly_chart_totals | tojson }};
+        const statusLabels = {{ status_chart_labels | tojson }};
+        const statusValues = {{ status_chart_values | tojson }};
+
+        const revenueCtx = document.getElementById("revenueChart");
+        if (revenueCtx && monthlyLabels.length > 0) {
+            new Chart(revenueCtx, {
+                type: "line",
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: "Revenue",
+                        data: monthlyTotals,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    try {
+                                        return "$" + Number(value).toLocaleString();
+                                    } catch (e) {
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const statusCtx = document.getElementById("statusChart");
+        if (statusCtx && statusLabels.length > 0) {
+            new Chart(statusCtx, {
+                type: "doughnut",
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    },
+                    cutout: "60%"
+                }
+            });
+        }
+    }
+});
+</script>
 
 {% endblock %}
