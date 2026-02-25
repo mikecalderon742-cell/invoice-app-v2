@@ -7,6 +7,8 @@ import os
 import io
 import smtplib
 from email.message import EmailMessage
+import base64
+import requests
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
@@ -885,15 +887,93 @@ def history_pdf(invoice_id):
 # -------------------------
 # EMAIL SENDING HELPER
 # -------------------------
+def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str):
+    """
+    Send email using the Resend HTTP API.
+    Returns (success: bool, error_message: str or None)
+    """
+    api_key = os.environ.get("RESEND_API_KEY")
+    resend_from = os.environ.get("RESEND_FROM") or os.environ.get("SMTP_FROM")
+
+    if not api_key or not resend_from:
+        return False, (
+            "Resend configuration missing. Please set RESEND_API_KEY and RESEND_FROM "
+            "(or SMTP_FROM as a fallback)."
+        )
+
+    # Resend expects attachments in base64
+    encoded_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+
+    try:
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": resend_from,
+                "to": [to_email],
+                "subject": subject,
+                "text": body_text,
+                "attachments": [
+                    {
+                        "filename": filename,
+                        "content": encoded_pdf,
+                        "contentType": "application/pdf",
+                    }
+                ],
+            },
+            timeout=10,
+        )
+
+        if resp.status_code >= 400:
+            return False, f"Resend API error {resp.status_code}: {resp.text}"
+
+        return True, None
+
+    except Exception as e:
+        return False, f"Error sending via Resend: {e}"
 def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: str):
     """
-    Generate the invoice PDF and send it via SMTP.
+    Generate the invoice PDF and send it via either:
+    - Resend (HTTP API) if RESEND_API_KEY is set (preferred, works on platforms blocking SMTP)
+    - SMTP if SMTP_HOST/SMTP_FROM are configured and Resend is not available
+
     Returns (success: bool, error_message: str or None)
     """
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
         return False, err
 
+    filename = f"invoice_{invoice_id}.pdf"
+
+    # 1) Prefer Resend if configured (works over HTTPS, avoids SMTP port blocking)
+    if os.environ.get("RESEND_API_KEY"):
+        success, api_err = send_email_via_resend(
+            to_email=to_email,
+            subject=subject,
+            body_text=body_text,
+            pdf_bytes=pdf_bytes,
+            filename=filename,
+        )
+        if success:
+            # Update invoice with last emailed info
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
+                (datetime.now(), to_email, invoice_id),
+            )
+            conn.commit()
+            cur.close()
+            conn.close()
+            return True, None
+        else:
+            # If Resend fails, return that error (don't silently fall back)
+            return False, api_err
+
+    # 2) Fallback to SMTP if Resend is not configured
     smtp_host = os.environ.get("SMTP_HOST")
     smtp_port = int(os.environ.get("SMTP_PORT", "587"))
     smtp_user = os.environ.get("SMTP_USER")
@@ -903,7 +983,8 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     if not smtp_host or not smtp_from:
         return (
             False,
-            "SMTP configuration missing. Please set SMTP_HOST and SMTP_FROM (and optionally SMTP_PORT, SMTP_USER, SMTP_PASSWORD).",
+            "No email provider available. Either configure Resend (RESEND_API_KEY & RESEND_FROM) "
+            "or SMTP (SMTP_HOST & SMTP_FROM).",
         )
 
     msg = EmailMessage()
@@ -912,7 +993,6 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     msg["To"] = to_email
     msg.set_content(body_text)
 
-    filename = f"invoice_{invoice_id}.pdf"
     msg.add_attachment(
         pdf_bytes,
         maintype="application",
@@ -921,14 +1001,13 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     )
 
     try:
-        # ⬇⬇ key change: add an explicit timeout so it fails fast instead of hanging until Gunicorn kills the worker
+        # Short timeout so we fail quickly instead of hanging until the worker dies
         with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
             server.starttls()
             if smtp_user and smtp_password:
                 server.login(smtp_user, smtp_password)
             server.send_message(msg)
     except Exception as e:
-        # This error gets surfaced nicely in your UI on /send-email/<id>
         return False, f"Error sending email (connection or SMTP error): {e}"
 
     # Update invoice with last emailed info
