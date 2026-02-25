@@ -272,36 +272,55 @@ def save():
 
 
 # -------------------------
-# INVOICES PAGE
+# INVOICES PAGE (with search & filters)
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
     # Auto-update overdue statuses
     update_overdue_statuses()
 
+    # Read filters from query string
+    q = (request.args.get("q") or "").strip()
+    status_filter = (request.args.get("status") or "").strip()
+    from_date_str = (request.args.get("from_date") or "").strip()
+    to_date_str = (request.args.get("to_date") or "").strip()
+
+    from_dt = None
+    to_dt = None
+
+    # Parse date strings (YYYY-MM-DD) if present
+    if from_date_str:
+        try:
+            from_dt = datetime.strptime(from_date_str, "%Y-%m-%d")
+        except ValueError:
+            from_dt = None
+
+    if to_date_str:
+        try:
+            # We include the whole day by setting time to end of day
+            to_dt = datetime.strptime(to_date_str, "%Y-%m-%d") + timedelta(days=1)
+        except ValueError:
+            to_dt = None
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # 1) Fetch ALL invoices for KPIs
     cursor.execute("""
         SELECT id, client, amount, created_at, status, invoice_number, due_date
         FROM invoices
         ORDER BY created_at DESC
     """)
-    invoices = cursor.fetchall()
-    conn.close()
+    all_rows = cursor.fetchall()
 
-    # Convert Decimal to float
-    cleaned_invoices = []
-    for invoice in invoices:
-        invoice_list = list(invoice)
-        invoice_list[2] = float(invoice_list[2])  # amount column
-        cleaned_invoices.append(invoice_list)
+    all_invoices = []
+    for row in all_rows:
+        row_list = list(row)
+        row_list[2] = float(row_list[2])  # amount
+        all_invoices.append(row_list)
 
-    invoices = cleaned_invoices
-
-    # KPI CALCULATIONS
-    total_invoices = len(invoices)
-    total_revenue = sum(inv[2] for inv in invoices)
+    total_invoices = len(all_invoices)
+    total_revenue = sum(inv[2] for inv in all_invoices)
 
     now = datetime.now()
     current_month = now.month
@@ -309,21 +328,67 @@ def invoices_page():
 
     monthly_revenue = sum(
         inv[2]
-        for inv in invoices
+        for inv in all_invoices
         if inv[3].month == current_month and inv[3].year == current_year
     )
 
     growth = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
     avg_invoice = round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
 
-    paid_count = sum(1 for inv in invoices if inv[4] == "Paid")
-    overdue_count = sum(1 for inv in invoices if inv[4] == "Overdue")
+    paid_count = sum(1 for inv in all_invoices if inv[4] == "Paid")
+    overdue_count = sum(1 for inv in all_invoices if inv[4] == "Overdue")
 
     status_distribution = {
         "Paid": paid_count,
-        "Sent": sum(1 for inv in invoices if inv[4] == "Sent"),
+        "Sent": sum(1 for inv in all_invoices if inv[4] == "Sent"),
         "Overdue": overdue_count,
     }
+
+    # 2) Build filtered query for the table
+    base_sql = """
+        SELECT id, client, amount, created_at, status, invoice_number, due_date
+        FROM invoices
+    """
+    conditions = []
+    params = []
+
+    # Text search on client or invoice_number
+    if q:
+        like = f"%{q.lower()}%"
+        conditions.append("(LOWER(client) LIKE %s OR LOWER(COALESCE(invoice_number, '')) LIKE %s)")
+        params.extend([like, like])
+
+    # Status filter
+    allowed_statuses = {"Paid", "Sent", "Overdue"}
+    if status_filter in allowed_statuses:
+        conditions.append("status = %s")
+        params.append(status_filter)
+
+    # Date range filters
+    if from_dt:
+        conditions.append("created_at >= %s")
+        params.append(from_dt)
+    if to_dt:
+        conditions.append("created_at < %s")
+        params.append(to_dt)
+
+    filtered_sql = base_sql
+    if conditions:
+        filtered_sql += " WHERE " + " AND ".join(conditions)
+    filtered_sql += " ORDER BY created_at DESC"
+
+    cursor.execute(filtered_sql, tuple(params))
+    filtered_rows = cursor.fetchall()
+
+    conn.close()
+
+    invoices = []
+    for row in filtered_rows:
+        row_list = list(row)
+        row_list[2] = float(row_list[2])  # amount
+        invoices.append(row_list)
+
+    filtered_count = len(invoices)
 
     return render_template(
         "invoices.html",
@@ -335,7 +400,13 @@ def invoices_page():
         avg_invoice=avg_invoice,
         paid_count=paid_count,
         overdue_count=overdue_count,
-        status_distribution=status_distribution
+        status_distribution=status_distribution,
+        # Filters for the template
+        q=q,
+        status_filter=status_filter,
+        from_date_str=from_date_str,
+        to_date_str=to_date_str,
+        filtered_count=filtered_count
     )
 
 
@@ -397,7 +468,6 @@ def delete_client(client_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Optional: you could null out client_id on invoices instead of blocking
     cursor.execute("DELETE FROM clients WHERE id = %s", (client_id,))
     conn.commit()
     cursor.close()

@@ -27,6 +27,7 @@
 
     <a href="/" class="sidebar-link">Create Invoice</a>
     <a href="/invoices" class="sidebar-link">Invoice History</a>
+    <a href="/clients" class="sidebar-link">Clients</a>
 </div>
 
 <!-- OVERLAY -->
@@ -41,6 +42,7 @@
     <div class="nav-right">
         <a href="/">Create Invoice</a>
         <a href="/invoices">Invoice History</a>
+        <a href="/clients">Clients</a>
         <button id="themeToggle" class="theme-toggle">🌙</button>
     </div>
 </nav>
@@ -210,7 +212,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (link.hostname === window.location.hostname) {
             link.addEventListener("click", function (e) {
                 const href = this.getAttribute("href");
-                // Don't intercept anchor-only or JS links
                 if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
                     return;
                 }

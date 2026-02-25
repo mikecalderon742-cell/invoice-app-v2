@@ -11,41 +11,91 @@
 
 {% if invoices %}
 
+<!-- FILTER SUMMARY -->
+<p class="chart-sub" style="margin-top: -8px; margin-bottom: 16px;">
+    Showing <strong>{{ filtered_count }}</strong> of <strong>{{ total_invoices }}</strong> invoices
+    {% if q or status_filter or from_date_str or to_date_str %}
+        • Filters:
+        {% if q %} <span>Search "{{ q }}"</span>{% endif %}
+        {% if status_filter %} <span>Status: {{ status_filter }}</span>{% endif %}
+        {% if from_date_str %} <span>From: {{ from_date_str }}</span>{% endif %}
+        {% if to_date_str %} <span>To: {{ to_date_str }}</span>{% endif %}
+    {% else %}
+        • No filters applied
+    {% endif %}
+</p>
+
+<!-- SEARCH & FILTER BAR -->
+<div class="search-bar modern">
+    <form method="GET" action="/invoices">
+        <input
+            type="text"
+            name="q"
+            placeholder="Search by client or invoice #"
+            value="{{ q }}"
+        >
+
+        <select name="status" style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px;">
+            <option value="">All statuses</option>
+            <option value="Sent"   {% if status_filter == 'Sent' %}selected{% endif %}>Sent</option>
+            <option value="Paid"   {% if status_filter == 'Paid' %}selected{% endif %}>Paid</option>
+            <option value="Overdue" {% if status_filter == 'Overdue' %}selected{% endif %}>Overdue</option>
+        </select>
+
+        <input
+            type="date"
+            name="from_date"
+            value="{{ from_date_str }}"
+            style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px;"
+        >
+        <input
+            type="date"
+            name="to_date"
+            value="{{ to_date_str }}"
+            style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px;"
+        >
+
+        <button type="submit" class="btn btn-brand">Apply</button>
+        <a href="/invoices" class="btn btn-secondary">Reset</a>
+    </form>
+</div>
+
 <!-- KPI STRIP -->
 <div class="dashboard-cards enhanced">
 
     <div class="card kpi orange">
-        <h2>{{ total_invoices }}</h2>
+        <h2 class="kpi-number">{{ total_invoices }}</h2>
         <p>Total Invoices</p>
     </div>
 
     <div class="card kpi green">
-        <h2>${{ "{:,.2f}".format(total_revenue) }}</h2>
+        <h2 class="kpi-number">${{ "{:,.2f}".format(total_revenue) }}</h2>
         <p>Total Revenue</p>
     </div>
 
     <div class="card kpi blue">
-        <h2>${{ "{:,.2f}".format(monthly_revenue) }}</h2>
+        <h2 class="kpi-number">${{ "{:,.2f}".format(monthly_revenue) }}</h2>
         <p>This Month</p>
         <small>{{ growth }}% of total revenue</small>
     </div>
 
     <div class="card kpi purple">
-        <h2>${{ "{:,.2f}".format(avg_invoice) }}</h2>
+        <h2 class="kpi-number">${{ "{:,.2f}".format(avg_invoice) }}</h2>
         <p>Average Invoice</p>
     </div>
 
     <div class="card kpi teal">
-        <h2>{{ paid_count }}</h2>
+        <h2 class="kpi-number">{{ paid_count }}</h2>
         <p>Paid</p>
     </div>
 
     <div class="card kpi red">
-        <h2>{{ overdue_count }}</h2>
+        <h2 class="kpi-number">{{ overdue_count }}</h2>
         <p>Overdue</p>
     </div>
 
 </div>
+
 <!-- TABLE -->
 <div class="table-wrapper">
     <table class="modern-table">
