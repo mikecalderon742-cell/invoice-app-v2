@@ -5,10 +5,13 @@ from urllib.parse import urlparse
 from pathlib import Path
 import os
 import io
+import smtplib
+from email.message import EmailMessage
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
 
 def get_db_connection():
     if not DATABASE_URL:
@@ -19,7 +22,7 @@ def get_db_connection():
         user=result.username,
         password=result.password,
         host=result.hostname,
-        port=result.port
+        port=result.port,
     )
     return conn
 
@@ -37,7 +40,8 @@ def init_db():
     cursor = conn.cursor()
 
     # Base invoices + items tables
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS invoices (
             id SERIAL PRIMARY KEY,
             client TEXT NOT NULL,
@@ -45,19 +49,23 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             status TEXT DEFAULT 'Sent'
         );
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS invoice_items (
             id SERIAL PRIMARY KEY,
             invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
             description TEXT,
             amount NUMERIC
         );
-    """)
+    """
+    )
 
-    # New: clients table
-    cursor.execute("""
+    # Clients table
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS clients (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
@@ -68,14 +76,25 @@ def init_db():
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """)
+    """
+    )
 
-    # New: extra columns on invoices (safe if already exist)
-    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
+    # Extra columns on invoices (safe if already exist)
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;"
+    )
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS terms TEXT;")
-    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id);")
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id);"
+    )
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_at TIMESTAMP;"
+    )
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_to TEXT;"
+    )
 
     conn.commit()
     cursor.close()
@@ -89,13 +108,15 @@ def update_overdue_statuses():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE invoices
         SET status = 'Overdue'
         WHERE status NOT IN ('Paid', 'Overdue')
           AND due_date IS NOT NULL
           AND due_date < NOW();
-    """)
+    """
+    )
     conn.commit()
     cursor.close()
     conn.close()
@@ -106,7 +127,7 @@ init_db()
 
 @app.context_processor
 def inject_now():
-    return {'now': datetime.now}
+    return {"now": datetime.now}
 
 
 # -------------------------
@@ -119,11 +140,13 @@ def home():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT id, name, email
         FROM clients
         ORDER BY created_at DESC
-    """)
+    """
+    )
     clients = cursor.fetchall()
     conn.close()
 
@@ -131,7 +154,7 @@ def home():
 
 
 # -------------------------
-# PREVIEW (currently not used by the form, kept for future)
+# PREVIEW (kept for future)
 # -------------------------
 @app.route("/preview", methods=["POST"])
 def preview():
@@ -149,10 +172,7 @@ def preview():
             items.append((desc, amt))
 
     return render_template(
-        "preview.html",
-        client=client,
-        items=items,
-        total=total
+        "preview.html", client=client, items=items, total=total
     )
 
 
@@ -209,7 +229,7 @@ def save():
             cid_int = int(selected_client_id)
             cursor.execute(
                 "SELECT id, name FROM clients WHERE id = %s",
-                (cid_int,)
+                (cid_int,),
             )
             row = cursor.fetchone()
             if row:
@@ -231,8 +251,8 @@ def save():
                 new_client_company or None,
                 new_client_phone or None,
                 new_client_address or None,
-                new_client_notes or None
-            )
+                new_client_notes or None,
+            ),
         )
         client_id = cursor.fetchone()[0]
         client_name_for_invoice = new_client_name
@@ -242,11 +262,23 @@ def save():
         client_name_for_invoice = request.form.get("client") or "Unknown client"
 
     # Insert invoice and get its ID
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms, client_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
-    """, (client_name_for_invoice, total, created_at, status, due_date, notes, terms, client_id))
+    """,
+        (
+            client_name_for_invoice,
+            total,
+            created_at,
+            status,
+            due_date,
+            notes,
+            terms,
+            client_id,
+        ),
+    )
 
     invoice_id = cursor.fetchone()[0]
 
@@ -254,7 +286,7 @@ def save():
     invoice_number = f"INV-{invoice_id:05d}"
     cursor.execute(
         "UPDATE invoices SET invoice_number = %s WHERE id = %s",
-        (invoice_number, invoice_id)
+        (invoice_number, invoice_id),
     )
 
     # Insert invoice items
@@ -306,11 +338,13 @@ def invoices_page():
     cursor = conn.cursor()
 
     # 1) Fetch ALL invoices for KPIs
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT id, client, amount, created_at, status, invoice_number, due_date
         FROM invoices
         ORDER BY created_at DESC
-    """)
+    """
+    )
     all_rows = cursor.fetchall()
 
     all_invoices = []
@@ -332,8 +366,12 @@ def invoices_page():
         if inv[3].month == current_month and inv[3].year == current_year
     )
 
-    growth = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
-    avg_invoice = round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
+    growth = (
+        round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
+    )
+    avg_invoice = (
+        round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
+    )
 
     paid_count = sum(1 for inv in all_invoices if inv[4] == "Paid")
     overdue_count = sum(1 for inv in all_invoices if inv[4] == "Overdue")
@@ -355,7 +393,9 @@ def invoices_page():
     # Text search on client or invoice_number
     if q:
         like = f"%{q.lower()}%"
-        conditions.append("(LOWER(client) LIKE %s OR LOWER(COALESCE(invoice_number, '')) LIKE %s)")
+        conditions.append(
+            "(LOWER(client) LIKE %s OR LOWER(COALESCE(invoice_number, '')) LIKE %s)"
+        )
         params.extend([like, like])
 
     # Status filter
@@ -406,7 +446,7 @@ def invoices_page():
         status_filter=status_filter,
         from_date_str=from_date_str,
         to_date_str=to_date_str,
-        filtered_count=filtered_count
+        filtered_count=filtered_count,
     )
 
 
@@ -420,11 +460,13 @@ def clients_page():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT id, name, email, company, created_at
         FROM clients
         ORDER BY created_at DESC
-    """)
+    """
+    )
     clients = cursor.fetchall()
     conn.close()
 
@@ -448,10 +490,13 @@ def add_client():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO clients (name, email, company, phone, address, notes)
         VALUES (%s, %s, %s, %s, %s, %s)
-    """, (name, email, company, phone, address, notes))
+    """,
+        (name, email, company, phone, address, notes),
+    )
     conn.commit()
     cursor.close()
     conn.close()
@@ -500,10 +545,7 @@ def edit(invoice_id):
     conn.close()
 
     return render_template(
-        "edit.html",
-        invoice_id=invoice_id,
-        client=invoice[1],
-        items=items
+        "edit.html", invoice_id=invoice_id, client=invoice[1], items=items
     )
 
 
@@ -530,18 +572,15 @@ def update(invoice_id):
 
     c.execute(
         "UPDATE invoices SET client = %s, amount = %s WHERE id = %s",
-        (client, total, invoice_id)
+        (client, total, invoice_id),
     )
 
-    c.execute(
-        "DELETE FROM invoice_items WHERE invoice_id = %s",
-        (invoice_id,)
-    )
+    c.execute("DELETE FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
 
     for desc, amt in cleaned_items:
         c.execute(
             "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (%s, %s, %s)",
-            (invoice_id, desc, amt)
+            (invoice_id, desc, amt),
         )
 
     conn.commit()
@@ -559,8 +598,7 @@ def update_status(invoice_id, new_status):
     c = conn.cursor()
 
     c.execute(
-        "UPDATE invoices SET status = %s WHERE id = %s",
-        (new_status, invoice_id)
+        "UPDATE invoices SET status = %s WHERE id = %s", (new_status, invoice_id)
     )
 
     conn.commit()
@@ -587,57 +625,262 @@ def delete(invoice_id):
 
 
 # -------------------------
-# PDF
+# PDF GENERATION HELPER
 # -------------------------
-@app.route("/history-pdf/<int:invoice_id>")
-def history_pdf(invoice_id):
+def generate_invoice_pdf_bytes(invoice_id: int):
+    """
+    Generate a PDF for the given invoice_id and return raw bytes.
+    """
     conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute("SELECT client, amount FROM invoices WHERE id = %s", (invoice_id,))
-    invoice = c.fetchone()
+    c.execute(
+        """
+        SELECT client, amount, created_at, due_date, invoice_number
+        FROM invoices
+        WHERE id = %s
+    """,
+        (invoice_id,),
+    )
+    row = c.fetchone()
 
-    if not invoice:
+    if not row:
         conn.close()
-        return "Invoice not found", 404
+        return None, "Invoice not found"
 
-    client, total = invoice
+    client, amount, created_at, due_date, invoice_number = row
 
     c.execute(
         "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
-        (invoice_id,)
+        (invoice_id,),
     )
     items = c.fetchall()
-
     conn.close()
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
     pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(72, 720, "Invoice")
+    pdf.drawString(72, 750, "Invoice")
 
     pdf.setFont("Helvetica", 12)
-    pdf.drawString(72, 690, f"Invoice ID: {invoice_id}")
-    pdf.drawString(72, 660, f"Client: {client}")
+    inv_label = invoice_number or f"#{invoice_id}"
+    pdf.drawString(72, 720, f"Invoice: {inv_label}")
+    pdf.drawString(72, 700, f"Client: {client}")
+    if created_at:
+        pdf.drawString(72, 680, f"Created: {created_at.strftime('%Y-%m-%d')}")
+    if due_date:
+        pdf.drawString(72, 660, f"Due: {due_date.strftime('%Y-%m-%d')}")
 
-    y = 620
+    y = 630
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(72, y, "Line Items")
+    y -= 20
+    pdf.setFont("Helvetica", 11)
+
     for desc, amt in items:
-        pdf.drawString(72, y, f"{desc} - ${amt}")
-        y -= 20
+        pdf.drawString(72, y, f"{desc}")
+        pdf.drawRightString(540, y, f"${amt}")
+        y -= 18
+        if y < 72:
+            pdf.showPage()
+            y = 750
 
-    pdf.drawString(72, y - 20, f"Total Due: ${total}")
+    y -= 10
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(72, y, f"Total Due: ${amount}")
 
     pdf.showPage()
     pdf.save()
-
     buffer.seek(0)
+    return buffer.getvalue(), None
+
+
+# -------------------------
+# PDF DOWNLOAD ROUTE
+# -------------------------
+@app.route("/history-pdf/<int:invoice_id>")
+def history_pdf(invoice_id):
+    pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
+    if err:
+        return err, 404
 
     return send_file(
-        buffer,
+        io.BytesIO(pdf_bytes),
         as_attachment=True,
         download_name=f"invoice_{invoice_id}.pdf",
-        mimetype="application/pdf"
+        mimetype="application/pdf",
+    )
+
+
+# -------------------------
+# EMAIL SENDING HELPER
+# -------------------------
+def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: str):
+    """
+    Generate the invoice PDF and send it via SMTP.
+    Returns (success: bool, error_message: str or None)
+    """
+    pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
+    if err:
+        return False, err
+
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_from = os.environ.get("SMTP_FROM") or smtp_user
+
+    if not smtp_host or not smtp_from:
+        return (
+            False,
+            "SMTP configuration missing. Please set SMTP_HOST and SMTP_FROM (and optionally SMTP_PORT, SMTP_USER, SMTP_PASSWORD).",
+        )
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = smtp_from
+    msg["To"] = to_email
+    msg.set_content(body_text)
+
+    filename = f"invoice_{invoice_id}.pdf"
+    msg.add_attachment(
+        pdf_bytes,
+        maintype="application",
+        subtype="pdf",
+        filename=filename,
+    )
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            if smtp_user and smtp_password:
+                server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+    except Exception as e:
+        return False, f"Error sending email: {e}"
+
+    # Update invoice with last emailed info
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
+        (datetime.now(), to_email, invoice_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return True, None
+
+
+# -------------------------
+# SEND EMAIL ROUTE
+# -------------------------
+@app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
+def send_email_view(invoice_id):
+    """
+    Show a form to send the invoice via email, and handle sending.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT
+            invoices.id,
+            invoices.client,
+            invoices.amount,
+            invoices.created_at,
+            invoices.status,
+            invoices.invoice_number,
+            invoices.due_date,
+            invoices.last_emailed_at,
+            invoices.last_emailed_to,
+            clients.email
+        FROM invoices
+        LEFT JOIN clients ON invoices.client_id = clients.id
+        WHERE invoices.id = %s
+    """,
+        (invoice_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return "Invoice not found", 404
+
+    (
+        invoice_id_db,
+        client_name,
+        amount,
+        created_at,
+        status,
+        invoice_number,
+        due_date,
+        last_emailed_at,
+        last_emailed_to,
+        client_email,
+    ) = row
+
+    amount_float = float(amount)
+    inv_label = invoice_number or f"#{invoice_id_db}"
+
+    # Defaults for the form
+    default_to_email = last_emailed_to or client_email or ""
+    default_subject = f"Invoice {inv_label} from InvoicePro"
+    default_message = (
+        f"Hi {client_name},\n\n"
+        f"Please find attached your invoice {inv_label} for ${amount_float:,.2f}.\n"
+        + (
+            f"Due date: {due_date.strftime('%Y-%m-%d')}\n\n"
+            if due_date
+            else "\n"
+        )
+        + "Thank you for your business!\n\n"
+        + "— InvoicePro"
+    )
+
+    feedback_message = None
+    feedback_type = None
+
+    if request.method == "POST":
+        to_email = (request.form.get("to_email") or "").strip()
+        subject = request.form.get("subject") or default_subject
+        message_body = request.form.get("message") or default_message
+
+        if not to_email:
+            feedback_message = "Recipient email is required."
+            feedback_type = "error"
+        else:
+            success, err = send_invoice_email(
+                invoice_id_db, to_email, subject, message_body
+            )
+            if success:
+                feedback_message = f"Invoice {inv_label} was emailed to {to_email}."
+                feedback_type = "success"
+                # Update default_to_email so form shows what we used
+                default_to_email = to_email
+            else:
+                feedback_message = err or "Failed to send email."
+                feedback_type = "error"
+
+    return render_template(
+        "send_email.html",
+        invoice_id=invoice_id_db,
+        client_name=client_name,
+        amount=amount_float,
+        created_at=created_at,
+        status=status,
+        invoice_number=invoice_number,
+        inv_label=inv_label,
+        due_date=due_date,
+        last_emailed_at=last_emailed_at,
+        last_emailed_to=last_emailed_to,
+        default_to_email=default_to_email,
+        default_subject=default_subject,
+        default_message=default_message,
+        feedback_message=feedback_message,
+        feedback_type=feedback_type,
     )
 
 

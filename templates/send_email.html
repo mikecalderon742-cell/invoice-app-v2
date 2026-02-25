@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Send Invoice Email</h1>
+    <div class="quick-actions">
+        <a href="/invoices" class="btn btn-secondary">Back to Invoices</a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+
+    {% if feedback_message %}
+        <div style="
+            margin-bottom:16px;
+            padding:12px 14px;
+            border-radius:10px;
+            font-size:14px;
+            font-weight:500;
+            {% if feedback_type == 'success' %}
+                background:#dcfce7;
+                color:#166534;
+                border:1px solid #16a34a;
+            {% else %}
+                background:#fee2e2;
+                color:#b91c1c;
+                border:1px solid #dc2626;
+            {% endif %}
+        ">
+            {{ feedback_message }}
+        </div>
+    {% endif %}
+
+    <h2 style="margin-top:0;">Invoice {{ inv_label }}</h2>
+    <p style="font-size:14px; opacity:.8; margin-bottom:18px;">
+        Client: <strong>{{ client_name }}</strong><br>
+        Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
+        {% if created_at %}
+            Created: <strong>{{ created_at.strftime('%Y-%m-%d') }}</strong><br>
+        {% endif %}
+        {% if due_date %}
+            Due: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
+        {% endif %}
+        Status: <strong>{{ status }}</strong><br>
+        {% if last_emailed_at %}
+            Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+            to <strong>{{ last_emailed_to }}</strong>
+        {% endif %}
+    </p>
+
+    <form method="POST" action="/send-email/{{ invoice_id }}">
+        <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
+
+            <div>
+                <label for="to_email" style="font-weight:600; font-size:14px;">To</label>
+                <input
+                    type="email"
+                    id="to_email"
+                    name="to_email"
+                    value="{{ default_to_email }}"
+                    placeholder="client@example.com"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="subject" style="font-weight:600; font-size:14px;">Subject</label>
+                <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value="{{ default_subject }}"
+                >
+            </div>
+
+            <div>
+                <label for="message" style="font-weight:600; font-size:14px;">Message</label>
+                <textarea
+                    id="message"
+                    name="message"
+                    rows="7"
+                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
+                >{{ default_message }}</textarea>
+            </div>
+
+        </div>
+
+        <p style="font-size:13px; opacity:.7;">
+            The invoice PDF will be attached automatically as <strong>invoice_{{ invoice_id }}.pdf</strong>.
+        </p>
+
+        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+            <a href="/invoices" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-brand">Send Email</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

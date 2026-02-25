@@ -160,9 +160,13 @@
                     {% endif %}
                 </td>
 
-                <!-- Actions -->
+                                <!-- Actions -->
                 <td class="action-buttons" data-label="Actions">
                     <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
+
+                    <a class="btn btn-info" href="/send-email/{{ invoice[0] }}">
+                        Send Email
+                    </a>
 
                     {% if invoice[4] != "Paid" %}
                         <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
