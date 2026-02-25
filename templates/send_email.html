@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="dashboard-header">
-    <h1>Send Invoice Email</h1>
+    <h1>Send Invoice</h1>
     <div class="quick-actions">
         <a href="/invoices" class="btn btn-secondary">Back to Invoices</a>
     </div>
@@ -32,21 +32,37 @@
     {% endif %}
 
     <h2 style="margin-top:0;">Invoice {{ inv_label }}</h2>
-    <p style="font-size:14px; opacity:.8; margin-bottom:18px;">
+    <p style="font-size:14px; opacity:.85; margin-bottom:18px;">
         Client: <strong>{{ client_name }}</strong><br>
         Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-        {% if created_at %}
-            Created: <strong>{{ created_at.strftime('%Y-%m-%d') }}</strong><br>
-        {% endif %}
-        {% if due_date %}
-            Due: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
-        {% endif %}
         Status: <strong>{{ status }}</strong><br>
+        {% if due_date %}
+            Due date: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
+        {% endif %}
         {% if last_emailed_at %}
             Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
-            to <strong>{{ last_emailed_to }}</strong>
+            {% if last_emailed_to %}
+                to <strong>{{ last_emailed_to }}</strong>
+            {% endif %}
         {% endif %}
     </p>
+
+    {% if public_url %}
+        <div style="
+            margin-bottom:16px;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px dashed rgba(37,99,235,0.5);
+            background: rgba(219,234,254,0.6);
+            font-size:13px;
+        ">
+            <strong>Public Invoice Link</strong><br>
+            <span style="word-break:break-all;">{{ public_url }}</span><br>
+            <span style="opacity:0.8;">
+                This link is included in the default email body. You can also copy it and send manually if needed.
+            </span>
+        </div>
+    {% endif %}
 
     <form method="POST" action="/send-email/{{ invoice_id }}">
         <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
@@ -57,8 +73,8 @@
                     type="email"
                     id="to_email"
                     name="to_email"
-                    value="{{ default_to_email }}"
                     placeholder="client@example.com"
+                    value="{{ default_to_email }}"
                     required
                 >
             </div>
@@ -70,6 +86,7 @@
                     id="subject"
                     name="subject"
                     value="{{ default_subject }}"
+                    required
                 >
             </div>
 
@@ -78,22 +95,22 @@
                 <textarea
                     id="message"
                     name="message"
-                    rows="7"
+                    rows="8"
                     style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
                 >{{ default_message }}</textarea>
+                <small style="font-size:12px; opacity:.7;">
+                    The invoice PDF will be attached automatically.
+                </small>
             </div>
 
         </div>
 
-        <p style="font-size:13px; opacity:.7;">
-            The invoice PDF will be attached automatically as <strong>invoice_{{ invoice_id }}.pdf</strong>.
-        </p>
-
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
             <a href="/invoices" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-brand">Send Email</button>
         </div>
     </form>
+
 </div>
 
 {% endblock %}

@@ -9,6 +9,7 @@ import smtplib
 from email.message import EmailMessage
 import base64
 import requests
+import secrets
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 
@@ -95,6 +96,21 @@ def init_db():
     """
     )
 
+    # NEW: Recurring invoices table
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS recurring_invoices (
+            id SERIAL PRIMARY KEY,
+            invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
+            frequency TEXT NOT NULL,        -- 'weekly', 'biweekly', 'monthly', 'custom'
+            interval_days INTEGER NOT NULL, -- how many days between invoices
+            next_run_date DATE NOT NULL,    -- when to generate the next invoice
+            active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """
+    )
+
     # Extra columns on invoices (safe if already exist)
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;"
@@ -110,6 +126,11 @@ def init_db():
     )
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_to TEXT;"
+    )
+
+    # NEW: public token for client-facing links
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;"
     )
 
     conn.commit()
@@ -136,6 +157,54 @@ def update_overdue_statuses():
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def get_or_create_public_token(invoice_id: int) -> str:
+    """
+    Ensure an invoice has a unique public_token used for the /public/<token> link.
+    Returns the token string.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if it already has a token
+    cursor.execute(
+        "SELECT public_token FROM invoices WHERE id = %s",
+        (invoice_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
+        raise ValueError(f"Invoice {invoice_id} not found")
+
+    existing_token = row[0]
+    if existing_token:
+        cursor.close()
+        conn.close()
+        return existing_token
+
+    # Generate a new unique token
+    token = None
+    while True:
+        candidate = secrets.token_urlsafe(16)
+        cursor.execute(
+            "SELECT id FROM invoices WHERE public_token = %s",
+            (candidate,),
+        )
+        clash = cursor.fetchone()
+        if not clash:
+            token = candidate
+            break
+
+    cursor.execute(
+        "UPDATE invoices SET public_token = %s WHERE id = %s",
+        (token, invoice_id),
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return token
 
 
 init_db()
@@ -884,6 +953,116 @@ def history_pdf(invoice_id):
     )
 
 
+@app.route("/public/<string:token>")
+def public_invoice(token):
+    """
+    Public, read-only view for a single invoice by its public_token.
+    No auth, so the token should be unguessable.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Look up invoice by token
+    cursor.execute(
+        """
+        SELECT
+            i.id,
+            i.client,
+            i.amount,
+            i.created_at,
+            i.status,
+            i.invoice_number,
+            i.due_date,
+            i.notes,
+            i.terms,
+            c.name,
+            c.email,
+            c.company
+        FROM invoices i
+        LEFT JOIN clients c ON i.client_id = c.id
+        WHERE i.public_token = %s
+        """,
+        (token,),
+    )
+    inv_row = cursor.fetchone()
+
+    if not inv_row:
+        cursor.close()
+        conn.close()
+        return "Invoice not found or link invalid.", 404
+
+    (
+        invoice_id,
+        client_name,
+        amount,
+        created_at,
+        status,
+        invoice_number,
+        due_date,
+        notes,
+        terms,
+        client_name_from_client,
+        client_email,
+        client_company,
+    ) = inv_row
+
+    amount_float = float(amount)
+    inv_label = invoice_number or f"#{invoice_id}"
+
+    # Fetch items
+    cursor.execute(
+        """
+        SELECT description, amount
+        FROM invoice_items
+        WHERE invoice_id = %s
+        ORDER BY id ASC
+        """,
+        (invoice_id,),
+    )
+    items = cursor.fetchall()
+
+    # Fetch payments
+    cursor.execute(
+        """
+        SELECT amount, method, note, created_at
+        FROM payments
+        WHERE invoice_id = %s
+        ORDER BY created_at DESC
+        """,
+        (invoice_id,),
+    )
+    payments = cursor.fetchall()
+
+    total_paid = sum(float(p[0]) for p in payments)
+    balance = amount_float - total_paid
+
+    cursor.close()
+    conn.close()
+
+    # Build a PDF download URL (same as internal)
+    pdf_url = f"/history-pdf/{invoice_id}"
+
+    return render_template(
+        "public_invoice.html",
+        invoice_id=invoice_id,
+        inv_label=inv_label,
+        client_name=client_name,
+        client_email=client_email,
+        client_company=client_company,
+        amount=amount_float,
+        status=status,
+        created_at=created_at,
+        due_date=due_date,
+        notes=notes,
+        terms=terms,
+        items=items,
+        payments=payments,
+        total_paid=total_paid,
+        balance=balance,
+        pdf_url=pdf_url,
+    )
+
+
 # -------------------------
 # EMAIL SENDING HELPER
 # -------------------------
@@ -1050,6 +1229,7 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
 def send_email_view(invoice_id):
     """
     Show a form to send the invoice via email, and handle sending.
+    Also ensures a public invoice link is available and includes it in the default message.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1065,7 +1245,8 @@ def send_email_view(invoice_id):
             invoices.due_date,
             invoices.last_emailed_at,
             invoices.last_emailed_to,
-            clients.email
+            clients.email,
+            invoices.public_token
         FROM invoices
         LEFT JOIN clients ON invoices.client_id = clients.id
         WHERE invoices.id = %s
@@ -1089,10 +1270,20 @@ def send_email_view(invoice_id):
         last_emailed_at,
         last_emailed_to,
         client_email,
+        public_token_db,
     ) = row
 
     amount_float = float(amount)
     inv_label = invoice_number or f"#{invoice_id_db}"
+
+    # Ensure we have a public token for this invoice
+    token = public_token_db
+    if not token:
+        token = get_or_create_public_token(invoice_id_db)
+
+    # Build the full public URL (e.g. https://app.onrender.com/public/...)
+    base_url = request.url_root.rstrip("/")  # includes scheme + host + /
+    public_url = f"{base_url}/public/{token}"
 
     # Defaults for the form
     default_to_email = last_emailed_to or client_email or ""
@@ -1101,9 +1292,12 @@ def send_email_view(invoice_id):
         f"Hi {client_name},\n\n"
         f"Please find attached your invoice {inv_label} for ${amount_float:,.2f}.\n"
         + (
-            f"Due date: {due_date.strftime('%Y-%m-%d')}\n\n"
+            f"Due date: {due_date.strftime('%Y-%m-%d')}\n"
             if due_date
-            else "\n"
+            else ""
+        )
+        + (
+            f"\nYou can also view this invoice online here:\n{public_url}\n\n"
         )
         + "Thank you for your business!\n\n"
         + "— InvoicePro"
@@ -1150,6 +1344,7 @@ def send_email_view(invoice_id):
         default_message=default_message,
         feedback_message=feedback_message,
         feedback_type=feedback_type,
+        public_url=public_url,
     )
 
 
