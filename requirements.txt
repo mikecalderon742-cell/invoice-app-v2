@@ -3,3 +3,4 @@ gunicorn
 psycopg2-binary
 reportlab
 requests
+stripe>=10.0.0
