@@ -1137,6 +1137,9 @@ def public_invoice(token):
         total_paid=total_paid,
         balance=balance,
         pdf_url=pdf_url,
+        # NEW: flags for template
+        is_public_view=True,
+        public_token=token,
     )
 
 

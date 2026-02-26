@@ -32,7 +32,7 @@
 </div>
 
 <!-- SIDEBAR -->
-<div id="sidebar" class="sidebar">
+<div id="sidebar" class="sidebar" {% if is_public_view %}style="display:none;"{% endif %}>
     <div class="sidebar-header">
         <h3>{{ business_profile.business_name or "InvoicePro" }}</h3>
     </div>
@@ -43,7 +43,7 @@
 </div>
 
 <!-- OVERLAY -->
-<div id="overlay" class="overlay"></div>
+<div id="overlay" class="overlay" {% if is_public_view %}style="display:none;"{% endif %}></div>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -59,10 +59,15 @@
     </div>
 
     <div class="nav-right">
-        <a href="/">Create Invoice</a>
-        <a href="/invoices">Invoice History</a>
-        <a href="/settings">Settings</a>
-        <button id="themeToggle" class="theme-toggle">🌙</button>
+        {% if is_public_view %}
+            <span style="opacity:0.8; font-size:14px;">Client View</span>
+            <button id="themeToggle" class="theme-toggle">🌙</button>
+        {% else %}
+            <a href="/">Create Invoice</a>
+            <a href="/invoices">Invoice History</a>
+            <a href="/settings">Settings</a>
+            <button id="themeToggle" class="theme-toggle">🌙</button>
+        {% endif %}
     </div>
 </nav>
 
@@ -76,7 +81,9 @@
 
 <div id="loader" class="loader"></div>
 
+{% if not is_public_view %}
 <a href="/" class="floating-btn">+</a>
+{% endif %}
 
 <div id="welcomeModal" class="welcome-modal hidden">
     <div class="welcome-content">
