@@ -64,11 +64,24 @@
             <span style="opacity:0.8; font-size:14px;">Client View</span>
             <button id="themeToggle" class="theme-toggle">🌙</button>
         {% else %}
-            <a href="/">Create Invoice</a>
-            <a href="/invoices">Invoice History</a>
-            <a href="/pricing">Pricing</a>
-            <a href="/settings">Settings</a>
-            <button id="themeToggle" class="theme-toggle">🌙</button>
+            {% if is_authenticated %}
+                <span style="margin-right:10px; font-size:13px; opacity:.85;">
+                    {{ current_user.email }} · {{ user_plan|capitalize }}
+                </span>
+                <a href="/">Create Invoice</a>
+                <a href="/invoices">Invoice History</a>
+                <a href="/pricing">Pricing</a>
+                <a href="/settings">Settings</a>
+                <a href="/logout">Logout</a>
+                <button id="themeToggle" class="theme-toggle">🌙</button>
+            {% else %}
+                <a href="/">Create Invoice</a>
+                <a href="/invoices">Invoice History</a>
+                <a href="/pricing">Pricing</a>
+                <a href="/login">Login</a>
+                <a href="/register">Sign Up</a>
+                <button id="themeToggle" class="theme-toggle">🌙</button>
+            {% endif %}
         {% endif %}
     </div>
 </nav>

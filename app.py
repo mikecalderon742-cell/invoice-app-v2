@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect
+from flask import Flask, render_template, request, send_file, redirect, session, url_for
 from datetime import datetime, timedelta
 import psycopg2
 from urllib.parse import urlparse
@@ -12,6 +12,8 @@ import requests
 import secrets
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
+from werkzeug.security import generate_password_hash, check_password_hash
+import stripe
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -31,6 +33,8 @@ def get_db_connection():
 
 
 app = Flask(__name__)
+
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 # Simple plan metadata (we’ll expand and enforce later)
 PLAN_DEFINITIONS = {
@@ -108,7 +112,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             status TEXT DEFAULT 'Sent'
         );
-    """
+        """
     )
 
     cursor.execute(
@@ -119,7 +123,7 @@ def init_db():
             description TEXT,
             amount NUMERIC
         );
-    """
+        """
     )
 
     cursor.execute(
@@ -134,7 +138,7 @@ def init_db():
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
+        """
     )
 
     cursor.execute(
@@ -147,7 +151,7 @@ def init_db():
             note TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
+        """
     )
 
     cursor.execute(
@@ -161,7 +165,7 @@ def init_db():
             active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
+        """
     )
 
     # ==========================
@@ -183,7 +187,7 @@ def init_db():
             default_notes TEXT,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-    """
+        """
     )
 
     # ==========================
@@ -229,7 +233,7 @@ def init_db():
     cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1;")
     row = cursor.fetchone()
     if not row:
-        # Simple default owner; we’ll replace with real auth later
+        # Simple default owner; we'll replace with real auth later
         cursor.execute(
             """
             INSERT INTO users (email, password_hash, plan, is_active)
@@ -239,20 +243,22 @@ def init_db():
             ("owner@example.com", None, "pro", True),
         )
         default_user_id = cursor.fetchone()[0]
+    else:
+        default_user_id = row[0]
 
-        # Optionally attach existing invoices/clients/business_profile rows to this user
-        cursor.execute(
-            "UPDATE invoices SET user_id = %s WHERE user_id IS NULL;",
-            (default_user_id,),
-        )
-        cursor.execute(
-            "UPDATE clients SET user_id = %s WHERE user_id IS NULL;",
-            (default_user_id,),
-        )
-        cursor.execute(
-            "UPDATE business_profile SET user_id = %s WHERE user_id IS NULL;",
-            (default_user_id,),
-        )
+    # Attach any existing rows with NULL user_id to this default user
+    cursor.execute(
+        "UPDATE invoices SET user_id = %s WHERE user_id IS NULL;",
+        (default_user_id,),
+    )
+    cursor.execute(
+        "UPDATE clients SET user_id = %s WHERE user_id IS NULL;",
+        (default_user_id,),
+    )
+    cursor.execute(
+        "UPDATE business_profile SET user_id = %s WHERE user_id IS NULL;",
+        (default_user_id,),
+    )
 
     conn.commit()
     cursor.close()
@@ -273,7 +279,7 @@ def update_overdue_statuses():
         WHERE status NOT IN ('Paid', 'Overdue')
           AND due_date IS NOT NULL
           AND due_date < NOW();
-    """
+        """
     )
     conn.commit()
     cursor.close()
@@ -335,6 +341,234 @@ init_db()
 def inject_now():
     return {"now": datetime.now}
 
+
+def get_default_user():
+    """
+    Fallback user if no session user is set.
+    This is the first user in the users table (created in init_db).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, email, plan, is_active, created_at FROM users ORDER BY id ASC LIMIT 1;"
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        return {
+            "id": None,
+            "email": "unknown@example.com",
+            "plan": "free",
+            "is_active": True,
+            "created_at": None,
+        }
+
+    user_id, email, plan, is_active, created_at = row
+    return {
+        "id": user_id,
+        "email": email,
+        "plan": plan or "free",
+        "is_active": is_active,
+        "created_at": created_at,
+    }
+
+
+def get_current_user():
+    """
+    If session['user_id'] is set, return that user.
+    Otherwise, return the default user.
+    """
+    user_id = session.get("user_id")
+    if user_id:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, email, plan, is_active, created_at FROM users WHERE id = %s",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if row:
+            uid, email, plan, is_active, created_at = row
+            if is_active:
+                return {
+                    "id": uid,
+                    "email": email,
+                    "plan": plan or "free",
+                    "is_active": is_active,
+                    "created_at": created_at,
+                }
+
+    # Fallback
+    return get_default_user()
+
+
+def get_plan_for_current_user():
+    user = get_current_user()
+    return user.get("plan") or "free"
+
+
+def get_business_profile():
+    """
+    Return a dict of business profile settings for the current user.
+    If no row exists, return sensible defaults (does NOT write to DB).
+    """
+    user = get_current_user()
+    user_id = user["id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, business_name, email, phone, website, address,
+               logo_url, brand_color, accent_color, default_terms, default_notes
+        FROM business_profile
+        WHERE user_id = %s
+        ORDER BY id ASC
+        LIMIT 1
+        """,
+        (user_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    # Defaults if nothing in DB yet
+    if not row:
+        return {
+            "id": None,
+            "business_name": "InvoicePro",
+            "email": "",
+            "phone": "",
+            "website": "",
+            "address": "",
+            "logo_url": "",
+            "brand_color": "#151B54",  # your current main accent
+            "accent_color": "#1d4ed8",  # secondary accent
+            "default_terms": "",
+            "default_notes": "",
+            "user_id": user_id,
+        }
+
+    (
+        bp_id,
+        business_name,
+        email,
+        phone,
+        website,
+        address,
+        logo_url,
+        brand_color,
+        accent_color,
+        default_terms,
+        default_notes,
+    ) = row
+
+    return {
+        "id": bp_id,
+        "business_name": business_name or "InvoicePro",
+        "email": email or "",
+        "phone": phone or "",
+        "website": website or "",
+        "address": address or "",
+        "logo_url": logo_url or "",
+        "brand_color": brand_color or "#151B54",
+        "accent_color": accent_color or "#1d4ed8",
+        "default_terms": default_terms or "",
+        "default_notes": default_notes or "",
+        "user_id": user_id,
+    }
+
+
+def upsert_business_profile(data: dict):
+    """
+    Insert or update the business_profile row for the current user.
+    Expects keys: business_name, email, phone, website, address,
+                  logo_url, brand_color, accent_color, default_terms, default_notes.
+    """
+    user = get_current_user()
+    user_id = user["id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # See if a row already exists for this user
+    cursor.execute(
+        "SELECT id FROM business_profile WHERE user_id = %s ORDER BY id ASC LIMIT 1",
+        (user_id,),
+    )
+    row = cursor.fetchone()
+
+    now = datetime.now()
+
+    if row:
+        bp_id = row[0]
+        cursor.execute(
+            """
+            UPDATE business_profile
+            SET business_name = %s,
+                email = %s,
+                phone = %s,
+                website = %s,
+                address = %s,
+                logo_url = %s,
+                brand_color = %s,
+                accent_color = %s,
+                default_terms = %s,
+                default_notes = %s,
+                updated_at = %s
+            WHERE id = %s AND user_id = %s
+            """,
+            (
+                data.get("business_name"),
+                data.get("email"),
+                data.get("phone"),
+                data.get("website"),
+                data.get("address"),
+                data.get("logo_url"),
+                data.get("brand_color"),
+                data.get("accent_color"),
+                data.get("default_terms"),
+                data.get("default_notes"),
+                now,
+                bp_id,
+                user_id,
+            ),
+        )
+    else:
+        cursor.execute(
+            """
+            INSERT INTO business_profile
+                (business_name, email, phone, website, address,
+                 logo_url, brand_color, accent_color, default_terms, default_notes,
+                 updated_at, user_id)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                data.get("business_name"),
+                data.get("email"),
+                data.get("phone"),
+                data.get("website"),
+                data.get("address"),
+                data.get("logo_url"),
+                data.get("brand_color"),
+                data.get("accent_color"),
+                data.get("default_terms"),
+                data.get("default_notes"),
+                now,
+                user_id,
+            ),
+        )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 @app.context_processor
 def inject_business_profile():
     """
@@ -342,17 +576,21 @@ def inject_business_profile():
     """
     return {"business_profile": get_business_profile()}
 
+
 @app.context_processor
 def inject_current_user():
     """
-    Makes `current_user` and `user_plan` available in all templates.
+    Makes `current_user`, `user_plan`, `plan_definitions`, and `is_authenticated`
+    available in all templates.
     """
     user = get_current_user()
     plan = user.get("plan") or "free"
+    is_authenticated = "user_id" in session and user.get("id") is not None
     return {
         "current_user": user,
         "user_plan": plan,
         "plan_definitions": PLAN_DEFINITIONS,
+        "is_authenticated": is_authenticated,
     }
 
 
@@ -364,19 +602,125 @@ def home():
     """
     Show the New Invoice form with a dropdown of existing clients.
     """
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
         SELECT id, name, email
         FROM clients
+        WHERE (user_id = %s OR user_id IS NULL)
         ORDER BY created_at DESC
-    """
+        """,
+        (user_id,),
     )
     clients = cursor.fetchall()
     conn.close()
 
     return render_template("index.html", clients=clients)
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """
+    Simple registration for a new user account.
+    For now, all new users start on the 'free' plan.
+    """
+    error = None
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        confirm = request.form.get("confirm_password") or ""
+
+        if not email or not password:
+            error = "Email and password are required."
+        elif password != confirm:
+            error = "Passwords do not match."
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            # Check if email already exists
+            cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+            existing = cursor.fetchone()
+            if existing:
+                error = "An account with that email already exists."
+                cursor.close()
+                conn.close()
+            else:
+                password_hash = generate_password_hash(password)
+                cursor.execute(
+                    """
+                    INSERT INTO users (email, password_hash, plan, is_active)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id, plan;
+                    """,
+                    (email, password_hash, "free", True),
+                )
+                row = cursor.fetchone()
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                if row:
+                    user_id, plan = row
+                    # Log them in
+                    session["user_id"] = user_id
+                    return redirect(url_for("invoices_page"))
+
+    return render_template("register.html", error=error)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """
+    Login for existing users.
+    """
+    error = None
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+
+        if not email or not password:
+            error = "Email and password are required."
+        else:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id, email, password_hash, plan, is_active FROM users WHERE email = %s",
+                (email,),
+            )
+            row = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not row:
+                error = "Invalid email or password."
+            else:
+                user_id, user_email, password_hash, plan, is_active = row
+                if not is_active:
+                    error = "This account is inactive."
+                elif not password_hash:
+                    error = "This account cannot be logged into yet."
+                elif not check_password_hash(password_hash, password):
+                    error = "Invalid email or password."
+                else:
+                    session["user_id"] = user_id
+                    return redirect(url_for("invoices_page"))
+
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    """
+    Log out the current user (clears session).
+    """
+    session.clear()
+    return redirect(url_for("login"))
 
 
 @app.route("/pricing")
@@ -408,9 +752,7 @@ def preview():
             total += amt
             items.append((desc, amt))
 
-    return render_template(
-        "preview.html", client=client, items=items, total=total
-    )
+    return render_template("preview.html", client=client, items=items, total=total)
 
 
 # -------------------------
@@ -420,10 +762,13 @@ def preview():
 def save():
     """
     Save a new invoice:
-    - Uses existing client if client_id is provided
+    - Uses existing client if client_id is provided (and belongs to the user)
     - Or creates a new client if new_client_name is provided
     - Falls back to plain 'client' text if needed
     """
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     # Client selection
     selected_client_id = request.form.get("client_id")
     new_client_name = request.form.get("new_client_name")
@@ -460,13 +805,13 @@ def save():
     client_name_for_invoice = None
     client_id = None
 
-    # 1) If an existing client is selected
+    # 1) If an existing client is selected (and belongs to this user)
     if selected_client_id:
         try:
             cid_int = int(selected_client_id)
             cursor.execute(
-                "SELECT id, name FROM clients WHERE id = %s",
-                (cid_int,),
+                "SELECT id, name FROM clients WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+                (cid_int, user_id),
             )
             row = cursor.fetchone()
             if row:
@@ -478,8 +823,8 @@ def save():
     if not client_name_for_invoice and new_client_name:
         cursor.execute(
             """
-            INSERT INTO clients (name, email, company, phone, address, notes)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO clients (name, email, company, phone, address, notes, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             (
@@ -489,6 +834,7 @@ def save():
                 new_client_phone or None,
                 new_client_address or None,
                 new_client_notes or None,
+                user_id,
             ),
         )
         client_id = cursor.fetchone()[0]
@@ -498,13 +844,13 @@ def save():
     if not client_name_for_invoice:
         client_name_for_invoice = request.form.get("client") or "Unknown client"
 
-    # Insert invoice and get its ID
+    # Insert invoice and get its ID, now with user_id
     cursor.execute(
         """
-        INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms, client_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms, client_id, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
-    """,
+        """,
         (
             client_name_for_invoice,
             total,
@@ -514,6 +860,7 @@ def save():
             notes,
             terms,
             client_id,
+            user_id,
         ),
     )
 
@@ -566,21 +913,26 @@ def invoices_page():
 
     if to_date_str:
         try:
-            # We include the whole day by setting time to end of day
+            # Include the whole day by setting time to end of day
             to_dt = datetime.strptime(to_date_str, "%Y-%m-%d") + timedelta(days=1)
         except ValueError:
             to_dt = None
 
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1) Fetch ALL invoices for KPIs
+    # 1) Fetch ALL invoices for KPIs (per user, no filters)
     cursor.execute(
         """
-        SELECT id, client, amount, created_at, status, invoice_number, due_date
+        SELECT id, client, amount, created_at, status
         FROM invoices
+        WHERE (user_id = %s OR user_id IS NULL)
         ORDER BY created_at DESC
-    """
+        """,
+        (user_id,),
     )
     all_rows = cursor.fetchall()
 
@@ -603,12 +955,8 @@ def invoices_page():
         if inv[3].month == current_month and inv[3].year == current_year
     )
 
-    growth = (
-        round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
-    )
-    avg_invoice = (
-        round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
-    )
+    growth = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
+    avg_invoice = round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
 
     paid_count = sum(1 for inv in all_invoices if inv[4] == "Paid")
     overdue_count = sum(1 for inv in all_invoices if inv[4] == "Overdue")
@@ -619,15 +967,17 @@ def invoices_page():
         "Overdue": overdue_count,
     }
 
-    # 1b) Monthly revenue data for chart (last 6 months)
+    # 1b) Monthly revenue data for chart (last 6 months, per-user)
     cursor.execute(
         """
         SELECT date_trunc('month', created_at) AS month, SUM(amount) AS total
         FROM invoices
+        WHERE (user_id = %s OR user_id IS NULL)
         GROUP BY month
         ORDER BY month DESC
         LIMIT 6
-    """
+        """,
+        (user_id,),
     )
     monthly_rows = cursor.fetchall()
 
@@ -657,9 +1007,10 @@ def invoices_page():
             COALESCE(SUM(p.amount), 0) AS total_paid
         FROM invoices i
         LEFT JOIN payments p ON p.invoice_id = i.id
+        WHERE (i.user_id = %s OR i.user_id IS NULL)
     """
     conditions = []
-    params = []
+    params = [user_id]
 
     # Text search on client or invoice_number
     if q:
@@ -685,7 +1036,7 @@ def invoices_page():
 
     filtered_sql = base_sql
     if conditions:
-        filtered_sql += " WHERE " + " AND ".join(conditions)
+        filtered_sql += " AND " + " AND ".join(conditions)
     filtered_sql += """
         GROUP BY
             i.id,
@@ -793,14 +1144,19 @@ def clients_page():
     """
     Simple clients listing + quick add form.
     """
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
         SELECT id, name, email, company, created_at
         FROM clients
+        WHERE (user_id = %s OR user_id IS NULL)
         ORDER BY created_at DESC
-    """
+        """,
+        (user_id,),
     )
     clients = cursor.fetchall()
     conn.close()
@@ -823,14 +1179,17 @@ def add_client():
     if not name:
         return redirect("/clients")
 
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO clients (name, email, company, phone, address, notes)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """,
-        (name, email, company, phone, address, notes),
+        INSERT INTO clients (name, email, company, phone, address, notes, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """,
+        (name, email, company, phone, address, notes, user_id),
     )
     conn.commit()
     cursor.close()
@@ -842,13 +1201,18 @@ def add_client():
 @app.route("/clients/delete/<int:client_id>")
 def delete_client(client_id):
     """
-    Delete a client (only if no invoices reference them ideally, but
-    for now we won't enforce that).
+    Delete a client (for the current user).
     """
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM clients WHERE id = %s", (client_id,))
+    cursor.execute(
+        "DELETE FROM clients WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        (client_id, user_id),
+    )
     conn.commit()
     cursor.close()
     conn.close()
@@ -861,6 +1225,9 @@ def delete_client(client_id):
 # -------------------------
 @app.route("/add-payment/<int:invoice_id>", methods=["GET", "POST"])
 def add_payment(invoice_id):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -868,9 +1235,9 @@ def add_payment(invoice_id):
         """
         SELECT id, client, amount, status, invoice_number
         FROM invoices
-        WHERE id = %s
-    """,
-        (invoice_id,),
+        WHERE id = %s AND (user_id = %s OR user_id IS NULL)
+        """,
+        (invoice_id, user_id),
     )
     invoice = cursor.fetchone()
 
@@ -903,7 +1270,7 @@ def add_payment(invoice_id):
                 """
                 INSERT INTO payments (invoice_id, amount, method, note)
                 VALUES (%s, %s, %s, %s)
-            """,
+                """,
                 (invoice_id_db, pay_amount, method or None, note or None),
             )
 
@@ -934,7 +1301,7 @@ def add_payment(invoice_id):
         FROM payments
         WHERE invoice_id = %s
         ORDER BY created_at DESC
-    """,
+        """,
         (invoice_id_db,),
     )
     payments = cursor.fetchall()
@@ -966,10 +1333,16 @@ def add_payment(invoice_id):
 # -------------------------
 @app.route("/edit/<int:invoice_id>")
 def edit(invoice_id):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute("SELECT id, client FROM invoices WHERE id = %s", (invoice_id,))
+    c.execute(
+        "SELECT id, client FROM invoices WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        (invoice_id, user_id),
+    )
     invoice = c.fetchone()
 
     if not invoice:
@@ -1007,15 +1380,21 @@ def update(invoice_id):
             total += amt
             cleaned_items.append((desc, amt))
 
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     c = conn.cursor()
 
     c.execute(
-        "UPDATE invoices SET client = %s, amount = %s WHERE id = %s",
-        (client, total, invoice_id),
+        "UPDATE invoices SET client = %s, amount = %s WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        (client, total, invoice_id, user_id),
     )
 
-    c.execute("DELETE FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
+    c.execute(
+        "DELETE FROM invoice_items WHERE invoice_id = %s",
+        (invoice_id,),
+    )
 
     for desc, amt in cleaned_items:
         c.execute(
@@ -1034,11 +1413,15 @@ def update(invoice_id):
 # -------------------------
 @app.route("/update-status/<int:invoice_id>/<string:new_status>")
 def update_status(invoice_id, new_status):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     c = conn.cursor()
 
     c.execute(
-        "UPDATE invoices SET status = %s WHERE id = %s", (new_status, invoice_id)
+        "UPDATE invoices SET status = %s WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        (new_status, invoice_id, user_id),
     )
 
     conn.commit()
@@ -1052,8 +1435,21 @@ def update_status(invoice_id, new_status):
 # -------------------------
 @app.route("/delete/<int:invoice_id>")
 def delete(invoice_id):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     conn = get_db_connection()
     c = conn.cursor()
+
+    # Ensure invoice belongs to current user before deleting
+    c.execute(
+        "SELECT id FROM invoices WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        (invoice_id, user_id),
+    )
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return "Invoice not found", 404
 
     c.execute("DELETE FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
     c.execute("DELETE FROM invoices WHERE id = %s", (invoice_id,))
@@ -1070,6 +1466,8 @@ def delete(invoice_id):
 def generate_invoice_pdf_bytes(invoice_id: int):
     """
     Generate a PDF for the given invoice_id and return raw bytes.
+    (No user check here because this is also used for the public link;
+     access control is handled at the route level.)
     """
     conn = get_db_connection()
     c = conn.cursor()
@@ -1079,7 +1477,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         SELECT client, amount, created_at, due_date, invoice_number
         FROM invoices
         WHERE id = %s
-    """,
+        """,
         (invoice_id,),
     )
     row = c.fetchone()
@@ -1137,10 +1535,14 @@ def generate_invoice_pdf_bytes(invoice_id: int):
 
 
 # -------------------------
-# PDF DOWNLOAD ROUTE
+# PDF DOWNLOAD ROUTE (internal)
 # -------------------------
 @app.route("/history-pdf/<int:invoice_id>")
 def history_pdf(invoice_id):
+    """
+    Internal PDF download by invoice_id.
+    Does NOT check user_id so public links can reuse it.
+    """
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
         return err, 404
@@ -1273,7 +1675,9 @@ def public_invoice(token):
 # -------------------------
 # EMAIL SENDING HELPER
 # -------------------------
-def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str):
+def send_email_via_resend(
+    to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str
+):
     """
     Send email using the Resend HTTP API.
     Returns (success: bool, error_message: str or None)
@@ -1339,6 +1743,8 @@ def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes
 
     except Exception as e:
         return False, f"Error sending via Resend: {e}"
+
+
 def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: str):
     """
     Generate the invoice PDF and send it via either:
@@ -1429,210 +1835,6 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     return True, None
 
 
-def get_default_user():
-    """
-    For now, returns the first user in the users table.
-    Later, this will be replaced with real auth (session-based).
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, email, plan, is_active, created_at FROM users ORDER BY id ASC LIMIT 1;"
-    )
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if not row:
-        # Should not happen because init_db ensures a default, but be defensive
-        return {
-            "id": None,
-            "email": "unknown@example.com",
-            "plan": "free",
-            "is_active": True,
-            "created_at": None,
-        }
-
-    user_id, email, plan, is_active, created_at = row
-    return {
-        "id": user_id,
-        "email": email,
-        "plan": plan or "free",
-        "is_active": is_active,
-        "created_at": created_at,
-    }
-
-
-def get_current_user():
-    """
-    Stub for now: always return the default user.
-    Later, this will look at session['user_id'].
-    """
-    return get_default_user()
-
-
-def get_plan_for_current_user():
-    user = get_current_user()
-    return user.get("plan") or "free"
-
-
-def get_business_profile():
-    """
-    Return a dict of business profile settings for the current user.
-    If no row exists, return sensible defaults (does NOT write to DB).
-    """
-    user = get_current_user()
-    user_id = user["id"]
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT id, business_name, email, phone, website, address,
-               logo_url, brand_color, accent_color, default_terms, default_notes
-        FROM business_profile
-        WHERE user_id = %s
-        ORDER BY id ASC
-        LIMIT 1
-        """,
-        (user_id,),
-    )
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    # Defaults if nothing in DB yet
-    if not row:
-        return {
-            "id": None,
-            "business_name": "InvoicePro",
-            "email": "",
-            "phone": "",
-            "website": "",
-            "address": "",
-            "logo_url": "",
-            "brand_color": "#151B54",   # your current main accent
-            "accent_color": "#1d4ed8",  # secondary accent
-            "default_terms": "",
-            "default_notes": "",
-            "user_id": user_id,
-        }
-
-    (
-        bp_id,
-        business_name,
-        email,
-        phone,
-        website,
-        address,
-        logo_url,
-        brand_color,
-        accent_color,
-        default_terms,
-        default_notes,
-    ) = row
-
-    return {
-        "id": bp_id,
-        "business_name": business_name or "InvoicePro",
-        "email": email or "",
-        "phone": phone or "",
-        "website": website or "",
-        "address": address or "",
-        "logo_url": logo_url or "",
-        "brand_color": brand_color or "#151B54",
-        "accent_color": accent_color or "#1d4ed8",
-        "default_terms": default_terms or "",
-        "default_notes": default_notes or "",
-        "user_id": user_id,
-    }
-
-
-def upsert_business_profile(data: dict):
-    """
-    Insert or update the business_profile row for the current user.
-    Expects keys: business_name, email, phone, website, address,
-                  logo_url, brand_color, accent_color, default_terms, default_notes.
-    """
-    user = get_current_user()
-    user_id = user["id"]
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # See if a row already exists for this user
-    cursor.execute(
-        "SELECT id FROM business_profile WHERE user_id = %s ORDER BY id ASC LIMIT 1",
-        (user_id,),
-    )
-    row = cursor.fetchone()
-
-    now = datetime.now()
-
-    if row:
-        bp_id = row[0]
-        cursor.execute(
-            """
-            UPDATE business_profile
-            SET business_name = %s,
-                email = %s,
-                phone = %s,
-                website = %s,
-                address = %s,
-                logo_url = %s,
-                brand_color = %s,
-                accent_color = %s,
-                default_terms = %s,
-                default_notes = %s,
-                updated_at = %s
-            WHERE id = %s AND user_id = %s
-            """,
-            (
-                data.get("business_name"),
-                data.get("email"),
-                data.get("phone"),
-                data.get("website"),
-                data.get("address"),
-                data.get("logo_url"),
-                data.get("brand_color"),
-                data.get("accent_color"),
-                data.get("default_terms"),
-                data.get("default_notes"),
-                now,
-                bp_id,
-                user_id,
-            ),
-        )
-    else:
-        cursor.execute(
-            """
-            INSERT INTO business_profile
-                (business_name, email, phone, website, address,
-                 logo_url, brand_color, accent_color, default_terms, default_notes,
-                 updated_at, user_id)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            """,
-            (
-                data.get("business_name"),
-                data.get("email"),
-                data.get("phone"),
-                data.get("website"),
-                data.get("address"),
-                data.get("logo_url"),
-                data.get("brand_color"),
-                data.get("accent_color"),
-                data.get("default_terms"),
-                data.get("default_notes"),
-                now,
-                user_id,
-            ),
-        )
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
 # -------------------------
 # SEND EMAIL ROUTE
 # -------------------------
@@ -1644,6 +1846,9 @@ def send_email_view(invoice_id):
     """
     profile = get_business_profile()
     business_name = profile["business_name"] or "InvoicePro"
+
+    current_user = get_current_user()
+    user_id = current_user["id"]
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1663,9 +1868,9 @@ def send_email_view(invoice_id):
             invoices.public_token
         FROM invoices
         LEFT JOIN clients ON invoices.client_id = clients.id
-        WHERE invoices.id = %s
-    """,
-        (invoice_id,),
+        WHERE invoices.id = %s AND (invoices.user_id = %s OR invoices.user_id IS NULL)
+        """,
+        (invoice_id, user_id),
     )
     row = cursor.fetchone()
     conn.close()
@@ -1705,14 +1910,8 @@ def send_email_view(invoice_id):
     default_message = (
         f"Hi {client_name},\n\n"
         f"Please find attached your invoice {inv_label} for ${amount_float:,.2f} from {business_name}.\n"
-        + (
-            f"Due date: {due_date.strftime('%Y-%m-%d')}\n"
-            if due_date
-            else ""
-        )
-        + (
-            f"\nYou can also view this invoice online here:\n{public_url}\n\n"
-        )
+        + (f"Due date: {due_date.strftime('%Y-%m-%d')}\n" if due_date else "")
+        + (f"\nYou can also view this invoice online here:\n{public_url}\n\n")
         + "Thank you for your business!\n\n"
         + f"— {business_name}"
     )

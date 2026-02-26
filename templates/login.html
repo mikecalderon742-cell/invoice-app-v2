@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Login</h1>
+</div>
+
+<div class="form-wrapper fade-in-up">
+    {% if error %}
+        <div style="
+            margin-bottom:16px;
+            padding:12px 14px;
+            border-radius:10px;
+            font-size:14px;
+            font-weight:500;
+            background:#fee2e2;
+            color:#b91c1c;
+            border:1px solid #dc2626;
+        ">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="/login">
+        <label style="font-weight:600; font-size:14px;">Email</label>
+        <input type="email" name="email" required placeholder="you@example.com">
+
+        <label style="font-weight:600; font-size:14px; margin-top:10px;">Password</label>
+        <input type="password" name="password" required>
+
+        <div class="form-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:18px;">
+            <a href="/register" style="font-size:13px; opacity:.8;">Need an account? Sign up</a>
+            <button type="submit" class="btn btn-brand">Login</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
