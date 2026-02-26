@@ -10,9 +10,24 @@
     </div>
 </div>
 
+{% if request.args.get('paid') == '1' %}
+    <div style="
+        margin-bottom:16px;
+        padding:12px 14px;
+        border-radius:10px;
+        font-size:14px;
+        font-weight:500;
+        background:#dcfce7;
+        color:#166534;
+        border:1px solid #16a34a;
+    ">
+        Payment completed successfully. Thank you!
+    </div>
+{% endif %}
+
 <div class="form-wrapper fade-in-up">
 
-    <!-- Top Summary Row -->
+    <!-- KPI STRIP -->
     <div class="dashboard-cards enhanced" style="margin-bottom: 20px;">
         <div class="card kpi blue">
             <h2>${{ "{:,.2f}".format(amount) }}</h2>
@@ -45,10 +60,10 @@
         </div>
     </div>
 
-    <!-- Core Invoice Info -->
-    <div class="public-grid" style="display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:18px; margin-bottom:18px;">
+    <!-- BILLING + DETAILS -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:18px; margin-bottom:18px;">
         <div>
-            <div class="public-section-title" style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
+            <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
                 Billed To
             </div>
             <p style="margin:0 0 4px 0; font-weight:600;">{{ client_name }}</p>
@@ -61,7 +76,7 @@
         </div>
 
         <div>
-            <div class="public-section-title" style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
+            <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
                 Invoice Details
             </div>
             <p style="margin:0 0 4px 0; font-size:14px;">
@@ -86,7 +101,7 @@
         </div>
     </div>
 
-    <!-- Line Items -->
+    <!-- LINE ITEMS -->
     <div class="table-wrapper">
         <table class="modern-table">
             <thead>
@@ -106,7 +121,7 @@
         </table>
     </div>
 
-    <!-- Payments (if any) -->
+    <!-- PAYMENTS -->
     {% if payments and payments|length > 0 %}
         <h3 style="margin-top: 24px; margin-bottom: 8px; font-size: 16px;">Payment History</h3>
         <div class="table-wrapper">
@@ -139,12 +154,12 @@
         </div>
     {% endif %}
 
-    <!-- Notes / Terms -->
+    <!-- NOTES / TERMS -->
     {% if notes or terms %}
         <div style="margin-top: 18px; display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:18px;">
             {% if notes %}
                 <div>
-                    <div class="public-section-title" style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
+                    <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
                         Notes
                     </div>
                     <p style="font-size:14px; margin:0; white-space:pre-line;">
@@ -154,7 +169,7 @@
             {% endif %}
             {% if terms %}
                 <div>
-                    <div class="public-section-title" style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
+                    <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
                         Payment Terms
                     </div>
                     <p style="font-size:14px; margin:0; white-space:pre-line;">
@@ -165,14 +180,21 @@
         </div>
     {% endif %}
 
-    <!-- Actions (Pay Now placeholder) -->
+    <!-- ACTIONS -->
     <div class="public-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; flex-wrap:wrap;">
         <a href="{{ pdf_url }}" class="btn btn-secondary" target="_blank" rel="noopener">
             Download PDF
         </a>
-        <button class="btn btn-success" type="button" disabled title="Online payments coming soon">
-            Pay Now (Coming Soon)
-        </button>
+
+        {% if balance > 0 %}
+            <a href="/pay/{{ public_token }}" class="btn btn-success">
+                Pay Now
+            </a>
+        {% else %}
+            <button class="btn btn-success" type="button" disabled>
+                Paid in Full
+            </button>
+        {% endif %}
     </div>
 
 </div>
