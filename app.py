@@ -1006,6 +1006,10 @@ def public_invoice(token):
         client_company,
     ) = inv_row
 
+    # Prefer the dedicated client record name if present
+    if client_name_from_client:
+        client_name = client_name_from_client
+
     amount_float = float(amount)
     inv_label = invoice_number or f"#{invoice_id}"
 
@@ -1039,7 +1043,7 @@ def public_invoice(token):
     cursor.close()
     conn.close()
 
-    # Build a PDF download URL (same as internal)
+    # Reuse your existing PDF route
     pdf_url = f"/history-pdf/{invoice_id}"
 
     return render_template(
