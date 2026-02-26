@@ -43,6 +43,10 @@ STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO")  # recurring price ID for 
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
+
+# PLAN_DEFINITIONS (as above)
+# PLAN_LEVELS (as above)
+
 # Simple plan metadata (we’ll expand and enforce later)
 PLAN_DEFINITIONS = {
     "free": {
@@ -79,6 +83,14 @@ PLAN_DEFINITIONS = {
             "Team access (coming soon)",
         ],
     },
+}
+
+# Plan “strength” used for comparisons (free < pro < enterprise)
+PLAN_LEVELS = {
+    "free": 0,
+    "starter": 0,       # alias if we ever use "starter"
+    "pro": 1,
+    "enterprise": 2,
 }
 
 # Simple numeric levels for gating
@@ -402,6 +414,19 @@ def get_current_user():
 def get_plan_for_current_user():
     user = get_current_user()
     return user.get("plan") or "free"
+
+
+@app.route("/debug-plan")
+def debug_plan():
+    """
+    Quick JSON view of the current user + plan, for debugging.
+    """
+    user = get_current_user()
+    return {
+        "id": user.get("id"),
+        "email": user.get("email"),
+        "plan": user.get("plan"),
+    }
 
 
 def plan_allows(required_plan: str) -> bool:
@@ -1977,6 +2002,7 @@ def stripe_webhook():
     sig_header = request.headers.get("Stripe-Signature")
 
     if not STRIPE_WEBHOOK_SECRET:
+        print("[Stripe] Webhook called but STRIPE_WEBHOOK_SECRET is not set", flush=True)
         return "Webhook secret not configured", 500
 
     try:
@@ -1987,10 +2013,14 @@ def stripe_webhook():
         )
     except ValueError:
         # Invalid payload
+        print("[Stripe] Invalid payload", flush=True)
         return "Invalid payload", 400
     except stripe.error.SignatureVerificationError:
         # Invalid signature
+        print("[Stripe] Invalid signature", flush=True)
         return "Invalid signature", 400
+
+    print(f"[Stripe] Received event: {event['type']}", flush=True)
 
     # We care about checkout.session.completed
     if event["type"] == "checkout.session.completed":
@@ -2000,10 +2030,13 @@ def stripe_webhook():
         subscription_id = session_obj.get("subscription")
         customer_id = session_obj.get("customer")
 
+        print(f"[Stripe] checkout.session.completed metadata={metadata}", flush=True)
+
         if user_id_str:
             try:
                 user_id = int(user_id_str)
             except ValueError:
+                print(f"[Stripe] Invalid user_id in metadata: {user_id_str}", flush=True)
                 user_id = None
 
             if user_id:
@@ -2022,6 +2055,9 @@ def stripe_webhook():
                 conn.commit()
                 cursor.close()
                 conn.close()
+                print(f"[Stripe] Upgraded user {user_id} to Pro", flush=True)
+        else:
+            print("[Stripe] No user_id in metadata; cannot upgrade", flush=True)
 
     return "OK", 200
 
