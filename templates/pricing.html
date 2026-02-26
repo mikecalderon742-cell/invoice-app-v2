@@ -1,108 +1,65 @@
 {% extends "base.html" %}
+
 {% block content %}
-
 <div class="dashboard-header">
-    <h1>Pricing</h1>
+    <h1>Choose your plan</h1>
     <div class="quick-actions">
-        <a href="/invoices" class="btn btn-secondary">Go to Dashboard</a>
+        <a href="{{ url_for('invoices_page') }}" class="btn btn-secondary">
+            Back to Dashboard
+        </a>
     </div>
 </div>
 
-<div class="form-wrapper fade-in-up">
+{% if request.args.get('upgraded') %}
+    <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:20px;">
+        🎉 Your upgrade was successful. Welcome to Pro!
+    </div>
+{% elif request.args.get('canceled') %}
+    <div class="alert-overdue" style="border-color:#f97316;background:#451a03;color:#fed7aa;margin-bottom:20px;">
+        Upgrade canceled. You can try again any time.
+    </div>
+{% endif %}
 
-    <p style="margin-top:0; margin-bottom:16px; font-size:14px; opacity:.8;">
-        Choose the plan that fits your workflow. You can start on Starter and
-        upgrade to Pro as your invoice volume grows.
+<div class="dashboard-cards enhanced">
+    {% for key, plan in plans.items() %}
+        <div class="card kpi
+            {% if key == 'free' %}teal{% elif key == 'pro' %}blue{% else %}purple{% endif %}">
+            <h2>{{ plan.name }}</h2>
+            <p>{{ plan.price_label }}</p>
+            <small>{{ plan.tagline }}</small>
+
+            <ul style="margin-top:12px;padding-left:18px;font-size:0.9rem;">
+                {% for f in plan.features %}
+                    <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+
+            <div style="margin-top:18px;">
+                {% if key == user_plan %}
+                    <span class="badge paid">Current plan</span>
+                {% elif key == 'pro' and not is_pro %}
+                    <form action="{{ url_for('create_checkout_session') }}" method="POST">
+                        <button type="submit" class="btn btn-brand">
+                            Upgrade to Pro
+                        </button>
+                    </form>
+                {% else %}
+                    {% if key == 'free' %}
+                        <span class="badge draft">Included</span>
+                    {% else %}
+                        <a href="mailto:support@mikeinvoices.com" class="btn btn-secondary">
+                            Contact sales
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% if stripe_publishable_key %}
+    <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">
+        Payments securely powered by Stripe.
     </p>
-
-    <div class="dashboard-cards enhanced" style="margin-bottom: 10px;">
-
-        <!-- Starter / Free -->
-        {% set plan = plans["free"] %}
-        <div class="card kpi blue" style="position:relative;">
-            <h2>{{ plan.name }}</h2>
-            <p style="font-size:22px; margin:4px 0 8px 0;">{{ plan.price_label }}</p>
-            <small class="card-sub">{{ plan.tagline }}</small>
-            <ul style="margin-top:12px; padding-left:18px; font-size:14px;">
-                {% for f in plan.features %}
-                    <li>{{ f }}</li>
-                {% endfor %}
-            </ul>
-
-            <div style="margin-top:14px;">
-                {% if user_plan == "free" %}
-                    <button class="btn btn-secondary" type="button" disabled>
-                        Current plan
-                    </button>
-                {% else %}
-                    <button class="btn btn-secondary" type="button" disabled>
-                        Downgrade (coming soon)
-                    </button>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Pro -->
-        {% set plan = plans["pro"] %}
-        <div class="card kpi green" style="position:relative;">
-            <div style="
-                position:absolute;
-                top:10px;
-                right:14px;
-                background:#facc15;
-                color:#1f2937;
-                font-size:11px;
-                font-weight:700;
-                padding:4px 8px;
-                border-radius:999px;
-                text-transform:uppercase;
-                letter-spacing:.08em;
-            ">
-                Most Popular
-            </div>
-            <h2>{{ plan.name }}</h2>
-            <p style="font-size:22px; margin:4px 0 8px 0;">{{ plan.price_label }}</p>
-            <small class="card-sub">{{ plan.tagline }}</small>
-            <ul style="margin-top:12px; padding-left:18px; font-size:14px;">
-                {% for f in plan.features %}
-                    <li>{{ f }}</li>
-                {% endfor %}
-            </ul>
-
-            <div style="margin-top:14px;">
-                {% if user_plan == "pro" %}
-                    <button class="btn btn-brand" type="button" disabled>
-                        Current plan
-                    </button>
-                {% else %}
-                    <button class="btn btn-brand" type="button" disabled>
-                        Upgrade to Pro (coming soon)
-                    </button>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Enterprise -->
-        {% set plan = plans["enterprise"] %}
-        <div class="card kpi purple" style="position:relative;">
-            <h2>{{ plan.name }}</h2>
-            <p style="font-size:22px; margin:4px 0 8px 0;">{{ plan.price_label }}</p>
-            <small class="card-sub">{{ plan.tagline }}</small>
-            <ul style="margin-top:12px; padding-left:18px; font-size:14px;">
-                {% for f in plan.features %}
-                    <li>{{ f }}</li>
-                {% endfor %}
-            </ul>
-
-            <div style="margin-top:14px;">
-                <button class="btn btn-secondary" type="button" disabled>
-                    Contact us (coming soon)
-                </button>
-            </div>
-        </div>
-
-    </div>
-
-</div>
-
+{% endif %}
 {% endblock %}

@@ -36,8 +36,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 # -------------------------
-# PLAN DEFINITIONS
+# STRIPE CONFIG
 # -------------------------
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")  # your Stripe *secret* key
+STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO")  # recurring price ID for Pro
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+
+# Simple plan metadata (we’ll expand and enforce later)
 PLAN_DEFINITIONS = {
     "free": {
         "name": "Starter",
@@ -216,6 +222,14 @@ def init_db():
     )
     cursor.execute(
         "ALTER TABLE business_profile ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
+    )
+       
+    # Stripe linkage for subscriptions
+    cursor.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;"
+    )
+    cursor.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;"
     )
 
     conn.commit()
@@ -739,12 +753,58 @@ def logout():
 @app.route("/pricing")
 def pricing():
     user = get_current_user()
+    user_plan = user.get("plan") or "free"
+    is_pro = PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0)
+
     return render_template(
         "pricing.html",
         current_user=user,
-        user_plan=user.get("plan") or "free",
+        user_plan=user_plan,
         plans=PLAN_DEFINITIONS,
+        stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
+        is_pro=is_pro,
     )
+
+
+@app.route("/create-checkout-session", methods=["POST"])
+def create_checkout_session():
+    """
+    Create a Stripe Checkout Session for upgrading to Pro.
+    """
+    user = get_current_user()
+    user_id = user["id"]
+    user_plan = user.get("plan") or "free"
+
+    if not STRIPE_PRICE_PRO or not stripe.api_key:
+        return (
+            "Stripe is not configured. Please set STRIPE_SECRET_KEY and STRIPE_PRICE_PRO.",
+            500,
+        )
+
+    # If already Pro or higher, no need to create a new subscription
+    if PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0):
+        return redirect(url_for("pricing"))
+
+    domain = request.url_root.rstrip("/")
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            mode="subscription",
+            line_items=[
+                {
+                    "price": STRIPE_PRICE_PRO,
+                    "quantity": 1,
+                }
+            ],
+            customer_email=user.get("email"),
+            metadata={"user_id": str(user_id)},
+            success_url=f"{domain}{url_for('pricing')}?upgraded=1",
+            cancel_url=f"{domain}{url_for('pricing')}?canceled=1",
+        )
+    except Exception as e:
+        return f"Error creating Checkout Session: {e}", 500
+
+    return redirect(checkout_session.url, code=303)
 
 
 # -------------------------
@@ -1906,6 +1966,64 @@ def send_email_view(invoice_id):
         feedback_type=feedback_type,
         public_url=public_url,
     )
+
+
+@app.route("/stripe/webhook", methods=["POST"])
+def stripe_webhook():
+    """
+    Handle Stripe webhooks to mark users as Pro when checkout completes.
+    """
+    payload = request.data
+    sig_header = request.headers.get("Stripe-Signature")
+
+    if not STRIPE_WEBHOOK_SECRET:
+        return "Webhook secret not configured", 500
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=STRIPE_WEBHOOK_SECRET,
+        )
+    except ValueError:
+        # Invalid payload
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError:
+        # Invalid signature
+        return "Invalid signature", 400
+
+    # We care about checkout.session.completed
+    if event["type"] == "checkout.session.completed":
+        session_obj = event["data"]["object"]
+        metadata = session_obj.get("metadata") or {}
+        user_id_str = metadata.get("user_id")
+        subscription_id = session_obj.get("subscription")
+        customer_id = session_obj.get("customer")
+
+        if user_id_str:
+            try:
+                user_id = int(user_id_str)
+            except ValueError:
+                user_id = None
+
+            if user_id:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    UPDATE users
+                    SET plan = %s,
+                        stripe_customer_id = COALESCE(stripe_customer_id, %s),
+                        stripe_subscription_id = %s
+                    WHERE id = %s
+                    """,
+                    ("pro", customer_id, subscription_id, user_id),
+                )
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+    return "OK", 200
 
 
 # -------------------------
