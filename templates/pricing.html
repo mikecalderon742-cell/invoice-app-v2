@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Pricing</h1>
+    <div class="quick-actions">
+        <a href="/invoices" class="btn btn-secondary">Go to Dashboard</a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+
+    <p style="margin-top:0; margin-bottom:16px; font-size:14px; opacity:.8;">
+        Choose the plan that fits your workflow. You can start on Starter and
+        upgrade to Pro as your invoice volume grows.
+    </p>
+
+    <div class="dashboard-cards enhanced" style="margin-bottom: 10px;">
+
+        <!-- Starter / Free -->
+        {% set plan = plans["free"] %}
+        <div class="card kpi blue" style="position:relative;">
+            <h2>{{ plan.name }}</h2>
+            <p style="font-size:22px; margin:4px 0 8px 0;">{{ plan.price_label }}</p>
+            <small class="card-sub">{{ plan.tagline }}</small>
+            <ul style="margin-top:12px; padding-left:18px; font-size:14px;">
+                {% for f in plan.features %}
+                    <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+
+            <div style="margin-top:14px;">
+                {% if user_plan == "free" %}
+                    <button class="btn btn-secondary" type="button" disabled>
+                        Current plan
+                    </button>
+                {% else %}
+                    <button class="btn btn-secondary" type="button" disabled>
+                        Downgrade (coming soon)
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pro -->
+        {% set plan = plans["pro"] %}
+        <div class="card kpi green" style="position:relative;">
+            <div style="
+                position:absolute;
+                top:10px;
+                right:14px;
+                background:#facc15;
+                color:#1f2937;
+                font-size:11px;
+                font-weight:700;
+                padding:4px 8px;
+                border-radius:999px;
+                text-transform:uppercase;
+                letter-spacing:.08em;
+            ">
+                Most Popular
+            </div>
+            <h2>{{ plan.name }}</h2>
+            <p style="font-size:22px; margin:4px 0 8px 0;">{{ plan.price_label }}</p>
+            <small class="card-sub">{{ plan.tagline }}</small>
+            <ul style="margin-top:12px; padding-left:18px; font-size:14px;">
+                {% for f in plan.features %}
+                    <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+
+            <div style="margin-top:14px;">
+                {% if user_plan == "pro" %}
+                    <button class="btn btn-brand" type="button" disabled>
+                        Current plan
+                    </button>
+                {% else %}
+                    <button class="btn btn-brand" type="button" disabled>
+                        Upgrade to Pro (coming soon)
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Enterprise -->
+        {% set plan = plans["enterprise"] %}
+        <div class="card kpi purple" style="position:relative;">
+            <h2>{{ plan.name }}</h2>
+            <p style="font-size:22px; margin:4px 0 8px 0;">{{ plan.price_label }}</p>
+            <small class="card-sub">{{ plan.tagline }}</small>
+            <ul style="margin-top:12px; padding-left:18px; font-size:14px;">
+                {% for f in plan.features %}
+                    <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+
+            <div style="margin-top:14px;">
+                <button class="btn btn-secondary" type="button" disabled>
+                    Contact us (coming soon)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

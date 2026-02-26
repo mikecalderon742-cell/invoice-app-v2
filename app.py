@@ -32,6 +32,44 @@ def get_db_connection():
 
 app = Flask(__name__)
 
+# Simple plan metadata (we’ll expand and enforce later)
+PLAN_DEFINITIONS = {
+    "free": {
+        "name": "Starter",
+        "price_label": "$0 / month",
+        "tagline": "For freelancers just getting started.",
+        "features": [
+            "Up to 10 invoices / month",
+            "Single invoice template",
+            "Basic dashboard",
+        ],
+    },
+    "pro": {
+        "name": "Pro",
+        "price_label": "$29 / month",
+        "tagline": "For growing businesses who invoice regularly.",
+        "features": [
+            "Unlimited invoices",
+            "Multiple invoice templates",
+            "Email delivery + PDFs",
+            "Public invoice links & Pay Now",
+            "Recurring invoices",
+        ],
+        "recommended": True,
+    },
+    "enterprise": {
+        "name": "Studio",
+        "price_label": "Contact us",
+        "tagline": "For agencies and teams that need more.",
+        "features": [
+            "All Pro features",
+            "Custom branding & domains",
+            "Priority support",
+            "Team access (coming soon)",
+        ],
+    },
+}
+
 DB_PATH = Path("invoices.db")
 
 
@@ -42,7 +80,25 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Base invoices + items tables
+    # ==========================
+    # USERS (multi-tenant base)
+    # ==========================
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT,
+            plan TEXT DEFAULT 'free',
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    # ==========================
+    # CORE TABLES
+    # ==========================
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoices (
@@ -66,7 +122,6 @@ def init_db():
     """
     )
 
-    # Clients table
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS clients (
@@ -82,7 +137,6 @@ def init_db():
     """
     )
 
-    # Payments table
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS payments (
@@ -96,7 +150,6 @@ def init_db():
     """
     )
 
-    # Recurring invoices table
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS recurring_invoices (
@@ -111,7 +164,9 @@ def init_db():
     """
     )
 
-    # Business profile table (single-row configuration)
+    # ==========================
+    # BUSINESS PROFILE
+    # ==========================
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS business_profile (
@@ -131,7 +186,11 @@ def init_db():
     """
     )
 
-    # Extra columns on invoices (safe if already exist)
+    # ==========================
+    # SCHEMA EVOLUTIONS
+    # ==========================
+
+    # Extra columns on invoices
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;"
     )
@@ -150,6 +209,50 @@ def init_db():
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;"
     )
+
+    # Multi-tenant ownership columns
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
+    )
+    cursor.execute(
+        "ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
+    )
+    cursor.execute(
+        "ALTER TABLE business_profile ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
+    )
+
+    conn.commit()
+
+    # ==========================
+    # ENSURE A DEFAULT USER
+    # ==========================
+    cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1;")
+    row = cursor.fetchone()
+    if not row:
+        # Simple default owner; we’ll replace with real auth later
+        cursor.execute(
+            """
+            INSERT INTO users (email, password_hash, plan, is_active)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id;
+            """,
+            ("owner@example.com", None, "pro", True),
+        )
+        default_user_id = cursor.fetchone()[0]
+
+        # Optionally attach existing invoices/clients/business_profile rows to this user
+        cursor.execute(
+            "UPDATE invoices SET user_id = %s WHERE user_id IS NULL;",
+            (default_user_id,),
+        )
+        cursor.execute(
+            "UPDATE clients SET user_id = %s WHERE user_id IS NULL;",
+            (default_user_id,),
+        )
+        cursor.execute(
+            "UPDATE business_profile SET user_id = %s WHERE user_id IS NULL;",
+            (default_user_id,),
+        )
 
     conn.commit()
     cursor.close()
@@ -239,6 +342,19 @@ def inject_business_profile():
     """
     return {"business_profile": get_business_profile()}
 
+@app.context_processor
+def inject_current_user():
+    """
+    Makes `current_user` and `user_plan` available in all templates.
+    """
+    user = get_current_user()
+    plan = user.get("plan") or "free"
+    return {
+        "current_user": user,
+        "user_plan": plan,
+        "plan_definitions": PLAN_DEFINITIONS,
+    }
+
 
 # -------------------------
 # HOME (NEW INVOICE FORM)
@@ -261,6 +377,17 @@ def home():
     conn.close()
 
     return render_template("index.html", clients=clients)
+
+
+@app.route("/pricing")
+def pricing():
+    user = get_current_user()
+    return render_template(
+        "pricing.html",
+        current_user=user,
+        user_plan=user.get("plan") or "free",
+        plans=PLAN_DEFINITIONS,
+    )
 
 
 # -------------------------
@@ -1302,11 +1429,61 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     return True, None
 
 
+def get_default_user():
+    """
+    For now, returns the first user in the users table.
+    Later, this will be replaced with real auth (session-based).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, email, plan, is_active, created_at FROM users ORDER BY id ASC LIMIT 1;"
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        # Should not happen because init_db ensures a default, but be defensive
+        return {
+            "id": None,
+            "email": "unknown@example.com",
+            "plan": "free",
+            "is_active": True,
+            "created_at": None,
+        }
+
+    user_id, email, plan, is_active, created_at = row
+    return {
+        "id": user_id,
+        "email": email,
+        "plan": plan or "free",
+        "is_active": is_active,
+        "created_at": created_at,
+    }
+
+
+def get_current_user():
+    """
+    Stub for now: always return the default user.
+    Later, this will look at session['user_id'].
+    """
+    return get_default_user()
+
+
+def get_plan_for_current_user():
+    user = get_current_user()
+    return user.get("plan") or "free"
+
+
 def get_business_profile():
     """
-    Return a dict of business profile settings.
+    Return a dict of business profile settings for the current user.
     If no row exists, return sensible defaults (does NOT write to DB).
     """
+    user = get_current_user()
+    user_id = user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1314,9 +1491,11 @@ def get_business_profile():
         SELECT id, business_name, email, phone, website, address,
                logo_url, brand_color, accent_color, default_terms, default_notes
         FROM business_profile
+        WHERE user_id = %s
         ORDER BY id ASC
         LIMIT 1
-        """
+        """,
+        (user_id,),
     )
     row = cursor.fetchone()
     cursor.close()
@@ -1336,6 +1515,7 @@ def get_business_profile():
             "accent_color": "#1d4ed8",  # secondary accent
             "default_terms": "",
             "default_notes": "",
+            "user_id": user_id,
         }
 
     (
@@ -1364,21 +1544,26 @@ def get_business_profile():
         "accent_color": accent_color or "#1d4ed8",
         "default_terms": default_terms or "",
         "default_notes": default_notes or "",
+        "user_id": user_id,
     }
 
 
 def upsert_business_profile(data: dict):
     """
-    Insert or update the single business_profile row.
+    Insert or update the business_profile row for the current user.
     Expects keys: business_name, email, phone, website, address,
                   logo_url, brand_color, accent_color, default_terms, default_notes.
     """
+    user = get_current_user()
+    user_id = user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # See if a row already exists
+    # See if a row already exists for this user
     cursor.execute(
-        "SELECT id FROM business_profile ORDER BY id ASC LIMIT 1"
+        "SELECT id FROM business_profile WHERE user_id = %s ORDER BY id ASC LIMIT 1",
+        (user_id,),
     )
     row = cursor.fetchone()
 
@@ -1400,7 +1585,7 @@ def upsert_business_profile(data: dict):
                 default_terms = %s,
                 default_notes = %s,
                 updated_at = %s
-            WHERE id = %s
+            WHERE id = %s AND user_id = %s
             """,
             (
                 data.get("business_name"),
@@ -1415,6 +1600,7 @@ def upsert_business_profile(data: dict):
                 data.get("default_notes"),
                 now,
                 bp_id,
+                user_id,
             ),
         )
     else:
@@ -1422,8 +1608,9 @@ def upsert_business_profile(data: dict):
             """
             INSERT INTO business_profile
                 (business_name, email, phone, website, address,
-                 logo_url, brand_color, accent_color, default_terms, default_notes, updated_at)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                 logo_url, brand_color, accent_color, default_terms, default_notes,
+                 updated_at, user_id)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """,
             (
                 data.get("business_name"),
@@ -1437,6 +1624,7 @@ def upsert_business_profile(data: dict):
                 data.get("default_terms"),
                 data.get("default_notes"),
                 now,
+                user_id,
             ),
         )
 
