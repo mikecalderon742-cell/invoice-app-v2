@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-wrapper" style="max-width: 720px; margin: 40px auto;">
+    <div class="dashboard-header" style="margin-bottom: 16px;">
+        <h1>{{ title or "Upgrade required" }}</h1>
+    </div>
+
+    <p style="font-size: 0.95rem; margin-bottom: 20px;">
+        {{ reason or "This feature is not available on your current plan." }}
+    </p>
+
+    <div class="status-summary" style="margin-bottom: 24px;">
+        <span class="status-item sent">
+            Current plan: <strong>{{ user_plan|capitalize }}</strong>
+        </span>
+        <span class="status-item paid">
+            Required plan: <strong>{{ required_plan|capitalize }}</strong> or higher
+        </span>
+    </div>
+
+    <div class="dashboard-cards">
+        {% for key, plan in plans.items() %}
+            <div class="card kpi {% if key == 'pro' %}blue{% else %}teal{% endif %}">
+                <h2>{{ plan.name }}</h2>
+                <p>{{ plan.price_label }}</p>
+                <small>{{ plan.tagline }}</small>
+                <ul style="margin-top: 12px; padding-left: 18px; font-size: 0.85rem;">
+                    {% for f in plan.features %}
+                        <li>{{ f }}</li>
+                    {% endfor %}
+                </ul>
+                <div style="margin-top: 16px;">
+                    <a href="{{ url_for('pricing') }}" class="btn btn-brand">
+                        View {{ plan.name }} details
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div style="text-align:center; margin-top: 20px; font-size: 0.85rem; opacity: 0.8;">
+        You can continue using all existing features on your current plan.
+    </div>
+</div>
+{% endblock %}

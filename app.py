@@ -13,7 +13,7 @@ import secrets
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 from werkzeug.security import generate_password_hash, check_password_hash
-import stripe
+import stripe  # installed and ready
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -33,10 +33,11 @@ def get_db_connection():
 
 
 app = Flask(__name__)
-
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
-# Simple plan metadata (we’ll expand and enforce later)
+# -------------------------
+# PLAN DEFINITIONS
+# -------------------------
 PLAN_DEFINITIONS = {
     "free": {
         "name": "Starter",
@@ -74,6 +75,9 @@ PLAN_DEFINITIONS = {
     },
 }
 
+# Simple numeric levels for gating
+PLAN_LEVELS = {"free": 1, "pro": 2, "enterprise": 3}
+
 DB_PATH = Path("invoices.db")
 
 
@@ -84,9 +88,7 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # ==========================
-    # USERS (multi-tenant base)
-    # ==========================
+    # USERS
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -100,9 +102,7 @@ def init_db():
         """
     )
 
-    # ==========================
     # CORE TABLES
-    # ==========================
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoices (
@@ -159,18 +159,16 @@ def init_db():
         CREATE TABLE IF NOT EXISTS recurring_invoices (
             id SERIAL PRIMARY KEY,
             invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
-            frequency TEXT NOT NULL,        -- 'weekly', 'biweekly', 'monthly', 'custom'
-            interval_days INTEGER NOT NULL, -- how many days between invoices
-            next_run_date DATE NOT NULL,    -- when to generate the next invoice
+            frequency TEXT NOT NULL,
+            interval_days INTEGER NOT NULL,
+            next_run_date DATE NOT NULL,
             active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
     )
 
-    # ==========================
     # BUSINESS PROFILE
-    # ==========================
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS business_profile (
@@ -190,11 +188,7 @@ def init_db():
         """
     )
 
-    # ==========================
     # SCHEMA EVOLUTIONS
-    # ==========================
-
-    # Extra columns on invoices
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;"
     )
@@ -214,7 +208,6 @@ def init_db():
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;"
     )
 
-    # Multi-tenant ownership columns
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
     )
@@ -227,13 +220,10 @@ def init_db():
 
     conn.commit()
 
-    # ==========================
-    # ENSURE A DEFAULT USER
-    # ==========================
+    # DEFAULT OWNER USER
     cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1;")
     row = cursor.fetchone()
     if not row:
-        # Simple default owner; we'll replace with real auth later
         cursor.execute(
             """
             INSERT INTO users (email, password_hash, plan, is_active)
@@ -243,22 +233,19 @@ def init_db():
             ("owner@example.com", None, "pro", True),
         )
         default_user_id = cursor.fetchone()[0]
-    else:
-        default_user_id = row[0]
 
-    # Attach any existing rows with NULL user_id to this default user
-    cursor.execute(
-        "UPDATE invoices SET user_id = %s WHERE user_id IS NULL;",
-        (default_user_id,),
-    )
-    cursor.execute(
-        "UPDATE clients SET user_id = %s WHERE user_id IS NULL;",
-        (default_user_id,),
-    )
-    cursor.execute(
-        "UPDATE business_profile SET user_id = %s WHERE user_id IS NULL;",
-        (default_user_id,),
-    )
+        cursor.execute(
+            "UPDATE invoices SET user_id = %s WHERE user_id IS NULL;",
+            (default_user_id,),
+        )
+        cursor.execute(
+            "UPDATE clients SET user_id = %s WHERE user_id IS NULL;",
+            (default_user_id,),
+        )
+        cursor.execute(
+            "UPDATE business_profile SET user_id = %s WHERE user_id IS NULL;",
+            (default_user_id,),
+        )
 
     conn.commit()
     cursor.close()
@@ -294,7 +281,6 @@ def get_or_create_public_token(invoice_id: int) -> str:
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Check if it already has a token
     cursor.execute(
         "SELECT public_token FROM invoices WHERE id = %s",
         (invoice_id,),
@@ -311,7 +297,6 @@ def get_or_create_public_token(invoice_id: int) -> str:
         conn.close()
         return existing_token
 
-    # Generate a new unique token
     token = None
     while True:
         candidate = secrets.token_urlsafe(16)
@@ -334,18 +319,12 @@ def get_or_create_public_token(invoice_id: int) -> str:
     return token
 
 
-init_db()
-
-
-@app.context_processor
-def inject_now():
-    return {"now": datetime.now}
-
-
+# -------------------------
+# USER + PLAN HELPERS
+# -------------------------
 def get_default_user():
     """
     Fallback user if no session user is set.
-    This is the first user in the users table (created in init_db).
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -403,7 +382,6 @@ def get_current_user():
                     "created_at": created_at,
                 }
 
-    # Fallback
     return get_default_user()
 
 
@@ -412,10 +390,61 @@ def get_plan_for_current_user():
     return user.get("plan") or "free"
 
 
+def plan_allows(required_plan: str) -> bool:
+    """
+    Return True if the current user's plan is >= required_plan.
+    """
+    user_plan = get_plan_for_current_user()
+    return PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get(required_plan, 0)
+
+
+def check_invoice_quota_or_reason():
+    """
+    Enforce simple invoice quotas by plan.
+
+    free -> max 10 invoices / calendar month
+    pro / enterprise -> unlimited
+    """
+    user = get_current_user()
+    user_id = user["id"]
+    plan = user.get("plan") or "free"
+
+    if plan != "free":
+        return True, None
+
+    now = datetime.now()
+    month_start = datetime(now.year, now.month, 1)
+    next_month = (month_start + timedelta(days=32)).replace(day=1)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM invoices
+        WHERE user_id = %s
+          AND created_at >= %s
+          AND created_at < %s
+        """,
+        (user_id, month_start, next_month),
+    )
+    count = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+
+    if count >= 10:
+        return (
+            False,
+            "You've reached the 10 invoices / month limit on the Starter plan.",
+        )
+
+    return True, None
+
+
 def get_business_profile():
     """
     Return a dict of business profile settings for the current user.
-    If no row exists, return sensible defaults (does NOT write to DB).
+    If no row exists, return sensible defaults.
     """
     user = get_current_user()
     user_id = user["id"]
@@ -437,7 +466,6 @@ def get_business_profile():
     cursor.close()
     conn.close()
 
-    # Defaults if nothing in DB yet
     if not row:
         return {
             "id": None,
@@ -447,8 +475,8 @@ def get_business_profile():
             "website": "",
             "address": "",
             "logo_url": "",
-            "brand_color": "#151B54",  # your current main accent
-            "accent_color": "#1d4ed8",  # secondary accent
+            "brand_color": "#151B54",
+            "accent_color": "#1d4ed8",
             "default_terms": "",
             "default_notes": "",
             "user_id": user_id,
@@ -487,8 +515,6 @@ def get_business_profile():
 def upsert_business_profile(data: dict):
     """
     Insert or update the business_profile row for the current user.
-    Expects keys: business_name, email, phone, website, address,
-                  logo_url, brand_color, accent_color, default_terms, default_notes.
     """
     user = get_current_user()
     user_id = user["id"]
@@ -496,7 +522,6 @@ def upsert_business_profile(data: dict):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # See if a row already exists for this user
     cursor.execute(
         "SELECT id FROM business_profile WHERE user_id = %s ORDER BY id ASC LIMIT 1",
         (user_id,),
@@ -569,20 +594,21 @@ def upsert_business_profile(data: dict):
     conn.close()
 
 
+# -------------------------
+# CONTEXT PROCESSORS
+# -------------------------
 @app.context_processor
-def inject_business_profile():
-    """
-    Makes `business_profile` available in all templates.
-    """
+def inject_now():
+    return {"now": datetime.now}
+
+
+@app.context_processor
+def inject_business_profile_ctx():
     return {"business_profile": get_business_profile()}
 
 
 @app.context_processor
-def inject_current_user():
-    """
-    Makes `current_user`, `user_plan`, `plan_definitions`, and `is_authenticated`
-    available in all templates.
-    """
+def inject_current_user_ctx():
     user = get_current_user()
     plan = user.get("plan") or "free"
     is_authenticated = "user_id" in session and user.get("id") is not None
@@ -599,19 +625,15 @@ def inject_current_user():
 # -------------------------
 @app.route("/")
 def home():
-    """
-    Show the New Invoice form with a dropdown of existing clients.
-    """
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     cursor = conn.cursor()
+    user = get_current_user()
+    user_id = user["id"]
     cursor.execute(
         """
         SELECT id, name, email
         FROM clients
-        WHERE (user_id = %s OR user_id IS NULL)
+        WHERE user_id = %s
         ORDER BY created_at DESC
         """,
         (user_id,),
@@ -622,12 +644,11 @@ def home():
     return render_template("index.html", clients=clients)
 
 
+# -------------------------
+# AUTH
+# -------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """
-    Simple registration for a new user account.
-    For now, all new users start on the 'free' plan.
-    """
     error = None
 
     if request.method == "POST":
@@ -642,7 +663,6 @@ def register():
         else:
             conn = get_db_connection()
             cursor = conn.cursor()
-            # Check if email already exists
             cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
             existing = cursor.fetchone()
             if existing:
@@ -666,7 +686,6 @@ def register():
 
                 if row:
                     user_id, plan = row
-                    # Log them in
                     session["user_id"] = user_id
                     return redirect(url_for("invoices_page"))
 
@@ -675,9 +694,6 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """
-    Login for existing users.
-    """
     error = None
 
     if request.method == "POST":
@@ -716,9 +732,6 @@ def login():
 
 @app.route("/logout")
 def logout():
-    """
-    Log out the current user (clears session).
-    """
     session.clear()
     return redirect(url_for("login"))
 
@@ -735,7 +748,7 @@ def pricing():
 
 
 # -------------------------
-# PREVIEW (kept for future)
+# PREVIEW (optional)
 # -------------------------
 @app.route("/preview", methods=["POST"])
 def preview():
@@ -756,20 +769,27 @@ def preview():
 
 
 # -------------------------
-# SAVE INVOICE
+# SAVE INVOICE (with free-plan quota)
 # -------------------------
 @app.route("/save", methods=["POST"])
 def save():
     """
     Save a new invoice:
-    - Uses existing client if client_id is provided (and belongs to the user)
+    - Enforces free plan monthly quota
+    - Uses existing client if client_id is provided
     - Or creates a new client if new_client_name is provided
     - Falls back to plain 'client' text if needed
     """
-    current_user = get_current_user()
-    user_id = current_user["id"]
+    allowed, reason = check_invoice_quota_or_reason()
+    if not allowed:
+        return render_template(
+            "upgrade_gate.html",
+            title="Invoice limit reached",
+            reason=reason,
+            required_plan="pro",
+            plans=PLAN_DEFINITIONS,
+        )
 
-    # Client selection
     selected_client_id = request.form.get("client_id")
     new_client_name = request.form.get("new_client_name")
     new_client_email = request.form.get("new_client_email")
@@ -778,7 +798,6 @@ def save():
     new_client_address = request.form.get("new_client_address")
     new_client_notes = request.form.get("new_client_notes")
 
-    # Optional invoice meta
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
 
@@ -798,19 +817,20 @@ def save():
             total += amt
             cleaned_items.append((desc, amt))
 
+    user = get_current_user()
+    user_id = user["id"]
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Figure out which client to use
     client_name_for_invoice = None
     client_id = None
 
-    # 1) If an existing client is selected (and belongs to this user)
     if selected_client_id:
         try:
             cid_int = int(selected_client_id)
             cursor.execute(
-                "SELECT id, name FROM clients WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+                "SELECT id, name FROM clients WHERE id = %s AND user_id = %s",
                 (cid_int, user_id),
             )
             row = cursor.fetchone()
@@ -819,7 +839,6 @@ def save():
         except ValueError:
             pass
 
-    # 2) If new client details are provided, create a client
     if not client_name_for_invoice and new_client_name:
         cursor.execute(
             """
@@ -840,11 +859,9 @@ def save():
         client_id = cursor.fetchone()[0]
         client_name_for_invoice = new_client_name
 
-    # 3) Fallback: free-text client field (for safety)
     if not client_name_for_invoice:
         client_name_for_invoice = request.form.get("client") or "Unknown client"
 
-    # Insert invoice and get its ID, now with user_id
     cursor.execute(
         """
         INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms, client_id, user_id)
@@ -866,14 +883,12 @@ def save():
 
     invoice_id = cursor.fetchone()[0]
 
-    # Compute invoice_number based on ID, e.g. INV-00001
     invoice_number = f"INV-{invoice_id:05d}"
     cursor.execute(
         "UPDATE invoices SET invoice_number = %s WHERE id = %s",
         (invoice_number, invoice_id),
     )
 
-    # Insert invoice items
     for desc, amt in cleaned_items:
         cursor.execute(
             "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (%s, %s, %s)",
@@ -888,14 +903,12 @@ def save():
 
 
 # -------------------------
-# INVOICES PAGE (with search, filters, payments, charts)
+# INVOICES DASHBOARD
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
-    # Auto-update overdue statuses
     update_overdue_statuses()
 
-    # Read filters from query string
     q = (request.args.get("q") or "").strip()
     status_filter = (request.args.get("status") or "").strip()
     from_date_str = (request.args.get("from_date") or "").strip()
@@ -904,7 +917,6 @@ def invoices_page():
     from_dt = None
     to_dt = None
 
-    # Parse date strings (YYYY-MM-DD) if present
     if from_date_str:
         try:
             from_dt = datetime.strptime(from_date_str, "%Y-%m-%d")
@@ -913,23 +925,22 @@ def invoices_page():
 
     if to_date_str:
         try:
-            # Include the whole day by setting time to end of day
             to_dt = datetime.strptime(to_date_str, "%Y-%m-%d") + timedelta(days=1)
         except ValueError:
             to_dt = None
 
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1) Fetch ALL invoices for KPIs (per user, no filters)
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
+    # KPIs
     cursor.execute(
         """
         SELECT id, client, amount, created_at, status
         FROM invoices
-        WHERE (user_id = %s OR user_id IS NULL)
+        WHERE user_id = %s
         ORDER BY created_at DESC
         """,
         (user_id,),
@@ -939,7 +950,7 @@ def invoices_page():
     all_invoices = []
     for row in all_rows:
         row_list = list(row)
-        row_list[2] = float(row_list[2])  # amount
+        row_list[2] = float(row_list[2])
         all_invoices.append(row_list)
 
     total_invoices = len(all_invoices)
@@ -955,8 +966,12 @@ def invoices_page():
         if inv[3].month == current_month and inv[3].year == current_year
     )
 
-    growth = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
-    avg_invoice = round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
+    growth = (
+        round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
+    )
+    avg_invoice = (
+        round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
+    )
 
     paid_count = sum(1 for inv in all_invoices if inv[4] == "Paid")
     overdue_count = sum(1 for inv in all_invoices if inv[4] == "Overdue")
@@ -967,12 +982,11 @@ def invoices_page():
         "Overdue": overdue_count,
     }
 
-    # 1b) Monthly revenue data for chart (last 6 months, per-user)
     cursor.execute(
         """
         SELECT date_trunc('month', created_at) AS month, SUM(amount) AS total
         FROM invoices
-        WHERE (user_id = %s OR user_id IS NULL)
+        WHERE user_id = %s
         GROUP BY month
         ORDER BY month DESC
         LIMIT 6
@@ -994,7 +1008,7 @@ def invoices_page():
         overdue_count,
     ]
 
-    # 2) Build filtered query for the table, with payments aggregated
+    # Filtered table query
     base_sql = """
         SELECT
             i.id,
@@ -1007,12 +1021,11 @@ def invoices_page():
             COALESCE(SUM(p.amount), 0) AS total_paid
         FROM invoices i
         LEFT JOIN payments p ON p.invoice_id = i.id
-        WHERE (i.user_id = %s OR i.user_id IS NULL)
+        WHERE i.user_id = %s
     """
     conditions = []
     params = [user_id]
 
-    # Text search on client or invoice_number
     if q:
         like = f"%{q.lower()}%"
         conditions.append(
@@ -1020,13 +1033,11 @@ def invoices_page():
         )
         params.extend([like, like])
 
-    # Status filter
     allowed_statuses = {"Paid", "Sent", "Overdue"}
     if status_filter in allowed_statuses:
         conditions.append("i.status = %s")
         params.append(status_filter)
 
-    # Date range filters
     if from_dt:
         conditions.append("i.created_at >= %s")
         params.append(from_dt)
@@ -1051,14 +1062,13 @@ def invoices_page():
 
     cursor.execute(filtered_sql, tuple(params))
     filtered_rows = cursor.fetchall()
-
     conn.close()
 
     invoices = []
     for row in filtered_rows:
         row_list = list(row)
-        row_list[2] = float(row_list[2])  # amount
-        row_list[7] = float(row_list[7])  # total_paid
+        row_list[2] = float(row_list[2])
+        row_list[7] = float(row_list[7])
         invoices.append(row_list)
 
     filtered_count = len(invoices)
@@ -1074,13 +1084,11 @@ def invoices_page():
         paid_count=paid_count,
         overdue_count=overdue_count,
         status_distribution=status_distribution,
-        # Filters for the template
         q=q,
         status_filter=status_filter,
         from_date_str=from_date_str,
         to_date_str=to_date_str,
         filtered_count=filtered_count,
-        # Chart data
         monthly_chart_labels=monthly_chart_labels,
         monthly_chart_totals=monthly_chart_totals,
         status_chart_labels=status_chart_labels,
@@ -1088,11 +1096,11 @@ def invoices_page():
     )
 
 
+# -------------------------
+# SETTINGS
+# -------------------------
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
-    """
-    Business Profile & Branding settings page.
-    """
     profile = get_business_profile()
     feedback_message = None
     feedback_type = None
@@ -1137,23 +1145,19 @@ def settings():
 
 
 # -------------------------
-# CLIENTS PAGE
+# CLIENTS
 # -------------------------
 @app.route("/clients")
 def clients_page():
-    """
-    Simple clients listing + quick add form.
-    """
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     cursor = conn.cursor()
+    user = get_current_user()
+    user_id = user["id"]
     cursor.execute(
         """
         SELECT id, name, email, company, created_at
         FROM clients
-        WHERE (user_id = %s OR user_id IS NULL)
+        WHERE user_id = %s
         ORDER BY created_at DESC
         """,
         (user_id,),
@@ -1166,9 +1170,6 @@ def clients_page():
 
 @app.route("/clients/add", methods=["POST"])
 def add_client():
-    """
-    Add a new client from the Clients page.
-    """
     name = request.form.get("name")
     email = request.form.get("email")
     company = request.form.get("company")
@@ -1179,8 +1180,8 @@ def add_client():
     if not name:
         return redirect("/clients")
 
-    current_user = get_current_user()
-    user_id = current_user["id"]
+    user = get_current_user()
+    user_id = user["id"]
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1200,17 +1201,13 @@ def add_client():
 
 @app.route("/clients/delete/<int:client_id>")
 def delete_client(client_id):
-    """
-    Delete a client (for the current user).
-    """
-    current_user = get_current_user()
-    user_id = current_user["id"]
+    user = get_current_user()
+    user_id = user["id"]
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute(
-        "DELETE FROM clients WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        "DELETE FROM clients WHERE id = %s AND user_id = %s",
         (client_id, user_id),
     )
     conn.commit()
@@ -1221,21 +1218,21 @@ def delete_client(client_id):
 
 
 # -------------------------
-# ADD PAYMENT
+# PAYMENTS
 # -------------------------
 @app.route("/add-payment/<int:invoice_id>", methods=["GET", "POST"])
 def add_payment(invoice_id):
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    user = get_current_user()
+    user_id = user["id"]
 
     cursor.execute(
         """
         SELECT id, client, amount, status, invoice_number
         FROM invoices
-        WHERE id = %s AND (user_id = %s OR user_id IS NULL)
+        WHERE id = %s AND user_id = %s
         """,
         (invoice_id, user_id),
     )
@@ -1274,14 +1271,12 @@ def add_payment(invoice_id):
                 (invoice_id_db, pay_amount, method or None, note or None),
             )
 
-            # Recompute total paid
             cursor.execute(
                 "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
                 (invoice_id_db,),
             )
             total_paid = float(cursor.fetchone()[0])
 
-            # Auto-mark as Paid if fully covered
             if total_paid >= amount_float:
                 cursor.execute(
                     "UPDATE invoices SET status = 'Paid' WHERE id = %s",
@@ -1294,7 +1289,6 @@ def add_payment(invoice_id):
             )
             feedback_type = "success"
 
-    # Fetch payments list for display
     cursor.execute(
         """
         SELECT amount, method, note, created_at
@@ -1306,7 +1300,6 @@ def add_payment(invoice_id):
     )
     payments = cursor.fetchall()
 
-    # Compute total paid & balance
     total_paid = sum(float(p[0]) for p in payments)
     balance = amount_float - total_paid
 
@@ -1329,18 +1322,18 @@ def add_payment(invoice_id):
 
 
 # -------------------------
-# EDIT INVOICE
+# EDIT / UPDATE / DELETE INVOICE
 # -------------------------
 @app.route("/edit/<int:invoice_id>")
 def edit(invoice_id):
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     c = conn.cursor()
 
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     c.execute(
-        "SELECT id, client FROM invoices WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        "SELECT id, client FROM invoices WHERE id = %s AND user_id = %s",
         (invoice_id, user_id),
     )
     invoice = c.fetchone()
@@ -1362,9 +1355,6 @@ def edit(invoice_id):
     )
 
 
-# -------------------------
-# UPDATE INVOICE
-# -------------------------
 @app.route("/update/<int:invoice_id>", methods=["POST"])
 def update(invoice_id):
     client = request.form.get("client")
@@ -1387,7 +1377,7 @@ def update(invoice_id):
     c = conn.cursor()
 
     c.execute(
-        "UPDATE invoices SET client = %s, amount = %s WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        "UPDATE invoices SET client = %s, amount = %s WHERE id = %s AND user_id = %s",
         (client, total, invoice_id, user_id),
     )
 
@@ -1408,19 +1398,16 @@ def update(invoice_id):
     return redirect("/invoices")
 
 
-# -------------------------
-# UPDATE STATUS
-# -------------------------
 @app.route("/update-status/<int:invoice_id>/<string:new_status>")
 def update_status(invoice_id, new_status):
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     c = conn.cursor()
 
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     c.execute(
-        "UPDATE invoices SET status = %s WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        "UPDATE invoices SET status = %s WHERE id = %s AND user_id = %s",
         (new_status, invoice_id, user_id),
     )
 
@@ -1430,20 +1417,16 @@ def update_status(invoice_id, new_status):
     return redirect("/invoices")
 
 
-# -------------------------
-# DELETE INVOICE
-# -------------------------
 @app.route("/delete/<int:invoice_id>")
 def delete(invoice_id):
-    current_user = get_current_user()
-    user_id = current_user["id"]
-
     conn = get_db_connection()
     c = conn.cursor()
 
-    # Ensure invoice belongs to current user before deleting
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
     c.execute(
-        "SELECT id FROM invoices WHERE id = %s AND (user_id = %s OR user_id IS NULL)",
+        "SELECT id FROM invoices WHERE id = %s AND user_id = %s",
         (invoice_id, user_id),
     )
     row = c.fetchone()
@@ -1461,14 +1444,9 @@ def delete(invoice_id):
 
 
 # -------------------------
-# PDF GENERATION HELPER
+# PDF GENERATION
 # -------------------------
 def generate_invoice_pdf_bytes(invoice_id: int):
-    """
-    Generate a PDF for the given invoice_id and return raw bytes.
-    (No user check here because this is also used for the public link;
-     access control is handled at the route level.)
-    """
     conn = get_db_connection()
     c = conn.cursor()
 
@@ -1534,15 +1512,8 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     return buffer.getvalue(), None
 
 
-# -------------------------
-# PDF DOWNLOAD ROUTE (internal)
-# -------------------------
 @app.route("/history-pdf/<int:invoice_id>")
 def history_pdf(invoice_id):
-    """
-    Internal PDF download by invoice_id.
-    Does NOT check user_id so public links can reuse it.
-    """
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
         return err, 404
@@ -1555,16 +1526,14 @@ def history_pdf(invoice_id):
     )
 
 
+# -------------------------
+# PUBLIC INVOICE PORTAL
+# -------------------------
 @app.route("/public/<string:token>")
 def public_invoice(token):
-    """
-    Public, read-only view for a single invoice by its public_token.
-    No auth, so the token should be unguessable.
-    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Look up invoice by token
     cursor.execute(
         """
         SELECT
@@ -1608,14 +1577,12 @@ def public_invoice(token):
         client_company,
     ) = inv_row
 
-    # Prefer the dedicated client record name if present
     if client_name_from_client:
         client_name = client_name_from_client
 
     amount_float = float(amount)
     inv_label = invoice_number or f"#{invoice_id}"
 
-    # Fetch items
     cursor.execute(
         """
         SELECT description, amount
@@ -1627,7 +1594,6 @@ def public_invoice(token):
     )
     items = cursor.fetchall()
 
-    # Fetch payments
     cursor.execute(
         """
         SELECT amount, method, note, created_at
@@ -1645,7 +1611,6 @@ def public_invoice(token):
     cursor.close()
     conn.close()
 
-    # Reuse your existing PDF route
     pdf_url = f"/history-pdf/{invoice_id}"
 
     return render_template(
@@ -1666,22 +1631,17 @@ def public_invoice(token):
         total_paid=total_paid,
         balance=balance,
         pdf_url=pdf_url,
-        # flags for template
         is_public_view=True,
         public_token=token,
     )
 
 
 # -------------------------
-# EMAIL SENDING HELPER
+# EMAIL (Resend / SMTP)
 # -------------------------
 def send_email_via_resend(
     to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str
 ):
-    """
-    Send email using the Resend HTTP API.
-    Returns (success: bool, error_message: str or None)
-    """
     api_key = os.environ.get("RESEND_API_KEY")
     resend_from = os.environ.get("RESEND_FROM")
 
@@ -1689,21 +1649,20 @@ def send_email_via_resend(
         return False, "Resend configuration missing: RESEND_API_KEY is not set."
 
     if not resend_from:
-        return False, (
+        return (
+            False,
             "Resend configuration missing: RESEND_FROM is not set. "
-            "Set RESEND_FROM to something like 'InvoicePro <billing@mikeinvoices.com>'."
+            "Set RESEND_FROM to something like 'InvoicePro <billing@mikeinvoices.com>'.",
         )
 
-    # Extra guard: don't let gmail.com slip through by mistake
     if "gmail.com" in resend_from.lower():
-        return False, (
+        return (
+            False,
             "Resend cannot send from a gmail.com address. "
             f"Current RESEND_FROM value is: '{resend_from}'. "
-            "Please change RESEND_FROM to use your verified domain, e.g. "
-            "'InvoicePro <billing@mikeinvoices.com>'."
+            "Use your verified domain, e.g. 'InvoicePro <billing@mikeinvoices.com>'.",
         )
 
-    # Resend expects attachments in base64
     encoded_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
 
     try:
@@ -1730,7 +1689,6 @@ def send_email_via_resend(
         )
 
         if resp.status_code >= 400:
-            # Try to give a clearer explanation for common cases
             try:
                 data = resp.json()
                 msg = data.get("message", "")
@@ -1746,20 +1704,12 @@ def send_email_via_resend(
 
 
 def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: str):
-    """
-    Generate the invoice PDF and send it via either:
-    - Resend (HTTP API) if RESEND_API_KEY is set (preferred, works on platforms blocking SMTP)
-    - SMTP if SMTP_HOST/SMTP_FROM are configured and Resend is not available
-
-    Returns (success: bool, error_message: str or None)
-    """
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
         return False, err
 
     filename = f"invoice_{invoice_id}.pdf"
 
-    # 1) Prefer Resend if configured (works over HTTPS, avoids SMTP port blocking)
     if os.environ.get("RESEND_API_KEY"):
         success, api_err = send_email_via_resend(
             to_email=to_email,
@@ -1769,7 +1719,6 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             filename=filename,
         )
         if success:
-            # Update invoice with last emailed info
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute(
@@ -1781,10 +1730,8 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             conn.close()
             return True, None
         else:
-            # If Resend fails, return that error (don't silently fall back)
             return False, api_err
 
-    # 2) Fallback to SMTP if Resend is not configured
     smtp_host = os.environ.get("SMTP_HOST")
     smtp_port = int(os.environ.get("SMTP_PORT", "587"))
     smtp_user = os.environ.get("SMTP_USER")
@@ -1794,7 +1741,7 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     if not smtp_host or not smtp_from:
         return (
             False,
-            "No email provider available. Either configure Resend (RESEND_API_KEY & RESEND_FROM) "
+            "No email provider available. Configure Resend (RESEND_API_KEY & RESEND_FROM) "
             "or SMTP (SMTP_HOST & SMTP_FROM).",
         )
 
@@ -1812,7 +1759,6 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     )
 
     try:
-        # Short timeout so we fail quickly instead of hanging until the worker dies
         with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
             server.starttls()
             if smtp_user and smtp_password:
@@ -1821,7 +1767,6 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     except Exception as e:
         return False, f"Error sending email (connection or SMTP error): {e}"
 
-    # Update invoice with last emailed info
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -1835,23 +1780,29 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     return True, None
 
 
-# -------------------------
-# SEND EMAIL ROUTE
-# -------------------------
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
 def send_email_view(invoice_id):
     """
-    Show a form to send the invoice via email, and handle sending.
-    Also ensures a public invoice link is available and includes it in the default message.
+    Email invoice with attached PDF + public link.
+    GATED: requires Pro plan or above.
     """
+    if not plan_allows("pro"):
+        return render_template(
+            "upgrade_gate.html",
+            title="Upgrade to email invoices",
+            reason="Email delivery with PDF attachments is available on the Pro plan and above.",
+            required_plan="pro",
+            plans=PLAN_DEFINITIONS,
+        )
+
     profile = get_business_profile()
     business_name = profile["business_name"] or "InvoicePro"
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
     current_user = get_current_user()
     user_id = current_user["id"]
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
     cursor.execute(
         """
         SELECT
@@ -1868,7 +1819,7 @@ def send_email_view(invoice_id):
             invoices.public_token
         FROM invoices
         LEFT JOIN clients ON invoices.client_id = clients.id
-        WHERE invoices.id = %s AND (invoices.user_id = %s OR invoices.user_id IS NULL)
+        WHERE invoices.id = %s AND invoices.user_id = %s
         """,
         (invoice_id, user_id),
     )
@@ -1895,23 +1846,20 @@ def send_email_view(invoice_id):
     amount_float = float(amount)
     inv_label = invoice_number or f"#{invoice_id_db}"
 
-    # Ensure we have a public token for this invoice
     token = public_token_db
     if not token:
         token = get_or_create_public_token(invoice_id_db)
 
-    # Build the full public URL (e.g. https://app.onrender.com/public/...)
-    base_url = request.url_root.rstrip("/")  # includes scheme + host + /
+    base_url = request.url_root.rstrip("/")
     public_url = f"{base_url}/public/{token}"
 
-    # Defaults for the form
     default_to_email = last_emailed_to or client_email or ""
     default_subject = f"Invoice {inv_label} from {business_name}"
     default_message = (
         f"Hi {client_name},\n\n"
         f"Please find attached your invoice {inv_label} for ${amount_float:,.2f} from {business_name}.\n"
         + (f"Due date: {due_date.strftime('%Y-%m-%d')}\n" if due_date else "")
-        + (f"\nYou can also view this invoice online here:\n{public_url}\n\n")
+        + f"\nYou can also view this invoice online here:\n{public_url}\n\n"
         + "Thank you for your business!\n\n"
         + f"— {business_name}"
     )
@@ -1960,11 +1908,17 @@ def send_email_view(invoice_id):
     )
 
 
+# -------------------------
+# HEALTHCHECK
+# -------------------------
 @app.route("/health")
 def health():
     return "OK", 200
 
 
+# -------------------------
+# MAIN
+# -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
