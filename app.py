@@ -96,7 +96,7 @@ def init_db():
     """
     )
 
-    # NEW: Recurring invoices table
+    # Recurring invoices table
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS recurring_invoices (
@@ -107,6 +107,26 @@ def init_db():
             next_run_date DATE NOT NULL,    -- when to generate the next invoice
             active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """
+    )
+
+    # Business profile table (single-row configuration)
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS business_profile (
+            id SERIAL PRIMARY KEY,
+            business_name TEXT,
+            email TEXT,
+            phone TEXT,
+            website TEXT,
+            address TEXT,
+            logo_url TEXT,
+            brand_color TEXT,
+            accent_color TEXT,
+            default_terms TEXT,
+            default_notes TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """
     )
@@ -127,8 +147,6 @@ def init_db():
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_to TEXT;"
     )
-
-    # NEW: public token for client-facing links
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;"
     )
@@ -213,6 +231,13 @@ init_db()
 @app.context_processor
 def inject_now():
     return {"now": datetime.now}
+
+@app.context_processor
+def inject_business_profile():
+    """
+    Makes `business_profile` available in all templates.
+    """
+    return {"business_profile": get_business_profile()}
 
 
 # -------------------------
@@ -582,6 +607,54 @@ def invoices_page():
         monthly_chart_totals=monthly_chart_totals,
         status_chart_labels=status_chart_labels,
         status_chart_values=status_chart_values,
+    )
+
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    """
+    Business Profile & Branding settings page.
+    """
+    profile = get_business_profile()
+    feedback_message = None
+    feedback_type = None
+
+    if request.method == "POST":
+        business_name = (request.form.get("business_name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        phone = (request.form.get("phone") or "").strip()
+        website = (request.form.get("website") or "").strip()
+        address = (request.form.get("address") or "").strip()
+        logo_url = (request.form.get("logo_url") or "").strip()
+        brand_color = (request.form.get("brand_color") or "").strip() or "#151B54"
+        accent_color = (request.form.get("accent_color") or "").strip() or "#1d4ed8"
+        default_terms = (request.form.get("default_terms") or "").strip()
+        default_notes = (request.form.get("default_notes") or "").strip()
+
+        data = {
+            "business_name": business_name or "InvoicePro",
+            "email": email,
+            "phone": phone,
+            "website": website,
+            "address": address,
+            "logo_url": logo_url,
+            "brand_color": brand_color,
+            "accent_color": accent_color,
+            "default_terms": default_terms,
+            "default_notes": default_notes,
+        }
+
+        upsert_business_profile(data)
+        profile = get_business_profile()
+
+        feedback_message = "Business profile updated successfully."
+        feedback_type = "success"
+
+    return render_template(
+        "settings.html",
+        profile=profile,
+        feedback_message=feedback_message,
+        feedback_type=feedback_type,
     )
 
 
@@ -1226,6 +1299,149 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     return True, None
 
 
+def get_business_profile():
+    """
+    Return a dict of business profile settings.
+    If no row exists, return sensible defaults (does NOT write to DB).
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, business_name, email, phone, website, address,
+               logo_url, brand_color, accent_color, default_terms, default_notes
+        FROM business_profile
+        ORDER BY id ASC
+        LIMIT 1
+        """
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    # Defaults if nothing in DB yet
+    if not row:
+        return {
+            "id": None,
+            "business_name": "InvoicePro",
+            "email": "",
+            "phone": "",
+            "website": "",
+            "address": "",
+            "logo_url": "",
+            "brand_color": "#151B54",   # your current main accent
+            "accent_color": "#1d4ed8",  # secondary accent
+            "default_terms": "",
+            "default_notes": "",
+        }
+
+    (
+        bp_id,
+        business_name,
+        email,
+        phone,
+        website,
+        address,
+        logo_url,
+        brand_color,
+        accent_color,
+        default_terms,
+        default_notes,
+    ) = row
+
+    return {
+        "id": bp_id,
+        "business_name": business_name or "InvoicePro",
+        "email": email or "",
+        "phone": phone or "",
+        "website": website or "",
+        "address": address or "",
+        "logo_url": logo_url or "",
+        "brand_color": brand_color or "#151B54",
+        "accent_color": accent_color or "#1d4ed8",
+        "default_terms": default_terms or "",
+        "default_notes": default_notes or "",
+    }
+
+
+def upsert_business_profile(data: dict):
+    """
+    Insert or update the single business_profile row.
+    Expects keys: business_name, email, phone, website, address,
+                  logo_url, brand_color, accent_color, default_terms, default_notes.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # See if a row already exists
+    cursor.execute(
+        "SELECT id FROM business_profile ORDER BY id ASC LIMIT 1"
+    )
+    row = cursor.fetchone()
+
+    now = datetime.now()
+
+    if row:
+        bp_id = row[0]
+        cursor.execute(
+            """
+            UPDATE business_profile
+            SET business_name = %s,
+                email = %s,
+                phone = %s,
+                website = %s,
+                address = %s,
+                logo_url = %s,
+                brand_color = %s,
+                accent_color = %s,
+                default_terms = %s,
+                default_notes = %s,
+                updated_at = %s
+            WHERE id = %s
+            """,
+            (
+                data.get("business_name"),
+                data.get("email"),
+                data.get("phone"),
+                data.get("website"),
+                data.get("address"),
+                data.get("logo_url"),
+                data.get("brand_color"),
+                data.get("accent_color"),
+                data.get("default_terms"),
+                data.get("default_notes"),
+                now,
+                bp_id,
+            ),
+        )
+    else:
+        cursor.execute(
+            """
+            INSERT INTO business_profile
+                (business_name, email, phone, website, address,
+                 logo_url, brand_color, accent_color, default_terms, default_notes, updated_at)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                data.get("business_name"),
+                data.get("email"),
+                data.get("phone"),
+                data.get("website"),
+                data.get("address"),
+                data.get("logo_url"),
+                data.get("brand_color"),
+                data.get("accent_color"),
+                data.get("default_terms"),
+                data.get("default_notes"),
+                now,
+            ),
+        )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 # -------------------------
 # SEND EMAIL ROUTE
 # -------------------------
@@ -1235,6 +1451,9 @@ def send_email_view(invoice_id):
     Show a form to send the invoice via email, and handle sending.
     Also ensures a public invoice link is available and includes it in the default message.
     """
+    profile = get_business_profile()
+    business_name = profile["business_name"] or "InvoicePro"
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1291,10 +1510,10 @@ def send_email_view(invoice_id):
 
     # Defaults for the form
     default_to_email = last_emailed_to or client_email or ""
-    default_subject = f"Invoice {inv_label} from InvoicePro"
+    default_subject = f"Invoice {inv_label} from {business_name}"
     default_message = (
         f"Hi {client_name},\n\n"
-        f"Please find attached your invoice {inv_label} for ${amount_float:,.2f}.\n"
+        f"Please find attached your invoice {inv_label} for ${amount_float:,.2f} from {business_name}.\n"
         + (
             f"Due date: {due_date.strftime('%Y-%m-%d')}\n"
             if due_date
@@ -1304,7 +1523,7 @@ def send_email_view(invoice_id):
             f"\nYou can also view this invoice online here:\n{public_url}\n\n"
         )
         + "Thank you for your business!\n\n"
-        + "— InvoicePro"
+        + f"— {business_name}"
     )
 
     feedback_message = None
@@ -1325,7 +1544,6 @@ def send_email_view(invoice_id):
             if success:
                 feedback_message = f"Invoice {inv_label} was emailed to {to_email}."
                 feedback_type = "success"
-                # Update default_to_email so form shows what we used
                 default_to_email = to_email
             else:
                 feedback_message = err or "Failed to send email."

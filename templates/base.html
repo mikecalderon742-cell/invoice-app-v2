@@ -2,13 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InvoicePro</title>
+    <head>
+    <title>{{ business_profile.business_name or "InvoicePro" }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <style>
+    :root {
+        {% if business_profile.brand_color %}
+        --accent: {{ business_profile.brand_color }};
+        {% endif %}
+        {% if business_profile.accent_color %}
+        --accent-light: {{ business_profile.accent_color }};
+        {% endif %}
+    }
+    </style>
+</head>
 </head>
 <body class="light fade-out">
 
@@ -22,12 +34,12 @@
 <!-- SIDEBAR -->
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
-        <h3>Navigation</h3>
+        <h3>{{ business_profile.business_name or "InvoicePro" }}</h3>
     </div>
 
     <a href="/" class="sidebar-link">Create Invoice</a>
     <a href="/invoices" class="sidebar-link">Invoice History</a>
-    <a href="/clients" class="sidebar-link">Clients</a>
+    <a href="/settings" class="sidebar-link">Settings</a>
 </div>
 
 <!-- OVERLAY -->
@@ -36,13 +48,20 @@
 <!-- NAVBAR -->
 <nav class="navbar">
     <div class="nav-left">
-        <span class="logo">InvoicePro</span>
+        {% if business_profile.logo_url %}
+            <img src="{{ business_profile.logo_url }}"
+                 alt="Logo"
+                 style="height:28px; margin-right:10px; border-radius:6px;">
+        {% endif %}
+        <span class="logo">
+            {{ business_profile.business_name or "InvoicePro" }}
+        </span>
     </div>
 
     <div class="nav-right">
         <a href="/">Create Invoice</a>
         <a href="/invoices">Invoice History</a>
-        <a href="/clients">Clients</a>
+        <a href="/settings">Settings</a>
         <button id="themeToggle" class="theme-toggle">🌙</button>
     </div>
 </nav>

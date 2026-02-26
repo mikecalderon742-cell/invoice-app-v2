@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Business Profile & Branding</h1>
+    <div class="quick-actions">
+        <a href="/" class="btn btn-secondary">Back to Create</a>
+        <a href="/invoices" class="btn btn-secondary">Invoice History</a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+
+    {% if feedback_message %}
+        <div style="
+            margin-bottom:16px;
+            padding:12px 14px;
+            border-radius:10px;
+            font-size:14px;
+            font-weight:500;
+            {% if feedback_type == 'success' %}
+                background:#dcfce7;
+                color:#166534;
+                border:1px solid #16a34a;
+            {% else %}
+                background:#fee2e2;
+                color:#b91c1c;
+                border:1px solid #dc2626;
+            {% endif %}
+        ">
+            {{ feedback_message }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="/settings">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+
+            <!-- Business Info -->
+            <div>
+                <h2 style="margin-top:0; font-size:18px;">Business Info</h2>
+
+                <label style="font-weight:600; font-size:14px;">Business Name</label>
+                <input type="text" name="business_name" value="{{ profile.business_name }}" required>
+
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">Business Email</label>
+                <input type="email" name="email" value="{{ profile.email }}">
+
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">Phone</label>
+                <input type="text" name="phone" value="{{ profile.phone }}">
+
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">Website</label>
+                <input type="text" name="website" value="{{ profile.website }}">
+
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">Address</label>
+                <textarea
+                    name="address"
+                    rows="3"
+                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
+                >{{ profile.address }}</textarea>
+            </div>
+
+            <!-- Branding -->
+            <div>
+                <h2 style="margin-top:0; font-size:18px;">Branding</h2>
+
+                <label style="font-weight:600; font-size:14px;">Logo URL</label>
+                <input type="text" name="logo_url" value="{{ profile.logo_url }}" placeholder="https://...">
+
+                {% if profile.logo_url %}
+                    <div style="margin-top:8px;">
+                        <span style="font-size:12px; opacity:.75;">Preview:</span><br>
+                        <img src="{{ profile.logo_url }}" alt="Logo preview" style="max-width:160px; margin-top:4px; border-radius:8px;">
+                    </div>
+                {% endif %}
+
+                <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
+                    <div style="flex:1;">
+                        <label style="font-weight:600; font-size:14px;">Primary Brand Color</label>
+                        <input type="text" name="brand_color" value="{{ profile.brand_color }}">
+                        <small style="font-size:12px; opacity:.7;">Used for primary accent (buttons, cards).</small>
+                    </div>
+                    <div>
+                        <label style="font-weight:600; font-size:14px;">&nbsp;</label><br>
+                        <div style="width:40px; height:40px; border-radius:999px; border:1px solid #e5e7eb; background: {{ profile.brand_color }};"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
+                    <div style="flex:1;">
+                        <label style="font-weight:600; font-size:14px;">Secondary Accent Color</label>
+                        <input type="text" name="accent_color" value="{{ profile.accent_color }}">
+                        <small style="font-size:12px; opacity:.7;">Used for secondary accents / highlights.</small>
+                    </div>
+                    <div>
+                        <label style="font-weight:600; font-size:14px;">&nbsp;</label><br>
+                        <div style="width:40px; height:40px; border-radius:999px; border:1px solid #e5e7eb; background: {{ profile.accent_color }};"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Defaults -->
+        <div style="margin-top:24px;">
+            <h2 style="margin-top:0; font-size:18px;">Default Invoice Notes & Terms</h2>
+
+            <label style="font-weight:600; font-size:14px;">Default Notes</label>
+            <textarea
+                name="default_notes"
+                rows="3"
+                style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
+                placeholder="Thank you for your business..."
+            >{{ profile.default_notes }}</textarea>
+
+            <label style="font-weight:600; font-size:14px; margin-top:10px;">Default Payment Terms</label>
+            <textarea
+                name="default_terms"
+                rows="3"
+                style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
+                placeholder="Payment is due within 14 days..."
+            >{{ profile.default_terms }}</textarea>
+        </div>
+
+        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+            <a href="/invoices" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-brand">Save Settings</button>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}
