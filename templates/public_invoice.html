@@ -1,207 +1,236 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="dashboard-header">
-    <h1>Invoice {{ inv_label }}</h1>
-    <div class="quick-actions">
-        <a href="{{ pdf_url }}" class="btn btn-secondary" target="_blank" rel="noopener">
-            Download PDF
-        </a>
-    </div>
-</div>
+<div class="public-portal">
 
-{% if request.args.get('paid') == '1' %}
-    <div style="
-        margin-bottom:16px;
-        padding:12px 14px;
-        border-radius:10px;
-        font-size:14px;
-        font-weight:500;
-        background:#dcfce7;
-        color:#166534;
-        border:1px solid #16a34a;
-    ">
-        Payment completed successfully. Thank you!
-    </div>
-{% endif %}
-
-<div class="form-wrapper fade-in-up">
-
-    <!-- KPI STRIP -->
-    <div class="dashboard-cards enhanced" style="margin-bottom: 20px;">
-        <div class="card kpi blue">
-            <h2>${{ "{:,.2f}".format(amount) }}</h2>
-            <p>Total</p>
-        </div>
-
-        <div class="card kpi green">
-            <h2>${{ "{:,.2f}".format(total_paid) }}</h2>
-            <p>Paid</p>
-        </div>
-
-        <div class="card kpi {% if balance > 0 %}red{% else %}teal{% endif %}">
-            <h2>${{ "{:,.2f}".format(balance) }}</h2>
-            <p>Balance</p>
-        </div>
-
-        <div class="card kpi purple">
-            <h2>
-                {% if status == "Paid" %}
-                    Paid
-                {% elif status == "Overdue" %}
-                    Overdue
-                {% elif status == "Sent" %}
-                    Open
-                {% else %}
-                    {{ status }}
-                {% endif %}
-            </h2>
-            <p>Status</p>
-        </div>
-    </div>
-
-    <!-- BILLING + DETAILS -->
-    <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:18px; margin-bottom:18px;">
-        <div>
-            <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
-                Billed To
-            </div>
-            <p style="margin:0 0 4px 0; font-weight:600;">{{ client_name }}</p>
-            {% if client_company %}
-                <p style="margin:0 0 4px 0;">{{ client_company }}</p>
-            {% endif %}
-            {% if client_email %}
-                <p style="margin:0 0 4px 0; font-size:14px; opacity:.85;">{{ client_email }}</p>
-            {% endif %}
-        </div>
-
-        <div>
-            <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
-                Invoice Details
-            </div>
-            <p style="margin:0 0 4px 0; font-size:14px;">
-                <strong>Invoice:</strong> {{ inv_label }}
-            </p>
-            <p style="margin:0 0 4px 0; font-size:14px;">
-                <strong>Issued:</strong>
-                {% if created_at %}
-                    {{ created_at.strftime('%Y-%m-%d') }}
-                {% else %}
-                    —
-                {% endif %}
-            </p>
-            <p style="margin:0 0 4px 0; font-size:14px;">
-                <strong>Due:</strong>
-                {% if due_date %}
-                    {{ due_date.strftime('%Y-%m-%d') }}
-                {% else %}
-                    —
-                {% endif %}
-            </p>
-        </div>
-    </div>
-
-    <!-- LINE ITEMS -->
-    <div class="table-wrapper">
-        <table class="modern-table">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th style="width: 140px;">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for desc, amt in items %}
-                <tr>
-                    <td data-label="Description">{{ desc }}</td>
-                    <td data-label="Amount">${{ "{:,.2f}".format(amt) }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- PAYMENTS -->
-    {% if payments and payments|length > 0 %}
-        <h3 style="margin-top: 24px; margin-bottom: 8px; font-size: 16px;">Payment History</h3>
-        <div class="table-wrapper">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Amount</th>
-                        <th>Method</th>
-                        <th>Note</th>
-                        <th>Recorded</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for p in payments %}
-                    <tr>
-                        <td data-label="Amount">${{ "{:,.2f}".format(p[0]) }}</td>
-                        <td data-label="Method">{{ p[1] or "—" }}</td>
-                        <td data-label="Note">{{ p[2] or "—" }}</td>
-                        <td data-label="Recorded">
-                            {% if p[3] %}
-                                {{ p[3].strftime('%Y-%m-%d %H:%M') }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
-
-    <!-- NOTES / TERMS -->
-    {% if notes or terms %}
-        <div style="margin-top: 18px; display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:18px;">
-            {% if notes %}
-                <div>
-                    <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
-                        Notes
-                    </div>
-                    <p style="font-size:14px; margin:0; white-space:pre-line;">
-                        {{ notes }}
-                    </p>
-                </div>
-            {% endif %}
-            {% if terms %}
-                <div>
-                    <div style="font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#6b7280; margin-bottom:6px;">
-                        Payment Terms
-                    </div>
-                    <p style="font-size:14px; margin:0; white-space:pre-line;">
-                        {{ terms }}
-                    </p>
-                </div>
-            {% endif %}
-        </div>
-    {% endif %}
-
-    <!-- ACTIONS -->
-    <div class="public-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; flex-wrap:wrap;">
-        <a href="{{ pdf_url }}" class="btn btn-secondary" target="_blank" rel="noopener">
-            Download PDF
-        </a>
-
-        {% if balance > 0 %}
-            <a href="/pay/{{ public_token }}" class="btn btn-success">
-                Pay Now
-            </a>
-        {% else %}
-            <button class="btn btn-success" type="button" disabled>
-                Paid in Full
-            </button>
+  <!-- HERO -->
+  <div class="public-hero">
+    <div class="public-hero-left">
+      <div class="public-brand">
+        {% if business_profile.logo_url %}
+          <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Logo">
         {% endif %}
+        <div>
+          <div class="public-title">{{ business_profile.business_name or "InvoicePro" }}</div>
+          <div class="public-subtitle">Invoice Portal</div>
+        </div>
+      </div>
+
+      <div class="public-inv-meta">
+        <div class="inv-label">Invoice <span class="mono">{{ inv_label }}</span></div>
+        <div class="inv-dates">
+          <span>
+            Created:
+            <strong>{{ created_at.strftime('%Y-%m-%d') if created_at else '—' }}</strong>
+          </span>
+          <span class="dot">•</span>
+          <span>
+            Due:
+            <strong>{{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <div class="public-status-row">
+        {% if status == "Paid" %}
+          <span class="status-pill paid">Paid</span>
+        {% elif status == "Overdue" %}
+          <span class="status-pill overdue">Overdue</span>
+        {% else %}
+          <span class="status-pill sent">Sent</span>
+        {% endif %}
+        <span class="status-note">
+          This is a secure link. Keep it private.
+        </span>
+      </div>
     </div>
 
-</div>
+    <div class="public-hero-right">
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-label">Balance Due</div>
+          <div class="summary-amount">
+            ${{ "{:,.2f}".format(balance) }}
+          </div>
+        </div>
 
-<p style="margin-top:16px; font-size:12px; text-align:center; opacity:.7;">
-    This secure link was generated by InvoicePro. If you have any questions about this invoice,
-    please contact your provider directly.
-</p>
+        <div class="summary-breakdown">
+          <div class="row">
+            <span>Total</span>
+            <strong>${{ "{:,.2f}".format(amount) }}</strong>
+          </div>
+          <div class="row">
+            <span>Paid</span>
+            <strong>${{ "{:,.2f}".format(total_paid) }}</strong>
+          </div>
+        </div>
+
+        <div class="summary-actions">
+          <!-- Pay Now UI (we’ll wire later) -->
+          <button class="btn btn-brand btn-pay" disabled title="Coming soon">
+            Pay Now (Coming Soon)
+          </button>
+
+          {% if pdf_url %}
+            <a class="btn btn-secondary btn-wide" href="{{ pdf_url }}" target="_blank" rel="noopener">
+              Download PDF
+            </a>
+          {% endif %}
+        </div>
+
+        <div class="summary-foot">
+          Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENT CARD -->
+  <div class="public-grid">
+    <div class="public-card">
+      <div class="card-title">Billed To</div>
+
+      <div class="client-block">
+        <div class="client-name">{{ client_name or "Client" }}</div>
+        {% if client_company %}
+          <div class="client-sub">{{ client_company }}</div>
+        {% endif %}
+        {% if client_email %}
+          <div class="client-sub">
+            <a href="mailto:{{ client_email }}">{{ client_email }}</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="mini-hint">
+        Tip: download the PDF for your records.
+      </div>
+    </div>
+
+    <div class="public-card">
+      <div class="card-title">Invoice Snapshot</div>
+      <div class="snapshot">
+        <div class="snap-item">
+          <div class="snap-label">Status</div>
+          <div class="snap-value">{{ status }}</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-label">Items</div>
+          <div class="snap-value">{{ items|length }}</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-label">Paid</div>
+          <div class="snap-value">${{ "{:,.2f}".format(total_paid) }}</div>
+        </div>
+        <div class="snap-item">
+          <div class="snap-label">Due</div>
+          <div class="snap-value">${{ "{:,.2f}".format(balance) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINE ITEMS -->
+  <div class="public-card public-card-wide">
+    <div class="card-title">Line Items</div>
+
+    <div class="public-table-wrap">
+      <table class="public-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for desc, amt in items %}
+            <tr>
+              <td>{{ desc }}</td>
+              <td class="right">${{ "{:,.2f}".format(amt) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td class="right">Total</td>
+            <td class="right"><strong>${{ "{:,.2f}".format(amount) }}</strong></td>
+          </tr>
+          <tr>
+            <td class="right">Paid</td>
+            <td class="right"><strong>${{ "{:,.2f}".format(total_paid) }}</strong></td>
+          </tr>
+          <tr>
+            <td class="right">Balance Due</td>
+            <td class="right"><strong>${{ "{:,.2f}".format(balance) }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAYMENTS + NOTES -->
+  <div class="public-grid">
+    <div class="public-card">
+      <div class="card-title">Payment History</div>
+
+      {% if payments and payments|length > 0 %}
+        <div class="timeline">
+          {% for p in payments %}
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-body">
+                <div class="timeline-top">
+                  <strong>${{ "{:,.2f}".format(p[0]) }}</strong>
+                  <span class="muted">
+                    {{ p[3].strftime('%Y-%m-%d') if p[3] else '' }}
+                  </span>
+                </div>
+                <div class="timeline-sub">
+                  {{ p[1] or "Payment" }}
+                  {% if p[2] %} — <span class="muted">{{ p[2] }}</span>{% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted" style="margin-top:10px;">No payments recorded yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="public-card">
+      <div class="card-title">Notes & Terms</div>
+
+      {% if notes %}
+        <div class="note-block">
+          <div class="note-label">Notes</div>
+          <div class="note-text">{{ notes }}</div>
+        </div>
+      {% endif %}
+
+      {% if terms %}
+        <div class="note-block">
+          <div class="note-label">Terms</div>
+          <div class="note-text">{{ terms }}</div>
+        </div>
+      {% endif %}
+
+      {% if not notes and not terms %}
+        <p class="muted" style="margin-top:10px;">No notes or terms provided.</p>
+      {% endif %}
+
+      <div class="trust-row">
+        <div class="trust-pill">Secure Link</div>
+        <div class="trust-pill">PDF Available</div>
+        <div class="trust-pill">Client Portal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="powered-by">
+    Powered by <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+  </div>
+
+</div>
 
 {% endblock %}
