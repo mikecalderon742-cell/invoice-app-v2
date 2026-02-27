@@ -11,297 +11,217 @@
 
 {% if invoices %}
 
-<!-- FILTER SUMMARY -->
-<p class="chart-sub" style="margin-top: -8px; margin-bottom: 16px;">
-    Showing <strong>{{ filtered_count }}</strong> of <strong>{{ total_invoices }}</strong> invoices
-    {% if q or status_filter or from_date_str or to_date_str %}
-        • Filters:
-        {% if q %} <span>Search "{{ q }}"</span>{% endif %}
-        {% if status_filter %} <span>Status: {{ status_filter }}</span>{% endif %}
-        {% if from_date_str %} <span>From: {{ from_date_str }}</span>{% endif %}
-        {% if to_date_str %} <span>To: {{ to_date_str }}</span>{% endif %}
-    {% else %}
-        • No filters applied
-    {% endif %}
-</p>
+    <!-- KPI STRIP -->
+    <div class="dashboard-cards enhanced">
 
-<!-- SEARCH & FILTER BAR -->
-<div class="search-bar modern">
-    <form method="GET" action="/invoices">
-        <input
-            type="text"
-            name="q"
-            placeholder="Search by client or invoice #"
-            value="{{ q }}"
-        >
+        <div class="card kpi orange">
+            <h2 class="kpi-number">{{ total_invoices }}</h2>
+            <p>Total Invoices</p>
+        </div>
 
-        <select name="status" style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px;">
-            <option value="">All statuses</option>
-            <option value="Sent"   {% if status_filter == 'Sent' %}selected{% endif %}>Sent</option>
-            <option value="Paid"   {% if status_filter == 'Paid' %}selected{% endif %}>Paid</option>
-            <option value="Overdue" {% if status_filter == 'Overdue' %}selected{% endif %}>Overdue</option>
-        </select>
+        <div class="card kpi green">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(total_revenue) }}</h2>
+            <p>Total Revenue</p>
+        </div>
 
-        <input
-            type="date"
-            name="from_date"
-            value="{{ from_date_str }}"
-            style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px;"
-        >
-        <input
-            type="date"
-            name="to_date"
-            value="{{ to_date_str }}"
-            style="padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 14px;"
-        >
+        <div class="card kpi blue">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(monthly_revenue) }}</h2>
+            <p>This Month</p>
+            <small>{{ growth }}% of total revenue</small>
+        </div>
 
-        <button type="submit" class="btn btn-brand">Apply</button>
-        <a href="/invoices" class="btn btn-secondary">Reset</a>
-    </form>
-</div>
+        <div class="card kpi purple">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(avg_invoice) }}</h2>
+            <p>Average Invoice</p>
+        </div>
 
-<!-- KPI STRIP -->
-<div class="dashboard-cards enhanced">
+        <div class="card kpi teal">
+            <h2 class="kpi-number">{{ paid_count }}</h2>
+            <p>Paid</p>
+        </div>
 
-    <div class="card kpi orange">
-        <h2 class="kpi-number">{{ total_invoices }}</h2>
-        <p>Total Invoices</p>
+        <div class="card kpi red">
+            <h2 class="kpi-number">{{ overdue_count }}</h2>
+            <p>Overdue</p>
+        </div>
+
     </div>
 
-    <div class="card kpi green">
-        <h2 class="kpi-number">${{ "{:,.2f}".format(total_revenue) }}</h2>
-        <p>Total Revenue</p>
-    </div>
-
-    <div class="card kpi blue">
-        <h2 class="kpi-number">${{ "{:,.2f}".format(monthly_revenue) }}</h2>
-        <p>This Month</p>
-        <small>{{ growth }}% of total revenue</small>
-    </div>
-
-    <div class="card kpi purple">
-        <h2 class="kpi-number">${{ "{:,.2f}".format(avg_invoice) }}</h2>
-        <p>Average Invoice</p>
-    </div>
-
-    <div class="card kpi teal">
-        <h2 class="kpi-number">{{ paid_count }}</h2>
-        <p>Paid</p>
-    </div>
-
-    <div class="card kpi red">
-        <h2 class="kpi-number">{{ overdue_count }}</h2>
-        <p>Overdue</p>
-    </div>
-
-</div>
-
-<!-- CHARTS ROW -->
-<div class="chart-card brand-accent">
-    <div class="chart-header">
-        <div>
-            <h2>Revenue (Last 6 Months)</h2>
-            <span class="chart-sub">Track your billed revenue month over month.</span>
+    <!-- STATUS SUMMARY STRIP -->
+    <div class="status-summary">
+        <div class="status-item paid">
+            Paid: {{ status_distribution["Paid"] }}
+        </div>
+        <div class="status-item sent">
+            Sent: {{ status_distribution["Sent"] }}
+        </div>
+        <div class="status-item draft">
+            Overdue: {{ status_distribution["Overdue"] }}
         </div>
     </div>
-    <canvas id="revenueChart" height="120"></canvas>
-</div>
 
-<div class="chart-card">
-    <div class="chart-header">
-        <div>
-            <h2>Status Breakdown</h2>
-            <span class="chart-sub">Paid vs Sent vs Overdue invoices.</span>
+    <!-- CHARTS ROW -->
+    <div class="dashboard-cards" style="margin-top: 10px;">
+
+        <!-- Revenue over time -->
+        <div class="chart-card brand-accent">
+            <div class="chart-header">
+                <div>
+                    <h3>Revenue Trend</h3>
+                    <span class="chart-sub">Last few months</span>
+                </div>
+            </div>
+            <canvas id="revenueChart" height="120"></canvas>
         </div>
+
+        <!-- Status breakdown -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <h3>Status Breakdown</h3>
+                    <span class="chart-sub">Paid vs Sent vs Overdue</span>
+                </div>
+            </div>
+            <canvas id="statusChart" height="120"></canvas>
+        </div>
+
     </div>
-    <canvas id="statusChart" height="140"></canvas>
-</div>
 
-<!-- TABLE -->
-<div class="table-wrapper">
-    <table class="modern-table">
-        <thead>
-            <tr>
-                <th>Invoice #</th>
-                <th>Client</th>
-                <th>Amount</th>
-                <th>Paid</th>
-                <th>Balance</th>
-                <th>Created</th>
-                <th>Due</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for invoice in invoices %}
-            {% set balance = invoice[2] - invoice[7] %}
-            <tr class="
-                {% if invoice[4] == 'Paid' %}row-paid
-                {% elif invoice[4] == 'Overdue' %}row-overdue
-                {% elif invoice[4] == 'Sent' %}row-sent
-                {% endif %}
-            ">
-                <!-- Invoice number (fallback to #id if null) -->
-                <td data-label="Invoice #">
-                    {% if invoice[5] %}
-                        {{ invoice[5] }}
-                    {% else %}
-                        #{{ invoice[0] }}
+    <!-- TABLE -->
+    <div class="table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Client</th>
+                    <th>Amount</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for invoice in invoices %}
+                <tr class="
+                    {% if invoice[4] == 'Paid' %}row-paid
+                    {% elif invoice[4] == 'Overdue' %}row-overdue
+                    {% elif invoice[4] == 'Sent' %}row-sent
                     {% endif %}
-                </td>
+                ">
+                    <td>#{{ invoice[0] }}</td>
+                    <td>{{ invoice[1] }}</td>
+                    <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
+                    <td>{{ invoice[3].strftime('%Y-%m-%d') }}</td>
 
-                <!-- Client -->
-                <td data-label="Client">{{ invoice[1] }}</td>
+                    <td>
+                        {% if invoice[4] == "Paid" %}
+                            <span class="badge paid">Paid</span>
+                        {% elif invoice[4] == "Overdue" %}
+                            <span class="badge overdue">Overdue</span>
+                        {% elif invoice[4] == "Sent" %}
+                            <span class="badge sent">Sent</span>
+                        {% else %}
+                            {{ invoice[4] }}
+                        {% endif %}
+                    </td>
 
-                <!-- Amount -->
-                <td data-label="Amount">${{ "{:,.2f}".format(invoice[2]) }}</td>
+                    <td class="action-buttons">
+                        <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
-                <!-- Paid -->
-                <td data-label="Paid">${{ "{:,.2f}".format(invoice[7]) }}</td>
+                        {% if invoice[4] != "Paid" %}
+                            <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
+                                Mark Paid
+                            </a>
+                        {% endif %}
 
-                <!-- Balance -->
-                <td data-label="Balance">
-                    ${{ "{:,.2f}".format(balance) }}
-                </td>
+                        {% if invoice[4] == "Draft" %}
+                            <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
+                                Mark Sent
+                            </a>
+                        {% endif %}
 
-                <!-- Created date -->
-                <td data-label="Created">
-                    {{ invoice[3].strftime('%Y-%m-%d') }}
-                </td>
+                        <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
 
-                <!-- Due date (may be empty for older invoices) -->
-                <td data-label="Due">
-                    {% if invoice[6] %}
-                        {{ invoice[6].strftime('%Y-%m-%d') }}
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-
-                <!-- Status badge -->
-                <td data-label="Status">
-                    {% if invoice[4] == "Paid" %}
-                        <span class="badge paid">Paid</span>
-                    {% elif invoice[4] == "Overdue" %}
-                        <span class="badge overdue">Overdue</span>
-                    {% elif invoice[4] == "Sent" %}
-                        <span class="badge sent">Sent</span>
-                    {% else %}
-                        {{ invoice[4] }}
-                    {% endif %}
-                </td>
-
-                <!-- Actions -->
-                <td class="action-buttons" data-label="Actions">
-                    <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
-
-                    <a class="btn btn-info" href="/send-email/{{ invoice[0] }}">
-                        Send Email
-                    </a>
-
-                    {% if balance > 0.01 %}
-                        <a class="btn btn-success" href="/add-payment/{{ invoice[0] }}">
-                            Record Payment
-                        </a>
-                    {% endif %}
-
-                    {% if invoice[4] != "Paid" and balance > 0.01 %}
-                        <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
-                            Mark Paid
-                        </a>
-                    {% endif %}
-
-                    {% if invoice[4] == "Draft" %}
-                        <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
-                            Mark Sent
-                        </a>
-                    {% endif %}
-
-                    <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+        </table>
+    </div>
 
 {% else %}
 
-<div class="empty-state">
-    <h3>No invoices yet</h3>
-    <p>Create your first invoice to get started.</p>
-    <a class="btn" href="/">Create Invoice</a>
-</div>
+    <div class="empty-state">
+        <h3>No invoices yet</h3>
+        <p>Create your first invoice to get started.</p>
+        <a class="btn" href="/">Create Invoice</a>
+    </div>
 
 {% endif %}
 
-<!-- CHART.JS WIRING -->
+<!-- CHART.JS SCRIPT (ONLY RUNS IF DATA IS PRESENT) -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    if (window.Chart) {
-        const monthlyLabels = {{ monthly_chart_labels | tojson }};
-        const monthlyTotals = {{ monthly_chart_totals | tojson }};
-        const statusLabels = {{ status_chart_labels | tojson }};
-        const statusValues = {{ status_chart_values | tojson }};
+document.addEventListener("DOMContentLoaded", function() {
+    {% if invoices %}
+    // Data from Flask
+    const revenueLabels = {{ monthly_chart_labels|tojson }};
+    const revenueValues = {{ monthly_chart_totals|tojson }};
+    const statusLabels  = {{ status_chart_labels|tojson }};
+    const statusValues  = {{ status_chart_values|tojson }};
 
-        const revenueCtx = document.getElementById("revenueChart");
-        if (revenueCtx && monthlyLabels.length > 0) {
-            new Chart(revenueCtx, {
-                type: "line",
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [{
-                        label: "Revenue",
-                        data: monthlyTotals,
-                        tension: 0.3,
-                        fill: true
-                    }]
+    // Revenue chart (line)
+    const revCtx = document.getElementById("revenueChart");
+    if (revCtx && revenueLabels.length > 0) {
+        new Chart(revCtx, {
+            type: "line",
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: "Revenue",
+                    data: revenueValues,
+                    fill: true,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            ticks: {
-                                callback: function(value) {
-                                    try {
-                                        return "$" + Number(value).toLocaleString();
-                                    } catch (e) {
-                                        return value;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                scales: {
+                    x: { ticks: { autoSkip: true } },
+                    y: { beginAtZero: true }
                 }
-            });
-        }
-
-        const statusCtx = document.getElementById("statusChart");
-        if (statusCtx && statusLabels.length > 0) {
-            new Chart(statusCtx, {
-                type: "doughnut",
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: "bottom"
-                        }
-                    },
-                    cutout: "60%"
-                }
-            });
-        }
+            }
+        });
     }
+
+    // Status chart (doughnut)
+    const statusCtx = document.getElementById("statusChart");
+    if (statusCtx && statusLabels.length > 0) {
+        new Chart(statusCtx, {
+            type: "doughnut",
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusValues
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                },
+                cutout: "60%"
+            }
+        });
+    }
+    {% endif %}
 });
 </script>
 
