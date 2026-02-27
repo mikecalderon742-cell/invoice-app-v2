@@ -33,21 +33,20 @@ def get_db_connection():
 
 
 app = Flask(__name__)
+
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 # -------------------------
 # STRIPE CONFIG
 # -------------------------
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")  # your Stripe *secret* key
-STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO")  # recurring price ID for Pro
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")  # Stripe secret key
+STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO")  # Pro subscription price ID
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
-
-# PLAN_DEFINITIONS (as above)
-# PLAN_LEVELS (as above)
-
-# Simple plan metadata (we’ll expand and enforce later)
+# -------------------------
+# PLAN DEFINITIONS
+# -------------------------
 PLAN_DEFINITIONS = {
     "free": {
         "name": "Starter",
@@ -85,10 +84,10 @@ PLAN_DEFINITIONS = {
     },
 }
 
-# Plan “strength” used for comparisons (free < pro < enterprise)
+# Plan levels for easy comparisons
 PLAN_LEVELS = {
     "free": 0,
-    "starter": 0,       # alias if we ever use "starter"
+    "starter": 0,  # alias if we ever use it
     "pro": 1,
     "enterprise": 2,
 }
@@ -2012,11 +2011,9 @@ def stripe_webhook():
             secret=STRIPE_WEBHOOK_SECRET,
         )
     except ValueError:
-        # Invalid payload
         print("[Stripe] Invalid payload", flush=True)
         return "Invalid payload", 400
     except stripe.error.SignatureVerificationError:
-        # Invalid signature
         print("[Stripe] Invalid signature", flush=True)
         return "Invalid signature", 400
 
