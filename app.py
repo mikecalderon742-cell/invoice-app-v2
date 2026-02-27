@@ -227,6 +227,11 @@ def init_db():
         "ALTER TABLE business_profile ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
     )
 
+    # 🔹 NEW: store which visual template this invoice uses
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS template_style TEXT;"
+    )
+
     # Stripe linkage for subscriptions
     cursor.execute(
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;"
@@ -855,6 +860,7 @@ def save():
     - Uses existing client if client_id is provided
     - Or creates a new client if new_client_name is provided
     - Falls back to plain 'client' text if needed
+    - Stores selected template_style for later PDF/web rendering
     """
     allowed, reason = check_invoice_quota_or_reason()
     if not allowed:
@@ -876,6 +882,9 @@ def save():
 
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
+
+    # 🔹 NEW: template style selection from the form
+    template_style = request.form.get("template_style") or "modern"
 
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
@@ -938,10 +947,22 @@ def save():
     if not client_name_for_invoice:
         client_name_for_invoice = request.form.get("client") or "Unknown client"
 
+    # 🔹 NEW: store template_style column
     cursor.execute(
         """
-        INSERT INTO invoices (client, amount, created_at, status, due_date, notes, terms, client_id, user_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO invoices (
+            client,
+            amount,
+            created_at,
+            status,
+            due_date,
+            notes,
+            terms,
+            template_style,
+            client_id,
+            user_id
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
         (
@@ -952,6 +973,7 @@ def save():
             due_date,
             notes,
             terms,
+            template_style,
             client_id,
             user_id,
         ),
@@ -1555,9 +1577,10 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     conn = get_db_connection()
     c = conn.cursor()
 
+    # 🔹 Grab template_style along with core fields
     c.execute(
         """
-        SELECT client, amount, created_at, due_date, invoice_number
+        SELECT client, amount, created_at, due_date, invoice_number, template_style
         FROM invoices
         WHERE id = %s
         """,
@@ -1569,7 +1592,8 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         conn.close()
         return None, "Invoice not found"
 
-    client, amount, created_at, due_date, invoice_number = row
+    client, amount, created_at, due_date, invoice_number, template_style = row
+    template_style = (template_style or "modern").lower()
 
     c.execute(
         "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
@@ -1578,44 +1602,140 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     items = c.fetchall()
     conn.close()
 
+    amount_float = float(amount)
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(72, 750, "Invoice")
+    page_width, page_height = LETTER
 
-    pdf.setFont("Helvetica", 12)
+    # ---------- TEMPLATE STYLES ----------
+    # Basic defaults
+    header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
+    title_text = "Invoice"
+    accent_color = header_bar_color
+
+    if template_style == "minimal":
+        header_bar_color = (0.18, 0.20, 0.24)  # dark slate
+        title_text = "Invoice"
+        accent_color = (0.6, 0.6, 0.65)
+    elif template_style == "bold":
+        header_bar_color = (0.97, 0.45, 0.09)  # orange
+        title_text = "Invoice Statement"
+        accent_color = (0.97, 0.45, 0.09)
+    elif template_style == "doodle":
+        header_bar_color = (0.33, 0.27, 0.96)  # purple/blue
+        title_text = "Invoice"
+        accent_color = (0.33, 0.27, 0.96)
+
+        # Simple doodle-like shapes in background
+        pdf.setFillColorRGB(0.93, 0.95, 1.0)
+        pdf.circle(60, page_height - 120, 26, fill=1, stroke=0)
+        pdf.setFillColorRGB(0.96, 0.92, 1.0)
+        pdf.circle(page_width - 80, page_height - 200, 30, fill=1, stroke=0)
+        pdf.setFillColorRGB(0.90, 0.96, 0.98)
+        pdf.rect(page_width - 150, 40, 120, 60, fill=1, stroke=0)
+
+    # ---------- HEADER BAR ----------
+    pdf.setFillColorRGB(*header_bar_color)
+    pdf.rect(0, page_height - 60, page_width, 60, fill=1, stroke=0)
+
+    pdf.setFillColorRGB(1, 1, 1)
+    pdf.setFont("Helvetica-Bold", 22)
+    pdf.drawString(72, page_height - 40, title_text)
+
+    # Reset to dark text for body
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
+    pdf.setFont("Helvetica", 11)
+
     inv_label = invoice_number or f"#{invoice_id}"
-    pdf.drawString(72, 720, f"Invoice: {inv_label}")
-    pdf.drawString(72, 700, f"Client: {client}")
-    if created_at:
-        pdf.drawString(72, 680, f"Created: {created_at.strftime('%Y-%m-%d')}")
-    if due_date:
-        pdf.drawString(72, 660, f"Due: {due_date.strftime('%Y-%m-%d')}")
+    y = page_height - 90
 
-    y = 630
+    pdf.drawString(72, y, f"Invoice: {inv_label}")
+    y -= 16
+    pdf.drawString(72, y, f"Client: {client}")
+
+    if created_at:
+        y -= 16
+        pdf.drawString(72, y, f"Created: {created_at.strftime('%Y-%m-%d')}")
+    if due_date:
+        y -= 16
+        pdf.drawString(72, y, f"Due: {due_date.strftime('%Y-%m-%d')}")
+
+    # Right side summary box
+    right_box_top = page_height - 90
+    right_box_left = page_width - 220
+    pdf.setFillColorRGB(1, 1, 1)
+    pdf.setStrokeColorRGB(*accent_color)
+    pdf.rect(right_box_left, right_box_top - 50, 180, 50, fill=1, stroke=1)
+
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(right_box_left + 10, right_box_top - 20, "Total")
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.setFillColorRGB(*accent_color)
+    pdf.drawRightString(
+        right_box_left + 170,
+        right_box_top - 30,
+        f"${amount_float:,.2f}",
+    )
+
+    # ---------- LINE ITEMS ----------
+    y = right_box_top - 80
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
     pdf.setFont("Helvetica-Bold", 12)
     pdf.drawString(72, y, "Line Items")
     y -= 20
+
     pdf.setFont("Helvetica", 11)
+    pdf.setFillColorRGB(0.3, 0.3, 0.35)
+    pdf.drawString(72, y, "Description")
+    pdf.drawRightString(page_width - 72, y, "Amount")
+    y -= 12
+
+    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
+    pdf.line(72, y, page_width - 72, y)
+    y -= 18
+
+    pdf.setFont("Helvetica", 10)
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
 
     for desc, amt in items:
+        amt_float = float(amt)
         pdf.drawString(72, y, f"{desc}")
-        pdf.drawRightString(540, y, f"${amt}")
-        y -= 18
+        pdf.drawRightString(
+            page_width - 72,
+            y,
+            f"${amt_float:,.2f}",
+        )
+        y -= 16
         if y < 72:
             pdf.showPage()
-            y = 750
+            y = page_height - 72
+            pdf.setFont("Helvetica", 10)
+            pdf.setFillColorRGB(0.1, 0.1, 0.15)
+
+    # ---------- TOTAL FOOTER ----------
+    if y < 110:
+        pdf.showPage()
+        y = page_height - 100
 
     y -= 10
+    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
+    pdf.line(72, y, page_width - 72, y)
+    y -= 24
+
     pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(72, y, f"Total Due: ${amount}")
+    pdf.setFillColorRGB(*accent_color)
+    pdf.drawRightString(
+        page_width - 72,
+        y,
+        f"Total Due: ${amount_float:,.2f}",
+    )
 
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
     return buffer.getvalue(), None
-
 
 @app.route("/history-pdf/<int:invoice_id>")
 def history_pdf(invoice_id):

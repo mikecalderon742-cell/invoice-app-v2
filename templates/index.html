@@ -116,6 +116,21 @@
             </table>
         </div>
 
+<div class="form-row">
+    <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
+        Invoice style
+    </label>
+    <select name="template_style" id="template_style" class="template-select">
+        <option value="modern" selected>Modern Clean (default)</option>
+        <option value="minimal">Minimal Grey</option>
+        <option value="bold">Bold Accent</option>
+        <option value="doodle">Playful / Doodle</option>
+    </select>
+    <small style="font-size:12px; opacity:0.7;">
+        This controls the layout and feel of the PDF and client view.
+    </small>
+</div>
+
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <a href="/invoices" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-brand">Save Invoice</button>
