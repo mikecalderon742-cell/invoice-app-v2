@@ -60,33 +60,6 @@
         </div>
     </div>
 
-    <!-- CHARTS ROW (separate from KPI cards) -->
-    <div class="charts-row">
-
-        <!-- Revenue over time -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>Revenue Trend</h3>
-                    <span class="chart-sub">Last few months</span>
-                </div>
-            </div>
-            <canvas id="revenueChart" class="chart-canvas"></canvas>
-        </div>
-
-        <!-- Status breakdown -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div>
-                    <h3>Status Breakdown</h3>
-                    <span class="chart-sub">Paid vs Sent vs Overdue</span>
-                </div>
-            </div>
-            <canvas id="statusChart" class="chart-canvas"></canvas>
-        </div>
-
-    </div>
-
     <!-- TABLE -->
     <div class="table-wrapper">
         <table class="modern-table">
@@ -127,20 +100,29 @@
                     </td>
 
                     <td class="action-buttons">
+                        <!-- Edit -->
                         <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
+                        <!-- Mark Paid (if not already) -->
                         {% if invoice[4] != "Paid" %}
                             <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
                                 Mark Paid
                             </a>
                         {% endif %}
 
+                        <!-- Mark Sent (if Draft ever used) -->
                         {% if invoice[4] == "Draft" %}
                             <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
                                 Mark Sent
                             </a>
                         {% endif %}
 
+                        <!-- SEND INVOICE VIA EMAIL -->
+                        <a class="btn btn-info" href="/send-email/{{ invoice[0] }}">
+                            Send
+                        </a>
+
+                        <!-- DELETE -->
                         <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
                     </td>
                 </tr>
@@ -159,70 +141,5 @@
     </div>
 
 {% endif %}
-
-<!-- CHART.JS SCRIPT -->
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    {% if invoices %}
-    // Data from Flask
-    const revenueLabels = {{ monthly_chart_labels|tojson }};
-    const revenueValues = {{ monthly_chart_totals|tojson }};
-    const statusLabels  = {{ status_chart_labels|tojson }};
-    const statusValues  = {{ status_chart_values|tojson }};
-
-    // Revenue chart (line)
-    const revCtx = document.getElementById("revenueChart");
-    if (revCtx && revenueLabels.length > 0) {
-        new Chart(revCtx, {
-            type: "line",
-            data: {
-                labels: revenueLabels,
-                datasets: [{
-                    label: "Revenue",
-                    data: revenueValues,
-                    fill: true,
-                    tension: 0.35
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: { ticks: { autoSkip: true } },
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    }
-
-    // Status chart (doughnut)
-    const statusCtx = document.getElementById("statusChart");
-    if (statusCtx && statusLabels.length > 0) {
-        new Chart(statusCtx, {
-            type: "doughnut",
-            data: {
-                labels: statusLabels,
-                datasets: [{
-                    data: statusValues
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "bottom"
-                    }
-                },
-                cutout: "60%"
-            }
-        });
-    }
-    {% endif %}
-});
-</script>
 
 {% endblock %}
