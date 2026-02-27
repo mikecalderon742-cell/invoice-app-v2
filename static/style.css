@@ -1724,3 +1724,17 @@ body.dark .modern-table tbody tr:nth-child(even) {
         padding-bottom: 1rem;
     }
 }
+
+/* =========================================
+   FIX CHART HEIGHT / PREVENT PAGE STRETCH
+========================================= */
+.chart-card {
+    position: relative;
+    height: 300px;     /* Balanced height */
+    max-height: 300px; /* Prevents stretch */
+}
+
+.chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
