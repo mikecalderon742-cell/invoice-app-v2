@@ -38,12 +38,10 @@
                 {% if key == user_plan %}
                     <span class="badge paid">Current plan</span>
                 {% elif key == 'pro' and not is_pro %}
-                    <form action="{{ url_for('create_checkout_session') }}" method="POST">
-                        <button type="submit" class="btn btn-brand">
-                            Upgrade to Pro
-                        </button>
-                    </form>
-                {% else %}
+    <button type="button" class="btn btn-brand" disabled>
+        Upgrade to Pro (coming soon)
+    </button>
+{% else %}
                     {% if key == 'free' %}
                         <span class="badge draft">Included</span>
                     {% else %}

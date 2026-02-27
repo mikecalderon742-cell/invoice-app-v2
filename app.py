@@ -819,6 +819,16 @@ def pricing():
     )
 
 
+@app.route("/create-checkout-session", methods=["POST"])
+def create_checkout_session():
+    """
+    TEMP STUB: This exists only so url_for('create_checkout_session') works
+    and the pricing page doesn't 500. We'll wire real Stripe logic later.
+    """
+    # For now, just go back to pricing with a notice.
+    return redirect(url_for("pricing", upgraded="stub"))
+
+
 def create_checkout_session():
     """
     Create a Stripe Checkout Session for upgrading to Pro.
