@@ -60,8 +60,8 @@
         </div>
     </div>
 
-    <!-- CHARTS ROW -->
-    <div class="dashboard-cards" style="margin-top: 10px;">
+    <!-- CHARTS ROW (separate from KPI cards) -->
+    <div class="charts-row">
 
         <!-- Revenue over time -->
         <div class="chart-card brand-accent">
@@ -72,7 +72,6 @@
                 </div>
             </div>
             <canvas id="revenueChart" class="chart-canvas"></canvas>
-            <canvas id="statusChart" class="chart-canvas"></canvas>
         </div>
 
         <!-- Status breakdown -->
@@ -83,7 +82,7 @@
                     <span class="chart-sub">Paid vs Sent vs Overdue</span>
                 </div>
             </div>
-            <canvas id="statusChart" height="120"></canvas>
+            <canvas id="statusChart" class="chart-canvas"></canvas>
         </div>
 
     </div>
@@ -161,7 +160,7 @@
 
 {% endif %}
 
-<!-- CHART.JS SCRIPT (ONLY RUNS IF DATA IS PRESENT) -->
+<!-- CHART.JS SCRIPT -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}

@@ -1738,3 +1738,74 @@ body.dark .modern-table tbody tr:nth-child(even) {
     width: 100% !important;
     height: 100% !important;
 }
+
+/* =========================================
+   INVOICE DASHBOARD CHART LAYOUT CLEANUP
+   (Safe overrides at the very bottom)
+========================================= */
+
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+/* Reset / define chart cards clearly so they don't stretch or overlap */
+.chart-card {
+    position: relative;
+    padding: 20px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 2px solid rgba(0,0,0,0.06);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    height: 280px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+body.dark .chart-card {
+    background: #020617;
+    border-color: rgba(148, 163, 184, 0.6);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.85);
+}
+
+.chart-card .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.chart-card .chart-sub {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+/* Canvas sizing: fill card width, fixed height inside card */
+.chart-canvas {
+    width: 100% !important;
+    height: 210px !important;
+}
+
+/* Make sure the table sits cleanly after the charts */
+.table-wrapper {
+    margin-top: 10px;
+}
+
+/* Extra safety for small screens */
+@media (max-width: 768px) {
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card {
+        height: 260px;
+    }
+
+    .chart-canvas {
+        height: 190px !important;
+    }
+}
