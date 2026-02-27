@@ -31,7 +31,7 @@ body.fade-out {
     max-width: 1200px;
     margin: auto;
     animation: fadeIn 0.4s ease-in-out;
-    position: relative;
+    position: relative;  /* so local doodles can anchor to it */
     z-index: 1;
 }
 
@@ -1561,71 +1561,104 @@ body.dark .badge.draft {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: -1; /* behind container, ahead of body::before glow */
+    z-index: 0; /* sits between body background and .container */
 }
 
-/* Base doodle style: thin, minimal lines */
+/* Base doodle style: premium, visible but not loud */
 .doodle {
     position: absolute;
     fill: none;
-    stroke: rgba(15, 23, 42, 0.35);
-    stroke-width: 1.4;
+    stroke: rgba(21, 27, 84, 0.55); /* stronger navy */
+    stroke-width: 1.7;
     stroke-linecap: round;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 18px 40px rgba(15, 23, 42, 0.18));
+    animation: doodleFloat 22s ease-in-out infinite alternate;
 }
 
-/* Slightly brighter in dark mode so they still show */
+/* Dark mode: lighter stroke so it pops on dark background */
 body.dark .doodle {
-    stroke: rgba(148, 163, 184, 0.75);
+    stroke: rgba(191, 219, 254, 0.85);
+    filter: drop-shadow(0 18px 40px rgba(15, 23, 42, 0.75));
 }
 
 /* Top-right invoice + chart */
 .doodle-top-right {
-    top: 80px;
-    right: 40px;
-    width: 240px;
-    max-width: 32vw;
-    transform: rotate(-6deg);
+    top: 40px;
+    right: -10px;
+    width: 320px;
+    max-width: 40vw;
+    transform: rotate(-5deg);
 }
 
 /* Bottom-left email / sending */
 .doodle-bottom-left {
-    bottom: 40px;
-    left: 24px;
-    width: 220px;
-    max-width: 30vw;
-    transform: rotate(4deg);
+    bottom: -10px;
+    left: -30px;
+    width: 260px;
+    max-width: 36vw;
+    transform: rotate(6deg);
 }
 
 /* Mid-right recurring billing */
 .doodle-mid-right {
     top: 55%;
-    right: 12px;
-    width: 180px;
-    max-width: 26vw;
-    transform: translateY(-50%) rotate(8deg);
+    right: -40px;
+    width: 240px;
+    max-width: 32vw;
+    transform: translateY(-50%) rotate(10deg);
 }
 
-/* Tone them down on small screens so they don't clash */
-@media (max-width: 900px) {
-    .doodle-top-right,
-    .doodle-mid-right {
-        opacity: 0.18;
-        transform: none;
-        right: -20px;
+/* Gentle float to make them feel alive */
+@keyframes doodleFloat {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.85;
     }
+    50% {
+        transform: translateY(-8px) rotate(1deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(4px) rotate(-1deg);
+        opacity: 0.9;
+    }
+}
 
+/* Tone them down on small/medium screens so they don't overpower */
+@media (max-width: 1100px) {
+    .doodle-top-right {
+        width: 260px;
+        right: -30px;
+        opacity: 0.8;
+    }
     .doodle-bottom-left {
-        opacity: 0.12;
-        left: -40px;
-        bottom: 10px;
+        width: 220px;
+        left: -50px;
+        opacity: 0.7;
+    }
+    .doodle-mid-right {
+        width: 200px;
+        right: -40px;
+        opacity: 0.75;
+    }
+}
+
+@media (max-width: 768px) {
+    .bg-doodles {
+        opacity: 0.55;
+    }
+    .doodle-top-right,
+    .doodle-mid-right,
+    .doodle-bottom-left {
+        filter: none;  /* fewer shadows on mobile */
     }
 }
 
 @media (max-width: 600px) {
     .bg-doodles {
-        opacity: 0.12;
+        opacity: 0.4;
     }
 }
 
@@ -1666,4 +1699,83 @@ body.dark .doodle {
 
 .empty-state p {
     margin-bottom: 20px;
+}
+
+/* =========================================
+   KPI CARD COLOR RESTORE
+   (ensure solid gradients for the dashboard strip)
+========================================= */
+
+.card.kpi.orange {
+    background: linear-gradient(135deg,#f97316,#c2410c);
+    color: #ffffff;
+}
+
+.card.kpi.green {
+    background: linear-gradient(135deg,#10b981,#047857);
+    color: #ffffff;
+}
+
+.card.kpi.blue {
+    background: linear-gradient(135deg,#2563eb,#1e40af);
+    color: #ffffff;
+}
+
+.card.kpi.purple {
+    background: linear-gradient(135deg,#8b5cf6,#6d28d9);
+    color: #ffffff;
+}
+
+.card.kpi.teal {
+    background: linear-gradient(135deg,#14b8a6,#0f766e);
+    color: #ffffff;
+}
+
+.card.kpi.red {
+    background: linear-gradient(135deg,#ef4444,#b91c1c);
+    color: #ffffff;
+}
+
+
+/* =========================================
+   PUBLIC INVOICE STAMP DOODLE
+========================================= */
+
+.public-stamp-doodle {
+    position: absolute;
+    top: 10px;
+    right: 18px;
+    width: 120px;
+    height: 120px;
+    opacity: 0.40;
+    pointer-events: none;
+    z-index: 0; /* beneath actual invoice card */
+}
+
+.public-stamp-svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: rgba(21, 27, 84, 0.7);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 10px 24px rgba(15, 23, 42, 0.35));
+    transform: rotate(-12deg);
+}
+
+body.dark .public-stamp-svg {
+    stroke: rgba(191, 219, 254, 0.95);
+    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.8));
+}
+
+/* On very small screens, tone it down a bit */
+@media (max-width: 640px) {
+    .public-stamp-doodle {
+        width: 90px;
+        height: 90px;
+        top: 4px;
+        right: 10px;
+        opacity: 0.32;
+    }
 }

@@ -147,6 +147,30 @@
 </nav>
 
 <div class="container">
+    {% if is_public_view %}
+    <div class="public-stamp-doodle" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="public-stamp-svg">
+            <!-- Outer circle -->
+            <circle cx="80" cy="80" r="58" />
+            <!-- Inner circle -->
+            <circle cx="80" cy="80" r="44" />
+
+            <!-- Horizontal lines (like ink lines) -->
+            <line x1="40" y1="80" x2="120" y2="80" />
+            <line x1="48" y1="96" x2="112" y2="96" />
+
+            <!-- Text “INVOICE” as simple path-like strokes -->
+            <path d="M50 70 L50 60" />
+            <path d="M62 70 L62 60" />
+            <path d="M58 65 L66 65" />
+            <path d="M76 70 L76 60" />
+            <path d="M88 70 L88 60" />
+            <path d="M84 60 L92 60" />
+            <path d="M100 70 L100 60" />
+        </svg>
+    </div>
+    {% endif %}
+
     {% block content %}{% endblock %}
 </div>
 
