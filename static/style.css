@@ -1552,6 +1552,83 @@ body.dark .badge.draft {
     margin-top: 2px;
 }
 
+
+/* =========================================
+   APP-SPECIFIC DOODLES (INVOICES / CHARTS)
+========================================= */
+
+.bg-doodles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1; /* behind container, ahead of body::before glow */
+}
+
+/* Base doodle style: thin, minimal lines */
+.doodle {
+    position: absolute;
+    fill: none;
+    stroke: rgba(15, 23, 42, 0.35);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+/* Slightly brighter in dark mode so they still show */
+body.dark .doodle {
+    stroke: rgba(148, 163, 184, 0.75);
+}
+
+/* Top-right invoice + chart */
+.doodle-top-right {
+    top: 80px;
+    right: 40px;
+    width: 240px;
+    max-width: 32vw;
+    transform: rotate(-6deg);
+}
+
+/* Bottom-left email / sending */
+.doodle-bottom-left {
+    bottom: 40px;
+    left: 24px;
+    width: 220px;
+    max-width: 30vw;
+    transform: rotate(4deg);
+}
+
+/* Mid-right recurring billing */
+.doodle-mid-right {
+    top: 55%;
+    right: 12px;
+    width: 180px;
+    max-width: 26vw;
+    transform: translateY(-50%) rotate(8deg);
+}
+
+/* Tone them down on small screens so they don't clash */
+@media (max-width: 900px) {
+    .doodle-top-right,
+    .doodle-mid-right {
+        opacity: 0.18;
+        transform: none;
+        right: -20px;
+    }
+
+    .doodle-bottom-left {
+        opacity: 0.12;
+        left: -40px;
+        bottom: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .bg-doodles {
+        opacity: 0.12;
+    }
+}
+
 /* Responsive stacking */
 @media (max-width: 600px) {
     .leader-item {
