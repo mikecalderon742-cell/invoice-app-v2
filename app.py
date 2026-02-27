@@ -1996,6 +1996,7 @@ def send_email_view(invoice_id):
 def stripe_webhook():
     """
     Handle Stripe webhooks to mark users as Pro when checkout completes.
+    This is a simplified version that ONLY updates the user's plan.
     """
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
@@ -2011,21 +2012,21 @@ def stripe_webhook():
             secret=STRIPE_WEBHOOK_SECRET,
         )
     except ValueError:
+        # Invalid payload
         print("[Stripe] Invalid payload", flush=True)
         return "Invalid payload", 400
     except stripe.error.SignatureVerificationError:
+        # Invalid signature
         print("[Stripe] Invalid signature", flush=True)
         return "Invalid signature", 400
 
     print(f"[Stripe] Received event: {event['type']}", flush=True)
 
-    # We care about checkout.session.completed
+    # We only care about completed checkout sessions
     if event["type"] == "checkout.session.completed":
         session_obj = event["data"]["object"]
         metadata = session_obj.get("metadata") or {}
         user_id_str = metadata.get("user_id")
-        subscription_id = session_obj.get("subscription")
-        customer_id = session_obj.get("customer")
 
         print(f"[Stripe] checkout.session.completed metadata={metadata}", flush=True)
 
@@ -2034,25 +2035,24 @@ def stripe_webhook():
                 user_id = int(user_id_str)
             except ValueError:
                 print(f"[Stripe] Invalid user_id in metadata: {user_id_str}", flush=True)
-                user_id = None
+                # Return 200 so Stripe stops retrying this bad payload
+                return "Bad metadata", 200
 
-            if user_id:
+            # 🔥 Minimal update: just set plan = 'pro' for this user
+            try:
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    """
-                    UPDATE users
-                    SET plan = %s,
-                        stripe_customer_id = COALESCE(stripe_customer_id, %s),
-                        stripe_subscription_id = %s
-                    WHERE id = %s
-                    """,
-                    ("pro", customer_id, subscription_id, user_id),
+                    "UPDATE users SET plan = %s WHERE id = %s",
+                    ("pro", user_id),
                 )
                 conn.commit()
                 cursor.close()
                 conn.close()
                 print(f"[Stripe] Upgraded user {user_id} to Pro", flush=True)
+            except Exception as e:
+                print(f"[Stripe] DB error while upgrading user {user_id}: {e}", flush=True)
+
         else:
             print("[Stripe] No user_id in metadata; cannot upgrade", flush=True)
 
