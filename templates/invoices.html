@@ -60,6 +60,72 @@
         </div>
     </div>
 
+    <!-- ANALYTICS ROW: CHARTS + TOP CLIENTS -->
+    <div class="charts-row">
+
+        <!-- Revenue over time -->
+        <div class="chart-card brand-accent">
+            <div class="chart-header">
+                <div>
+                    <h3>Revenue Trend</h3>
+                    <span class="chart-sub">Last few months</span>
+                </div>
+            </div>
+            <canvas id="revenueChart" class="chart-canvas"></canvas>
+        </div>
+
+        <!-- Status breakdown -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <h3>Status Breakdown</h3>
+                    <span class="chart-sub">Paid vs Sent vs Overdue</span>
+                </div>
+            </div>
+            <canvas id="statusChart" class="chart-canvas"></canvas>
+        </div>
+
+        <!-- Top clients -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <h3>Top Clients</h3>
+                    <span class="chart-sub">By total billed amount</span>
+                </div>
+            </div>
+
+            {% if top_clients and top_clients|length > 0 %}
+                <ul class="leaderboard">
+                    {% for client in top_clients %}
+                        {# expect: client = (name, total_amount, invoice_count) #}
+                        <li class="leader-item">
+                            <div class="leader-left">
+                                <span class="rank">#{{ loop.index }}</span>
+                                <span class="client-name">
+                                    {{ client[0] or 'Unknown client' }}
+                                </span>
+                            </div>
+                            <div class="leader-right">
+                                ${{ "{:,.2f}".format(client[1]) }}
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
+                            </div>
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
+                                {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">
+                    Top clients will appear here as you send more invoices.
+                </p>
+            {% endif %}
+        </div>
+
+    </div>
+
     <!-- TABLE -->
     <div class="table-wrapper">
         <table class="modern-table">
@@ -141,5 +207,78 @@
     </div>
 
 {% endif %}
+
+<!-- CHART.JS SCRIPT (data from Flask) -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    {% if invoices %}
+    // Data from Flask (we'll make sure these are defined in app.py)
+    const revenueLabels = {{ monthly_chart_labels|tojson }};
+    const revenueValues = {{ monthly_chart_totals|tojson }};
+    const statusLabels  = {{ status_chart_labels|tojson }};
+    const statusValues  = {{ status_chart_values|tojson }};
+
+    // Revenue chart (line)
+    const revCtx = document.getElementById("revenueChart");
+    if (revCtx && revenueLabels.length > 0) {
+        new Chart(revCtx, {
+            type: "line",
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: "Revenue",
+                    data: revenueValues,
+                    fill: true,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const v = ctx.parsed.y || 0;
+                                return "$" + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { autoSkip: true } },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Status chart (doughnut)
+    const statusCtx = document.getElementById("statusChart");
+    if (statusCtx && statusLabels.length > 0) {
+        new Chart(statusCtx, {
+            type: "doughnut",
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusValues
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                },
+                cutout: "60%"
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
 
 {% endblock %}

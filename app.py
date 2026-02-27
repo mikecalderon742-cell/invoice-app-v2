@@ -84,14 +84,6 @@ PLAN_DEFINITIONS = {
     },
 }
 
-# Plan levels for easy comparisons
-PLAN_LEVELS = {
-    "free": 0,
-    "starter": 0,  # alias if we ever use it
-    "pro": 1,
-    "enterprise": 2,
-}
-
 # Simple numeric levels for gating
 PLAN_LEVELS = {"free": 1, "pro": 2, "enterprise": 3}
 
@@ -234,7 +226,7 @@ def init_db():
     cursor.execute(
         "ALTER TABLE business_profile ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
     )
-       
+
     # Stripe linkage for subscriptions
     cursor.execute(
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;"
@@ -453,7 +445,6 @@ def dev_force_pro():
     except Exception as e:
         return f"Error updating user plan: {e}", 500
 
-    # Optional: update session object if you ever store plan there in the future
     return f"User {user_id} is now Pro."
 
 
@@ -662,6 +653,12 @@ def upsert_business_profile(data: dict):
 
 
 # -------------------------
+# INITIALIZE DB ON STARTUP
+# -------------------------
+init_db()
+
+
+# -------------------------
 # CONTEXT PROCESSORS
 # -------------------------
 @app.context_processor
@@ -819,54 +816,11 @@ def pricing():
     )
 
 
+# Stub route so url_for('create_checkout_session') works.
+# The button can show "Coming soon" and just bounce back to pricing for now.
 @app.route("/create-checkout-session", methods=["POST"])
-def create_checkout_session():
-    """
-    TEMP STUB: This exists only so url_for('create_checkout_session') works
-    and the pricing page doesn't 500. We'll wire real Stripe logic later.
-    """
-    # For now, just go back to pricing with a notice.
+def create_checkout_session_route():
     return redirect(url_for("pricing", upgraded="stub"))
-
-
-def create_checkout_session():
-    """
-    Create a Stripe Checkout Session for upgrading to Pro.
-    """
-    user = get_current_user()
-    user_id = user["id"]
-    user_plan = user.get("plan") or "free"
-
-    if not STRIPE_PRICE_PRO or not stripe.api_key:
-        return (
-            "Stripe is not configured. Please set STRIPE_SECRET_KEY and STRIPE_PRICE_PRO.",
-            500,
-        )
-
-    # If already Pro or higher, no need to create a new subscription
-    if PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0):
-        return redirect(url_for("pricing"))
-
-    domain = request.url_root.rstrip("/")
-
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            mode="subscription",
-            line_items=[
-                {
-                    "price": STRIPE_PRICE_PRO,
-                    "quantity": 1,
-                }
-            ],
-            customer_email=user.get("email"),
-            metadata={"user_id": str(user_id)},
-            success_url=f"{domain}{url_for('pricing')}?upgraded=1",
-            cancel_url=f"{domain}{url_for('pricing')}?canceled=1",
-        )
-    except Exception as e:
-        return f"Error creating Checkout Session: {e}", 500
-
-    return redirect(checkout_session.url, code=303)
 
 
 # -------------------------
@@ -1104,6 +1058,7 @@ def invoices_page():
         "Overdue": overdue_count,
     }
 
+    # Monthly revenue data for chart (last 6 months)
     cursor.execute(
         """
         SELECT date_trunc('month', created_at) AS month, SUM(amount) AS total
@@ -1129,6 +1084,33 @@ def invoices_page():
         status_distribution.get("Sent", 0),
         overdue_count,
     ]
+
+    # Top clients (for leaderboard)
+    cursor.execute(
+        """
+        SELECT
+            client,
+            SUM(amount) AS total_billed,
+            COUNT(*) AS invoice_count
+        FROM invoices
+        WHERE user_id = %s
+        GROUP BY client
+        HAVING SUM(amount) > 0
+        ORDER BY total_billed DESC
+        LIMIT 5
+        """,
+        (user_id,),
+    )
+    tc_rows = cursor.fetchall()
+    top_clients = []
+    if tc_rows:
+        top_total = float(tc_rows[0][1]) if tc_rows[0][1] is not None else 0.0
+        for name, total_amt, inv_count in tc_rows:
+            total_float = float(total_amt or 0)
+            pct = 0.0
+            if top_total > 0:
+                pct = round((total_float / top_total) * 100, 1)
+            top_clients.append([name, total_float, inv_count, pct])
 
     # Filtered table query
     base_sql = """
@@ -1215,6 +1197,7 @@ def invoices_page():
         monthly_chart_totals=monthly_chart_totals,
         status_chart_labels=status_chart_labels,
         status_chart_values=status_chart_values,
+        top_clients=top_clients,
     )
 
 
@@ -2050,17 +2033,14 @@ def stripe_webhook():
             secret=STRIPE_WEBHOOK_SECRET,
         )
     except ValueError:
-        # Invalid payload
         print("[Stripe] Invalid payload", flush=True)
         return "Invalid payload", 400
     except stripe.error.SignatureVerificationError:
-        # Invalid signature
         print("[Stripe] Invalid signature", flush=True)
         return "Invalid signature", 400
 
     print(f"[Stripe] Received event: {event['type']}", flush=True)
 
-    # We only care about completed checkout sessions
     if event["type"] == "checkout.session.completed":
         session_obj = event["data"]["object"]
         metadata = session_obj.get("metadata") or {}
@@ -2073,10 +2053,8 @@ def stripe_webhook():
                 user_id = int(user_id_str)
             except ValueError:
                 print(f"[Stripe] Invalid user_id in metadata: {user_id_str}", flush=True)
-                # Return 200 so Stripe stops retrying this bad payload
                 return "Bad metadata", 200
 
-            # 🔥 Minimal update: just set plan = 'pro' for this user
             try:
                 conn = get_db_connection()
                 cursor = conn.cursor()
@@ -2090,7 +2068,6 @@ def stripe_webhook():
                 print(f"[Stripe] Upgraded user {user_id} to Pro", flush=True)
             except Exception as e:
                 print(f"[Stripe] DB error while upgrading user {user_id}: {e}", flush=True)
-
         else:
             print("[Stripe] No user_id in metadata; cannot upgrade", flush=True)
 
