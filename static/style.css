@@ -319,7 +319,7 @@ body.dark .card {
     left: 140%;
 }
 
-/* Color Variants */
+/* Color Variants (main cards) */
 
 .card.blue {
     background: linear-gradient(135deg,#2563eb,#1e40af);
@@ -356,33 +356,48 @@ body.dark .card {
 }
 
 .card.kpi {
-    backdrop-filter: blur(12px);
     border-radius: 16px;
     padding: 22px;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(
-        145deg,
-        rgba(255,255,255,0.85),
-        rgba(255,255,255,0.55)
-    );
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
     transition: all 0.25s ease;
     border: 2px solid rgba(0,0,0,0.08);
 }
 
-body.dark .card.kpi {
-    background: linear-gradient(
-        145deg,
-        rgba(30,30,30,0.9),
-        rgba(30,30,30,0.65)
-    );
-    border: 2px solid rgba(255,255,255,0.08);
+/* 🔥 Solid colored KPI backgrounds (back like before) */
+.card.kpi.orange {
+    background: linear-gradient(135deg,#f97316,#ea580c);
+    color: #fff;
 }
 
-.card.kpi:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 14px 40px rgba(0,0,0,0.15);
+.card.kpi.green {
+    background: linear-gradient(135deg,#22c55e,#16a34a);
+    color: #fff;
+}
+
+.card.kpi.blue {
+    background: linear-gradient(135deg,#3b82f6,#2563eb);
+    color: #fff;
+}
+
+.card.kpi.purple {
+    background: linear-gradient(135deg,#8b5cf6,#7c3aed);
+    color: #fff;
+}
+
+.card.kpi.teal {
+    background: linear-gradient(135deg,#14b8a6,#0d9488);
+    color: #fff;
+}
+
+.card.kpi.red {
+    background: linear-gradient(135deg,#ef4444,#b91c1c);
+    color: #fff;
+}
+
+body.dark .card.kpi {
+    border: 2px solid rgba(255,255,255,0.08);
 }
 
 .card.kpi h2 {
@@ -393,23 +408,7 @@ body.dark .card.kpi {
 
 .card.kpi p {
     font-size: 14px;
-    opacity: 0.75;
-}
-
-.card.kpi.green { border-left: 5px solid #22c55e; }
-.card.kpi.blue { border-left: 5px solid #3b82f6; }
-.card.kpi.purple { border-left: 5px solid #a855f7; }
-.card.kpi.teal { border-left: 5px solid #14b8a6; }
-
-.card.kpi.red {
-    background: #dc2626;
-    color: white;
-}
-
-.card.kpi.red h2,
-.card.kpi.red p,
-.card.kpi.red small {
-    color: white;
+    opacity: 0.9;
 }
 
 /* KPI hover depth */
@@ -558,6 +557,39 @@ body.dark .hamburger span {
     color: white;
 }
 
+/* Decorative stripe on sidebar */
+.sidebar::before {
+    content: "";
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 4px;
+    height: 120px;
+    background: linear-gradient(180deg, #6366f1, #22c55e);
+    border-radius: 0 999px 999px 0;
+    opacity: 0.7;
+}
+
+/* ========================= */
+/* THEME TOGGLE BUTTON */
+/* ========================= */
+
+.theme-toggle {
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: rgba(255,255,255,0.85);
+    padding: 6px 10px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+body.dark .theme-toggle {
+    background: rgba(15,23,42,0.9);
+    color: #e5e7eb;
+    border-color: rgba(148,163,184,0.8);
+}
+
 /* ========================= */
 /* OVERLAY EFFECT */
 /* ========================= */
@@ -621,6 +653,12 @@ body.fade-exit {
     overflow: hidden;
 }
 
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .hero-left {
     flex: 1;
 }
@@ -655,6 +693,21 @@ body.fade-exit {
     width: 280px;
 }
 
+/* Subtle line-art / scribble accent in hero */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 16px 24px auto auto;
+    width: 180px;
+    height: 90px;
+    background-image:
+        linear-gradient(120deg, rgba(255,255,255,0.55) 0, transparent 60%),
+        radial-gradient(circle at 0 100%, rgba(15,23,42,0.18), transparent 70%);
+    mix-blend-mode: screen;
+    opacity: 0.35;
+    border-radius: 999px;
+}
+
 /* ========================= */
 /* HOME STATS */
 /* ========================= */
@@ -677,6 +730,7 @@ body.fade-exit {
 /* ========================= */
 
 .form-wrapper {
+    position: relative;
     backdrop-filter: blur(18px);
     background: rgba(255, 255, 255, 0.75);
     border-radius: 20px;
@@ -694,6 +748,22 @@ body.fade-exit {
 body.dark .form-wrapper {
     background: rgba(31, 41, 55, 0.7);
     border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Form wrapper doodle */
+.form-wrapper::before {
+    content: "";
+    position: absolute;
+    top: -24px;
+    left: 12px;
+    width: 140px;
+    height: 70px;
+    border-radius: 999px;
+    background:
+        linear-gradient(90deg, rgba(21,27,84,0.16), transparent 70%),
+        radial-gradient(circle at 100% 0, rgba(59,130,246,0.35), transparent 70%);
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 /* ========================= */
@@ -739,18 +809,19 @@ body.dark input {
 }
 
 /* ========================= */
-/* BACKGROUND GLOW */
+/* BACKGROUND GLOW + DOODLES */
 /* ========================= */
 
+/* Global glow */
 body::before {
     content: "";
     position: fixed;
     top: -200px;
     right: -200px;
-    width: 400px;
-    height: 400px;
+    width: 440px;
+    height: 440px;
     background: radial-gradient(circle, var(--accent-light), transparent 70%);
-    opacity: 0.15;
+    opacity: 0.28;
     z-index: -2;
 }
 
@@ -761,12 +832,55 @@ body::after {
     pointer-events: none;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
     left: var(--x);
     top: var(--y);
+}
+
+/* Container doodles – more visible now */
+.container::before,
+.container::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Top-left blob */
+.container::before {
+    width: 220px;
+    height: 220px;
+    top: -60px;
+    left: -60px;
+    background:
+        radial-gradient(circle at 10% 20%, rgba(59,130,246,0.4), transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(129,140,248,0.55), transparent 70%);
+    border-radius: 40% 60% 55% 45%;
+    opacity: 0.45;
+}
+
+/* Bottom-right blob */
+.container::after {
+    width: 260px;
+    height: 260px;
+    right: -80px;
+    bottom: -80px;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(56,189,248,0.4), transparent 60%),
+        radial-gradient(circle at 70% 10%, rgba(244,114,182,0.5), transparent 70%);
+    border-radius: 55% 45% 60% 40%;
+    opacity: 0.45;
+}
+
+/* Make doodles slightly brighter in dark mode */
+body.dark .container::before,
+body.dark .container::after,
+body.dark .hero::before,
+body.dark .form-wrapper::before {
+    opacity: 0.55;
 }
 
 /* ========================= */
@@ -1015,13 +1129,6 @@ body.dark .welcome-content {
     list-style: none;
     padding: 0;
     margin: 0;
-}
-
-.leaderboard li {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,.05);
 }
 
 /* =============================== */
@@ -1378,7 +1485,7 @@ body.dark .badge.draft {
     margin: 0;
 }
 
-/* 🔧 Top Clients overlap fix */
+/* 🔧 Overlap fix: structured layout */
 .leader-item {
     display: flex;
     flex-direction: row;
@@ -1387,14 +1494,19 @@ body.dark .badge.draft {
     gap: 12px;
     padding: 12px 0;
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    position: relative;
 }
 
 .leader-left {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     flex: 1 1 60%;
+}
+
+.leader-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .rank {
@@ -1411,9 +1523,8 @@ body.dark .badge.draft {
 }
 
 .leader-right {
-    position: static;                /* override old absolute */
     font-weight: 700;
-    white-space: nowrap;             /* keep "$" + "invoices" tidy */
+    white-space: nowrap;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -1435,7 +1546,13 @@ body.dark .badge.draft {
     transition: width 0.6s ease;
 }
 
-/* Responsive stacking so totals don't collide on small screens */
+.leader-meta {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+/* Responsive stacking */
 @media (max-width: 600px) {
     .leader-item {
         flex-direction: column;
@@ -1448,165 +1565,28 @@ body.dark .badge.draft {
 }
 
 /* =============================== */
-/* TOP CLIENTS BLOCK (optional hooks) */
+/* TOP CLIENTS BLOCK (extra hooks) */
 /* =============================== */
 
 .top-clients {
     margin-top: 18px;
 }
 
-.top-clients-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.top-client-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    flex-wrap: wrap;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.08);
-}
-
-.tc-left {
-    flex: 1 1 260px;
-    min-width: 220px;
-}
-
-.tc-name {
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.tc-bar {
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.10);
-    overflow: hidden;
-}
-
-.tc-bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: rgba(99, 102, 241, 0.95);
-}
-
-.tc-right {
-    display: flex;
-    align-items: baseline;
-    justify-content: flex-end;
-    gap: 14px;
-    white-space: nowrap;
-}
-
-.tc-amount {
-    font-weight: 800;
-}
-
-.tc-count {
-    opacity: 0.8;
-    font-size: 0.95em;
-}
-
-@media (max-width: 520px) {
-    .tc-right {
-        width: 100%;
-        justify-content: flex-start;
-        white-space: normal;
-    }
-}
-
 /* =============================== */
-/* ILLUSTRATIVE DOODLES (SUBTLE) */
+/* EMPTY STATE */
 /* =============================== */
 
-/* Soft geometric doodles behind the main container */
-.container::before,
-.container::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.14;
-    filter: blur(0.2px);
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+    opacity: 0.85;
 }
 
-/* Top-left doodle */
-.container::before {
-    width: 180px;
-    height: 180px;
-    top: -40px;
-    left: -40px;
-    background:
-        radial-gradient(circle at 10% 20%, rgba(59,130,246,0.25), transparent 60%),
-        radial-gradient(circle at 80% 80%, rgba(129,140,248,0.4), transparent 70%);
-    border-radius: 40% 60% 55% 45%;
+.empty-state h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
 }
 
-/* Bottom-right doodle */
-.container::after {
-    width: 220px;
-    height: 220px;
-    right: -60px;
-    bottom: -60px;
-    background:
-        radial-gradient(circle at 20% 80%, rgba(56,189,248,0.3), transparent 60%),
-        radial-gradient(circle at 70% 10%, rgba(244,114,182,0.35), transparent 70%);
-    border-radius: 55% 45% 60% 40%;
-}
-
-/* Hero scribble / line-art accent */
-.hero::before {
-    content: "";
-    position: absolute;
-    inset: 16px 24px auto auto;
-    width: 160px;
-    height: 80px;
-    background-image:
-        linear-gradient(120deg, rgba(255,255,255,0.55) 0, transparent 60%),
-        radial-gradient(circle at 0 100%, rgba(15,23,42,0.15), transparent 70%);
-    mix-blend-mode: screen;
-    opacity: 0.28;
-    border-radius: 999px;
-}
-
-/* Form wrapper doodle accent */
-.form-wrapper::before {
-    content: "";
-    position: absolute;
-    top: -24px;
-    left: 12px;
-    width: 120px;
-    height: 60px;
-    border-radius: 999px;
-    background:
-        linear-gradient(90deg, rgba(21,27,84,0.12), transparent 70%),
-        radial-gradient(circle at 100% 0, rgba(59,130,246,0.3), transparent 70%);
-    opacity: 0.25;
-    pointer-events: none;
-}
-
-/* Sidebar decorative stripe */
-.sidebar::before {
-    content: "";
-    position: absolute;
-    top: 70px;
-    left: 0;
-    width: 4px;
-    height: 120px;
-    background: linear-gradient(180deg, #6366f1, #22c55e);
-    border-radius: 0 999px 999px 0;
-    opacity: 0.7;
-}
-
-/* Make sure doodles stay subtle in dark mode */
-body.dark .container::before,
-body.dark .container::after,
-body.dark .hero::before,
-body.dark .form-wrapper::before {
-    opacity: 0.18;
+.empty-state p {
+    margin-bottom: 20px;
 }

@@ -95,24 +95,30 @@
             </div>
 
             {% if top_clients and top_clients|length > 0 %}
-                <ul class="leaderboard">
+                <ul class="leaderboard premium">
                     {% for client in top_clients %}
-                        {# expect: client = (name, total_amount, invoice_count) #}
+                        {# expect: client = (name, total_amount, invoice_count, pct_of_max) #}
                         <li class="leader-item">
                             <div class="leader-left">
-                                <span class="rank">#{{ loop.index }}</span>
-                                <span class="client-name">
-                                    {{ client[0] or 'Unknown client' }}
-                                </span>
+                                <div class="leader-main">
+                                    <span class="rank">#{{ loop.index }}</span>
+                                    <span class="client-name">
+                                        {{ client[0] or 'Unknown client' }}
+                                    </span>
+                                </div>
+
+                                <div class="progress-bar">
+                                    <div class="progress-fill"
+                                         style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
+                                </div>
+
+                                <div class="leader-meta">
+                                    {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
+                                </div>
                             </div>
+
                             <div class="leader-right">
                                 ${{ "{:,.2f}".format(client[1]) }}
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
-                            </div>
-                            <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
-                                {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
                             </div>
                         </li>
                     {% endfor %}
@@ -241,7 +247,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         callbacks: {
                             label: function(ctx) {
                                 const v = ctx.parsed.y || 0;
-                                return "$" + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                return "$" + v.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
                             }
                         }
                     }
