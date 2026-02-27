@@ -428,6 +428,35 @@ def debug_plan():
     }
 
 
+@app.route("/dev/force-pro")
+def dev_force_pro():
+    """
+    DEV ONLY: Force the current user to Pro in the database.
+    This bypasses Stripe entirely so we can move forward.
+    """
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not user_id:
+        return "No current user found.", 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET plan = %s WHERE id = %s",
+            ("pro", user_id),
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        return f"Error updating user plan: {e}", 500
+
+    # Optional: update session object if you ever store plan there in the future
+    return f"User {user_id} is now Pro."
+
+
 def plan_allows(required_plan: str) -> bool:
     """
     Return True if the current user's plan is >= required_plan.
@@ -790,7 +819,6 @@ def pricing():
     )
 
 
-@app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     """
     Create a Stripe Checkout Session for upgrading to Pro.
