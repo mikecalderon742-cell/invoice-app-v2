@@ -2204,3 +2204,14 @@ body.dark .trust-pill {
     opacity: 0.75;
     margin: 14px 0 6px 0;
 }
+
+
+/* =========================================
+   FIX: Public portal buttons stay inside card
+========================================= */
+
+.summary-actions .btn {
+    width: 100%;
+    display: block;
+    box-sizing: border-box;  /* includes padding in width */
+}
