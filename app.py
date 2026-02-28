@@ -833,20 +833,77 @@ def create_checkout_session_route():
 # -------------------------
 @app.route("/preview", methods=["POST"])
 def preview():
-    client = request.form.get("client")
+    """
+    Preview an invoice BEFORE saving.
+    Uses the same form fields as /save but does NOT write to the database.
+    """
+    user = get_current_user()
+    user_id = user["id"]
+
+    # Determine client display
+    client_id = request.form.get("client_id")
+    new_client_name = (request.form.get("new_client_name") or "").strip()
+    new_client_email = (request.form.get("new_client_email") or "").strip()
+
+    client_name = ""
+    client_email = ""
+
+    # If they picked an existing client, fetch their name/email
+    if client_id:
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT name, email FROM clients WHERE id = %s AND user_id = %s",
+                (int(client_id), user_id),
+            )
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+            if row:
+                client_name = row[0] or ""
+                client_email = row[1] or ""
+        except Exception:
+            # soft-fail, we'll fall back to new client fields
+            pass
+
+    if not client_name:
+        client_name = new_client_name or "Unspecified client"
+    if not client_email:
+        client_email = new_client_email
+
+    invoice_notes = request.form.get("invoice_notes") or ""
+    invoice_terms = request.form.get("invoice_terms") or "Payment due within 30 days."
+    template_style = request.form.get("template_style") or "modern"
+
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
     items = []
-    total = 0
+    total = 0.0
 
     for desc, amt in zip(descriptions, amounts):
         if desc and amt:
-            amt = float(amt)
-            total += amt
-            items.append((desc, amt))
+            try:
+                value = float(amt)
+            except ValueError:
+                continue
+            total += value
+            items.append((desc, value))
 
-    return render_template("preview.html", client=client, items=items, total=total)
+    preview_created_at = datetime.now()
+
+    return render_template(
+        "preview.html",
+        client_name=client_name,
+        client_email=client_email,
+        invoice_notes=invoice_notes,
+        invoice_terms=invoice_terms,
+        items=items,
+        total=total,
+        template_style=template_style,
+        preview_created_at=preview_created_at,
+    )
 
 
 # -------------------------
@@ -1153,11 +1210,18 @@ def invoices_page():
     params = [user_id]
 
     if q:
-        like = f"%{q.lower()}%"
-        conditions.append(
-            "(LOWER(i.client) LIKE %s OR LOWER(COALESCE(i.invoice_number, '')) LIKE %s)"
+    like = f"%{q.lower()}%"
+    conditions.append(
+        """
+        (
+            LOWER(i.client) LIKE %s
+            OR LOWER(COALESCE(i.invoice_number, '')) LIKE %s
+            OR LOWER(COALESCE(i.notes, '')) LIKE %s
+            OR LOWER(COALESCE(i.terms, '')) LIKE %s
         )
-        params.extend([like, like])
+        """
+    )
+    params.extend([like, like, like, like])
 
     allowed_statuses = {"Paid", "Sent", "Overdue"}
     if status_filter in allowed_statuses:
@@ -1858,6 +1922,120 @@ def public_invoice(token):
         pdf_url=pdf_url,
         is_public_view=True,
         public_token=token,
+    )
+
+
+
+@app.route("/invoice/<int:invoice_id>")
+def invoice_detail(invoice_id):
+    """
+    Internal preview of an invoice (owner view).
+    Uses the same layout as the client portal, but keeps full app chrome.
+    """
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT
+            i.id,
+            i.client,
+            i.amount,
+            i.created_at,
+            i.status,
+            i.invoice_number,
+            i.due_date,
+            i.notes,
+            i.terms,
+            c.name,
+            c.email,
+            c.company
+        FROM invoices i
+        LEFT JOIN clients c ON i.client_id = c.id
+        WHERE i.id = %s AND i.user_id = %s
+        """,
+        (invoice_id, user_id),
+    )
+    inv_row = cursor.fetchone()
+
+    if not inv_row:
+        cursor.close()
+        conn.close()
+        return "Invoice not found", 404
+
+    (
+        invoice_id,
+        client_name,
+        amount,
+        created_at,
+        status,
+        invoice_number,
+        due_date,
+        notes,
+        terms,
+        client_name_from_client,
+        client_email,
+        client_company,
+    ) = inv_row
+
+    if client_name_from_client:
+        client_name = client_name_from_client
+
+    amount_float = float(amount)
+    inv_label = invoice_number or f"#{invoice_id}"
+
+    cursor.execute(
+        """
+        SELECT description, amount
+        FROM invoice_items
+        WHERE invoice_id = %s
+        ORDER BY id ASC
+        """,
+        (invoice_id,),
+    )
+    items = cursor.fetchall()
+
+    cursor.execute(
+        """
+        SELECT amount, method, note, created_at
+        FROM payments
+        WHERE invoice_id = %s
+        ORDER BY created_at DESC
+        """,
+        (invoice_id,),
+    )
+    payments = cursor.fetchall()
+
+    total_paid = sum(float(p[0]) for p in payments)
+    balance = amount_float - total_paid
+
+    cursor.close()
+    conn.close()
+
+    pdf_url = f"/history-pdf/{invoice_id}"
+
+    return render_template(
+        "public_invoice.html",
+        invoice_id=invoice_id,
+        inv_label=inv_label,
+        client_name=client_name,
+        client_email=client_email,
+        client_company=client_company,
+        amount=amount_float,
+        status=status,
+        created_at=created_at,
+        due_date=due_date,
+        notes=notes,
+        terms=terms,
+        items=items,
+        payments=payments,
+        total_paid=total_paid,
+        balance=balance,
+        pdf_url=pdf_url,
+        is_public_view=False,  # owner view, full app nav
+        public_token=None,
     )
 
 

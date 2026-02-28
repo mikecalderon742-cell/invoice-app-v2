@@ -2438,3 +2438,18 @@ body.dark .btn-remove-row {
 body.dark .btn-remove-row:hover {
     color: #fca5a5;
 }
+
+/* Make Top Clients list scrollable so long lists don't stretch the card */
+.chart-card .leaderboard {
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.chart-card .leaderboard::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chart-card .leaderboard::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+}

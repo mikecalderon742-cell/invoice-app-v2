@@ -1,34 +1,88 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h1>Invoice Preview</h1>
+<div class="invoice-preview-page reveal">
+    <h1 style="margin-bottom:10px;">Invoice Preview</h1>
+    <p style="margin-top:0; opacity:0.75; font-size:14px;">
+        This is a preview only. Close this tab to continue editing your invoice.
+    </p>
 
-<p><strong>Client:</strong> {{ client }}</p>
+    <div class="public-invoice-shell">
+        <div class="public-invoice-card">
 
-<table>
-    <tr>
-        <th>Description</th>
-        <th>Amount</th>
-    </tr>
+            <header class="public-invoice-header">
+                <div>
+                    <h2 style="margin:0 0 4px 0;">{{ business_profile.business_name or "InvoicePro" }}</h2>
+                    {% if business_profile.address %}
+                        <div class="public-invoice-sub">{{ business_profile.address }}</div>
+                    {% endif %}
+                    {% if business_profile.website %}
+                        <div class="public-invoice-sub">{{ business_profile.website }}</div>
+                    {% endif %}
+                </div>
+                <div class="public-invoice-meta">
+                    <div><strong>Status:</strong> Draft / Preview</div>
+                    <div><strong>Style:</strong> {{ template_style|capitalize }}</div>
+                    <div>
+                        <strong>Date:</strong>
+                        {{ preview_created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                    </div>
+                </div>
+            </header>
 
-    {% for item in items %}
-    <tr>
-        <td>{{ item[0] }}</td>
-        <td>${{ item[1] }}</td>
-    </tr>
-    {% endfor %}
-</table>
+            <section class="public-invoice-section">
+                <h3>Bill To</h3>
+                <p style="margin:4px 0;"><strong>{{ client_name }}</strong></p>
+                {% if client_email %}
+                    <p style="margin:0; opacity:0.8;">{{ client_email }}</p>
+                {% endif %}
+            </section>
 
-<h3>Total: ${{ total }}</h3>
+            <section class="public-invoice-section">
+                <h3>Line Items</h3>
+                {% if items %}
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="width:160px;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for desc, amt in items %}
+                            <tr>
+                                <td>{{ desc }}</td>
+                                <td>${{ "{:,.2f}".format(amt) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p style="opacity:0.7; font-size:14px;">No line items yet. Go back and add at least one.</p>
+                {% endif %}
+            </section>
 
-<form method="POST" action="/save">
-    <input type="hidden" name="client" value="{{ client }}">
-    {% for item in items %}
-        <input type="hidden" name="description" value="{{ item[0] }}">
-        <input type="hidden" name="amount" value="{{ item[1] }}">
-    {% endfor %}
-    <button type="submit">Save Invoice</button>
-</form>
+            <section class="public-invoice-section">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        {% if invoice_notes %}
+                            <p style="margin:0 0 4px 0;"><strong>Notes:</strong> {{ invoice_notes }}</p>
+                        {% endif %}
+                        {% if invoice_terms %}
+                            <p style="margin:0; opacity:0.8;"><strong>Terms:</strong> {{ invoice_terms }}</p>
+                        {% endif %}
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:14px; opacity:0.7;">Total</div>
+                        <div style="font-size:24px; font-weight:700;">
+                            ${{ "{:,.2f}".format(total) }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
 
 {% endblock %}

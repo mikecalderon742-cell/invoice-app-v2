@@ -9,6 +9,18 @@
     </div>
 </div>
 
+<!-- SEARCH BAR -->
+<div class="search-bar modern">
+    <form method="get" action="/invoices">
+        <input
+            type="text"
+            name="q"
+            placeholder="Search client, invoice #, notes, terms..."
+            value="{{ q }}">
+        <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+</div>
+
 {% if invoices %}
 
     <!-- KPI STRIP -->
@@ -86,7 +98,7 @@
         </div>
 
         <!-- Top clients -->
-        <div class="chart-card top-clients-card">
+        <div class="chart-card">
             <div class="chart-header">
                 <div>
                     <h3>Top Clients</h3>
@@ -95,9 +107,9 @@
             </div>
 
             {% if top_clients and top_clients|length > 0 %}
-                <ul class="leaderboard premium">
+                <ul class="leaderboard">
                     {% for client in top_clients %}
-                        {# expect: client = (name, total_amount, invoice_count, contribution_percent) #}
+                        {# expect: client = (name, total_amount, invoice_count, percent_of_top) #}
                         <li class="leader-item">
                             <div class="leader-left">
                                 <span class="rank">#{{ loop.index }}</span>
@@ -126,17 +138,6 @@
 
     </div>
 
-    <!-- TABLE SECTION HEADER (descriptive) -->
-    <div class="table-section-header">
-        <div>
-            <h2>Invoice History</h2>
-            <p>All invoices, statuses, and quick actions — including one-click PDF downloads.</p>
-        </div>
-        <div class="table-meta">
-            <span>{{ filtered_count }} showing</span>
-        </div>
-    </div>
-
     <!-- TABLE -->
     <div class="table-wrapper">
         <table class="modern-table">
@@ -145,7 +146,7 @@
                     <th>#</th>
                     <th>Client</th>
                     <th>Amount</th>
-                    <th>Created (Date &amp; Time)</th>
+                    <th>Created</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -162,8 +163,6 @@
                     <td>#{{ invoice[0] }}</td>
                     <td>{{ invoice[1] }}</td>
                     <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-
-                    {# Created: date + time #}
                     <td>{{ invoice[3].strftime('%Y-%m-%d %I:%M %p') }}</td>
 
                     <td>
@@ -179,6 +178,14 @@
                     </td>
 
                     <td class="action-buttons">
+                        <!-- View / Preview -->
+                        <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}">View</a>
+
+                        <!-- Download PDF -->
+                        <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}">
+                            PDF
+                        </a>
+
                         <!-- Edit -->
                         <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
 
@@ -199,11 +206,6 @@
                         <!-- SEND INVOICE VIA EMAIL -->
                         <a class="btn btn-info" href="/send-email/{{ invoice[0] }}">
                             Send
-                        </a>
-
-                        <!-- DOWNLOAD PDF -->
-                        <a class="btn btn-secondary btn-pdf" href="/history-pdf/{{ invoice[0] }}">
-                            PDF
                         </a>
 
                         <!-- DELETE -->
@@ -230,13 +232,11 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}
-    // Data from Flask
     const revenueLabels = {{ monthly_chart_labels|tojson }};
     const revenueValues = {{ monthly_chart_totals|tojson }};
     const statusLabels  = {{ status_chart_labels|tojson }};
     const statusValues  = {{ status_chart_values|tojson }};
 
-    // Revenue chart (line)
     const revCtx = document.getElementById("revenueChart");
     if (revCtx && revenueLabels.length > 0) {
         new Chart(revCtx, {
@@ -272,7 +272,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Status chart (doughnut)
     const statusCtx = document.getElementById("statusChart");
     if (statusCtx && statusLabels.length > 0) {
         new Chart(statusCtx, {

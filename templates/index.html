@@ -147,6 +147,15 @@
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <a href="/invoices" class="btn btn-secondary">Cancel</a>
+            <!-- 🔍 Preview without saving (opens in new tab) -->
+            <button
+                type="submit"
+                class="btn btn-secondary"
+                formaction="/preview"
+                formtarget="_blank">
+                Preview
+            </button>
+            <!-- ✅ Save to DB -->
             <button type="submit" class="btn btn-brand">Save Invoice</button>
         </div>
 
@@ -193,7 +202,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (tbody.rows.length > 1) {
             row.remove();
         } else {
-            // Just clear the inputs if it's the last row
             const inputs = row.querySelectorAll("input");
             inputs.forEach(i => i.value = "");
         }
