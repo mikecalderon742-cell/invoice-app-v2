@@ -1211,6 +1211,7 @@ def invoices_page():
 
 
     if q:
+
     like = f"%{q.lower()}%"
     conditions.append(
         """
