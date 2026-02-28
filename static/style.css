@@ -2771,6 +2771,6 @@ body.dark .ai-helper-form {
 @media (max-width: 768px) {
     .ai-helper-panel {
         width: calc(100vw - 32px);
-        right: 16px;
+        left: 16px;
     }
 }
