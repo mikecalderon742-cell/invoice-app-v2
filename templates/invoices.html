@@ -75,66 +75,79 @@
         <!-- ANALYTICS ROW: CHARTS + TOP CLIENTS + ITEMS -->
     <div class="charts-row">
 
-        <!-- Revenue over time -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>Revenue Trend</h3>
-                    <span class="chart-sub">Last few months (live from invoices)</span>
-                </div>
+    <!-- Revenue over time (monthly) -->
+    <div class="chart-card brand-accent">
+        <div class="chart-header">
+            <div>
+                <h3>Revenue Trend</h3>
+                <span class="chart-sub">Last few months</span>
             </div>
-            <canvas id="revenueChart" class="chart-canvas"></canvas>
+        </div>
+        <canvas id="revenueChart" class="chart-canvas"></canvas>
+    </div>
+
+    <!-- NEW: Daily revenue (last 30 days) -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div>
+                <h3>Daily Revenue</h3>
+                <span class="chart-sub">Last 30 days</span>
+            </div>
+        </div>
+        <canvas id="dailyRevenueChart" class="chart-canvas"></canvas>
+    </div>
+
+    <!-- Status breakdown -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div>
+                <h3>Status Breakdown</h3>
+                <span class="chart-sub">Paid vs Sent vs Overdue</span>
+            </div>
+        </div>
+        <canvas id="statusChart" class="chart-canvas"></canvas>
+    </div>
+
+    <!-- Top clients -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div>
+                <h3>Top Clients</h3>
+                <span class="chart-sub">By total billed amount</span>
+            </div>
         </div>
 
-        <!-- Status breakdown -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div>
-                    <h3>Status Breakdown</h3>
-                    <span class="chart-sub">Paid vs Sent vs Overdue</span>
-                </div>
-            </div>
-            <canvas id="statusChart" class="chart-canvas"></canvas>
-        </div>
+        {% if top_clients and top_clients|length > 0 %}
+            <ul class="leaderboard">
+                {% for client in top_clients %}
+                    {# expect: client = (name, total_amount, invoice_count, pct) #}
+                    <li class="leader-item">
+                        <div class="leader-left">
+                            <span class="rank">#{{ loop.index }}</span>
+                            <span class="client-name">
+                                {{ client[0] or 'Unknown client' }}
+                            </span>
+                        </div>
+                        <div class="leader-right">
+                            ${{ "{:,.2f}".format(client[1]) }}
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
+                            {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">
+                Top clients will appear here as you send more invoices.
+            </p>
+        {% endif %}
+    </div>
 
-        <!-- Top clients -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div>
-                    <h3>Top Clients</h3>
-                    <span class="chart-sub">By total billed amount</span>
-                </div>
-            </div>
-
-            {% if top_clients and top_clients|length > 0 %}
-                <ul class="leaderboard">
-                    {% for client in top_clients %}
-                        {# expect: client = (name, total_amount, invoice_count, share_percent) #}
-                        <li class="leader-item">
-                            <div class="leader-left">
-                                <span class="rank">#{{ loop.index }}</span>
-                                <span class="client-name">
-                                    {{ client[0] or 'Unknown client' }}
-                                </span>
-                            </div>
-                            <div class="leader-right">
-                                ${{ "{:,.2f}".format(client[1]) }}
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
-                            </div>
-                            <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
-                                {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">
-                    Top clients will appear here as you send more invoices.
-                </p>
-            {% endif %}
-        </div>
+</div>
 
         <!-- Top items / services -->
         <div class="chart-card">
@@ -243,16 +256,15 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}
-    // Data from Flask (live from DB)
+    // Data from Flask
     const revenueLabels = {{ monthly_chart_labels|tojson }};
     const revenueValues = {{ monthly_chart_totals|tojson }};
     const statusLabels  = {{ status_chart_labels|tojson }};
     const statusValues  = {{ status_chart_values|tojson }};
-    const itemLabels    = {{ item_chart_labels|tojson }};
-    const itemTotals    = {{ item_chart_totals|tojson }};
-    const itemCounts    = {{ item_chart_counts|tojson }};
+    const dailyLabels   = {{ daily_chart_labels|tojson }};
+    const dailyValues   = {{ daily_chart_totals|tojson }};
 
-    // Revenue chart (line)
+    // Revenue chart (monthly, line)
     const revCtx = document.getElementById("revenueChart");
     if (revCtx && revenueLabels.length > 0) {
         new Chart(revCtx, {
@@ -285,14 +297,49 @@ document.addEventListener("DOMContentLoaded", function() {
                 },
                 scales: {
                     x: { ticks: { autoSkip: true } },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return "$" + value.toLocaleString();
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // NEW: Daily revenue chart (last 30 days, bar)
+    const dailyCtx = document.getElementById("dailyRevenueChart");
+    if (dailyCtx && dailyLabels.length > 0) {
+        new Chart(dailyCtx, {
+            type: "bar",
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: "Daily revenue",
+                    data: dailyValues
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const v = ctx.parsed.y || 0;
+                                return "$" + v.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
                             }
                         }
                     }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: { beginAtZero: true }
                 }
             }
         });
@@ -321,6 +368,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+    {% endif %}
+});
+</script>
 
     // Top items (bar chart by total billed)
     const itemCtx = document.getElementById("itemChart");

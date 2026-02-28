@@ -1142,7 +1142,71 @@ def invoices_page():
     current_user = get_current_user()
     user_id = current_user["id"]
 
-    # KPIs
+
+# -------------------------
+# GLOBAL SEARCH
+# -------------------------
+@app.route("/search")
+def global_search():
+    q = (request.args.get("q") or "").strip()
+    user = get_current_user()
+    user_id = user["id"]
+
+    client_results = []
+    invoice_results = []
+
+    if q:
+        like = f"%{q.lower()}%"
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Clients search
+        cursor.execute(
+            """
+            SELECT id, name, email, company, created_at
+            FROM clients
+            WHERE user_id = %s
+              AND (
+                    LOWER(name) LIKE %s
+                 OR LOWER(COALESCE(email, '')) LIKE %s
+                 OR LOWER(COALESCE(company, '')) LIKE %s
+              )
+            ORDER BY created_at DESC
+            LIMIT 50
+            """,
+            (user_id, like, like, like),
+        )
+        client_results = cursor.fetchall()
+
+        # Invoices search
+        cursor.execute(
+            """
+            SELECT id, client, amount, created_at, status, invoice_number
+            FROM invoices
+            WHERE user_id = %s
+              AND (
+                    LOWER(client) LIKE %s
+                 OR LOWER(COALESCE(invoice_number, '')) LIKE %s
+                 OR LOWER(COALESCE(notes, '')) LIKE %s
+                 OR LOWER(COALESCE(terms, '')) LIKE %s
+              )
+            ORDER BY created_at DESC
+            LIMIT 50
+            """,
+            (user_id, like, like, like, like),
+        )
+        invoice_results = cursor.fetchall()
+
+        conn.close()
+
+    return render_template(
+        "search.html",
+        q=q,
+        client_results=client_results,
+        invoice_results=invoice_results,
+    )
+
+    # ---------------- KPIs (same idea as before) ----------------
     cursor.execute(
         """
         SELECT id, client, amount, created_at, status
@@ -1189,7 +1253,7 @@ def invoices_page():
         "Overdue": overdue_count,
     }
 
-    # Monthly revenue data for chart (last 6 months)
+    # ---------------- Monthly revenue chart (last 6 months) ----------------
     cursor.execute(
         """
         SELECT date_trunc('month', created_at) AS month, SUM(amount) AS total
@@ -1209,6 +1273,27 @@ def invoices_page():
         monthly_chart_labels.append(month_dt.strftime("%b %Y"))
         monthly_chart_totals.append(float(total_amt))
 
+    # ---------------- NEW: Daily revenue chart (last 30 days) ----------------
+    cursor.execute(
+        """
+        SELECT DATE(created_at) AS day, SUM(amount) AS total
+        FROM invoices
+        WHERE user_id = %s
+        GROUP BY day
+        ORDER BY day DESC
+        LIMIT 30
+        """,
+        (user_id,),
+    )
+    daily_rows = cursor.fetchall()
+
+    daily_chart_labels = []
+    daily_chart_totals = []
+    for day_dt, total_amt in reversed(daily_rows):
+        daily_chart_labels.append(day_dt.strftime("%b %d"))
+        daily_chart_totals.append(float(total_amt))
+
+    # ---------------- Status chart data ----------------
     status_chart_labels = ["Paid", "Sent", "Overdue"]
     status_chart_values = [
         paid_count,
@@ -1216,30 +1301,7 @@ def invoices_page():
         overdue_count,
     ]
 
-    # Top items: aggregate invoice_items per description
-    cursor.execute(
-        """
-        SELECT
-            ii.description,
-            COUNT(*) AS item_count,
-            SUM(ii.amount) AS total_amount
-        FROM invoice_items ii
-        JOIN invoices i ON ii.invoice_id = i.id
-        WHERE i.user_id = %s
-          AND ii.description IS NOT NULL
-          AND ii.description <> ''
-        GROUP BY ii.description
-        ORDER BY total_amount DESC
-        LIMIT 10
-        """,
-        (user_id,),
-    )
-    item_rows = cursor.fetchall()
-    item_chart_labels = [row[0] for row in item_rows]
-    item_chart_counts = [int(row[1]) for row in item_rows]
-    item_chart_totals = [float(row[2]) for row in item_rows]
-
-    # Top clients (for leaderboard)
+    # ---------------- Top clients (leaderboard) ----------------
     cursor.execute(
         """
         SELECT
@@ -1266,7 +1328,7 @@ def invoices_page():
                 pct = round((total_float / top_total) * 100, 1)
             top_clients.append([name, total_float, inv_count, pct])
 
-    # Filtered table query
+    # ---------------- Filtered table query ----------------
     base_sql = """
         SELECT
             i.id,
@@ -1356,12 +1418,11 @@ def invoices_page():
         filtered_count=filtered_count,
         monthly_chart_labels=monthly_chart_labels,
         monthly_chart_totals=monthly_chart_totals,
+        daily_chart_labels=daily_chart_labels,
+        daily_chart_totals=daily_chart_totals,
         status_chart_labels=status_chart_labels,
         status_chart_values=status_chart_values,
         top_clients=top_clients,
-        item_chart_labels=item_chart_labels,
-        item_chart_counts=item_chart_counts,
-        item_chart_totals=item_chart_totals,
     )
 
 
@@ -1713,7 +1774,7 @@ def delete(invoice_id):
 
 
 # -------------------------
-# PDF GENERATION
+# PDF GENERATION (template-aware)
 # -------------------------
 def generate_invoice_pdf_bytes(invoice_id: int):
     conn = get_db_connection()
@@ -1721,7 +1782,15 @@ def generate_invoice_pdf_bytes(invoice_id: int):
 
     c.execute(
         """
-        SELECT client, amount, created_at, due_date, invoice_number
+        SELECT
+            client,
+            amount,
+            created_at,
+            due_date,
+            invoice_number,
+            template_style,
+            notes,
+            terms
         FROM invoices
         WHERE id = %s
         """,
@@ -1733,7 +1802,19 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         conn.close()
         return None, "Invoice not found"
 
-    client, amount, created_at, due_date, invoice_number = row
+    (
+        client,
+        amount,
+        created_at,
+        due_date,
+        invoice_number,
+        template_style,
+        notes,
+        terms,
+    ) = row
+
+    amount_float = float(amount)
+    template_style = (template_style or "modern").lower()
 
     c.execute(
         "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
@@ -1744,47 +1825,166 @@ def generate_invoice_pdf_bytes(invoice_id: int):
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
+    page_width, page_height = LETTER
 
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(72, 750, "Invoice")
+    # ---------- TEMPLATE STYLES ----------
+    # Basic defaults
+    header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
+    title_text = "Invoice"
+    accent_color = header_bar_color
 
-    pdf.setFont("Helvetica", 12)
+    if template_style == "minimal":
+        header_bar_color = (0.18, 0.20, 0.24)  # dark slate
+        accent_color = (0.6, 0.6, 0.65)
+    elif template_style == "bold":
+        header_bar_color = (0.97, 0.45, 0.09)  # orange
+        title_text = "Invoice Statement"
+        accent_color = (0.97, 0.45, 0.09)
+    elif template_style == "doodle":
+        header_bar_color = (0.33, 0.27, 0.96)  # purple/blue
+        accent_color = (0.33, 0.27, 0.96)
+
+        # Soft doodle-like shapes in background
+        pdf.setFillColorRGB(0.93, 0.95, 1.0)
+        pdf.circle(60, page_height - 120, 26, fill=1, stroke=0)
+        pdf.setFillColorRGB(0.96, 0.92, 1.0)
+        pdf.circle(page_width - 80, page_height - 200, 30, fill=1, stroke=0)
+        pdf.setFillColorRGB(0.90, 0.96, 0.98)
+        pdf.rect(page_width - 150, 40, 120, 60, fill=1, stroke=0)
+
+    # ---------- HEADER BAR ----------
+    pdf.setFillColorRGB(*header_bar_color)
+    pdf.rect(0, page_height - 60, page_width, 60, fill=1, stroke=0)
+
+    pdf.setFillColorRGB(1, 1, 1)
+    pdf.setFont("Helvetica-Bold", 22)
+    pdf.drawString(72, page_height - 40, title_text)
+
+    # ---------- INVOICE META ----------
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
+    pdf.setFont("Helvetica", 11)
+
     inv_label = invoice_number or f"#{invoice_id}"
-    pdf.drawString(72, 720, f"Invoice: {inv_label}")
-    pdf.drawString(72, 700, f"Client: {client}")
+    y = page_height - 90
+
+    pdf.drawString(72, y, f"Invoice: {inv_label}")
+    y -= 16
+    pdf.drawString(72, y, f"Client: {client}")
+    y -= 16
 
     if created_at:
         pdf.drawString(
             72,
-            680,
+            y,
             f"Created: {created_at.strftime('%Y-%m-%d %I:%M %p')}",
         )
-
+        y -= 16
     if due_date:
         pdf.drawString(
             72,
-            660,
+            y,
             f"Due: {due_date.strftime('%Y-%m-%d')}",
         )
+        y -= 16
 
-    y = 630
+    # Right side total box
+    right_box_top = page_height - 90
+    right_box_left = page_width - 220
+    pdf.setFillColorRGB(1, 1, 1)
+    pdf.setStrokeColorRGB(*accent_color)
+    pdf.rect(right_box_left, right_box_top - 50, 180, 50, fill=1, stroke=1)
+
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(right_box_left + 10, right_box_top - 20, "Total")
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.setFillColorRGB(*accent_color)
+    pdf.drawRightString(
+        right_box_left + 170,
+        right_box_top - 30,
+        f"${amount_float:,.2f}",
+    )
+
+    # ---------- LINE ITEMS ----------
+    y = right_box_top - 80
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
     pdf.setFont("Helvetica-Bold", 12)
     pdf.drawString(72, y, "Line Items")
     y -= 20
+
     pdf.setFont("Helvetica", 11)
+    pdf.setFillColorRGB(0.3, 0.3, 0.35)
+    pdf.drawString(72, y, "Description")
+    pdf.drawRightString(page_width - 72, y, "Amount")
+    y -= 12
+
+    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
+    pdf.line(72, y, page_width - 72, y)
+    y -= 18
+
+    pdf.setFont("Helvetica", 10)
+    pdf.setFillColorRGB(0.1, 0.1, 0.15)
 
     for desc, amt in items:
+        amt_float = float(amt)
         pdf.drawString(72, y, f"{desc}")
-        pdf.drawRightString(540, y, f"${amt}")
-        y -= 18
-
-        if y < 72:
+        pdf.drawRightString(
+            page_width - 72,
+            y,
+            f"${amt_float:,.2f}",
+        )
+        y -= 16
+        if y < 120:  # keep space for footer / notes
             pdf.showPage()
-            y = 750
+            page_width, page_height = LETTER
+            y = page_height - 100
+            pdf.setFont("Helvetica", 10)
+            pdf.setFillColorRGB(0.1, 0.1, 0.15)
 
-    y -= 10
+    # ---------- NOTES & TERMS ----------
+    if y < 120:
+        pdf.showPage()
+        page_width, page_height = LETTER
+        y = page_height - 100
+
+    if notes:
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.setFillColorRGB(0.1, 0.1, 0.15)
+        pdf.drawString(72, y, "Notes")
+        y -= 16
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(72, y, notes[:120])
+        y -= 20
+
+    if terms:
+        if y < 80:
+            pdf.showPage()
+            page_width, page_height = LETTER
+            y = page_height - 100
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(72, y, "Payment Terms")
+        y -= 16
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(72, y, terms[:160])
+        y -= 20
+
+    # ---------- TOTAL FOOTER ----------
+    if y < 80:
+        pdf.showPage()
+        page_width, page_height = LETTER
+        y = page_height - 120
+
+    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
+    pdf.line(72, y, page_width - 72, y)
+    y -= 24
+
     pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(72, y, f"Total Due: ${amount}")
+    pdf.setFillColorRGB(*accent_color)
+    pdf.drawRightString(
+        page_width - 72,
+        y,
+        f"Total Due: ${amount_float:,.2f}",
+    )
 
     pdf.showPage()
     pdf.save()
@@ -1805,33 +2005,6 @@ def history_pdf(invoice_id):
         mimetype="application/pdf",
     )
 
-
-    # ---------- TEMPLATE STYLES ----------
-    # Basic defaults
-    header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
-    title_text = "Invoice"
-    accent_color = header_bar_color
-
-    if template_style == "minimal":
-        header_bar_color = (0.18, 0.20, 0.24)  # dark slate
-        title_text = "Invoice"
-        accent_color = (0.6, 0.6, 0.65)
-    elif template_style == "bold":
-        header_bar_color = (0.97, 0.45, 0.09)  # orange
-        title_text = "Invoice Statement"
-        accent_color = (0.97, 0.45, 0.09)
-    elif template_style == "doodle":
-        header_bar_color = (0.33, 0.27, 0.96)  # purple/blue
-        title_text = "Invoice"
-        accent_color = (0.33, 0.27, 0.96)
-
-        # Simple doodle-like shapes in background
-        pdf.setFillColorRGB(0.93, 0.95, 1.0)
-        pdf.circle(60, page_height - 120, 26, fill=1, stroke=0)
-        pdf.setFillColorRGB(0.96, 0.92, 1.0)
-        pdf.circle(page_width - 80, page_height - 200, 30, fill=1, stroke=0)
-        pdf.setFillColorRGB(0.90, 0.96, 0.98)
-        pdf.rect(page_width - 150, 40, 120, 60, fill=1, stroke=0)
 
     # ---------- HEADER BAR ----------
     pdf.setFillColorRGB(*header_bar_color)
@@ -2438,19 +2611,84 @@ def send_email_view(invoice_id):
     )
 
 
+def get_ai_kpi_summary_for_user(user_id: int) -> str:
+    """
+    Lightweight invoice KPIs for the AI helper so it can reason
+    about your business without pulling full raw tables.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT amount, created_at, status
+        FROM invoices
+        WHERE user_id = %s
+        ORDER BY created_at DESC
+        """,
+        (user_id,),
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    total_invoices = len(rows)
+    total_revenue = 0.0
+    monthly_revenue = 0.0
+    paid_count = 0
+    overdue_count = 0
+    sent_count = 0
+
+    now = datetime.now()
+    this_month = now.month
+    this_year = now.year
+
+    for amount, created_at, status in rows:
+        amt = float(amount)
+        total_revenue += amt
+
+        if created_at and created_at.month == this_month and created_at.year == this_year:
+            monthly_revenue += amt
+
+        status = (status or "").strip()
+        if status == "Paid":
+            paid_count += 1
+        elif status == "Overdue":
+            overdue_count += 1
+        elif status == "Sent":
+            sent_count += 1
+
+    if total_revenue <= 0:
+        growth_pct = 0.0
+    else:
+        growth_pct = round((monthly_revenue / total_revenue) * 100, 1)
+
+    return (
+        f"Total invoices: {total_invoices}, "
+        f"total revenue: ${total_revenue:,.2f}, "
+        f"this month revenue: ${monthly_revenue:,.2f} "
+        f"({growth_pct}% of all-time), "
+        f"status counts → Paid: {paid_count}, Sent: {sent_count}, Overdue: {overdue_count}."
+    )
+
+
 # -------------------------
 # AI HELPER ENDPOINT
 # -------------------------
 @app.route("/ai-helper", methods=["POST"])
 def ai_helper():
     """
-    Small JSON API that powers the InvoicePro assistant.
-    Frontend calls this with { question, page } and gets back { answer }.
+    JSON API that powers the InvoicePro assistant.
+
+    Request body: { "question": "...", "page": "/invoices" }
+    Response: { "answer": "..." } or { "error": "..." }
+
     Behavior is plan-aware:
-      - free: shorter, simpler responses
-      - pro / enterprise: more detailed, strategic help
+      - free: shorter, simpler responses + gentle upgrade nudges
+      - pro / enterprise: deeper, more strategic guidance
+
+    The helper also gets a small KPI snapshot of the current user's invoices
+    so it can reason about revenue, paid vs overdue, etc.
     """
-    # Safety: if no API client configured, fail gracefully
     if not ai_client or not OPENAI_API_KEY:
         return {"error": "AI helper is not configured on the server."}, 500
 
@@ -2461,10 +2699,20 @@ def ai_helper():
     if not question:
         return {"error": "Missing question."}, 400
 
-    # Figure out plan level
+    # Current user + plan
     user = get_current_user()
     user_plan = user.get("plan") or "free"
+    user_id = user.get("id")
     is_pro = PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0)
+
+    # KPI snapshot for this user (if we have a concrete user_id)
+    kpi_summary = ""
+    if user_id:
+        try:
+            kpi_summary = get_ai_kpi_summary_for_user(user_id)
+        except Exception:
+            # Don't break AI helper if KPI query fails
+            kpi_summary = ""
 
     # Very small context string so the model knows the app shape
     app_context = f"""
@@ -2480,24 +2728,42 @@ Key features and routes:
 - There is a public invoice view for clients at "/public/<token>" with a "Download PDF" button.
 
 User plan: {user_plan}.
-If the plan is free, keep answers shorter and more basic, and gently suggest upgrading to Pro
-when deeper automation or AI workflows are requested.
-If the plan is Pro or Enterprise, you can go deeper: offer strategies, workflows, and step-by-step
-guidance using features that exist in this description and in this codebase, but do not invent routes
-that aren't here.
 Current page path: {page}.
+
+High-level metrics for this user (if available):
+{kpi_summary}
+
+Guidance rules:
+- If the plan is free, keep answers concise and practical. When the user asks about deep automation,
+  recurring billing, or heavy AI workflows, gently suggest upgrading to Pro without being pushy.
+- If the plan is Pro or Enterprise, provide more detailed, strategic help. Offer step-by-step workflows,
+  follow-up suggestions, and concrete ideas for how to use existing features together.
+
+You can:
+- Explain how to use any of the routes/features described above.
+- Suggest best practices for invoicing, following up on overdue invoices, or pricing services.
+- Help the user interpret their KPIs and charts using the high-level metrics (but do NOT invent exact
+  client names or invoice IDs that you were not given).
+- Suggest better email wording for sending invoices or following up on unpaid ones.
+
+Never:
+- Invent new backend routes or database tables that are not mentioned here.
+- Claim you can change subscription plans or charge cards directly.
 """
 
     # Choose model + length by plan
     model_name = AI_MODEL_PRO if is_pro else AI_MODEL_FREE
-    max_output_tokens = 600 if is_pro else 200
+    max_output_tokens = 600 if is_pro else 220
 
     try:
         resp = ai_client.chat.completions.create(
             model=model_name,
             messages=[
                 {"role": "system", "content": app_context},
-                {"role": "user", "content": question},
+                {
+                    "role": "user",
+                    "content": question,
+                },
             ],
             temperature=0.4,
             max_tokens=max_output_tokens,

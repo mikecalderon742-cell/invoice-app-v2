@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-header">
+    <h1>Search</h1>
+    <div class="quick-actions">
+        <a href="/" class="btn btn-secondary">New Invoice</a>
+        <a href="/invoices" class="btn">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+    <h2 style="margin-top:0;">Find invoices or clients</h2>
+    <form method="get" action="{{ url_for('global_search') }}" style="display:flex; gap:10px; margin-top:10px;">
+        <input
+            type="text"
+            name="q"
+            placeholder="Search by client name, invoice #, notes, terms, email, or company..."
+            value="{{ q or '' }}"
+        >
+        <button type="submit" class="btn btn-brand">Search</button>
+    </form>
+
+    {% if not q %}
+        <p style="margin-top:14px; font-size:13px; opacity:.8;">
+            Type anything related to a client or invoice and hit Search.
+        </p>
+    {% endif %}
+</div>
+
+{% if q %}
+    <div class="status-summary">
+        <div class="status-item sent">
+            Results for: <strong>{{ q }}</strong>
+        </div>
+    </div>
+
+    <!-- Invoice results -->
+    <div class="table-wrapper">
+        <h3 style="margin-top:0; margin-bottom:10px;">Matching Invoices</h3>
+        {% if invoice_results %}
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Client</th>
+                        <th>Amount</th>
+                        <th>Created</th>
+                        <th>Status</th>
+                        <th>View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoice_results %}
+                        <tr>
+                            <td>#{{ inv[5] or inv[0] }}</td>
+                            <td>{{ inv[1] }}</td>
+                            <td>${{ "{:,.2f}".format(inv[2]) }}</td>
+                            <td>{{ inv[3].strftime('%Y-%m-%d %I:%M %p') if inv[3] }}</td>
+                            <td>
+                                {% if inv[4] == "Paid" %}
+                                    <span class="badge paid">Paid</span>
+                                {% elif inv[4] == "Overdue" %}
+                                    <span class="badge overdue">Overdue</span>
+                                {% elif inv[4] == "Sent" %}
+                                    <span class="badge sent">Sent</span>
+                                {% else %}
+                                    {{ inv[4] }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/invoice/{{ inv[0] }}" class="btn btn-secondary" style="padding:4px 10px; font-size:12px;">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="font-size:13px; opacity:.8;">
+                No invoices match <strong>{{ q }}</strong>.
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Client results -->
+    <div class="table-wrapper">
+        <h3 style="margin-top:0; margin-bottom:10px;">Matching Clients</h3>
+        {% if client_results %}
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in client_results %}
+                        <tr>
+                            <td>{{ c[1] }}</td>
+                            <td>{{ c[2] or "—" }}</td>
+                            <td>{{ c[3] or "—" }}</td>
+                            <td>{{ c[4].strftime('%Y-%m-%d %I:%M %p') if c[4] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="font-size:13px; opacity:.8;">
+                No clients match <strong>{{ q }}</strong>.
+            </p>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% endblock %}
