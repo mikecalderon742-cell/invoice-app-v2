@@ -19,7 +19,7 @@
 <div class="form-wrapper fade-in-up">
     <h2 style="margin-top:0;">New Invoice</h2>
 
-    <form method="POST" action="/save">
+    <form id="invoiceForm" method="POST" action="/save">
 
         <!-- CLIENT SECTION -->
         <h3>Client</h3>
@@ -90,19 +90,18 @@
         <!-- LINE ITEMS -->
         <h3>Line Items</h3>
         <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-            Add as many services or products as you like. You can remove rows you don’t need.
+            Add at least one service or product. You can leave unused rows blank.
         </p>
 
-        <div class="table-wrapper line-items-wrapper" style="margin-top:12px;">
+        <div class="table-wrapper" style="margin-top:12px;">
             <table class="modern-table">
                 <thead>
                     <tr>
                         <th>Description</th>
                         <th style="width:180px;">Amount</th>
-                        <th style="width:40px;"></th>
                     </tr>
                 </thead>
-                <tbody id="lineItemsBody">
+                <tbody>
                     {% for i in range(3) %}
                     <tr>
                         <td>
@@ -111,26 +110,13 @@
                         <td>
                             <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
                         </td>
-                        <td class="remove-cell">
-                            <button type="button" class="btn-remove-row" aria-label="Remove line item">✕</button>
-                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <div class="line-items-controls">
-            <button type="button" class="btn btn-secondary btn-add-row">
-                + Add line item
-            </button>
-            <small class="line-items-hint">
-                Tip: You can add unlimited rows. Leave unused rows blank.
-            </small>
-        </div>
-
-        <!-- TEMPLATE STYLE PICKER -->
-        <div class="form-row" style="margin-top:24px;">
+        <div class="form-row">
             <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
                 Invoice style
             </label>
@@ -141,71 +127,47 @@
                 <option value="doodle">Playful / Doodle</option>
             </select>
             <small style="font-size:12px; opacity:0.7;">
-                This will eventually control the layout and feel of the PDF and client view.
+                This controls the layout and feel of the PDF and client view.
             </small>
         </div>
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <a href="/invoices" class="btn btn-secondary">Cancel</a>
-            <!-- 🔍 Preview without saving (opens in new tab) -->
-            <button
-                type="submit"
-                class="btn btn-secondary"
-                formaction="/preview"
-                formtarget="_blank">
-                Preview
+            <!-- NEW: Preview button -->
+            <button type="button" id="previewButton" class="btn btn-secondary">
+                Preview Invoice
             </button>
-            <!-- ✅ Save to DB -->
+            <!-- Existing: Save -->
             <button type="submit" class="btn btn-brand">Save Invoice</button>
         </div>
 
     </form>
 </div>
 
-<!-- LINE ITEMS DYNAMIC JS -->
+<!-- Inline page-specific script to wire Preview button -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const tbody = document.getElementById("lineItemsBody");
-    const addBtn = document.querySelector(".btn-add-row");
+    const form = document.getElementById("invoiceForm");
+    const previewBtn = document.getElementById("previewButton");
 
-    if (!tbody || !addBtn) return;
+    if (form && previewBtn) {
+        previewBtn.addEventListener("click", function (e) {
+            e.preventDefault();
 
-    function createRow() {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>
-                <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
-            </td>
-            <td>
-                <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
-            </td>
-            <td class="remove-cell">
-                <button type="button" class="btn-remove-row" aria-label="Remove line item">✕</button>
-            </td>
-        `;
-        return tr;
+            const originalAction = form.action;
+            const originalTarget = form.target;
+
+            // Send this exact form payload to /preview
+            form.action = "/preview";
+            form.target = "_blank"; // open preview in a new tab so you don't lose the form
+
+            form.submit();
+
+            // Restore original settings so "Save" still posts to /save
+            form.action = originalAction;
+            form.target = originalTarget;
+        });
     }
-
-    addBtn.addEventListener("click", function () {
-        tbody.appendChild(createRow());
-    });
-
-    // Event delegation for remove buttons
-    tbody.addEventListener("click", function (e) {
-        const btn = e.target.closest(".btn-remove-row");
-        if (!btn) return;
-
-        const row = btn.closest("tr");
-        if (!row) return;
-
-        // Keep at least one row so the table never disappears completely
-        if (tbody.rows.length > 1) {
-            row.remove();
-        } else {
-            const inputs = row.querySelectorAll("input");
-            inputs.forEach(i => i.value = "");
-        }
-    });
 });
 </script>
 

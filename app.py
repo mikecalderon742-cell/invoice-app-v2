@@ -832,52 +832,29 @@ def create_checkout_session_route():
 # PREVIEW (optional)
 # -------------------------
 @app.route("/preview", methods=["POST"])
-def preview():
+def preview_invoice():
     """
-    Preview an invoice BEFORE saving.
-    Uses the same form fields as /save but does NOT write to the database.
+    Live preview of an invoice BEFORE saving.
+    Mirrors most of the /save logic but does NOT write to the database.
     """
-    user = get_current_user()
-    user_id = user["id"]
+    # ---- CLIENT RESOLUTION (same idea as /save) ----
+    selected_client_id = request.form.get("client_id")
+    new_client_name = request.form.get("new_client_name")
+    new_client_email = request.form.get("new_client_email")
+    new_client_company = request.form.get("new_client_company")
+    new_client_phone = request.form.get("new_client_phone")
+    new_client_address = request.form.get("new_client_address")
+    new_client_notes = request.form.get("new_client_notes")
 
-    # Determine client display
-    client_id = request.form.get("client_id")
-    new_client_name = (request.form.get("new_client_name") or "").strip()
-    new_client_email = (request.form.get("new_client_email") or "").strip()
-
-    client_name = ""
-    client_email = ""
-
-    # If they picked an existing client, fetch their name/email
-    if client_id:
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT name, email FROM clients WHERE id = %s AND user_id = %s",
-                (int(client_id), user_id),
-            )
-            row = cur.fetchone()
-            cur.close()
-            conn.close()
-            if row:
-                client_name = row[0] or ""
-                client_email = row[1] or ""
-        except Exception:
-            # soft-fail, we'll fall back to new client fields
-            pass
-
-    if not client_name:
-        client_name = new_client_name or "Unspecified client"
-    if not client_email:
-        client_email = new_client_email
-
-    invoice_notes = request.form.get("invoice_notes") or ""
-    invoice_terms = request.form.get("invoice_terms") or "Payment due within 30 days."
+    notes = request.form.get("invoice_notes") or ""
+    terms = request.form.get("invoice_terms") or "Payment due within 30 days."
     template_style = request.form.get("template_style") or "modern"
 
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
+
+    created_at = datetime.now()
+    due_date = created_at + timedelta(days=30)
 
     items = []
     total = 0.0
@@ -885,24 +862,90 @@ def preview():
     for desc, amt in zip(descriptions, amounts):
         if desc and amt:
             try:
-                value = float(amt)
+                amt_val = float(amt)
             except ValueError:
                 continue
-            total += value
-            items.append((desc, value))
+            total += amt_val
+            items.append((desc, amt_val))
 
-    preview_created_at = datetime.now()
+    user = get_current_user()
+    user_id = user["id"]
+
+    # Figure out what name/email would be used for this invoice
+    display_client_name = None
+    display_client_email = new_client_email or ""
+    display_client_company = new_client_company or ""
+    display_client_phone = new_client_phone or ""
+    display_client_address = new_client_address or ""
+    display_client_notes = new_client_notes or ""
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if selected_client_id:
+        try:
+            cid_int = int(selected_client_id)
+            cursor.execute(
+                """
+                SELECT name, email, company, phone, address, notes
+                FROM clients
+                WHERE id = %s AND user_id = %s
+                """,
+                (cid_int, user_id),
+            )
+            row = cursor.fetchone()
+            if row:
+                (
+                    db_name,
+                    db_email,
+                    db_company,
+                    db_phone,
+                    db_address,
+                    db_notes,
+                ) = row
+                display_client_name = db_name
+                display_client_email = display_client_email or (db_email or "")
+                display_client_company = display_client_company or (db_company or "")
+                display_client_phone = display_client_phone or (db_phone or "")
+                display_client_address = display_client_address or (db_address or "")
+                display_client_notes = display_client_notes or (db_notes or "")
+        except ValueError:
+            pass
+
+    if not display_client_name and new_client_name:
+        display_client_name = new_client_name
+
+    if not display_client_name:
+        display_client_name = "Unknown client"
+
+    cursor.close()
+    conn.close()
+
+    # Business profile for branding
+    profile = get_business_profile()
+    business_name = profile.get("business_name") or "InvoicePro"
+
+    # "Virtual" invoice label (not saved yet)
+    invoice_label = "PREVIEW — Not saved"
 
     return render_template(
         "preview.html",
-        client_name=client_name,
-        client_email=client_email,
-        invoice_notes=invoice_notes,
-        invoice_terms=invoice_terms,
+        business_profile=profile,
+        business_name=business_name,
+        client_name=display_client_name,
+        client_email=display_client_email,
+        client_company=display_client_company,
+        client_phone=display_client_phone,
+        client_address=display_client_address,
+        client_notes=display_client_notes,
+        created_at=created_at,
+        due_date=due_date,
         items=items,
         total=total,
+        notes=notes,
+        terms=terms,
         template_style=template_style,
-        preview_created_at=preview_created_at,
+        invoice_label=invoice_label,
     )
 
 
