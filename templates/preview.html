@@ -1,88 +1,150 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="invoice-preview-page reveal">
-    <h1 style="margin-bottom:10px;">Invoice Preview</h1>
-    <p style="margin-top:0; opacity:0.75; font-size:14px;">
-        This is a preview only. Close this tab to continue editing your invoice.
-    </p>
+<div class="preview-banner">
+    <span class="preview-pill">Preview only</span>
+    <p>This invoice has not been saved yet. Use your browser's Back button to adjust details.</p>
+</div>
 
-    <div class="public-invoice-shell">
-        <div class="public-invoice-card">
+<div class="invoice-preview-shell">
 
-            <header class="public-invoice-header">
+    <!-- Left: invoice card -->
+    <div class="invoice-preview-card">
+        <header class="invoice-preview-header">
+            <div class="brand-block">
+                {% if business_profile.logo_url %}
+                    <img src="{{ business_profile.logo_url }}"
+                         alt="Logo"
+                         class="preview-logo">
+                {% endif %}
                 <div>
-                    <h2 style="margin:0 0 4px 0;">{{ business_profile.business_name or "InvoicePro" }}</h2>
-                    {% if business_profile.address %}
-                        <div class="public-invoice-sub">{{ business_profile.address }}</div>
-                    {% endif %}
-                    {% if business_profile.website %}
-                        <div class="public-invoice-sub">{{ business_profile.website }}</div>
-                    {% endif %}
+                    <h1 class="preview-brand-name">{{ business_name }}</h1>
+                    <p class="preview-subtitle">Invoice summary preview</p>
                 </div>
-                <div class="public-invoice-meta">
-                    <div><strong>Status:</strong> Draft / Preview</div>
-                    <div><strong>Style:</strong> {{ template_style|capitalize }}</div>
-                    <div>
-                        <strong>Date:</strong>
-                        {{ preview_created_at.strftime("%Y-%m-%d %I:%M %p") }}
+            </div>
+
+            <div class="invoice-meta">
+                <div>
+                    <span class="meta-label">Invoice</span>
+                    <div class="meta-value">{{ invoice_label }}</div>
+                </div>
+                <div>
+                    <span class="meta-label">Created</span>
+                    <div class="meta-value">
+                        {{ created_at.strftime('%Y-%m-%d %I:%M %p') }}
                     </div>
                 </div>
-            </header>
+                <div>
+                    <span class="meta-label">Due</span>
+                    <div class="meta-value">
+                        {{ due_date.strftime('%Y-%m-%d') }}
+                    </div>
+                </div>
+            </div>
+        </header>
 
-            <section class="public-invoice-section">
-                <h3>Bill To</h3>
-                <p style="margin:4px 0;"><strong>{{ client_name }}</strong></p>
+        <section class="invoice-section two-col">
+            <div>
+                <h3 class="section-title">Bill to</h3>
+                <p class="client-main">{{ client_name }}</p>
+                {% if client_company %}
+                    <p class="client-line">{{ client_company }}</p>
+                {% endif %}
                 {% if client_email %}
-                    <p style="margin:0; opacity:0.8;">{{ client_email }}</p>
+                    <p class="client-line">{{ client_email }}</p>
                 {% endif %}
-            </section>
+                {% if client_phone %}
+                    <p class="client-line">{{ client_phone }}</p>
+                {% endif %}
+                {% if client_address %}
+                    <p class="client-line">{{ client_address }}</p>
+                {% endif %}
+                {% if client_notes %}
+                    <p class="client-notes">Notes: {{ client_notes }}</p>
+                {% endif %}
+            </div>
 
-            <section class="public-invoice-section">
-                <h3>Line Items</h3>
-                {% if items %}
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Description</th>
-                                <th style="width:160px;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="business-contact">
+                <h3 class="section-title">From</h3>
+                <p class="client-main">{{ business_profile.business_name or business_name }}</p>
+                {% if business_profile.email %}
+                    <p class="client-line">{{ business_profile.email }}</p>
+                {% endif %}
+                {% if business_profile.phone %}
+                    <p class="client-line">{{ business_profile.phone }}</p>
+                {% endif %}
+                {% if business_profile.website %}
+                    <p class="client-line">{{ business_profile.website }}</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="invoice-section">
+            <h3 class="section-title">Line items</h3>
+            <div class="preview-table-wrapper">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th style="width:180px; text-align:right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if items %}
                             {% for desc, amt in items %}
-                            <tr>
-                                <td>{{ desc }}</td>
-                                <td>${{ "{:,.2f}".format(amt) }}</td>
-                            </tr>
+                                <tr>
+                                    <td>{{ desc }}</td>
+                                    <td style="text-align:right;">
+                                        ${{ "{:,.2f}".format(amt) }}
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p style="opacity:0.7; font-size:14px;">No line items yet. Go back and add at least one.</p>
-                {% endif %}
-            </section>
-
-            <section class="public-invoice-section">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        {% if invoice_notes %}
-                            <p style="margin:0 0 4px 0;"><strong>Notes:</strong> {{ invoice_notes }}</p>
+                        {% else %}
+                            <tr>
+                                <td colspan="2" style="text-align:center; font-size:13px; opacity:0.7;">
+                                    No line items yet. Add at least one before saving.
+                                </td>
+                            </tr>
                         {% endif %}
-                        {% if invoice_terms %}
-                            <p style="margin:0; opacity:0.8;"><strong>Terms:</strong> {{ invoice_terms }}</p>
-                        {% endif %}
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:14px; opacity:0.7;">Total</div>
-                        <div style="font-size:24px; font-weight:700;">
-                            ${{ "{:,.2f}".format(total) }}
-                        </div>
-                    </div>
-                </div>
-            </section>
+                    </tbody>
+                </table>
+            </div>
 
-        </div>
+            <div class="preview-total-row">
+                <span>Total</span>
+                <span class="preview-total-amount">
+                    ${{ "{:,.2f}".format(total) }}
+                </span>
+            </div>
+        </section>
+
+        <section class="invoice-section small-print">
+            {% if notes %}
+                <p><strong>Invoice notes:</strong> {{ notes }}</p>
+            {% endif %}
+            {% if terms %}
+                <p><strong>Payment terms:</strong> {{ terms }}</p>
+            {% endif %}
+        </section>
     </div>
+
+    <!-- Right: style hint / legend (optional) -->
+    <aside class="preview-sidebar">
+        <h3>Template style: <span class="pill">{{ template_style|capitalize }}</span></h3>
+        <p class="preview-tip">
+            This preview reflects your selected style and content. When you save,
+            the PDF and client view will follow this layout.
+        </p>
+        <ul class="preview-checklist">
+            <li>✓ Client details look correct</li>
+            <li>✓ Line items + totals are accurate</li>
+            <li>✓ Notes & terms say what you want</li>
+        </ul>
+        <p class="preview-footer-text">
+            Happy with it? Close this tab and hit <strong>Save Invoice</strong> back in the app.
+        </p>
+    </aside>
+
 </div>
 
 {% endblock %}
