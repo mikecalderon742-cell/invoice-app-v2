@@ -1191,7 +1191,7 @@ def invoices_page():
                 pct = round((total_float / top_total) * 100, 1)
             top_clients.append([name, total_float, inv_count, pct])
 
-    # Filtered table query
+        # Filtered table query
     base_sql = """
         SELECT
             i.id,
@@ -1209,21 +1209,19 @@ def invoices_page():
     conditions = []
     params = [user_id]
 
-
     if q:
-
-    like = f"%{q.lower()}%"
-    conditions.append(
-        """
-        (
-            LOWER(i.client) LIKE %s
-            OR LOWER(COALESCE(i.invoice_number, '')) LIKE %s
-            OR LOWER(COALESCE(i.notes, '')) LIKE %s
-            OR LOWER(COALESCE(i.terms, '')) LIKE %s
+        like = f"%{q.lower()}%"
+        conditions.append(
+            """
+            (
+                LOWER(i.client) LIKE %s
+                OR LOWER(COALESCE(i.invoice_number, '')) LIKE %s
+                OR LOWER(COALESCE(i.notes, '')) LIKE %s
+                OR LOWER(COALESCE(i.terms, '')) LIKE %s
+            )
+            """
         )
-        """
-    )
-    params.extend([like, like, like, like])
+        params.extend([like, like, like, like])
 
     allowed_statuses = {"Paid", "Sent", "Overdue"}
     if status_filter in allowed_statuses:
