@@ -2362,3 +2362,28 @@ body.dark .btn-secondary {
 body.dark .top-clients-card .leaderboard::-webkit-scrollbar-thumb {
     background: rgba(148,163,184,0.9);
 }
+
+/* ==========================================================
+   FINAL HARD OVERRIDE — TABLE HEADER FIX (NAVY, NOT FADED)
+   ========================================================== */
+
+.table-wrapper .modern-table thead,
+.table-wrapper .modern-table thead tr,
+.table-wrapper .modern-table thead th {
+    background: #151B54 !important;    /* Full navy */
+    color: #ffffff !important;         /* Strong white text */
+    opacity: 1 !important;             /* No fading */
+    border: none !important;           /* Clean edges */
+    box-shadow: none !important;
+    backdrop-filter: none !important;  /* Remove glass effect */
+}
+
+/* Dark mode — keep header consistent & bold */
+body.dark .table-wrapper .modern-table thead,
+body.dark .table-wrapper .modern-table thead tr,
+body.dark .table-wrapper .modern-table thead th {
+    background: #0a0e2a !important;    /* Deeper navy */
+    color: #ffffff !important;
+    opacity: 1 !important;
+    border: none !important;
+}
