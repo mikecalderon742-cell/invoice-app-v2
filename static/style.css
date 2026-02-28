@@ -2194,6 +2194,48 @@ body.dark .note-block {
     background: rgba(21,27,84,0.10);
 }
 
+/* ===== Invoice Table Section Header ===== */
+
+.table-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+
+.table-section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.table-section-header p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.table-meta {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* PDF button tweak so it feels like an icon-style action */
+.btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+}
+
+.btn-pdf::before {
+    content: "⬇";
+    font-size: 0.85em;
+}
+
 body.dark .trust-pill {
     background: rgba(255,255,255,0.06);
 }

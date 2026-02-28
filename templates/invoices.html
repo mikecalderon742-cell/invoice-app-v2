@@ -97,28 +97,22 @@
             {% if top_clients and top_clients|length > 0 %}
                 <ul class="leaderboard premium">
                     {% for client in top_clients %}
-                        {# expect: client = (name, total_amount, invoice_count, pct_of_max) #}
+                        {# expect: client = (name, total_amount, invoice_count, contribution_percent) #}
                         <li class="leader-item">
                             <div class="leader-left">
-                                <div class="leader-main">
-                                    <span class="rank">#{{ loop.index }}</span>
-                                    <span class="client-name">
-                                        {{ client[0] or 'Unknown client' }}
-                                    </span>
-                                </div>
-
-                                <div class="progress-bar">
-                                    <div class="progress-fill"
-                                         style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
-                                </div>
-
-                                <div class="leader-meta">
-                                    {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
-                                </div>
+                                <span class="rank">#{{ loop.index }}</span>
+                                <span class="client-name">
+                                    {{ client[0] or 'Unknown client' }}
+                                </span>
                             </div>
-
                             <div class="leader-right">
                                 ${{ "{:,.2f}".format(client[1]) }}
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
+                            </div>
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
+                                {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
                             </div>
                         </li>
                     {% endfor %}
@@ -132,6 +126,17 @@
 
     </div>
 
+    <!-- TABLE SECTION HEADER (descriptive) -->
+    <div class="table-section-header">
+        <div>
+            <h2>Invoice History</h2>
+            <p>All invoices, statuses, and quick actions—including PDF downloads.</p>
+        </div>
+        <div class="table-meta">
+            <span>{{ filtered_count }} showing</span>
+        </div>
+    </div>
+
     <!-- TABLE -->
     <div class="table-wrapper">
         <table class="modern-table">
@@ -140,7 +145,7 @@
                     <th>#</th>
                     <th>Client</th>
                     <th>Amount</th>
-                    <th>Created</th>
+                    <th>Created (Date &amp; Time)</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -157,7 +162,9 @@
                     <td>#{{ invoice[0] }}</td>
                     <td>{{ invoice[1] }}</td>
                     <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-                    <td>{{ invoice[3].strftime('%Y-%m-%d') }}</td>
+
+                    {# 🔹 Created: date + time #}
+                    <td>{{ invoice[3].strftime('%Y-%m-%d %I:%M %p') }}</td>
 
                     <td>
                         {% if invoice[4] == "Paid" %}
@@ -194,6 +201,11 @@
                             Send
                         </a>
 
+                        <!-- DOWNLOAD PDF -->
+                        <a class="btn btn-secondary btn-pdf" href="/history-pdf/{{ invoice[0] }}">
+                            PDF
+                        </a>
+
                         <!-- DELETE -->
                         <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
                     </td>
@@ -218,7 +230,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}
-    // Data from Flask (we'll make sure these are defined in app.py)
+    // Data from Flask
     const revenueLabels = {{ monthly_chart_labels|tojson }};
     const revenueValues = {{ monthly_chart_totals|tojson }};
     const statusLabels  = {{ status_chart_labels|tojson }};
@@ -247,10 +259,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         callbacks: {
                             label: function(ctx) {
                                 const v = ctx.parsed.y || 0;
-                                return "$" + v.toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                });
+                                return "$" + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             }
                         }
                     }
