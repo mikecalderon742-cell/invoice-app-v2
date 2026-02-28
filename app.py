@@ -14,6 +14,7 @@ from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 from werkzeug.security import generate_password_hash, check_password_hash
 import stripe  # installed and ready
+from openai import OpenAI  # ✅ AI helper
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -43,6 +44,14 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")  # Stripe secret key
 STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO")  # Pro subscription price ID
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+
+# -------------------------
+# AI HELPER CONFIG
+# -------------------------
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+ai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+AI_MODEL_FREE = "gpt-4o-mini"   # lightweight helper for free users
+AI_MODEL_PRO = "gpt-4.1-mini"   # more capable helper for Pro
 
 # -------------------------
 # PLAN DEFINITIONS
@@ -2401,6 +2410,79 @@ def send_email_view(invoice_id):
         feedback_type=feedback_type,
         public_url=public_url,
     )
+
+
+# -------------------------
+# AI HELPER ENDPOINT
+# -------------------------
+@app.route("/ai-helper", methods=["POST"])
+def ai_helper():
+    """
+    Small JSON API that powers the InvoicePro assistant.
+    Frontend calls this with { question, page } and gets back { answer }.
+    Behavior is plan-aware:
+      - free: shorter, simpler responses
+      - pro / enterprise: more detailed, strategic help
+    """
+    if not ai_client or not OPENAI_API_KEY:
+        return {"error": "AI helper is not configured on the server."}, 500
+
+    data = request.get_json() or {}
+    question = (data.get("question") or "").strip()
+    page = (data.get("page") or "").strip()
+
+    if not question:
+        return {"error": "Missing question."}, 400
+
+    # Figure out plan level
+    user = get_current_user()
+    user_plan = user.get("plan") or "free"
+    is_pro = PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0)
+
+    # Very small context string so the model knows the app shape
+    app_context = f"""
+You are the in-app assistant for an invoicing web app called InvoicePro.
+
+Key features and routes:
+- Create invoice at "/" (new invoice form with client + line items).
+- Invoice history dashboard at "/invoices" with KPIs, charts, and status filters.
+- Clients listing at "/clients".
+- Settings / business profile at "/settings".
+- Email an invoice with PDF at "/send-email/<id>" (Pro feature).
+- Invoice statuses: "Sent", "Paid", "Overdue".
+- There is a public invoice view for clients at "/public/<token>" with a "Download PDF" button.
+
+User plan: {user_plan}.
+If the plan is free, keep answers shorter and more basic, and gently suggest upgrading to Pro
+when deeper automation or AI workflows are requested.
+If the plan is Pro or Enterprise, you can go deeper: offer strategies, workflows, and step-by-step
+guidance using features that exist in this description and in this codebase, but do not invent routes
+that aren't here.
+Current page path: {page}.
+"""
+
+    # Choose model + length by plan
+    model_name = AI_MODEL_PRO if is_pro else AI_MODEL_FREE
+    max_output_tokens = 600 if is_pro else 200
+
+    try:
+        resp = ai_client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": app_context},
+                {
+                    "role": "user",
+                    "content": question,
+                },
+            ],
+            temperature=0.4,
+            max_tokens=max_output_tokens,
+        )
+        answer = resp.choices[0].message.content.strip()
+        return {"answer": answer}
+    except Exception as e:
+        # Don't blow up the app on AI issues
+        return {"error": f"AI error: {e}"}, 500
 
 
 @app.route("/stripe/webhook", methods=["POST"])
