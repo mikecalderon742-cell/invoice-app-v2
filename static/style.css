@@ -1129,6 +1129,15 @@ body.dark .welcome-content {
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.leaderboard li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,.05);
 }
 
 /* =============================== */

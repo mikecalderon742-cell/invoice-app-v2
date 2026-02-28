@@ -1216,6 +1216,29 @@ def invoices_page():
         overdue_count,
     ]
 
+    # Top items: aggregate invoice_items per description
+    cursor.execute(
+        """
+        SELECT
+            ii.description,
+            COUNT(*) AS item_count,
+            SUM(ii.amount) AS total_amount
+        FROM invoice_items ii
+        JOIN invoices i ON ii.invoice_id = i.id
+        WHERE i.user_id = %s
+          AND ii.description IS NOT NULL
+          AND ii.description <> ''
+        GROUP BY ii.description
+        ORDER BY total_amount DESC
+        LIMIT 10
+        """,
+        (user_id,),
+    )
+    item_rows = cursor.fetchall()
+    item_chart_labels = [row[0] for row in item_rows]
+    item_chart_counts = [int(row[1]) for row in item_rows]
+    item_chart_totals = [float(row[2]) for row in item_rows]
+
     # Top clients (for leaderboard)
     cursor.execute(
         """
@@ -1243,7 +1266,7 @@ def invoices_page():
                 pct = round((total_float / top_total) * 100, 1)
             top_clients.append([name, total_float, inv_count, pct])
 
-        # Filtered table query
+    # Filtered table query
     base_sql = """
         SELECT
             i.id,
@@ -1336,6 +1359,9 @@ def invoices_page():
         status_chart_labels=status_chart_labels,
         status_chart_values=status_chart_values,
         top_clients=top_clients,
+        item_chart_labels=item_chart_labels,
+        item_chart_counts=item_chart_counts,
+        item_chart_totals=item_chart_totals,
     )
 
 
