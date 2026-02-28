@@ -1140,6 +1140,31 @@ body.dark .welcome-content {
     border-bottom: 1px solid rgba(255,255,255,.05);
 }
 
+.chart-card.brand-accent {
+    border: 1px solid var(--brand-accent, #1d4ed8);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.chart-scroll-x {
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.chart-scroll-x .wide-chart {
+    min-width: 720px; /* forces horizontal scroll on narrow layouts */
+}
+
+.chart-ai-hint {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 6px;
+}
+
+.kpi-live-label {
+    font-size: 10px;
+    opacity: 0.6;
+}
+
 /* =============================== */
 /* CHART CARD */
 /* =============================== */

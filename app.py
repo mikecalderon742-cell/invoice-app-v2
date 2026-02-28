@@ -1114,10 +1114,8 @@ def save():
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
-    # Keep overdue statuses up to date
     update_overdue_statuses()
 
-    # ----- Filters from querystring -----
     q = (request.args.get("q") or "").strip()
     status_filter = (request.args.get("status") or "").strip()
     from_date_str = (request.args.get("from_date") or "").strip()
@@ -1134,7 +1132,6 @@ def invoices_page():
 
     if to_date_str:
         try:
-            # add one day so we can use "< to_dt" and still be inclusive
             to_dt = datetime.strptime(to_date_str, "%Y-%m-%d") + timedelta(days=1)
         except ValueError:
             to_dt = None
@@ -1145,7 +1142,7 @@ def invoices_page():
     current_user = get_current_user()
     user_id = current_user["id"]
 
-    # ---------------- KPIs (overall stats) ----------------
+    # ---------------- KPIs (same idea as before) ----------------
     cursor.execute(
         """
         SELECT id, client, amount, created_at, status
@@ -1160,7 +1157,6 @@ def invoices_page():
     all_invoices = []
     for row in all_rows:
         row_list = list(row)
-        # amount numeric -> float
         row_list[2] = float(row_list[2])
         all_invoices.append(row_list)
 
@@ -1178,9 +1174,7 @@ def invoices_page():
     )
 
     growth = (
-        round((monthly_revenue / total_revenue) * 100, 1)
-        if total_revenue > 0
-        else 0
+        round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
     )
     avg_invoice = (
         round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
@@ -1215,7 +1209,7 @@ def invoices_page():
         monthly_chart_labels.append(month_dt.strftime("%b %Y"))
         monthly_chart_totals.append(float(total_amt))
 
-    # ---------------- NEW: Daily revenue chart (last 30 days) ----------------
+    # ---------------- Daily revenue chart (last 30 days) ----------------
     cursor.execute(
         """
         SELECT DATE(created_at) AS day, SUM(amount) AS total
@@ -1269,6 +1263,33 @@ def invoices_page():
             if top_total > 0:
                 pct = round((total_float / top_total) * 100, 1)
             top_clients.append([name, total_float, inv_count, pct])
+
+    # ---------------- NEW: Top items / services (for Top Items chart) ----------------
+    cursor.execute(
+        """
+        SELECT
+            ii.description,
+            SUM(ii.amount) AS total_billed,
+            COUNT(*) AS line_count
+        FROM invoice_items ii
+        JOIN invoices i ON ii.invoice_id = i.id
+        WHERE i.user_id = %s
+        GROUP BY ii.description
+        HAVING SUM(ii.amount) > 0
+        ORDER BY total_billed DESC
+        LIMIT 7
+        """,
+        (user_id,),
+    )
+    item_rows = cursor.fetchall()
+
+    item_labels = []
+    item_totals = []
+    item_counts = []
+    for desc, total_amt, line_count in item_rows:
+        item_labels.append(desc or "Untitled item")
+        item_totals.append(float(total_amt or 0))
+        item_counts.append(line_count or 0)
 
     # ---------------- Filtered table query ----------------
     base_sql = """
@@ -1336,8 +1357,8 @@ def invoices_page():
     invoices = []
     for row in filtered_rows:
         row_list = list(row)
-        row_list[2] = float(row_list[2])   # amount
-        row_list[7] = float(row_list[7])   # total_paid
+        row_list[2] = float(row_list[2])
+        row_list[7] = float(row_list[7])
         invoices.append(row_list)
 
     filtered_count = len(invoices)
@@ -1365,6 +1386,9 @@ def invoices_page():
         status_chart_labels=status_chart_labels,
         status_chart_values=status_chart_values,
         top_clients=top_clients,
+        item_labels=item_labels,
+        item_totals=item_totals,
+        item_counts=item_counts,
     )
 
 

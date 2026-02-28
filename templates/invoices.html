@@ -32,8 +32,11 @@
         </div>
 
         <div class="card kpi green">
-            <h2 class="kpi-number">${{ "{:,.2f}".format(total_revenue) }}</h2>
+            <h2 class="kpi-number" id="totalRevenueKpi">
+                ${{ "{:,.2f}".format(total_revenue) }}
+            </h2>
             <p>Total Revenue</p>
+            <small class="kpi-live-label">Live counter</small>
         </div>
 
         <div class="card kpi blue">
@@ -84,21 +87,29 @@
                 </div>
             </div>
             <canvas id="revenueChart" class="chart-canvas"></canvas>
+            <p class="chart-ai-hint">
+                Tip: Ask the AI helper “What does my revenue trend say about my business momentum?”
+            </p>
         </div>
 
-        <!-- Daily revenue (last 30 days) -->
-        <div class="chart-card">
+        <!-- Daily revenue (last 30 days) - scrollable -->
+        <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
                     <h3>Daily Revenue</h3>
-                    <span class="chart-sub">Last 30 days</span>
+                    <span class="chart-sub">Last 30 days (scrollable)</span>
                 </div>
             </div>
-            <canvas id="dailyRevenueChart" class="chart-canvas"></canvas>
+            <div class="chart-scroll-x">
+                <canvas id="dailyRevenueChart" class="chart-canvas wide-chart"></canvas>
+            </div>
+            <p class="chart-ai-hint">
+                Tip: Ask the AI helper “Which recent days were unusually strong or weak in revenue?”
+            </p>
         </div>
 
         <!-- Status breakdown -->
-        <div class="chart-card">
+        <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
                     <h3>Status Breakdown</h3>
@@ -106,10 +117,13 @@
                 </div>
             </div>
             <canvas id="statusChart" class="chart-canvas"></canvas>
+            <p class="chart-ai-hint">
+                Tip: Ask the AI helper “How should I prioritize following up based on my overdue vs sent invoices?”
+            </p>
         </div>
 
         <!-- Top clients -->
-        <div class="chart-card">
+        <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
                     <h3>Top Clients</h3>
@@ -146,10 +160,13 @@
                     Top clients will appear here as you send more invoices.
                 </p>
             {% endif %}
+            <p class="chart-ai-hint">
+                Tip: Ask the AI helper “How should I nurture or price work for my top clients?”
+            </p>
         </div>
 
         <!-- Top items / services -->
-        <div class="chart-card">
+        <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
                     <h3>Top Items</h3>
@@ -157,6 +174,9 @@
                 </div>
             </div>
             <canvas id="itemChart" class="chart-canvas"></canvas>
+            <p class="chart-ai-hint">
+                Tip: Ask the AI helper “What does my top items chart say about what I should sell more of?”
+            </p>
         </div>
 
     </div>
@@ -251,7 +271,7 @@
 
 {% endif %}
 
-<!-- CHART.JS SCRIPT (data from Flask) -->
+<!-- CHART.JS SCRIPT (data from Flask + live revenue counter) -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}
@@ -263,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const dailyLabels   = {{ daily_chart_labels|tojson }};
     const dailyValues   = {{ daily_chart_totals|tojson }};
 
-    // Optional: top items data (safe default to [])
+    // Top items data
     const itemLabels = {{ item_labels|default([], true)|tojson }};
     const itemTotals = {{ item_totals|default([], true)|tojson }};
     const itemCounts = {{ item_counts|default([], true)|tojson }};
@@ -423,6 +443,33 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+
+    // Live animated counter for Total Revenue
+    const totalRevenue = {{ total_revenue|tojson }};
+    const totalRevenueEl = document.getElementById("totalRevenueKpi");
+    if (totalRevenueEl && !isNaN(totalRevenue)) {
+        const duration = 800; // ms
+        const start = performance.now();
+        const startValue = 0;
+
+        function animate(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const current = startValue + (totalRevenue - startValue) * progress;
+
+            totalRevenueEl.textContent = "$" + current.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
     {% endif %}
 });
 </script>
