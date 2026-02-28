@@ -2387,3 +2387,54 @@ body.dark .table-wrapper .modern-table thead th {
     opacity: 1 !important;
     border: none !important;
 }
+
+/* =========================================
+   LINE ITEMS CONTROL POLISH
+   ========================================= */
+
+.line-items-wrapper {
+    margin-top: 12px;
+}
+
+.line-items-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.line-items-hint {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.remove-cell {
+    text-align: center;
+    vertical-align: middle;
+    width: 40px;
+}
+
+.btn-remove-row {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-remove-row:hover {
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+body.dark .btn-remove-row {
+    color: #6b7280;
+}
+
+body.dark .btn-remove-row:hover {
+    color: #fca5a5;
+}

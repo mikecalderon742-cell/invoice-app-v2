@@ -90,18 +90,19 @@
         <!-- LINE ITEMS -->
         <h3>Line Items</h3>
         <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-            Add at least one service or product. You can leave unused rows blank.
+            Add as many services or products as you like. You can remove rows you don’t need.
         </p>
 
-        <div class="table-wrapper" style="margin-top:12px;">
+        <div class="table-wrapper line-items-wrapper" style="margin-top:12px;">
             <table class="modern-table">
                 <thead>
                     <tr>
                         <th>Description</th>
                         <th style="width:180px;">Amount</th>
+                        <th style="width:40px;"></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="lineItemsBody">
                     {% for i in range(3) %}
                     <tr>
                         <td>
@@ -110,26 +111,39 @@
                         <td>
                             <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
                         </td>
+                        <td class="remove-cell">
+                            <button type="button" class="btn-remove-row" aria-label="Remove line item">✕</button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-<div class="form-row">
-    <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
-        Invoice style
-    </label>
-    <select name="template_style" id="template_style" class="template-select">
-        <option value="modern" selected>Modern Clean (default)</option>
-        <option value="minimal">Minimal Grey</option>
-        <option value="bold">Bold Accent</option>
-        <option value="doodle">Playful / Doodle</option>
-    </select>
-    <small style="font-size:12px; opacity:0.7;">
-        This controls the layout and feel of the PDF and client view.
-    </small>
-</div>
+        <div class="line-items-controls">
+            <button type="button" class="btn btn-secondary btn-add-row">
+                + Add line item
+            </button>
+            <small class="line-items-hint">
+                Tip: You can add unlimited rows. Leave unused rows blank.
+            </small>
+        </div>
+
+        <!-- TEMPLATE STYLE PICKER -->
+        <div class="form-row" style="margin-top:24px;">
+            <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
+                Invoice style
+            </label>
+            <select name="template_style" id="template_style" class="template-select">
+                <option value="modern" selected>Modern Clean (default)</option>
+                <option value="minimal">Minimal Grey</option>
+                <option value="bold">Bold Accent</option>
+                <option value="doodle">Playful / Doodle</option>
+            </select>
+            <small style="font-size:12px; opacity:0.7;">
+                This will eventually control the layout and feel of the PDF and client view.
+            </small>
+        </div>
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <a href="/invoices" class="btn btn-secondary">Cancel</a>
@@ -138,5 +152,53 @@
 
     </form>
 </div>
+
+<!-- LINE ITEMS DYNAMIC JS -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tbody = document.getElementById("lineItemsBody");
+    const addBtn = document.querySelector(".btn-add-row");
+
+    if (!tbody || !addBtn) return;
+
+    function createRow() {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
+            </td>
+            <td class="remove-cell">
+                <button type="button" class="btn-remove-row" aria-label="Remove line item">✕</button>
+            </td>
+        `;
+        return tr;
+    }
+
+    addBtn.addEventListener("click", function () {
+        tbody.appendChild(createRow());
+    });
+
+    // Event delegation for remove buttons
+    tbody.addEventListener("click", function (e) {
+        const btn = e.target.closest(".btn-remove-row");
+        if (!btn) return;
+
+        const row = btn.closest("tr");
+        if (!row) return;
+
+        // Keep at least one row so the table never disappears completely
+        if (tbody.rows.length > 1) {
+            row.remove();
+        } else {
+            // Just clear the inputs if it's the last row
+            const inputs = row.querySelectorAll("input");
+            inputs.forEach(i => i.value = "");
+        }
+    });
+});
+</script>
 
 {% endblock %}
