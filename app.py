@@ -1817,7 +1817,7 @@ def history_pdf(invoice_id):
     y -= 16
     pdf.drawString(72, y, f"Client: {client}")
 
-        if created_at:
+    if created_at:
         pdf.drawString(
             72,
             680,
