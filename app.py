@@ -1114,8 +1114,10 @@ def save():
 # -------------------------
 @app.route("/invoices")
 def invoices_page():
+    # Keep overdue statuses up to date
     update_overdue_statuses()
 
+    # ----- Filters from querystring -----
     q = (request.args.get("q") or "").strip()
     status_filter = (request.args.get("status") or "").strip()
     from_date_str = (request.args.get("from_date") or "").strip()
@@ -1132,6 +1134,7 @@ def invoices_page():
 
     if to_date_str:
         try:
+            # add one day so we can use "< to_dt" and still be inclusive
             to_dt = datetime.strptime(to_date_str, "%Y-%m-%d") + timedelta(days=1)
         except ValueError:
             to_dt = None
@@ -1142,71 +1145,7 @@ def invoices_page():
     current_user = get_current_user()
     user_id = current_user["id"]
 
-
-# -------------------------
-# GLOBAL SEARCH
-# -------------------------
-@app.route("/search")
-def global_search():
-    q = (request.args.get("q") or "").strip()
-    user = get_current_user()
-    user_id = user["id"]
-
-    client_results = []
-    invoice_results = []
-
-    if q:
-        like = f"%{q.lower()}%"
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Clients search
-        cursor.execute(
-            """
-            SELECT id, name, email, company, created_at
-            FROM clients
-            WHERE user_id = %s
-              AND (
-                    LOWER(name) LIKE %s
-                 OR LOWER(COALESCE(email, '')) LIKE %s
-                 OR LOWER(COALESCE(company, '')) LIKE %s
-              )
-            ORDER BY created_at DESC
-            LIMIT 50
-            """,
-            (user_id, like, like, like),
-        )
-        client_results = cursor.fetchall()
-
-        # Invoices search
-        cursor.execute(
-            """
-            SELECT id, client, amount, created_at, status, invoice_number
-            FROM invoices
-            WHERE user_id = %s
-              AND (
-                    LOWER(client) LIKE %s
-                 OR LOWER(COALESCE(invoice_number, '')) LIKE %s
-                 OR LOWER(COALESCE(notes, '')) LIKE %s
-                 OR LOWER(COALESCE(terms, '')) LIKE %s
-              )
-            ORDER BY created_at DESC
-            LIMIT 50
-            """,
-            (user_id, like, like, like, like),
-        )
-        invoice_results = cursor.fetchall()
-
-        conn.close()
-
-    return render_template(
-        "search.html",
-        q=q,
-        client_results=client_results,
-        invoice_results=invoice_results,
-    )
-
-    # ---------------- KPIs (same idea as before) ----------------
+    # ---------------- KPIs (overall stats) ----------------
     cursor.execute(
         """
         SELECT id, client, amount, created_at, status
@@ -1221,6 +1160,7 @@ def global_search():
     all_invoices = []
     for row in all_rows:
         row_list = list(row)
+        # amount numeric -> float
         row_list[2] = float(row_list[2])
         all_invoices.append(row_list)
 
@@ -1238,7 +1178,9 @@ def global_search():
     )
 
     growth = (
-        round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
+        round((monthly_revenue / total_revenue) * 100, 1)
+        if total_revenue > 0
+        else 0
     )
     avg_invoice = (
         round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
@@ -1394,8 +1336,8 @@ def global_search():
     invoices = []
     for row in filtered_rows:
         row_list = list(row)
-        row_list[2] = float(row_list[2])
-        row_list[7] = float(row_list[7])
+        row_list[2] = float(row_list[2])   # amount
+        row_list[7] = float(row_list[7])   # total_paid
         invoices.append(row_list)
 
     filtered_count = len(invoices)
@@ -1423,6 +1365,70 @@ def global_search():
         status_chart_labels=status_chart_labels,
         status_chart_values=status_chart_values,
         top_clients=top_clients,
+    )
+
+
+# -------------------------
+# GLOBAL SEARCH
+# -------------------------
+@app.route("/search")
+def global_search():
+    q = (request.args.get("q") or "").strip()
+    user = get_current_user()
+    user_id = user["id"]
+
+    client_results = []
+    invoice_results = []
+
+    if q:
+        like = f"%{q.lower()}%"
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Clients search
+        cursor.execute(
+            """
+            SELECT id, name, email, company, created_at
+            FROM clients
+            WHERE user_id = %s
+              AND (
+                    LOWER(name) LIKE %s
+                 OR LOWER(COALESCE(email, '')) LIKE %s
+                 OR LOWER(COALESCE(company, '')) LIKE %s
+              )
+            ORDER BY created_at DESC
+            LIMIT 50
+            """,
+            (user_id, like, like, like),
+        )
+        client_results = cursor.fetchall()
+
+        # Invoices search
+        cursor.execute(
+            """
+            SELECT id, client, amount, created_at, status, invoice_number
+            FROM invoices
+            WHERE user_id = %s
+              AND (
+                    LOWER(client) LIKE %s
+                 OR LOWER(COALESCE(invoice_number, '')) LIKE %s
+                 OR LOWER(COALESCE(notes, '')) LIKE %s
+                 OR LOWER(COALESCE(terms, '')) LIKE %s
+              )
+            ORDER BY created_at DESC
+            LIMIT 50
+            """,
+            (user_id, like, like, like, like),
+        )
+        invoice_results = cursor.fetchall()
+
+        conn.close()
+
+    return render_template(
+        "search.html",
+        q=q,
+        client_results=client_results,
+        invoice_results=invoice_results,
     )
 
 
@@ -2006,115 +2012,6 @@ def history_pdf(invoice_id):
     )
 
 
-    # ---------- HEADER BAR ----------
-    pdf.setFillColorRGB(*header_bar_color)
-    pdf.rect(0, page_height - 60, page_width, 60, fill=1, stroke=0)
-
-    pdf.setFillColorRGB(1, 1, 1)
-    pdf.setFont("Helvetica-Bold", 22)
-    pdf.drawString(72, page_height - 40, title_text)
-
-    # Reset to dark text for body
-    pdf.setFillColorRGB(0.1, 0.1, 0.15)
-    pdf.setFont("Helvetica", 11)
-
-    inv_label = invoice_number or f"#{invoice_id}"
-    y = page_height - 90
-
-    pdf.drawString(72, y, f"Invoice: {inv_label}")
-    y -= 16
-    pdf.drawString(72, y, f"Client: {client}")
-
-    if created_at:
-        pdf.drawString(
-            72,
-            680,
-            f"Created: {created_at.strftime('%Y-%m-%d %I:%M %p')}",
-        )
-    if due_date:
-        pdf.drawString(
-            72,
-            660,
-            f"Due: {due_date.strftime('%Y-%m-%d')}",
-        )
-
-    # Right side summary box
-    right_box_top = page_height - 90
-    right_box_left = page_width - 220
-    pdf.setFillColorRGB(1, 1, 1)
-    pdf.setStrokeColorRGB(*accent_color)
-    pdf.rect(right_box_left, right_box_top - 50, 180, 50, fill=1, stroke=1)
-
-    pdf.setFillColorRGB(0.1, 0.1, 0.15)
-    pdf.setFont("Helvetica-Bold", 11)
-    pdf.drawString(right_box_left + 10, right_box_top - 20, "Total")
-    pdf.setFont("Helvetica-Bold", 14)
-    pdf.setFillColorRGB(*accent_color)
-    pdf.drawRightString(
-        right_box_left + 170,
-        right_box_top - 30,
-        f"${amount_float:,.2f}",
-    )
-
-    # ---------- LINE ITEMS ----------
-    y = right_box_top - 80
-    pdf.setFillColorRGB(0.1, 0.1, 0.15)
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(72, y, "Line Items")
-    y -= 20
-
-    pdf.setFont("Helvetica", 11)
-    pdf.setFillColorRGB(0.3, 0.3, 0.35)
-    pdf.drawString(72, y, "Description")
-    pdf.drawRightString(page_width - 72, y, "Amount")
-    y -= 12
-
-    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
-    pdf.line(72, y, page_width - 72, y)
-    y -= 18
-
-    pdf.setFont("Helvetica", 10)
-    pdf.setFillColorRGB(0.1, 0.1, 0.15)
-
-    for desc, amt in items:
-        amt_float = float(amt)
-        pdf.drawString(72, y, f"{desc}")
-        pdf.drawRightString(
-            page_width - 72,
-            y,
-            f"${amt_float:,.2f}",
-        )
-        y -= 16
-        if y < 72:
-            pdf.showPage()
-            y = page_height - 72
-            pdf.setFont("Helvetica", 10)
-            pdf.setFillColorRGB(0.1, 0.1, 0.15)
-
-    # ---------- TOTAL FOOTER ----------
-    if y < 110:
-        pdf.showPage()
-        y = page_height - 100
-
-    y -= 10
-    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
-    pdf.line(72, y, page_width - 72, y)
-    y -= 24
-
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.setFillColorRGB(*accent_color)
-    pdf.drawRightString(
-        page_width - 72,
-        y,
-        f"Total Due: ${amount_float:,.2f}",
-    )
-
-    pdf.showPage()
-    pdf.save()
-    buffer.seek(0)
-    return buffer.getvalue(), None
-
-
 # -------------------------
 # PUBLIC INVOICE PORTAL
 # -------------------------
@@ -2223,7 +2120,6 @@ def public_invoice(token):
         is_public_view=True,
         public_token=token,
     )
-
 
 
 @app.route("/invoice/<int:invoice_id>")
@@ -2611,6 +2507,9 @@ def send_email_view(invoice_id):
     )
 
 
+# -------------------------
+# AI HELPER SUPPORTING KPI SNAPSHOT
+# -------------------------
 def get_ai_kpi_summary_for_user(user_id: int) -> str:
     """
     Lightweight invoice KPIs for the AI helper so it can reason
