@@ -1906,19 +1906,6 @@ def history_pdf(invoice_id):
     buffer.seek(0)
     return buffer.getvalue(), None
 
-@app.route("/history-pdf/<int:invoice_id>")
-def history_pdf(invoice_id):
-    pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
-    if err:
-        return err, 404
-
-    return send_file(
-        io.BytesIO(pdf_bytes),
-        as_attachment=True,
-        download_name=f"invoice_{invoice_id}.pdf",
-        mimetype="application/pdf",
-    )
-
 
 # -------------------------
 # PUBLIC INVOICE PORTAL
