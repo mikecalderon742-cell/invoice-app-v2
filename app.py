@@ -1684,10 +1684,9 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     conn = get_db_connection()
     c = conn.cursor()
 
-    # 🔹 Grab template_style along with core fields
     c.execute(
         """
-        SELECT client, amount, created_at, due_date, invoice_number, template_style
+        SELECT client, amount, created_at, due_date, invoice_number
         FROM invoices
         WHERE id = %s
         """,
@@ -1699,8 +1698,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         conn.close()
         return None, "Invoice not found"
 
-    client, amount, created_at, due_date, invoice_number, template_style = row
-    template_style = (template_style or "modern").lower()
+    client, amount, created_at, due_date, invoice_number = row
 
     c.execute(
         "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
@@ -1709,11 +1707,69 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     items = c.fetchall()
     conn.close()
 
-    amount_float = float(amount)
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=LETTER)
 
-    page_width, page_height = LETTER
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(72, 750, "Invoice")
+
+    pdf.setFont("Helvetica", 12)
+    inv_label = invoice_number or f"#{invoice_id}"
+    pdf.drawString(72, 720, f"Invoice: {inv_label}")
+    pdf.drawString(72, 700, f"Client: {client}")
+
+    if created_at:
+        pdf.drawString(
+            72,
+            680,
+            f"Created: {created_at.strftime('%Y-%m-%d %I:%M %p')}",
+        )
+
+    if due_date:
+        pdf.drawString(
+            72,
+            660,
+            f"Due: {due_date.strftime('%Y-%m-%d')}",
+        )
+
+    y = 630
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(72, y, "Line Items")
+    y -= 20
+    pdf.setFont("Helvetica", 11)
+
+    for desc, amt in items:
+        pdf.drawString(72, y, f"{desc}")
+        pdf.drawRightString(540, y, f"${amt}")
+        y -= 18
+
+        if y < 72:
+            pdf.showPage()
+            y = 750
+
+    y -= 10
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(72, y, f"Total Due: ${amount}")
+
+    pdf.showPage()
+    pdf.save()
+    buffer.seek(0)
+    return buffer.getvalue(), None
+
+
+@app.route("/history-pdf/<int:invoice_id>")
+def history_pdf(invoice_id):
+    pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
+    if err:
+        return err, 404
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        as_attachment=True,
+        download_name=f"invoice_{invoice_id}.pdf",
+        mimetype="application/pdf",
+    )
+
 
     # ---------- TEMPLATE STYLES ----------
     # Basic defaults
