@@ -17,134 +17,183 @@
 </div>
 
 <div class="form-wrapper fade-in-up">
-    <h2 style="margin-top:0;">New Invoice</h2>
 
-    <form id="invoiceForm" method="POST" action="/save">
+    <div class="invoice-layout-grid">
+        <!-- LEFT: main invoice form -->
+        <div class="invoice-form-col">
+            <h2 style="margin-top:0;">New Invoice</h2>
 
-        <!-- CLIENT SECTION -->
-        <h3>Client</h3>
-        <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
+            <form id="invoiceForm" method="POST" action="/save">
 
-            <!-- Existing client dropdown -->
-            <div>
-                <label for="client_id" style="font-weight:600; font-size:14px;">Existing Client (optional)</label>
-                <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
-                    <option value="">-- Select existing client --</option>
-                    {% for client in clients %}
-                        <option value="{{ client[0] }}">
-                            {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
-                        </option>
-                    {% endfor %}
-                </select>
-                <small style="font-size:12px; opacity:0.7;">Choose a client you've already worked with, or add a new one below.</small>
-            </div>
+                <!-- CLIENT SECTION -->
+                <h3>Client</h3>
+                <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
 
-            <!-- New client fields -->
-            <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
-                <div>
-                    <label for="new_client_name" style="font-weight:600; font-size:14px;">New Client Name</label>
-                    <input type="text" id="new_client_name" name="new_client_name" placeholder="e.g. Acme Corp or Jane Doe">
+                    <!-- Existing client dropdown -->
+                    <div>
+                        <label for="client_id" style="font-weight:600; font-size:14px;">Existing Client (optional)</label>
+                        <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+                            <option value="">-- Select existing client --</option>
+                            {% for client in clients %}
+                                <option value="{{ client[0] }}">
+                                    {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small style="font-size:12px; opacity:0.7;">Choose a client you've already worked with, or add a new one below.</small>
+                    </div>
+
+                    <!-- New client fields -->
+                    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
+                        <div>
+                            <label for="new_client_name" style="font-weight:600; font-size:14px;">New Client Name</label>
+                            <input type="text" id="new_client_name" name="new_client_name" placeholder="e.g. Acme Corp or Jane Doe">
+                        </div>
+                        <div>
+                            <label for="new_client_email" style="font-weight:600; font-size:14px;">Client Email</label>
+                            <input type="email" id="new_client_email" name="new_client_email" placeholder="client@example.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="new_client_company" style="font-weight:600; font-size:14px;">Company (optional)</label>
+                        <input type="text" id="new_client_company" name="new_client_company" placeholder="Company name">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div>
+                            <label for="new_client_phone" style="font-weight:600; font-size:14px;">Phone (optional)</label>
+                            <input type="text" id="new_client_phone" name="new_client_phone" placeholder="+1 (555) 123-4567">
+                        </div>
+                        <div>
+                            <label for="new_client_address" style="font-weight:600; font-size:14px;">Address (optional)</label>
+                            <input type="text" id="new_client_address" name="new_client_address" placeholder="City, Country">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="new_client_notes" style="font-weight:600; font-size:14px;">Client Notes (optional)</label>
+                        <input type="text" id="new_client_notes" name="new_client_notes" placeholder="e.g. Prefers bank transfer, pay within 7 days">
+                    </div>
+
                 </div>
-                <div>
-                    <label for="new_client_email" style="font-weight:600; font-size:14px;">Client Email</label>
-                    <input type="email" id="new_client_email" name="new_client_email" placeholder="client@example.com">
+
+                <!-- INVOICE META -->
+                <h3>Invoice Details</h3>
+                <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
+                    <div>
+                        <label for="invoice_notes" style="font-weight:600; font-size:14px;">Invoice Notes (optional)</label>
+                        <input type="text" id="invoice_notes" name="invoice_notes" placeholder="e.g. Thanks for your business!">
+                    </div>
+                    <div>
+                        <label for="invoice_terms" style="font-weight:600; font-size:14px;">Payment Terms</label>
+                        <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <label for="new_client_company" style="font-weight:600; font-size:14px;">Company (optional)</label>
-                <input type="text" id="new_client_company" name="new_client_company" placeholder="Company name">
-            </div>
+                <!-- LINE ITEMS -->
+                <h3>Line Items</h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    Add at least one service or product. You can leave unused rows blank.
+                </p>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <div>
-                    <label for="new_client_phone" style="font-weight:600; font-size:14px;">Phone (optional)</label>
-                    <input type="text" id="new_client_phone" name="new_client_phone" placeholder="+1 (555) 123-4567">
+                <div class="table-wrapper" style="margin-top:12px;">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="width:180px;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(3) %}
+                            <tr>
+                                <td>
+                                    <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <label for="new_client_address" style="font-weight:600; font-size:14px;">Address (optional)</label>
-                    <input type="text" id="new_client_address" name="new_client_address" placeholder="City, Country">
+
+                <div class="form-row">
+                    <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
+                        Invoice style
+                    </label>
+                    <select name="template_style" id="template_style" class="template-select">
+                        <option value="modern" selected>Modern Clean (default)</option>
+                        <option value="minimal">Minimal Grey</option>
+                        <option value="bold">Bold Accent</option>
+                        <option value="doodle">Playful / Doodle</option>
+                    </select>
+                    <small style="font-size:12px; opacity:0.7;">
+                        This controls the layout and feel of the PDF and client view.
+                    </small>
                 </div>
+
+                <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <a href="/invoices" class="btn btn-secondary">Cancel</a>
+                    <button type="button" id="previewButton" class="btn btn-secondary">
+                        Preview Invoice
+                    </button>
+                    <button type="submit" class="btn btn-brand">Save Invoice</button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
+        <aside class="invoice-helper-col">
+            <div class="assistant-card">
+                <div class="assistant-header">
+                    <span class="assistant-icon">✨</span>
+                    <div>
+                        <h3 class="assistant-title">Invoice Assistant</h3>
+                        <p class="assistant-subtitle">Smart tips while you build.</p>
+                    </div>
+                </div>
+
+                {% if user_plan == "pro" or user_plan == "enterprise" %}
+                    <p class="assistant-text">
+                        As a Pro user, you’ll get richer suggestions here as we roll out AI features.
+                        For now, here are some recommended tweaks:
+                    </p>
+                    <ul class="assistant-list">
+                        <li>Make your line item descriptions specific (hours, deliverables, dates).</li>
+                        <li>Use payment terms that match how you actually collect (Net 7, Net 15, Net 30).</li>
+                        <li>Add a friendly note to increase on-time payments.</li>
+                        <li>Use the <strong>Preview</strong> button to sanity-check totals and wording.</li>
+                    </ul>
+                    <p class="assistant-footer">
+                        Coming soon: ask natural language questions like
+                        <em>“Help me rewrite this invoice to sound more professional.”</em>
+                    </p>
+                {% else %}
+                    <p class="assistant-text">
+                        The assistant gives you quick best-practice tips on the free plan.
+                        Upgrade to Pro later for deeper AI help.
+                    </p>
+                    <ul class="assistant-list">
+                        <li>Always double-check the client email before sending.</li>
+                        <li>Break big projects into multiple line items instead of one huge fee.</li>
+                        <li>Use clear due dates so there’s no confusion.</li>
+                    </ul>
+                    <p class="assistant-footer">
+                        Want smarter, AI-powered suggestions here?<br>
+                        <a href="/pricing" class="assistant-link">See Pro features →</a>
+                    </p>
+                {% endif %}
             </div>
+        </aside>
 
-            <div>
-                <label for="new_client_notes" style="font-weight:600; font-size:14px;">Client Notes (optional)</label>
-                <input type="text" id="new_client_notes" name="new_client_notes" placeholder="e.g. Prefers bank transfer, pay within 7 days">
-            </div>
-
-        </div>
-
-        <!-- INVOICE META -->
-        <h3>Invoice Details</h3>
-        <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
-            <div>
-                <label for="invoice_notes" style="font-weight:600; font-size:14px;">Invoice Notes (optional)</label>
-                <input type="text" id="invoice_notes" name="invoice_notes" placeholder="e.g. Thanks for your business!">
-            </div>
-            <div>
-                <label for="invoice_terms" style="font-weight:600; font-size:14px;">Payment Terms</label>
-                <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
-            </div>
-        </div>
-
-        <!-- LINE ITEMS -->
-        <h3>Line Items</h3>
-        <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-            Add at least one service or product. You can leave unused rows blank.
-        </p>
-
-        <div class="table-wrapper" style="margin-top:12px;">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th style="width:180px;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(3) %}
-                    <tr>
-                        <td>
-                            <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="form-row">
-            <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
-                Invoice style
-            </label>
-            <select name="template_style" id="template_style" class="template-select">
-                <option value="modern" selected>Modern Clean (default)</option>
-                <option value="minimal">Minimal Grey</option>
-                <option value="bold">Bold Accent</option>
-                <option value="doodle">Playful / Doodle</option>
-            </select>
-            <small style="font-size:12px; opacity:0.7;">
-                This controls the layout and feel of the PDF and client view.
-            </small>
-        </div>
-
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-            <a href="/invoices" class="btn btn-secondary">Cancel</a>
-            <!-- NEW: Preview button -->
-            <button type="button" id="previewButton" class="btn btn-secondary">
-                Preview Invoice
-            </button>
-            <!-- Existing: Save -->
-            <button type="submit" class="btn btn-brand">Save Invoice</button>
-        </div>
-
-    </form>
+    </div>
 </div>
 
-<!-- Inline page-specific script to wire Preview button -->
+<!-- Keep your existing Preview JS here -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("invoiceForm");
@@ -157,13 +206,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const originalAction = form.action;
             const originalTarget = form.target;
 
-            // Send this exact form payload to /preview
             form.action = "/preview";
-            form.target = "_blank"; // open preview in a new tab so you don't lose the form
+            form.target = "_blank";
 
             form.submit();
 
-            // Restore original settings so "Save" still posts to /save
             form.action = originalAction;
             form.target = originalTarget;
         });

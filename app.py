@@ -1761,12 +1761,18 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     y -= 16
     pdf.drawString(72, y, f"Client: {client}")
 
-    if created_at:
-        y -= 16
-        pdf.drawString(72, y, f"Created: {created_at.strftime('%Y-%m-%d')}")
+        if created_at:
+        pdf.drawString(
+            72,
+            680,
+            f"Created: {created_at.strftime('%Y-%m-%d %I:%M %p')}",
+        )
     if due_date:
-        y -= 16
-        pdf.drawString(72, y, f"Due: {due_date.strftime('%Y-%m-%d')}")
+        pdf.drawString(
+            72,
+            660,
+            f"Due: {due_date.strftime('%Y-%m-%d')}",
+        )
 
     # Right side summary box
     right_box_top = page_height - 90
