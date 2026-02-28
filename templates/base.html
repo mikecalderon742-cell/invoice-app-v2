@@ -174,6 +174,24 @@
     {% block content %}{% endblock %}
 </div>
 
+<footer class="footer">
+   © • InvoicePro v2.1 • Mike Calderon • 2026
+</footer>
+
+<div id="loader" class="loader"></div>
+
+{% if not is_public_view %}
+<a href="/" class="floating-btn">+</a>
+{% endif %}
+
+<div id="welcomeModal" class="welcome-modal hidden">
+    <div class="welcome-content">
+        <h2>Welcome to InvoicePro 🚀</h2>
+        <p>You're now using a modern invoicing platform.</p>
+        <button id="closeWelcome" class="btn">Let's Go</button>
+    </div>
+</div>
+
 {% if not is_public_view %}
 <!-- AI HELPER WIDGET -->
 <div id="aiHelper" class="ai-helper">
@@ -210,24 +228,6 @@
 </div>
 {% endif %}
 
-<footer class="footer">
-   © • InvoicePro v2.1 • Mike Calderon • 2026
-</footer>
-
-<div id="loader" class="loader"></div>
-
-{% if not is_public_view %}
-<a href="/" class="floating-btn">+</a>
-{% endif %}
-
-<div id="welcomeModal" class="welcome-modal hidden">
-    <div class="welcome-content">
-        <h2>Welcome to InvoicePro 🚀</h2>
-        <p>You're now using a modern invoicing platform.</p>
-        <button id="closeWelcome" class="btn">Let's Go</button>
-    </div>
-</div>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -258,91 +258,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!isNaN(target)) {
             update();
         }
-
-        /* ============================
-       AI HELPER WIDGET
-    ============================ */
-    const aiHelper = document.getElementById("aiHelper");
-    const aiPanel = document.getElementById("aiHelperPanel");
-    const aiToggle = document.getElementById("aiHelperToggle");
-    const aiClose = document.getElementById("aiHelperClose");
-    const aiForm = document.getElementById("aiHelperForm");
-    const aiInput = document.getElementById("aiHelperInput");
-    const aiMessages = document.getElementById("aiHelperMessages");
-
-    function appendMessage(text, role) {
-        if (!aiMessages) return;
-        const div = document.createElement("div");
-        div.classList.add("ai-message");
-        if (role === "user") div.classList.add("ai-message-user");
-        if (role === "assistant") div.classList.add("ai-message-assistant");
-        if (role === "system") div.classList.add("ai-message-system");
-        div.innerHTML = text.replace(/\n/g, "<br>");
-        aiMessages.appendChild(div);
-        aiMessages.scrollTop = aiMessages.scrollHeight;
-    }
-
-    function setLoading(isLoading) {
-        if (!aiForm) return;
-        const sendBtn = aiForm.querySelector(".ai-helper-send");
-        if (!sendBtn) return;
-        sendBtn.disabled = isLoading;
-        sendBtn.textContent = isLoading ? "Thinking..." : "Send";
-    }
-
-    if (aiToggle && aiPanel && aiHelper) {
-        aiToggle.addEventListener("click", function () {
-            aiHelper.classList.toggle("open");
-            if (aiHelper.classList.contains("open") && aiInput) {
-                setTimeout(() => aiInput.focus(), 50);
-            }
-        });
-    }
-
-    if (aiClose && aiHelper) {
-        aiClose.addEventListener("click", function () {
-            aiHelper.classList.remove("open");
-        });
-    }
-
-    if (aiForm && aiInput) {
-        aiForm.addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const q = aiInput.value.trim();
-            if (!q) return;
-
-            appendMessage(q, "user");
-            aiInput.value = "";
-            setLoading(true);
-
-            try {
-                const resp = await fetch("/ai-helper", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        question: q,
-                        page: window.location.pathname
-                    })
-                });
-
-                const data = await resp.json();
-                if (data.answer) {
-                    appendMessage(data.answer, "assistant");
-                } else if (data.error) {
-                    appendMessage("Sorry, I ran into a problem: " + data.error, "system");
-                } else {
-                    appendMessage("Hmm, I couldn't understand the response from the server.", "system");
-                }
-            } catch (err) {
-                appendMessage("Network error talking to the AI helper. Please try again.", "system");
-            } finally {
-                setLoading(false);
-            }
-        });
-    }
-
     });
 
     /* HERO PARALLAX */
@@ -393,12 +308,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const overlay = document.getElementById("overlay");
 
     function openSidebar() {
+        if (!sidebar || !overlay || !hamburger) return;
         sidebar.classList.add("active");
         overlay.classList.add("active");
         hamburger.classList.add("active");
     }
 
     function closeSidebar() {
+        if (!sidebar || !overlay || !hamburger) return;
         sidebar.classList.remove("active");
         overlay.classList.remove("active");
         hamburger.classList.remove("active");
@@ -475,6 +392,91 @@ document.addEventListener("DOMContentLoaded", function () {
         document.body.style.setProperty('--x', e.clientX + 'px');
         document.body.style.setProperty('--y', e.clientY + 'px');
     });
+
+    /* ============================
+       AI HELPER WIDGET
+    ============================ */
+    const aiHelper = document.getElementById("aiHelper");
+    const aiPanel = document.getElementById("aiHelperPanel");
+    const aiToggle = document.getElementById("aiHelperToggle");
+    const aiClose = document.getElementById("aiHelperClose");
+    const aiForm = document.getElementById("aiHelperForm");
+    const aiInput = document.getElementById("aiHelperInput");
+    const aiMessages = document.getElementById("aiHelperMessages");
+
+    function appendMessage(text, role) {
+        if (!aiMessages) return;
+        const div = document.createElement("div");
+        div.classList.add("ai-message");
+        if (role === "user") div.classList.add("ai-message-user");
+        if (role === "assistant") div.classList.add("ai-message-assistant");
+        if (role === "system") div.classList.add("ai-message-system");
+        div.innerHTML = text.replace(/\n/g, "<br>");
+        aiMessages.appendChild(div);
+        aiMessages.scrollTop = aiMessages.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+        if (!aiForm) return;
+        const sendBtn = aiForm.querySelector(".ai-helper-send");
+        if (!sendBtn) return;
+        sendBtn.disabled = isLoading;
+        sendBtn.textContent = isLoading ? "Thinking..." : "Send";
+    }
+
+    if (aiToggle && aiHelper) {
+        aiToggle.addEventListener("click", function () {
+            aiHelper.classList.toggle("open");
+            if (aiHelper.classList.contains("open") && aiInput) {
+                setTimeout(() => aiInput.focus(), 50);
+            }
+        });
+    }
+
+    if (aiClose && aiHelper) {
+        aiClose.addEventListener("click", function () {
+            aiHelper.classList.remove("open");
+        });
+    }
+
+    if (aiForm && aiInput) {
+        aiForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const q = aiInput.value.trim();
+            if (!q) return;
+
+            appendMessage(q, "user");
+            aiInput.value = "";
+            setLoading(true);
+
+            try {
+                const resp = await fetch("/ai-helper", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        question: q,
+                        page: window.location.pathname
+                    })
+                });
+
+                const data = await resp.json();
+                if (data.answer) {
+                    appendMessage(data.answer, "assistant");
+                } else if (data.error) {
+                    appendMessage("Sorry, I ran into a problem: " + data.error, "system");
+                } else {
+                    appendMessage("Hmm, I couldn't understand the response from the server.", "system");
+                }
+            } catch (err) {
+                appendMessage("Network error talking to the AI helper. Please try again.", "system");
+            } finally {
+                setLoading(false);
+            }
+        });
+    }
+
 });
 </script>
 
