@@ -2257,3 +2257,108 @@ body.dark .trust-pill {
     display: block;
     box-sizing: border-box;  /* includes padding in width */
 }
+
+/* ===== Invoice Table Section Header – make it stronger ===== */
+
+.table-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+
+.table-section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: #111827; /* strong slate */
+}
+
+.table-section-header p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    opacity: 0.9; /* was faint, now stronger */
+    color: #4b5563;
+}
+
+body.dark .table-section-header h2 {
+    color: #e5e7eb;
+}
+
+body.dark .table-section-header p {
+    color: #9ca3af;
+    opacity: 1;
+}
+
+.table-meta {
+    font-size: 12px;
+    opacity: 0.8;
+    color: #6b7280;
+}
+
+body.dark .table-meta {
+    color: #9ca3af;
+}
+
+/* ===== Secondary + PDF button styling – clearly visible ===== */
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #111827;
+    border: 2px solid rgba(0,0,0,0.15);
+}
+
+body.dark .btn-secondary {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: rgba(148,163,184,0.6);
+}
+
+.btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+}
+
+.btn-pdf::before {
+    content: "⬇";
+    font-size: 0.85em;
+}
+
+/* ===== Top Clients card – scrollable leaderboard ===== */
+
+.top-clients-card {
+    display: flex;
+    flex-direction: column;
+    max-height: 280px;
+    overflow: hidden;
+}
+
+.top-clients-card .leaderboard {
+    flex: 1;
+    max-height: 210px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* nice thin scrollbar for the leaderboard (WebKit) */
+.top-clients-card .leaderboard::-webkit-scrollbar {
+    width: 6px;
+}
+
+.top-clients-card .leaderboard::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.top-clients-card .leaderboard::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.7);
+    border-radius: 999px;
+}
+
+body.dark .top-clients-card .leaderboard::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.9);
+}

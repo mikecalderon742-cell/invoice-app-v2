@@ -86,7 +86,7 @@
         </div>
 
         <!-- Top clients -->
-        <div class="chart-card">
+        <div class="chart-card top-clients-card">
             <div class="chart-header">
                 <div>
                     <h3>Top Clients</h3>
@@ -130,7 +130,7 @@
     <div class="table-section-header">
         <div>
             <h2>Invoice History</h2>
-            <p>All invoices, statuses, and quick actions—including PDF downloads.</p>
+            <p>All invoices, statuses, and quick actions — including one-click PDF downloads.</p>
         </div>
         <div class="table-meta">
             <span>{{ filtered_count }} showing</span>
@@ -163,7 +163,7 @@
                     <td>{{ invoice[1] }}</td>
                     <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
 
-                    {# 🔹 Created: date + time #}
+                    {# Created: date + time #}
                     <td>{{ invoice[3].strftime('%Y-%m-%d %I:%M %p') }}</td>
 
                     <td>
