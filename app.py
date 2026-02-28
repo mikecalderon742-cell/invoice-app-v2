@@ -1209,6 +1209,7 @@ def invoices_page():
     conditions = []
     params = [user_id]
 
+
     if q:
     like = f"%{q.lower()}%"
     conditions.append(
