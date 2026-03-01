@@ -93,15 +93,15 @@
         </div>
 
         <!-- Daily revenue (last 30 days) - scrollable -->
-        <div class="chart-card brand-accent">
+        <div class="chart-card brand-accent daily-scroll">
             <div class="chart-header">
                 <div>
                     <h3>Daily Revenue</h3>
-                    <span class="chart-sub">Last 30 days (scrollable)</span>
+                    <span class="chart-sub">Last 30 days</span>
                 </div>
             </div>
-            <div class="chart-scroll-x">
-                <canvas id="dailyRevenueChart" class="chart-canvas wide-chart"></canvas>
+            <div class="chart-scroll-inner">
+                <canvas id="dailyRevenueChart" class="chart-canvas wide"></canvas>
             </div>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “Which recent days were unusually strong or weak in revenue?”
@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const itemTotals = {{ item_totals|default([], true)|tojson }};
     const itemCounts = {{ item_counts|default([], true)|tojson }};
 
-    // Revenue chart (monthly, line)
+    // ---------- Revenue chart (monthly, LINE) ----------
     const revCtx = document.getElementById("revenueChart");
     if (revCtx && revenueLabels.length > 0) {
         new Chart(revCtx, {
@@ -298,8 +298,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     label: "Revenue",
                     data: revenueValues,
-                    fill: true,
-                    tension: 0.35
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.35,
+                    fill: false
                 }]
             },
             options: {
@@ -311,23 +314,36 @@ document.addEventListener("DOMContentLoaded", function() {
                         callbacks: {
                             label: function(ctx) {
                                 const v = ctx.parsed.y || 0;
-                                return "$" + v.toLocaleString(undefined, {
+                                return "Revenue: $" + v.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
                                 });
                             }
                         }
+                    },
+                    title: {
+                        display: true,
+                        text: "Monthly revenue trend"
                     }
                 },
                 scales: {
-                    x: { ticks: { autoSkip: true } },
-                    y: { beginAtZero: true }
+                    x: {
+                        ticks: { autoSkip: true }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return "$" + value.toLocaleString();
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
-    // Daily revenue chart (last 30 days, bar)
+    // ---------- Daily revenue chart (bar, scrollable) ----------
     const dailyCtx = document.getElementById("dailyRevenueChart");
     if (dailyCtx && dailyLabels.length > 0) {
         new Chart(dailyCtx, {
@@ -336,7 +352,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: dailyLabels,
                 datasets: [{
                     label: "Daily revenue",
-                    data: dailyValues
+                    data: dailyValues,
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.7
                 }]
             },
             options: {
@@ -348,28 +366,39 @@ document.addEventListener("DOMContentLoaded", function() {
                         callbacks: {
                             label: function(ctx) {
                                 const v = ctx.parsed.y || 0;
-                                return "$" + v.toLocaleString(undefined, {
+                                return "Revenue: $" + v.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
                                 });
                             }
                         }
+                    },
+                    title: {
+                        display: true,
+                        text: "Daily revenue (last 30 days)"
                     }
                 },
                 scales: {
                     x: {
                         ticks: {
                             autoSkip: true,
-                            maxTicksLimit: 8
+                            maxTicksLimit: 10
                         }
                     },
-                    y: { beginAtZero: true }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return "$" + value.toLocaleString();
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
-    // Status chart (doughnut)
+    // ---------- Status chart (doughnut) ----------
     const statusCtx = document.getElementById("statusChart");
     if (statusCtx && statusLabels.length > 0) {
         new Chart(statusCtx, {
@@ -386,6 +415,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 plugins: {
                     legend: {
                         position: "bottom"
+                    },
+                    title: {
+                        display: true,
+                        text: "Invoice statuses"
                     }
                 },
                 cutout: "60%"
@@ -393,7 +426,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Top items (bar chart by total billed)
+    // ---------- Top items (bar chart by total billed) ----------
     const itemCtx = document.getElementById("itemChart");
     if (itemCtx && itemLabels.length > 0) {
         new Chart(itemCtx, {
@@ -419,9 +452,13 @@ document.addEventListener("DOMContentLoaded", function() {
                                 return "$" + total.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
-                                }) + " (" + count + " tx)";
+                                }) + " (" + count + " item" + (count === 1 ? "" : "s") + ")";
                             }
                         }
+                    },
+                    title: {
+                        display: true,
+                        text: "Top billed items"
                     }
                 },
                 scales: {
@@ -444,7 +481,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Live animated counter for Total Revenue
+    // ---------- Live animated counter for Total Revenue ----------
     const totalRevenue = {{ total_revenue|tojson }};
     const totalRevenueEl = document.getElementById("totalRevenueKpi");
     if (totalRevenueEl && !isNaN(totalRevenue)) {
