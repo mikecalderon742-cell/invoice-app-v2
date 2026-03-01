@@ -91,6 +91,29 @@
                         <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
                     </div>
                 </div>
+                <!-- ATTACHMENTS (PHOTOS) -->
+<h3>Attachments (optional)</h3>
+<p style="font-size:13px; opacity:0.8; margin-top:4px;">
+    Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
+</p>
+
+<div style="margin-bottom:20px;">
+    <label for="attachments" style="font-weight:600; font-size:14px;">
+        Photos
+    </label>
+    <input
+        type="file"
+        id="attachments"
+        name="attachments"
+        accept="image/*"
+        multiple
+        style="display:block; margin-top:6px;"
+        capture="environment"
+    >
+    <small style="font-size:12px; opacity:0.7;">
+        On mobile you can use your camera or pick from your photo library.
+    </small>
+</div>
 
                 <!-- LINE ITEMS -->
                 <h3>Line Items</h3>
@@ -136,6 +159,40 @@
                         style="margin-top:8px;"
                     >
                 </div>
+
+                <!-- SIGNATURE -->
+<h3>Client Signature (optional)</h3>
+<p style="font-size:13px; opacity:0.8; margin-top:4px;">
+    Capture a quick signature for on-site approvals.
+</p>
+
+<div style="margin-bottom:20px;">
+    <div
+        style="
+            border:1px solid #e5e7eb;
+            border-radius:10px;
+            padding:10px;
+            background:#0b1120;
+        "
+    >
+        <canvas
+            id="signature-pad"
+            width="600"
+            height="200"
+            style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
+        ></canvas>
+        <div style="margin-top:8px; display:flex; justify-content:space-between; gap:10px;">
+            <small style="font-size:12px; opacity:0.7; align-self:center;">
+                Sign with your finger or mouse.
+            </small>
+            <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
+                Clear
+            </button>
+        </div>
+    </div>
+    <!-- Hidden field we populate with base64 PNG -->
+    <input type="hidden" name="signature_data" id="signature_data">
+</div>
 
                 <!-- ✅ SIGNATURE PAD -->
                 <div class="line-items-wrapper" style="margin-top:24px;">
@@ -246,6 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
         previewBtn.addEventListener("click", function (e) {
             e.preventDefault();
 
+            // Before submitting for preview, capture signature if any
+            captureSignatureToHiddenField();
+
             const originalAction = form.action;
             const originalTarget = form.target;
 
@@ -258,6 +318,131 @@ document.addEventListener("DOMContentLoaded", function () {
             form.target = originalTarget;
         });
     }
+
+    // Also capture signature on normal save submit
+    if (form) {
+        form.addEventListener("submit", function () {
+            captureSignatureToHiddenField();
+        });
+    }
+
+    // ---- Signature pad setup ----
+    const canvas = document.getElementById("signature-pad");
+    const clearBtn = document.getElementById("clear-signature");
+    const sigInput = document.getElementById("signature_data");
+
+    if (!canvas || !sigInput) {
+        return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    // Start with a clean dark background
+    function clearCanvas() {
+        ctx.fillStyle = "#020617";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    clearCanvas();
+
+    function getCanvasPos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+        const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+
+    function startDrawing(evt) {
+        drawing = true;
+        const pos = getCanvasPos(evt);
+        lastX = pos.x;
+        lastY = pos.y;
+    }
+
+    function draw(evt) {
+        if (!drawing) return;
+        evt.preventDefault();
+        const pos = getCanvasPos(evt);
+        ctx.strokeStyle = "#facc15"; // yellow-ish ink
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+
+        lastX = pos.x;
+        lastY = pos.y;
+    }
+
+    function stopDrawing() {
+        drawing = false;
+    }
+
+    // Mouse events
+    canvas.addEventListener("mousedown", startDrawing);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stopDrawing);
+    canvas.addEventListener("mouseleave", stopDrawing);
+
+    // Touch events
+    canvas.addEventListener("touchstart", function (e) {
+        e.preventDefault();
+        startDrawing(e);
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", function (e) {
+        draw(e);
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", function () {
+        stopDrawing();
+    });
+
+    // Clear button
+    if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+            clearCanvas();
+            sigInput.value = "";
+        });
+    }
+
+    // Helper to capture base64 into the hidden field
+    function captureSignatureToHiddenField() {
+        // If canvas is empty, don't send anything
+        // Simple heuristic: check if we ever drew anything by inspecting alpha channel
+        try {
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let hasInk = false;
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] !== 255) { // not fully opaque background
+                    hasInk = true;
+                    break;
+                }
+            }
+            if (!hasInk) {
+                sigInput.value = "";
+                return;
+            }
+        } catch (err) {
+            // If getImageData is blocked for any reason, just attempt to save
+        }
+
+        const dataUrl = canvas.toDataURL("image/png");
+        sigInput.value = dataUrl;
+    }
+
+    // Make capture function visible to outer scope
+    window.captureSignatureToHiddenField = captureSignatureToHiddenField;
+});
+</script>
 
     /* ===============================
        SIGNATURE PAD (finger/mouse)

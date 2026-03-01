@@ -219,6 +219,44 @@
         <p class="muted" style="margin-top:10px;">No notes or terms provided.</p>
       {% endif %}
 
+      {% if attachment_paths or signature_path %}
+    <section class="invoice-extras" style="margin-top:24px;">
+        {% if attachment_paths %}
+            <div class="invoice-attachments" style="margin-bottom:16px;">
+                <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
+                    Attachments
+                </h3>
+                <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+                    {% for path in attachment_paths %}
+                        <a href="{{ url_for('uploaded_file', filename=path) }}" target="_blank"
+                           style="display:inline-block; border-radius:8px; overflow:hidden; border:1px solid rgba(148,163,184,0.4);">
+                            <img src="{{ url_for('uploaded_file', filename=path) }}"
+                                 alt="Attachment"
+                                 style="display:block; max-height:120px;">
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if signature_path %}
+            <div class="invoice-signature">
+                <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
+                    Signature
+                </h3>
+                <div style="margin-top:8px; padding:10px; border-radius:10px; background:#020617; border:1px solid rgba(148,163,184,0.5); max-width:320px;">
+                    <img src="{{ url_for('uploaded_file', filename=signature_path) }}"
+                         alt="Signature"
+                         style="display:block; width:100%; max-width:100%;">
+                    <div style="margin-top:6px; font-size:12px; opacity:0.7;">
+                        Signed on file
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+
       <div class="trust-row">
         <div class="trust-pill">Secure Link</div>
         <div class="trust-pill">PDF Available</div>
