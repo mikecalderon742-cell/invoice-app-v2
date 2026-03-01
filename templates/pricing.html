@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
 
 {% block content %}
 <div class="dashboard-header">
     <h1>Choose your plan</h1>
     <div class="quick-actions">
-        <a href="{{ url_for('invoices_page') }}" class="btn btn-secondary">
+        <a href="{{ url_for('invoices_page') }}" class="btn btn-secondary btn-compact">
             Back to Dashboard
         </a>
     </div>
@@ -20,41 +20,72 @@
     </div>
 {% endif %}
 
-<div class="dashboard-cards enhanced">
+<div class="pricing-grid">
     {% for key, plan in plans.items() %}
-        <div class="card kpi
-            {% if key == 'free' %}teal{% elif key == 'pro' %}blue{% else %}purple{% endif %}">
-            
-            <h2 style="margin-bottom:4px;">{{ plan.name }}</h2>
-            <p style="font-size:16px;font-weight:600;margin:0 0 4px 0;">
-                {{ plan.price_label }}
-            </p>
-            <small style="font-size:12px;opacity:0.9;">{{ plan.tagline }}</small>
+        <div class="pricing-card
+            {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
+            {% if key == user_plan %} pricing-current{% endif %}
+        ">
+            <div class="pricing-card-header">
+                <div class="pricing-title-row">
+                    <div>
+                        <div class="pricing-name">{{ plan.name }}</div>
+                        <p class="pricing-tagline">{{ plan.tagline }}</p>
+                    </div>
+                    <div class="pricing-price" style="text-align:right;">
+                        <span class="amount">{{ plan.price_label }}</span><br>
+                        {% if key == user_plan %}
+                            <span class="pricing-pill current">Current plan</span>
+                        {% elif key == 'pro' %}
+                            <span class="pricing-pill recommended">Best for growing</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
 
-            <ul style="margin-top:12px;padding-left:18px;font-size:0.9rem;">
+            <ul class="pricing-features">
                 {% for f in plan.features %}
-                    <li>{{ f }}</li>
+                    <li>
+                        <span class="feature-bullet">•</span>
+                        <span>{{ f }}</span>
+                    </li>
                 {% endfor %}
             </ul>
 
-            <div style="margin-top:18px;">
+            {% if key == 'pro' %}
+                <div class="pricing-ai-callout">
+                    <strong>Includes InvoicePro Assistant:</strong>
+                    <ul>
+                        <li>Explain your dashboard in plain English</li>
+                        <li>Help draft invoice notes & reminders</li>
+                        <li>Suggest follow-ups for overdue clients</li>
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="pricing-cta">
                 {% if key == user_plan %}
                     <span class="badge paid">Current plan</span>
+                    <span class="pricing-note">You’re already on this plan.</span>
 
                 {% elif key == 'pro' and not is_pro %}
-                    <!-- Same size as other buttons, no full-width -->
-                    <button type="button" class="btn btn-brand" disabled>
+                    <!-- Pre-launch: still disabled until Stripe checkout is wired -->
+                    <button type="button" class="btn btn-brand btn-compact" disabled>
                         Upgrade to Pro (coming soon)
                     </button>
+                    <span class="pricing-note">Stripe billing will be enabled soon.</span>
 
                 {% else %}
                     {% if key == 'free' %}
                         <span class="badge draft">Included</span>
+                        <span class="pricing-note">Perfect if you’re just getting started.</span>
                     {% else %}
-                        <!-- Contact sales button, same .btn sizing as others -->
-                        <a href="mailto:support@mikeinvoices.com" class="btn btn-secondary">
+                        <a href="mailto:support@mikeinvoices.com"
+                           class="btn btn-secondary btn-compact"
+                           style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
                             Contact sales
                         </a>
+                        <span class="pricing-note">We’ll help you design a higher-volume plan.</span>
                     {% endif %}
                 {% endif %}
             </div>
