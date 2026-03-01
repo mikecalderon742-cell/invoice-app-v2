@@ -4,7 +4,7 @@
 <div class="dashboard-header">
     <h1>Choose your plan</h1>
     <div class="quick-actions">
-        <a href="{{ url_for('invoices_page') }}" class="btn btn-secondary">
+        <a href="{{ url_for('invoices_page') }}" class="btn btn-secondary btn-compact">
             Back to Dashboard
         </a>
     </div>
@@ -28,71 +28,63 @@
         ">
             <div class="pricing-card-header">
                 <div class="pricing-title-row">
-                    <h2 class="pricing-name">{{ plan.name }}</h2>
-
-                    {% if key == user_plan %}
-                        <span class="pricing-pill current">Current</span>
-                    {% elif plan.recommended %}
-                        <span class="pricing-pill recommended">Recommended</span>
-                    {% endif %}
+                    <div>
+                        <div class="pricing-name">{{ plan.name }}</div>
+                        <p class="pricing-tagline">{{ plan.tagline }}</p>
+                    </div>
+                    <div class="pricing-price" style="text-align:right;">
+                        <span class="amount">{{ plan.price_label }}</span><br>
+                        {% if key == user_plan %}
+                            <span class="pricing-pill current">Current plan</span>
+                        {% elif key == 'pro' %}
+                            <span class="pricing-pill recommended">Best for growing</span>
+                        {% endif %}
+                    </div>
                 </div>
-
-                <div class="pricing-price">
-                    <span class="amount">{{ plan.price_label }}</span>
-                </div>
-
-                <p class="pricing-tagline">
-                    {{ plan.tagline }}
-                </p>
             </div>
 
             <ul class="pricing-features">
                 {% for f in plan.features %}
                     <li>
-                        <span class="feature-bullet">✓</span>
+                        <span class="feature-bullet">•</span>
                         <span>{{ f }}</span>
                     </li>
                 {% endfor %}
             </ul>
 
-            <div class="pricing-cta">
-                {% if key == user_plan %}
-                    <span class="badge paid">You’re on this plan</span>
-                {% elif key == 'pro' and not is_pro %}
-                    {# Stubbed for now; Stripe checkout flow later #}
-                    <button type="button" class="btn btn-brand" disabled>
-                        Upgrade to Pro (coming soon)
-                    </button>
-                    <small class="pricing-note">
-                        Stripe-powered in-app upgrade will be enabled before launch.
-                    </small>
-                {% else %}
-                    {% if key == 'free' %}
-                        <span class="badge draft">Included</span>
-                        <small class="pricing-note">
-                            Perfect if you’re just starting out.
-                        </small>
-                    {% else %}
-                        <a href="mailto:support@mikeinvoices.com" class="btn btn-secondary">
-                            Contact sales
-                        </a>
-                        <small class="pricing-note">
-                            We’ll help you customize {{ plan.name }} for your workflow.
-                        </small>
-                    {% endif %}
-                {% endif %}
-            </div>
-
             {% if key == 'pro' %}
                 <div class="pricing-ai-callout">
-                    <strong>AI & automation focus</strong>
+                    <strong>Includes InvoicePro Assistant:</strong>
                     <ul>
-                        <li>Higher AI helper limits for strategy questions</li>
-                        <li>Email delivery with attached PDFs</li>
-                        <li>Best for freelancers who invoice weekly</li>
+                        <li>Explain your dashboard in plain English</li>
+                        <li>Help draft invoice notes & reminders</li>
+                        <li>Suggest follow-ups for overdue clients</li>
                     </ul>
                 </div>
             {% endif %}
+
+            <div class="pricing-cta">
+                {% if key == user_plan %}
+                    <span class="badge paid">Current plan</span>
+                    <span class="pricing-note">You’re already on this plan.</span>
+                {% elif key == 'pro' and not is_pro %}
+                    <button type="button" class="btn btn-brand btn-compact" disabled>
+                        Upgrade to Pro (coming soon)
+                    </button>
+                    <span class="pricing-note">Stripe billing will be enabled soon.</span>
+                {% else %}
+                    {% if key == 'free' %}
+                        <span class="badge draft">Included</span>
+                        <span class="pricing-note">Perfect if you’re just getting started.</span>
+                    {% else %}
+                        <a href="mailto:support@mikeinvoices.com"
+                           class="btn btn-secondary btn-compact">
+                            Contact sales
+                        </a>
+                        <span class="pricing-note">We’ll help you design a higher-volume plan.</span>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     {% endfor %}
 </div>
@@ -100,10 +92,6 @@
 {% if stripe_publishable_key %}
     <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">
         Payments securely powered by Stripe.
-    </p>
-{% else %}
-    <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">
-        Stripe-powered upgrades are wired in the code and can be enabled when you’re ready.
     </p>
 {% endif %}
 {% endblock %}

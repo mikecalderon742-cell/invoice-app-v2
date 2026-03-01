@@ -3003,3 +3003,57 @@ body.dark .pricing-ai-callout {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==== PRICING OVERRIDES: solid cards + compact CTA ==== */
+
+.btn-compact {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    border-radius: 999px;
+}
+
+/* Solid color backgrounds for pricing cards */
+.pricing-card.pricing-free {
+    background: #0f766e; /* teal */
+    color: #e5fdf9;
+    border: none;
+    box-shadow: 0 20px 50px rgba(15,118,110,0.45);
+}
+
+.pricing-card.pricing-pro {
+    background: #1d4ed8; /* blue */
+    color: #e0ecff;
+    border: none;
+    box-shadow: 0 20px 50px rgba(37,99,235,0.55);
+}
+
+.pricing-card.pricing-enterprise {
+    background: #6d28d9; /* purple */
+    color: #f3e8ff;
+    border: none;
+    box-shadow: 0 20px 50px rgba(109,40,217,0.55);
+}
+
+/* Ensure inner text/links are readable on dark cards */
+.pricing-card .pricing-tagline,
+.pricing-card .pricing-note,
+.pricing-card .pricing-features li {
+    color: inherit;
+}
+
+.pricing-card .badge,
+.pricing-card .pricing-pill {
+    background-clip: padding-box;
+}
+
+.pricing-card a.btn-secondary {
+    background: #f9fafb;
+    color: #111827;
+    border-color: rgba(15,23,42,0.16);
+}
+
+body.dark .pricing-card.pricing-free,
+body.dark .pricing-card.pricing-pro,
+body.dark .pricing-card.pricing-enterprise {
+    box-shadow: 0 22px 60px rgba(0,0,0,0.9);
+}
