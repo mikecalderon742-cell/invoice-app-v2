@@ -791,6 +791,30 @@ body.dark input {
     color: white;
 }
 
+/* NEW: textarea baseline + dark mode so Settings fields flip correctly */
+textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+body.dark textarea,
+body.dark select {
+    background: #111827 !important;
+    border: 1px solid #374151 !important;
+    color: #e5e7eb !important;
+}
+
 /* ========================= */
 /* FADE + SLIDE ENTRANCE */
 /* ========================= */
@@ -2806,5 +2830,176 @@ body.dark .ai-helper-form {
     .ai-helper-panel {
         width: calc(100vw - 32px);
         right: 16px;
+    }
+}
+
+/* ===================================== */
+/* PRICING PAGE LAYOUT (plans grid)     */
+/* ===================================== */
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.pricing-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px 18px 18px;
+    box-shadow: 0 18px 40px rgba(15,23,42,0.08);
+    border: 1px solid rgba(148,163,184,0.4);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+body.dark .pricing-card {
+    background: #020617;
+    border-color: rgba(148,163,184,0.6);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+}
+
+/* Plan variants: just subtle tints */
+.pricing-free {
+    border-left: 4px solid #14b8a6;
+}
+
+.pricing-pro {
+    border-left: 4px solid #3b82f6;
+}
+
+.pricing-enterprise {
+    border-left: 4px solid #8b5cf6;
+}
+
+/* Current plan highlight */
+.pricing-current {
+    box-shadow: 0 22px 60px rgba(21,27,84,0.35);
+}
+
+.pricing-card-header {
+    margin-bottom: 10px;
+}
+
+.pricing-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.pricing-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.pricing-price .amount {
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.pricing-tagline {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+/* Pills: current / recommended */
+.pricing-pill {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.pricing-pill.current {
+    background: rgba(16,185,129,0.1);
+    color: #166534;
+    border: 1px solid rgba(16,185,129,0.7);
+}
+
+.pricing-pill.recommended {
+    background: rgba(59,130,246,0.08);
+    color: #1d4ed8;
+    border: 1px solid rgba(59,130,246,0.7);
+}
+
+body.dark .pricing-pill.current {
+    background: rgba(16,185,129,0.25);
+    color: #bbf7d0;
+}
+
+body.dark .pricing-pill.recommended {
+    background: rgba(59,130,246,0.25);
+    color: #bfdbfe;
+}
+
+/* Feature list */
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 8px 0;
+    font-size: 13px;
+}
+
+.pricing-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.feature-bullet {
+    font-size: 12px;
+    margin-top: 2px;
+    color: #16a34a;
+}
+
+/* CTA area */
+.pricing-cta {
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(148,163,184,0.6);
+}
+
+.pricing-note {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+/* AI callout for Pro */
+.pricing-ai-callout {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(37,99,235,0.05);
+    font-size: 12px;
+}
+
+.pricing-ai-callout ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+}
+
+.pricing-ai-callout li {
+    margin-bottom: 3px;
+}
+
+body.dark .pricing-ai-callout {
+    background: rgba(37,99,235,0.18);
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
     }
 }
