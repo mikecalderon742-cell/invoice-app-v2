@@ -86,9 +86,7 @@
                     <span class="chart-sub">Last few months</span>
                 </div>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="revenueChart" class="chart-canvas"></canvas>
-            </div>
+            <canvas id="revenueChart" class="chart-canvas"></canvas>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “What does my revenue trend say about my business momentum?”
             </p>
@@ -102,7 +100,7 @@
                     <span class="chart-sub">Last 30 days (scrollable)</span>
                 </div>
             </div>
-            <div class="chart-wrapper chart-scroll-x">
+            <div class="chart-scroll-x">
                 <canvas id="dailyRevenueChart" class="chart-canvas wide-chart"></canvas>
             </div>
             <p class="chart-ai-hint">
@@ -118,9 +116,7 @@
                     <span class="chart-sub">Paid vs Sent vs Overdue</span>
                 </div>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="statusChart" class="chart-canvas"></canvas>
-            </div>
+            <canvas id="statusChart" class="chart-canvas"></canvas>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “How should I prioritize following up based on my overdue vs sent invoices?”
             </p>
@@ -177,9 +173,7 @@
                     <span class="chart-sub">Most billed services / products</span>
                 </div>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="itemChart" class="chart-canvas"></canvas>
-            </div>
+            <canvas id="itemChart" class="chart-canvas"></canvas>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “What does my top items chart say about what I should sell more of?”
             </p>
@@ -324,7 +318,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -379,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -439,7 +433,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: {
                         position: "bottom",
@@ -471,7 +465,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -547,56 +541,5 @@ document.addEventListener("DOMContentLoaded", function() {
     {% endif %}
 });
 </script>
-
-<!-- Responsive chart layout just for this page -->
-<style>
-    /* Make the charts row adapt better on wide & small screens */
-    .charts-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 1.5rem;
-        align-items: stretch;
-    }
-
-    .chart-card {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-height: 230px;
-    }
-
-    .chart-card .chart-header {
-        margin-bottom: 4px;
-    }
-
-    .chart-card .chart-wrapper {
-        position: relative;
-        width: 100%;
-        height: 260px; /* main chart height on desktop */
-    }
-
-    .chart-card canvas {
-        position: absolute;
-        inset: 0;
-        width: 100% !important;
-        height: 100% !important;
-    }
-
-    .chart-scroll-x {
-        overflow-x: auto;
-    }
-
-    @media (max-width: 768px) {
-        .chart-card .chart-wrapper {
-            height: 220px;
-        }
-    }
-
-    @media (min-width: 1440px) {
-        .chart-card .chart-wrapper {
-            height: 280px;
-        }
-    }
-</style>
 
 {% endblock %}
