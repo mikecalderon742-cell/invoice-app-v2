@@ -3427,3 +3427,23 @@ table td:last-child,
     gap: 6px;
     min-width: 180px;
 }
+
+/* =========================================================
+   PRICING PILL – keep "Current plan" on a single line
+   ========================================================= */
+
+.pricing-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;       /* 👈 no line breaks inside */
+    padding: 4px 12px;
+    max-width: none;
+    font-size: 11px;
+}
+
+.pricing-pill.current,
+.pricing-pill.recommended {
+    /* keep existing colors, just inherit from what you had */
+    line-height: 1.2;
+}
