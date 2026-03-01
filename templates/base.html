@@ -562,88 +562,122 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     /* ============================
-       AI HELPER WIDGET
-    ============================ */
-    const aiHelper = document.getElementById("aiHelper");
-    const aiPanel = document.getElementById("aiHelperPanel");
-    const aiToggle = document.getElementById("aiHelperToggle");
-    const aiClose = document.getElementById("aiHelperClose");
-    const aiForm = document.getElementById("aiHelperForm");
-    const aiInput = document.getElementById("aiHelperInput");
-    const aiMessages = document.getElementById("aiHelperMessages");
+   AI HELPER WIDGET (enhanced)
+============================ */
+const aiHelper = document.getElementById("aiHelper");
+const aiPanel = document.getElementById("aiHelperPanel");
+const aiToggle = document.getElementById("aiHelperToggle");
+const aiClose = document.getElementById("aiHelperClose");
+const aiForm = document.getElementById("aiHelperForm");
+const aiInput = document.getElementById("aiHelperInput");
+const aiMessages = document.getElementById("aiHelperMessages");
 
-    function appendMessage(text, role) {
-        if (!aiMessages) return;
-        const div = document.createElement("div");
-        div.classList.add("ai-message");
-        if (role === "user") div.classList.add("ai-message-user");
-        if (role === "assistant") div.classList.add("ai-message-assistant");
-        if (role === "system") div.classList.add("ai-message-system");
-        div.innerHTML = text.replace(/\n/g, "<br>");
-        aiMessages.appendChild(div);
-        aiMessages.scrollTop = aiMessages.scrollHeight;
+function appendMessage(text, role) {
+    if (!aiMessages) return;
+    const div = document.createElement("div");
+    div.classList.add("ai-message");
+    if (role === "user") div.classList.add("ai-message-user");
+    if (role === "assistant") div.classList.add("ai-message-assistant");
+    if (role === "system") div.classList.add("ai-message-system");
+
+    div.innerHTML = String(text).replace(/\n/g, "<br>");
+    aiMessages.appendChild(div);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+}
+
+function appendLoadingBubble() {
+    if (!aiMessages) return null;
+    const div = document.createElement("div");
+    div.classList.add("ai-message", "ai-message-assistant");
+    div.dataset.loading = "true";
+    div.textContent = "Thinking...";
+    aiMessages.appendChild(div);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+    return div;
+}
+
+function removeLoadingBubble(el) {
+    if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
     }
+}
 
-    function setLoading(isLoading) {
-        if (!aiForm) return;
-        const sendBtn = aiForm.querySelector(".ai-helper-send");
-        if (!sendBtn) return;
-        sendBtn.disabled = isLoading;
-        sendBtn.textContent = isLoading ? "Thinking..." : "Send";
-    }
+// Optional: show a one-time system hint if you want
+if (aiMessages && !aiMessages.dataset.initialized) {
+    appendMessage(
+        "Hi! I can help interpret your charts, suggest better invoice wording, " +
+        "and give ideas for handling overdue invoices.\n\n" +
+        "Try asking: “What does my revenue trend say about my business momentum?”",
+        "system"
+    );
+    aiMessages.dataset.initialized = "true";
+}
 
-    if (aiToggle && aiHelper) {
-        aiToggle.addEventListener("click", function () {
-            aiHelper.classList.toggle("open");
-            if (aiHelper.classList.contains("open") && aiInput) {
-                setTimeout(() => aiInput.focus(), 50);
+if (aiToggle && aiHelper) {
+    aiToggle.addEventListener("click", function () {
+        aiHelper.classList.toggle("open");
+        if (aiHelper.classList.contains("open") && aiInput) {
+            setTimeout(() => aiInput.focus(), 50);
+        }
+    });
+}
+
+if (aiClose && aiHelper) {
+    aiClose.addEventListener("click", function () {
+        aiHelper.classList.remove("open");
+    });
+}
+
+if (aiForm && aiInput) {
+    aiForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const q = aiInput.value.trim();
+        if (!q) return;
+
+        appendMessage(q, "user");
+        aiInput.value = "";
+
+        const loadingBubble = appendLoadingBubble();
+
+        try {
+            const resp = await fetch("/ai-helper", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    question: q,
+                    page: window.location.pathname
+                })
+            });
+
+            if (!resp.ok) {
+                throw new Error("HTTP " + resp.status);
             }
-        });
-    }
 
-    if (aiClose && aiHelper) {
-        aiClose.addEventListener("click", function () {
-            aiHelper.classList.remove("open");
-        });
-    }
+            const data = await resp.json();
+            removeLoadingBubble(loadingBubble);
 
-    if (aiForm && aiInput) {
-        aiForm.addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const q = aiInput.value.trim();
-            if (!q) return;
-
-            appendMessage(q, "user");
-            aiInput.value = "";
-            setLoading(true);
-
-            try {
-                const resp = await fetch("/ai-helper", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        question: q,
-                        page: window.location.pathname
-                    })
-                });
-
-                const data = await resp.json();
-                if (data.answer) {
-                    appendMessage(data.answer, "assistant");
-                } else if (data.error) {
-                    appendMessage("Sorry, I ran into a problem: " + data.error, "system");
-                } else {
-                    appendMessage("Hmm, I couldn't understand the response from the server.", "system");
-                }
-            } catch (err) {
-                appendMessage("Network error talking to the AI helper. Please try again.", "system");
-            } finally {
-                setLoading(false);
+            if (data.answer) {
+                appendMessage(data.answer, "assistant");
+            } else if (data.error) {
+                appendMessage("Sorry, I ran into a problem: " + data.error, "system");
+            } else {
+                appendMessage(
+                    "Hmm, I couldn't understand the response from the server.",
+                    "system"
+                );
             }
-        });
-    }
+        } catch (err) {
+            console.error("AI helper error:", err);
+            removeLoadingBubble(loadingBubble);
+            appendMessage(
+                "Network or server error talking to the AI helper. Please try again.",
+                "system"
+            );
+        }
+    });
+}
 
 });
 </script>

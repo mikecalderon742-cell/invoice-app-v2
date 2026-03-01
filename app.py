@@ -2836,6 +2836,114 @@ def health():
     return "OK", 200
 
 
+from flask import Flask, render_template, request, jsonify  # make sure jsonify & request are imported
+
+# ... your existing app setup and routes ...
+
+
+@app.route("/ai-helper", methods=["POST"])
+def ai_helper():
+    """
+    Lightweight AI helper endpoint.
+    For now, it returns heuristic tips based on the user's message.
+    Later you can swap the guts for a real OpenAI call.
+    """
+    data = request.get_json(silent=True) or {}
+    raw_message = data.get("message", "") or ""
+    path = (data.get("path") or "").strip()  # e.g. "/invoices"
+    message = raw_message.strip().lower()
+
+    if not message:
+        return jsonify({
+            "reply": (
+                "I didn’t catch any question. Try something like:\n"
+                "• “How do I read the revenue charts?”\n"
+                "• “How can I send invoices faster?”\n"
+                "• “What should I improve in my payment terms?”"
+            )
+        })
+
+    reply_parts = []
+
+    # Context-aware hints based on page
+    if "/invoices" in path:
+        reply_parts.append(
+            "You’re on the **Invoice History & Dashboard** screen, "
+            "so I’ll focus on your charts and invoice list."
+        )
+    elif path in ("/", ""):
+        reply_parts.append(
+            "You’re on the **New Invoice** screen, so I’ll focus on line items, clients, and payment terms."
+        )
+
+    # Heuristic responses based on message content
+    if any(word in message for word in ["revenue", "trend", "growth"]):
+        reply_parts.append(
+            "For revenue trends, look at:\n"
+            "• **Monthly Revenue** (line chart) – this shows your overall momentum.\n"
+            "• **This Month** KPI – compare it to total revenue to see how active the current month is.\n"
+            "If you see a spike, ask yourself: *What did I do differently that month?* That’s a repeatable play."
+        )
+
+    if any(word in message for word in ["overdue", "late", "collection", "collect", "follow up"]):
+        reply_parts.append(
+            "For overdue invoices, focus on the **Overdue count** and the **Status Breakdown** chart.\n"
+            "A simple playbook:\n"
+            "1. Sort your table by the **Created** column so the oldest invoices are on top.\n"
+            "2. For each overdue invoice, send a short, friendly reminder email.\n"
+            "3. Tighten your **payment terms** on new invoices (e.g., Net 7 or Net 14 for smaller jobs)."
+        )
+
+    if any(word in message for word in ["pricing", "price", "rate", "rates", "charge"]):
+        reply_parts.append(
+            "To refine your pricing:\n"
+            "• Look at **Top Items** – the services with the highest totals are where a small price bump has the biggest impact.\n"
+            "• For high-value clients in **Top Clients**, consider moving them to a package or retainer, not just one-off invoices.\n"
+            "• Track how quickly invoices are marked **Paid** after you adjust prices, so you don’t accidentally make payment friction too high."
+        )
+
+    if any(word in message for word in ["client", "clients", "top client"]):
+        reply_parts.append(
+            "Your **Top Clients** list is basically a built-in CRM lite:\n"
+            "• Clients at the top are candidates for upsells, retainers, or priority scheduling.\n"
+            "• Add notes to invoices about what they care about (fast turnaround, clean reports, etc.).\n"
+            "• If a top client’s activity drops, that’s a signal to check in proactively."
+        )
+
+    if any(word in message for word in ["line item", "description", "scope", "detail"]):
+        reply_parts.append(
+            "For line items, clearer = faster payment:\n"
+            "• Use descriptions like “Website maintenance – 6 hours (bug fixes & security updates)” instead of just “Work”.\n"
+            "• Match your descriptions to the **language your client uses** in emails or DMs.\n"
+            "• If you often reuse similar work, create a few standard line item phrases you can quickly drop in."
+        )
+
+    if any(word in message for word in ["terms", "payment", "pay", "due date", "net 30", "net30", "net-30"]):
+        reply_parts.append(
+            "Strong payment terms usually include:\n"
+            "• A **clear due date** (e.g., “Due within 7 days of receipt”).\n"
+            "• **Accepted methods** (bank transfer, card, etc.).\n"
+            "• A polite note about late fees or pauses in work if invoices remain unpaid.\n"
+            "You can adjust your default terms in your invoice notes field so every new invoice starts with good language."
+        )
+
+    # Fallback if we didn't hit any specific topics
+    if not reply_parts:
+        reply_parts.append(
+            "Here’s how I can help:\n"
+            "• Explain what your charts/KPIs are telling you.\n"
+            "• Suggest better invoice descriptions and payment terms.\n"
+            "• Help you think through pricing, overdue follow-ups, and top-client strategy.\n\n"
+            "Try asking something like: “What is the simplest way to reduce overdue invoices?”"
+        )
+
+    reply = "\n\n".join(reply_parts)
+
+    return jsonify({
+        "reply": reply
+    })
+
+
 # -------------------------
 # MAIN
 # -------------------------
