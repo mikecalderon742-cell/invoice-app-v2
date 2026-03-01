@@ -91,29 +91,30 @@
                         <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
                     </div>
                 </div>
-                <!-- ATTACHMENTS (PHOTOS) -->
-<h3>Attachments (optional)</h3>
-<p style="font-size:13px; opacity:0.8; margin-top:4px;">
-    Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
-</p>
 
-<div style="margin-bottom:20px;">
-    <label for="attachments" style="font-weight:600; font-size:14px;">
-        Photos
-    </label>
-    <input
-        type="file"
-        id="attachments"
-        name="attachments"
-        accept="image/*"
-        multiple
-        style="display:block; margin-top:6px;"
-        capture="environment"
-    >
-    <small style="font-size:12px; opacity:0.7;">
-        On mobile you can use your camera or pick from your photo library.
-    </small>
-</div>
+                <!-- ATTACHMENTS (PHOTOS) -->
+                <h3>Attachments (optional)</h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
+                </p>
+
+                <div style="margin-bottom:20px;">
+                    <label for="attachments" style="font-weight:600; font-size:14px;">
+                        Photos
+                    </label>
+                    <input
+                        type="file"
+                        id="attachments"
+                        name="attachments"
+                        accept="image/*"
+                        multiple
+                        style="display:block; margin-top:6px;"
+                        capture="environment"
+                    >
+                    <small style="font-size:12px; opacity:0.7;">
+                        On mobile you can use your camera or pick from your photo library.
+                    </small>
+                </div>
 
                 <!-- LINE ITEMS -->
                 <h3>Line Items</h3>
@@ -144,82 +145,41 @@
                     </table>
                 </div>
 
-                <!-- ✅ ATTACHMENTS: photos from camera / photo library -->
-                <div class="line-items-wrapper" style="margin-top:24px;">
-                    <h3>Attachments</h3>
-                    <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                        Add photos from your camera or photo library (job site, receipts, before/after work, etc.).
-                    </p>
-                    <input
-                        type="file"
-                        name="attachments"
-                        accept="image/*"
-                        capture="environment"
-                        multiple
-                        style="margin-top:8px;"
-                    >
-                </div>
-
                 <!-- SIGNATURE -->
-<h3>Client Signature (optional)</h3>
-<p style="font-size:13px; opacity:0.8; margin-top:4px;">
-    Capture a quick signature for on-site approvals.
-</p>
+                <h3>Client Signature (optional)</h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    Capture a quick signature for on-site approvals.
+                </p>
 
-<div style="margin-bottom:20px;">
-    <div
-        style="
-            border:1px solid #e5e7eb;
-            border-radius:10px;
-            padding:10px;
-            background:#0b1120;
-        "
-    >
-        <canvas
-            id="signature-pad"
-            width="600"
-            height="200"
-            style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
-        ></canvas>
-        <div style="margin-top:8px; display:flex; justify-content:space-between; gap:10px;">
-            <small style="font-size:12px; opacity:0.7; align-self:center;">
-                Sign with your finger or mouse.
-            </small>
-            <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
-                Clear
-            </button>
-        </div>
-    </div>
-    <!-- Hidden field we populate with base64 PNG -->
-    <input type="hidden" name="signature_data" id="signature_data">
-</div>
-
-                <!-- ✅ SIGNATURE PAD -->
-                <div class="line-items-wrapper" style="margin-top:24px;">
-                    <h3>Client Signature</h3>
-                    <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                        Have your client sign with their finger (mobile) or mouse before you save/send the invoice.
-                    </p>
-
-                    <div style="border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;padding:12px;">
+                <div style="margin-bottom:20px;">
+                    <div
+                        style="
+                            border:1px solid #e5e7eb;
+                            border-radius:10px;
+                            padding:10px;
+                            background:#0b1120;
+                        "
+                    >
                         <canvas
-                            id="signaturePad"
+                            id="signature-pad"
                             width="600"
                             height="200"
-                            style="width:100%;max-width:100%;display:block;background:#ffffff;border-radius:8px;touch-action:none;"
+                            style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
                         ></canvas>
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap;">
-                            <button type="button" class="btn btn-secondary btn-compact" id="clearSignature">
+                        <div style="margin-top:8px; display:flex; justify-content:space-between; gap:10px;">
+                            <small style="font-size:12px; opacity:0.7; align-self:center;">
+                                Sign with your finger or mouse.
+                            </small>
+                            <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
                                 Clear
                             </button>
-                            <span style="font-size:12px;opacity:0.7;">Signature will be saved with this invoice.</span>
                         </div>
                     </div>
-
-                    <!-- hidden field where the PNG data goes -->
-                    <input type="hidden" name="signature_data" id="signatureData">
+                    <!-- Hidden field we populate with base64 PNG -->
+                    <input type="hidden" name="signature_data" id="signature_data">
                 </div>
 
+                <!-- TEMPLATE STYLE -->
                 <div class="form-row" style="margin-top:24px;">
                     <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
                         Invoice style
@@ -293,17 +253,134 @@
     </div>
 </div>
 
-<!-- Keep Preview JS + add signature handling -->
+<!-- Preview + Signature JS -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("invoiceForm");
     const previewBtn = document.getElementById("previewButton");
 
+    // ---- Signature pad setup ----
+    const canvas = document.getElementById("signature-pad");
+    const clearBtn = document.getElementById("clear-signature");
+    const sigInput = document.getElementById("signature_data");
+
+    let ctx = null;
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    if (canvas && sigInput) {
+        ctx = canvas.getContext("2d");
+
+        // Start with a clean dark background
+        function clearCanvas() {
+            ctx.fillStyle = "#020617";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        clearCanvas();
+
+        function getCanvasPos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+            const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDrawing(evt) {
+            drawing = true;
+            const pos = getCanvasPos(evt);
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function draw(evt) {
+            if (!drawing) return;
+            evt.preventDefault();
+            const pos = getCanvasPos(evt);
+            ctx.strokeStyle = "#facc15"; // yellow-ish ink
+            ctx.lineWidth = 2;
+            ctx.lineCap = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function stopDrawing() {
+            drawing = false;
+        }
+
+        // Mouse events
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseleave", stopDrawing);
+
+        // Touch events
+        canvas.addEventListener("touchstart", function (e) {
+            e.preventDefault();
+            startDrawing(e);
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", function (e) {
+            draw(e);
+        }, { passive: false });
+
+        canvas.addEventListener("touchend", function () {
+            stopDrawing();
+        });
+
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener("click", function () {
+                clearCanvas();
+                sigInput.value = "";
+            });
+        }
+    }
+
+    // Helper to capture base64 into the hidden field
+    function captureSignatureToHiddenField() {
+        if (!canvas || !ctx || !sigInput) return;
+
+        // Try to detect if the user actually drew anything
+        try {
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let hasInk = false;
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] !== 255) { // alpha channel check
+                    hasInk = true;
+                    break;
+                }
+            }
+            if (!hasInk) {
+                sigInput.value = "";
+                return;
+            }
+        } catch (err) {
+            // If getImageData fails, we still try to save
+        }
+
+        const dataUrl = canvas.toDataURL("image/png");
+        sigInput.value = dataUrl;
+    }
+
+    // Make it available for debugging if needed
+    window.captureSignatureToHiddenField = captureSignatureToHiddenField;
+
+    // Preview button → send to /preview in new tab
     if (form && previewBtn) {
         previewBtn.addEventListener("click", function (e) {
             e.preventDefault();
 
-            // Before submitting for preview, capture signature if any
             captureSignatureToHiddenField();
 
             const originalAction = form.action;
@@ -319,217 +396,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Also capture signature on normal save submit
+    // Normal save submit → capture signature too
     if (form) {
         form.addEventListener("submit", function () {
             captureSignatureToHiddenField();
         });
-    }
-
-    // ---- Signature pad setup ----
-    const canvas = document.getElementById("signature-pad");
-    const clearBtn = document.getElementById("clear-signature");
-    const sigInput = document.getElementById("signature_data");
-
-    if (!canvas || !sigInput) {
-        return;
-    }
-
-    const ctx = canvas.getContext("2d");
-    let drawing = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    // Start with a clean dark background
-    function clearCanvas() {
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    clearCanvas();
-
-    function getCanvasPos(evt) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-        const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
-    }
-
-    function startDrawing(evt) {
-        drawing = true;
-        const pos = getCanvasPos(evt);
-        lastX = pos.x;
-        lastY = pos.y;
-    }
-
-    function draw(evt) {
-        if (!drawing) return;
-        evt.preventDefault();
-        const pos = getCanvasPos(evt);
-        ctx.strokeStyle = "#facc15"; // yellow-ish ink
-        ctx.lineWidth = 2;
-        ctx.lineCap = "round";
-
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-
-        lastX = pos.x;
-        lastY = pos.y;
-    }
-
-    function stopDrawing() {
-        drawing = false;
-    }
-
-    // Mouse events
-    canvas.addEventListener("mousedown", startDrawing);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", stopDrawing);
-    canvas.addEventListener("mouseleave", stopDrawing);
-
-    // Touch events
-    canvas.addEventListener("touchstart", function (e) {
-        e.preventDefault();
-        startDrawing(e);
-    }, { passive: false });
-
-    canvas.addEventListener("touchmove", function (e) {
-        draw(e);
-    }, { passive: false });
-
-    canvas.addEventListener("touchend", function () {
-        stopDrawing();
-    });
-
-    // Clear button
-    if (clearBtn) {
-        clearBtn.addEventListener("click", function () {
-            clearCanvas();
-            sigInput.value = "";
-        });
-    }
-
-    // Helper to capture base64 into the hidden field
-    function captureSignatureToHiddenField() {
-        // If canvas is empty, don't send anything
-        // Simple heuristic: check if we ever drew anything by inspecting alpha channel
-        try {
-            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            let hasInk = false;
-            for (let i = 3; i < pixels.length; i += 4) {
-                if (pixels[i] !== 255) { // not fully opaque background
-                    hasInk = true;
-                    break;
-                }
-            }
-            if (!hasInk) {
-                sigInput.value = "";
-                return;
-            }
-        } catch (err) {
-            // If getImageData is blocked for any reason, just attempt to save
-        }
-
-        const dataUrl = canvas.toDataURL("image/png");
-        sigInput.value = dataUrl;
-    }
-
-    // Make capture function visible to outer scope
-    window.captureSignatureToHiddenField = captureSignatureToHiddenField;
-});
-</script>
-
-    /* ===============================
-       SIGNATURE PAD (finger/mouse)
-    =============================== */
-    const canvas = document.getElementById("signaturePad");
-    const clearBtn = document.getElementById("clearSignature");
-    const hiddenInput = document.getElementById("signatureData");
-
-    if (canvas && hiddenInput) {
-        const ctx = canvas.getContext("2d");
-        let drawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        ctx.lineWidth = 2;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "#111827";
-
-        function getPos(evt) {
-            const rect = canvas.getBoundingClientRect();
-            if (evt.touches && evt.touches[0]) {
-                return {
-                    x: evt.touches[0].clientX - rect.left,
-                    y: evt.touches[0].clientY - rect.top
-                };
-            }
-            return {
-                x: evt.clientX - rect.left,
-                y: evt.clientY - rect.top
-            };
-        }
-
-        function startDraw(evt) {
-            drawing = true;
-            const pos = getPos(evt);
-            lastX = pos.x;
-            lastY = pos.y;
-        }
-
-        function draw(evt) {
-            if (!drawing) return;
-            evt.preventDefault();
-            const pos = getPos(evt);
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-            lastX = pos.x;
-            lastY = pos.y;
-        }
-
-        function endDraw() {
-            drawing = false;
-            // save PNG into hidden field
-            hiddenInput.value = canvas.toDataURL("image/png");
-        }
-
-        // mouse events
-        canvas.addEventListener("mousedown", startDraw);
-        canvas.addEventListener("mousemove", draw);
-        window.addEventListener("mouseup", endDraw);
-
-        // touch events
-        canvas.addEventListener("touchstart", function (e) {
-            startDraw(e);
-        }, { passive: true });
-
-        canvas.addEventListener("touchmove", function (e) {
-            draw(e);
-        }, { passive: false });
-
-        canvas.addEventListener("touchend", endDraw);
-
-        // Clear button
-        if (clearBtn) {
-            clearBtn.addEventListener("click", function () {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                hiddenInput.value = "";
-            });
-        }
-
-        // Make sure signature is saved before submit
-        if (form) {
-            form.addEventListener("submit", function () {
-                hiddenInput.value = canvas.toDataURL("image/png");
-            });
-        }
     }
 });
 </script>
