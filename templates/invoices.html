@@ -275,6 +275,20 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}
+
+    // ---------- GLOBAL CHART DEFAULTS (BOLDER GRID) ----------
+    if (window.Chart) {
+        // Axis + tick colors
+        Chart.defaults.color = "#4b5563"; // label text
+        Chart.defaults.borderColor = "rgba(148, 163, 184, 0.8)";
+
+        // Grid lines
+        if (Chart.defaults.scale && Chart.defaults.scale.grid) {
+            Chart.defaults.scale.grid.color = "rgba(148, 163, 184, 0.45)";
+            Chart.defaults.scale.grid.lineWidth = 1.2;
+        }
+    }
+
     // Data from Flask
     const revenueLabels = {{ monthly_chart_labels|tojson }};
     const revenueValues = {{ monthly_chart_totals|tojson }};
@@ -288,7 +302,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const itemTotals = {{ item_totals|default([], true)|tojson }};
     const itemCounts = {{ item_counts|default([], true)|tojson }};
 
-    // ---------- Revenue chart (monthly, LINE) ----------
+    // ---------- Revenue chart (monthly, line) ----------
     const revCtx = document.getElementById("revenueChart");
     if (revCtx && revenueLabels.length > 0) {
         new Chart(revCtx, {
@@ -298,11 +312,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     label: "Revenue",
                     data: revenueValues,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    tension: 0.35,
-                    fill: false
+                    fill: true,
+                    tension: 0.35
                 }]
             },
             options: {
@@ -314,28 +325,29 @@ document.addEventListener("DOMContentLoaded", function() {
                         callbacks: {
                             label: function(ctx) {
                                 const v = ctx.parsed.y || 0;
-                                return "Revenue: $" + v.toLocaleString(undefined, {
+                                return "$" + v.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
                                 });
                             }
                         }
-                    },
-                    title: {
-                        display: true,
-                        text: "Monthly revenue trend"
                     }
                 },
                 scales: {
                     x: {
-                        ticks: { autoSkip: true }
+                        ticks: { autoSkip: true },
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.45)",
+                            lineWidth: 1.2,
+                            drawBorder: true
+                        }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return "$" + value.toLocaleString();
-                            }
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.55)",
+                            lineWidth: 1.4,
+                            drawBorder: true
                         }
                     }
                 }
@@ -343,7 +355,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // ---------- Daily revenue chart (bar, scrollable) ----------
+    // ---------- Daily revenue chart (last 30 days, bar) ----------
     const dailyCtx = document.getElementById("dailyRevenueChart");
     if (dailyCtx && dailyLabels.length > 0) {
         new Chart(dailyCtx, {
@@ -352,9 +364,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: dailyLabels,
                 datasets: [{
                     label: "Daily revenue",
-                    data: dailyValues,
-                    categoryPercentage: 0.7,
-                    barPercentage: 0.7
+                    data: dailyValues
                 }]
             },
             options: {
@@ -366,31 +376,32 @@ document.addEventListener("DOMContentLoaded", function() {
                         callbacks: {
                             label: function(ctx) {
                                 const v = ctx.parsed.y || 0;
-                                return "Revenue: $" + v.toLocaleString(undefined, {
+                                return "$" + v.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
                                 });
                             }
                         }
-                    },
-                    title: {
-                        display: true,
-                        text: "Daily revenue (last 30 days)"
                     }
                 },
                 scales: {
                     x: {
                         ticks: {
                             autoSkip: true,
-                            maxTicksLimit: 10
+                            maxTicksLimit: 8
+                        },
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.45)",
+                            lineWidth: 1.2,
+                            drawBorder: true
                         }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return "$" + value.toLocaleString();
-                            }
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.55)",
+                            lineWidth: 1.4,
+                            drawBorder: true
                         }
                     }
                 }
@@ -415,10 +426,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 plugins: {
                     legend: {
                         position: "bottom"
-                    },
-                    title: {
-                        display: true,
-                        text: "Invoice statuses"
                     }
                 },
                 cutout: "60%"
@@ -452,13 +459,9 @@ document.addEventListener("DOMContentLoaded", function() {
                                 return "$" + total.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
-                                }) + " (" + count + " item" + (count === 1 ? "" : "s") + ")";
+                                }) + " (" + count + " tx)";
                             }
                         }
-                    },
-                    title: {
-                        display: true,
-                        text: "Top billed items"
                     }
                 },
                 scales: {
@@ -466,6 +469,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         ticks: {
                             maxRotation: 40,
                             minRotation: 0
+                        },
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.45)",
+                            lineWidth: 1.2,
+                            drawBorder: true
                         }
                     },
                     y: {
@@ -474,6 +482,11 @@ document.addEventListener("DOMContentLoaded", function() {
                             callback: function(value) {
                                 return "$" + value.toLocaleString();
                             }
+                        },
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.55)",
+                            lineWidth: 1.4,
+                            drawBorder: true
                         }
                     }
                 }
@@ -510,5 +523,4 @@ document.addEventListener("DOMContentLoaded", function() {
     {% endif %}
 });
 </script>
-
 {% endblock %}
