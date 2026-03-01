@@ -2512,6 +2512,151 @@ body.dark .btn-remove-row:hover {
     border-radius: 999px;
 }
 
+/* ====== Invoice dashboard layout ====== */
+.invoices-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.6fr);
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+@media (max-width: 1024px) {
+    .invoices-layout-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ====== Charts ====== */
+.charts-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+}
+
+.chart-card {
+    background: rgba(15, 23, 42, 0.75);
+    border-radius: 16px;
+    padding: 14px 14px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chart-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+.chart-card .chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 260px; /* tweak 240–320px if you want */
+}
+
+.chart-card canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ====== Top clients card ====== */
+.top-clients-card {
+    background: rgba(15, 23, 42, 0.75);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.top-clients-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.top-client-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.top-client-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.top-client-meta {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.top-client-amount {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.top-client-bar {
+    margin-top: 4px;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(30, 64, 175, 0.35);
+    overflow: hidden;
+}
+
+.top-client-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #3b82f6;
+}
+
+/* ====== Table wrapper ====== */
+.table-wrapper {
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.9);
+}
+
+/* Status pills */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.status-pill-paid {
+    background: rgba(22, 163, 74, 0.18);
+    color: #22c55e;
+}
+
+.status-pill-sent {
+    background: rgba(37, 99, 235, 0.18);
+    color: #60a5fa;
+}
+
+.status-pill-overdue {
+    background: rgba(220, 38, 38, 0.18);
+    color: #f97373;
+}
+
 /* ===============================
    INVOICE LAYOUT + ASSISTANT
 ================================= */
@@ -3056,4 +3201,44 @@ body.dark .pricing-card.pricing-free,
 body.dark .pricing-card.pricing-pro,
 body.dark .pricing-card.pricing-enterprise {
     box-shadow: 0 22px 60px rgba(0,0,0,0.9);
+}
+
+/* Charts grid on /invoices */
+.charts-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+/* On larger screens, show them in 2 columns, but keep sane heights */
+@media (min-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+        align-items: stretch;
+    }
+}
+
+/* Card wrapper around each canvas */
+.chart-card {
+    background: rgba(15, 23, 42, 0.7); /* nice dark slate */
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Lock the height so charts don't get super short on ultrawide screens */
+.chart-card .chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 260px; /* tweak between 240–320px if you want taller */
+}
+
+/* Let Chart.js stretch to fill the wrapper */
+.chart-card canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
 }

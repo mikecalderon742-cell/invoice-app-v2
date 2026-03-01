@@ -12,6 +12,7 @@ import requests
 import secrets
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader  # 🔹 for drawing signature image
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import stripe  # installed and ready
@@ -43,16 +44,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
-
-
-def allowed_image(filename: str) -> bool:
-    if not filename:
-        return False
-    if "." not in filename:
-        return False
-    ext = filename.rsplit(".", 1)[1].lower()
-    return ext in ALLOWED_IMAGE_EXTENSIONS
-
 
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
@@ -245,6 +236,11 @@ def init_db():
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;"
     )
 
+    # 🔹 NEW: store client signature as base64 PNG data URL (optional)
+    cursor.execute(
+        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS signature_data TEXT;"
+    )
+
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);"
     )
@@ -258,14 +254,6 @@ def init_db():
     # 🔹 NEW: store which visual template this invoice uses
     cursor.execute(
         "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS template_style TEXT;"
-    )
-
-    # 🔹 NEW: attachments + signature paths
-    cursor.execute(
-        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS attachment_paths TEXT;"
-    )
-    cursor.execute(
-        "ALTER TABLE invoices ADD COLUMN IF NOT EXISTS signature_path TEXT;"
     )
 
     # Stripe linkage for subscriptions
@@ -986,7 +974,7 @@ def preview_invoice():
 
 
 # -------------------------
-# SAVE INVOICE (with free-plan quota, attachments, signature)
+# SAVE INVOICE (with free-plan quota)
 # -------------------------
 @app.route("/save", methods=["POST"])
 def save():
@@ -997,7 +985,7 @@ def save():
     - Or creates a new client if new_client_name is provided
     - Falls back to plain 'client' text if needed
     - Stores selected template_style for later PDF/web rendering
-    - Stores optional attachments + signature
+    - Stores optional client signature_data
     """
     allowed, reason = check_invoice_quota_or_reason()
     if not allowed:
@@ -1020,14 +1008,14 @@ def save():
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
 
-    # 🔹 template style selection from the form
+    # 🔹 NEW: template style selection from the form
     template_style = request.form.get("template_style") or "modern"
+
+    # 🔹 NEW: signature data (data URL from hidden field)
+    signature_data = request.form.get("signature_data") or None
 
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
-
-    # 🔹 signature data (base64 PNG from hidden field)
-    signature_data = request.form.get("signature_data") or ""
 
     created_at = datetime.now()
     status = "Sent"
@@ -1087,7 +1075,7 @@ def save():
     if not client_name_for_invoice:
         client_name_for_invoice = request.form.get("client") or "Unknown client"
 
-    # Insert invoice (without attachments/signature yet)
+    # 🔹 NEW: store template_style & signature_data column
     cursor.execute(
         """
         INSERT INTO invoices (
@@ -1100,9 +1088,10 @@ def save():
             terms,
             template_style,
             client_id,
-            user_id
+            user_id,
+            signature_data
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
         (
@@ -1116,6 +1105,7 @@ def save():
             template_style,
             client_id,
             user_id,
+            signature_data,
         ),
     )
 
@@ -1132,49 +1122,6 @@ def save():
             "INSERT INTO invoice_items (invoice_id, description, amount) VALUES (%s, %s, %s)",
             (invoice_id, desc, amt),
         )
-
-    # 🔹 Handle attachments (photos)
-    attachment_files = request.files.getlist("attachments")
-    attachment_paths = []
-
-    if attachment_files:
-        for f in attachment_files:
-            if not f or not f.filename:
-                continue
-            if not allowed_image(f.filename):
-                continue
-            fn = secure_filename(f.filename)
-            stored_name = f"invoice_{invoice_id}_{fn}"
-            save_path = os.path.join(app.config["UPLOAD_FOLDER"], stored_name)
-            f.save(save_path)
-            attachment_paths.append(stored_name)
-
-    attachment_paths_str = ";".join(attachment_paths) if attachment_paths else None
-
-    # 🔹 Handle signature (base64 PNG)
-    signature_path = None
-    if signature_data and signature_data.startswith("data:image/png;base64,"):
-        try:
-            encoded = signature_data.split(",", 1)[1]
-            png_bytes = base64.b64decode(encoded)
-            sig_filename = f"invoice_{invoice_id}_signature.png"
-            sig_path = os.path.join(app.config["UPLOAD_FOLDER"], sig_filename)
-            with open(sig_path, "wb") as sig_file:
-                sig_file.write(png_bytes)
-            signature_path = sig_filename
-        except Exception:
-            signature_path = None
-
-    # Update invoice with file paths
-    cursor.execute(
-        """
-        UPDATE invoices
-        SET attachment_paths = %s,
-            signature_path = %s
-        WHERE id = %s
-        """,
-        (attachment_paths_str, signature_path, invoice_id),
-    )
 
     conn.commit()
     cursor.close()
@@ -1225,6 +1172,7 @@ def invoices_page():
         ORDER BY created_at DESC
         """,
         (user_id,),
+
     )
     all_rows = cursor.fetchall()
 
@@ -1895,7 +1843,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
             template_style,
             notes,
             terms,
-            signature_path
+            signature_data
         FROM invoices
         WHERE id = %s
         """,
@@ -1916,7 +1864,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         template_style,
         notes,
         terms,
-        signature_path,
+        signature_data,
     ) = row
 
     amount_float = float(amount)
@@ -1934,7 +1882,6 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     page_width, page_height = LETTER
 
     # ---------- TEMPLATE STYLES ----------
-    # Basic defaults
     header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
     title_text = "Invoice"
     accent_color = header_bar_color
@@ -2040,7 +1987,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
             f"${amt_float:,.2f}",
         )
         y -= 16
-        if y < 120:  # keep space for footer / notes / signature
+        if y < 120:  # keep space for footer / notes
             pdf.showPage()
             page_width, page_height = LETTER
             y = page_height - 100
@@ -2048,7 +1995,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
             pdf.setFillColorRGB(0.1, 0.1, 0.15)
 
     # ---------- NOTES & TERMS ----------
-    if y < 140:
+    if y < 120:
         pdf.showPage()
         page_width, page_height = LETTER
         y = page_height - 100
@@ -2068,40 +2015,56 @@ def generate_invoice_pdf_bytes(invoice_id: int):
             page_width, page_height = LETTER
             y = page_height - 100
         pdf.setFont("Helvetica-Bold", 11)
+        pdf.setFillColorRGB(0.1, 0.1, 0.15)
         pdf.drawString(72, y, "Payment Terms")
         y -= 16
         pdf.setFont("Helvetica", 10)
         pdf.drawString(72, y, terms[:160])
         y -= 20
 
-    # ---------- SIGNATURE (if available) ----------
-    if signature_path:
-        if y < 120:
-            pdf.showPage()
-            page_width, page_height = LETTER
-            y = page_height - 140
+    # ---------- CLIENT SIGNATURE (if captured) ----------
+    if signature_data:
+        try:
+            # signature_data is typically "data:image/png;base64,AAAA..."
+            if signature_data.startswith("data:image"):
+                _, b64_data = signature_data.split(",", 1)
+            else:
+                b64_data = signature_data
 
-        sig_full_path = os.path.join(UPLOAD_FOLDER, signature_path)
-        if os.path.exists(sig_full_path):
+            sig_bytes = base64.b64decode(b64_data)
+            sig_buf = io.BytesIO(sig_bytes)
+            sig_img = ImageReader(sig_buf)
+
+            # Ensure we have enough space; otherwise new page
+            if y < 140:
+                pdf.showPage()
+                page_width, page_height = LETTER
+                y = page_height - 160
+
             pdf.setFont("Helvetica-Bold", 11)
             pdf.setFillColorRGB(0.1, 0.1, 0.15)
-            pdf.drawString(72, y, "Signature on file")
-            y -= 12
-            try:
-                img_height = 60
-                img_width = 200
-                pdf.drawImage(
-                    sig_full_path,
-                    72,
-                    y - img_height,
-                    width=img_width,
-                    height=img_height,
-                    preserveAspectRatio=True,
-                )
-                y -= img_height + 16
-            except Exception:
-                # If we can't draw the image for any reason, just move on
-                y -= 24
+            pdf.drawString(72, y, "Client Signature")
+            y -= 10
+
+            sig_box_height = 70
+            sig_box_width = 200
+
+            pdf.setStrokeColorRGB(0.8, 0.82, 0.86)
+            pdf.rect(72, y - sig_box_height, sig_box_width, sig_box_height, fill=0, stroke=1)
+
+            pdf.drawImage(
+                sig_img,
+                72 + 6,
+                y - sig_box_height + 6,
+                width=sig_box_width - 12,
+                height=sig_box_height - 12,
+                mask='auto'
+            )
+
+            y -= sig_box_height + 16
+        except Exception:
+            # If anything goes wrong with the signature, just skip it
+            pass
 
     # ---------- TOTAL FOOTER ----------
     if y < 80:
@@ -2163,14 +2126,13 @@ def public_invoice(token):
             i.terms,
             c.name,
             c.email,
-            c.company,
-            i.attachment_paths,
-            i.signature_path
+            c.company
         FROM invoices i
         LEFT JOIN clients c ON i.client_id = c.id
         WHERE i.public_token = %s
         """,
         (token,),
+
     )
     inv_row = cursor.fetchone()
 
@@ -2192,8 +2154,6 @@ def public_invoice(token):
         client_name_from_client,
         client_email,
         client_company,
-        attachment_paths_str,
-        signature_path,
     ) = inv_row
 
     if client_name_from_client:
@@ -2232,8 +2192,6 @@ def public_invoice(token):
 
     pdf_url = f"/history-pdf/{invoice_id}"
 
-    attachment_paths = attachment_paths_str.split(";") if attachment_paths_str else []
-
     return render_template(
         "public_invoice.html",
         invoice_id=invoice_id,
@@ -2254,8 +2212,6 @@ def public_invoice(token):
         pdf_url=pdf_url,
         is_public_view=True,
         public_token=token,
-        attachment_paths=attachment_paths,
-        signature_path=signature_path,
     )
 
 
@@ -2284,9 +2240,7 @@ def invoice_detail(invoice_id):
             i.terms,
             c.name,
             c.email,
-            c.company,
-            i.attachment_paths,
-            i.signature_path
+            c.company
         FROM invoices i
         LEFT JOIN clients c ON i.client_id = c.id
         WHERE i.id = %s AND i.user_id = %s
@@ -2313,8 +2267,6 @@ def invoice_detail(invoice_id):
         client_name_from_client,
         client_email,
         client_company,
-        attachment_paths_str,
-        signature_path,
     ) = inv_row
 
     if client_name_from_client:
@@ -2353,8 +2305,6 @@ def invoice_detail(invoice_id):
 
     pdf_url = f"/history-pdf/{invoice_id}"
 
-    attachment_paths = attachment_paths_str.split(";") if attachment_paths_str else []
-
     return render_template(
         "public_invoice.html",
         invoice_id=invoice_id,
@@ -2375,8 +2325,6 @@ def invoice_detail(invoice_id):
         pdf_url=pdf_url,
         is_public_view=False,  # owner view, full app nav
         public_token=None,
-        attachment_paths=attachment_paths,
-        signature_path=signature_path,
     )
 
 
@@ -2878,17 +2826,6 @@ def stripe_webhook():
             print("[Stripe] No user_id in metadata; cannot upgrade", flush=True)
 
     return "OK", 200
-
-
-# -------------------------
-# UPLOADS SERVE ROUTE
-# -------------------------
-@app.route("/uploads/<path:filename>")
-def uploaded_file(filename):
-    """
-    Serve uploaded attachments and signatures.
-    """
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 # -------------------------
