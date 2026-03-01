@@ -1,123 +1,131 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="dashboard-header">
-    <h1>Create Invoice</h1>
-    <div class="quick-actions">
-        <a href="/invoices" class="btn btn-secondary btn-compact">Invoice History</a>
+<div class="hero reveal">
+    <div class="hero-left">
+        <h1>Create a New Invoice</h1>
+        <p>Pick a client, add your services, and track your revenue with a clean dashboard.</p>
+        <a href="/invoices" class="btn hero-cta">View Invoice History</a>
+    </div>
+    <div class="hero-right">
+        <div class="mock-card">
+            <h3>InvoicePro Snapshot</h3>
+            <p style="margin: 10px 0;">Fast, modern, and built for solo devs and small teams.</p>
+            <p><strong>Tip:</strong> Add your frequent clients once, then select them in a click.</p>
+        </div>
     </div>
 </div>
 
-<div class="invoice-layout-grid">
+<div class="form-wrapper fade-in-up">
 
-    <!-- LEFT: INVOICE FORM -->
-    <div class="invoice-form-col">
-        <div class="form-wrapper fade-in-up">
-            <form method="POST" action="/" enctype="multipart/form-data">
+    <div class="invoice-layout-grid">
+        <!-- LEFT: main invoice form -->
+        <div class="invoice-form-col">
+            <h2 style="margin-top:0;">New Invoice</h2>
 
-                <!-- Client Info -->
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+            <!-- ✅ enctype added so photos + signature can be uploaded -->
+            <form id="invoiceForm" method="POST" action="/save" enctype="multipart/form-data">
+
+                <!-- CLIENT SECTION -->
+                <h3>Client</h3>
+                <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
+
+                    <!-- Existing client dropdown -->
                     <div>
-                        <h2 style="margin-top:0;font-size:18px;">Client</h2>
+                        <label for="client_id" style="font-weight:600; font-size:14px;">Existing Client (optional)</label>
+                        <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+                            <option value="">-- Select existing client --</option>
+                            {% for client in clients %}
+                                <option value="{{ client[0] }}">
+                                    {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small style="font-size:12px; opacity:0.7;">Choose a client you've already worked with, or add a new one below.</small>
+                    </div>
 
-                        <label style="font-weight:600;font-size:14px;">Client Name</label>
-                        <input type="text" name="client_name" required value="{{ form_data.client_name if form_data is defined else '' }}">
-
-                        <label style="font-weight:600;font-size:14px;margin-top:10px;">Client Email</label>
-                        <input type="email" name="client_email" value="{{ form_data.client_email if form_data is defined else '' }}">
-
-                        <label style="font-weight:600;font-size:14px;margin-top:10px;">Client Phone</label>
-                        <input type="text" name="client_phone" value="{{ form_data.client_phone if form_data is defined else '' }}">
+                    <!-- New client fields -->
+                    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
+                        <div>
+                            <label for="new_client_name" style="font-weight:600; font-size:14px;">New Client Name</label>
+                            <input type="text" id="new_client_name" name="new_client_name" placeholder="e.g. Acme Corp or Jane Doe">
+                        </div>
+                        <div>
+                            <label for="new_client_email" style="font-weight:600; font-size:14px;">Client Email</label>
+                            <input type="email" id="new_client_email" name="new_client_email" placeholder="client@example.com">
+                        </div>
                     </div>
 
                     <div>
-                        <h2 style="margin-top:0;font-size:18px;">Invoice Details</h2>
+                        <label for="new_client_company" style="font-weight:600; font-size:14px;">Company (optional)</label>
+                        <input type="text" id="new_client_company" name="new_client_company" placeholder="Company name">
+                    </div>
 
-                        <label style="font-weight:600;font-size:14px;">Invoice Number</label>
-                        <input type="text" name="invoice_number" value="{{ form_data.invoice_number if form_data is defined else '' }}" required>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div>
+                            <label for="new_client_phone" style="font-weight:600; font-size:14px;">Phone (optional)</label>
+                            <input type="text" id="new_client_phone" name="new_client_phone" placeholder="+1 (555) 123-4567">
+                        </div>
+                        <div>
+                            <label for="new_client_address" style="font-weight:600; font-size:14px;">Address (optional)</label>
+                            <input type="text" id="new_client_address" name="new_client_address" placeholder="City, Country">
+                        </div>
+                    </div>
 
-                        <label style="font-weight:600;font-size:14px;margin-top:10px;">Issue Date</label>
-                        <input type="date" name="issue_date" value="{{ form_data.issue_date if form_data is defined else '' }}">
+                    <div>
+                        <label for="new_client_notes" style="font-weight:600; font-size:14px;">Client Notes (optional)</label>
+                        <input type="text" id="new_client_notes" name="new_client_notes" placeholder="e.g. Prefers bank transfer, pay within 7 days">
+                    </div>
 
-                        <label style="font-weight:600;font-size:14px;margin-top:10px;">Due Date</label>
-                        <input type="date" name="due_date" value="{{ form_data.due_date if form_data is defined else '' }}">
+                </div>
+
+                <!-- INVOICE META -->
+                <h3>Invoice Details</h3>
+                <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
+                    <div>
+                        <label for="invoice_notes" style="font-weight:600; font-size:14px;">Invoice Notes (optional)</label>
+                        <input type="text" id="invoice_notes" name="invoice_notes" placeholder="e.g. Thanks for your business!">
+                    </div>
+                    <div>
+                        <label for="invoice_terms" style="font-weight:600; font-size:14px;">Payment Terms</label>
+                        <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
                     </div>
                 </div>
 
-                <!-- Line Items -->
-                <div class="line-items-wrapper" style="margin-top:24px;">
-                    <h2 style="font-size:18px;margin-bottom:8px;">Line Items</h2>
-                    <p class="line-items-hint">
-                        Add each service or product as its own line item.
-                    </p>
+                <!-- LINE ITEMS -->
+                <h3>Line Items</h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    Add at least one service or product. You can leave unused rows blank.
+                </p>
 
-                    <table class="modern-table" style="min-width:0;">
+                <div class="table-wrapper" style="margin-top:12px;">
+                    <table class="modern-table">
                         <thead>
                             <tr>
-                                <th style="width:40%;">Description</th>
-                                <th style="width:20%;">Qty</th>
-                                <th style="width:20%;">Unit Price</th>
-                                <th style="width:20%;">Total</th>
-                                <th style="width:40px;"></th>
+                                <th>Description</th>
+                                <th style="width:180px;">Amount</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsBody">
-                            {% if form_items is defined and form_items %}
-                                {% for item in form_items %}
-                                <tr>
-                                    <td>
-                                        <input type="text" name="item_description[]" value="{{ item.description }}" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" name="item_quantity[]" value="{{ item.quantity }}" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" name="item_unit_price[]" value="{{ item.unit_price }}" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" name="item_total[]" value="{{ item.total }}" readonly>
-                                    </td>
-                                    <td class="remove-cell">
-                                        <button type="button" class="btn-remove-row" onclick="removeItemRow(this)">✕</button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <!-- default one blank row -->
-                                <tr>
-                                    <td>
-                                        <input type="text" name="item_description[]" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" name="item_quantity[]" value="1" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" name="item_unit_price[]" value="0.00" required>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" name="item_total[]" value="0.00" readonly>
-                                    </td>
-                                    <td class="remove-cell">
-                                        <button type="button" class="btn-remove-row" onclick="removeItemRow(this)">✕</button>
-                                    </td>
-                                </tr>
-                            {% endif %}
+                        <tbody>
+                            {% for i in range(3) %}
+                            <tr>
+                                <td>
+                                    <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
-
-                    <div class="line-items-controls">
-                        <button type="button" class="btn btn-secondary btn-compact" id="addItemRow">
-                            + Add line item
-                        </button>
-                        <span class="line-items-hint">Totals update automatically as you edit.</span>
-                    </div>
                 </div>
 
-                <!-- Attachments (PHOTOS) -->
-                <div class="form-section line-items-wrapper" style="margin-top:24px;">
-                    <h2 style="font-size:18px;margin-bottom:8px;">Attachments</h2>
-                    <p class="line-items-hint">
-                        Add photos from your camera or photo library (job site, receipts, before/after shots).
+                <!-- ✅ ATTACHMENTS: photos from camera / photo library -->
+                <div class="line-items-wrapper" style="margin-top:24px;">
+                    <h3>Attachments</h3>
+                    <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                        Add photos from your camera or photo library (job site, receipts, before/after work, etc.).
                     </p>
                     <input
                         type="file"
@@ -125,14 +133,15 @@
                         accept="image/*"
                         capture="environment"
                         multiple
+                        style="margin-top:8px;"
                     >
                 </div>
 
-                <!-- Signature pad -->
-                <div class="form-section line-items-wrapper" style="margin-top:24px;">
-                    <h2 style="font-size:18px;margin-bottom:8px;">Client Signature</h2>
-                    <p class="line-items-hint">
-                        Have your client sign with their finger (mobile) or mouse before sending the invoice.
+                <!-- ✅ SIGNATURE PAD -->
+                <div class="line-items-wrapper" style="margin-top:24px;">
+                    <h3>Client Signature</h3>
+                    <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                        Have your client sign with their finger (mobile) or mouse before you save/send the invoice.
                     </p>
 
                     <div style="border-radius:12px;border:1px solid #e5e7eb;background:#f9fafb;padding:12px;">
@@ -146,188 +155,126 @@
                             <button type="button" class="btn btn-secondary btn-compact" id="clearSignature">
                                 Clear
                             </button>
-                            <span class="line-items-hint">Signature will be saved with this invoice.</span>
+                            <span style="font-size:12px;opacity:0.7;">Signature will be saved with this invoice.</span>
                         </div>
                     </div>
 
-                    <!-- Hidden input to store the PNG data -->
+                    <!-- hidden field where the PNG data goes -->
                     <input type="hidden" name="signature_data" id="signatureData">
                 </div>
 
-                <!-- Notes & Terms -->
-                <div style="margin-top:24px;">
-                    <h2 style="margin-top:0;font-size:18px;">Notes & Terms</h2>
-
-                    <label style="font-weight:600;font-size:14px;">Notes</label>
-                    <textarea
-                        name="notes"
-                        rows="3"
-                        style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit;"
-                        placeholder="Thank you for your business..."
-                    >{{ form_data.notes if form_data is defined else profile.default_notes if profile is defined else '' }}</textarea>
-
-                    <label style="font-weight:600;font-size:14px;margin-top:10px;">Payment Terms</label>
-                    <textarea
-                        name="terms"
-                        rows="3"
-                        style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit;"
-                        placeholder="Payment is due within 14 days..."
-                    >{{ form_data.terms if form_data is defined else profile.default_terms if profile is defined else '' }}</textarea>
+                <div class="form-row" style="margin-top:24px;">
+                    <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
+                        Invoice style
+                    </label>
+                    <select name="template_style" id="template_style" class="template-select">
+                        <option value="modern" selected>Modern Clean (default)</option>
+                        <option value="minimal">Minimal Grey</option>
+                        <option value="bold">Bold Accent</option>
+                        <option value="doodle">Playful / Doodle</option>
+                    </select>
+                    <small style="font-size:12px; opacity:0.7;">
+                        This controls the layout and feel of the PDF and client view.
+                    </small>
                 </div>
 
-                <!-- Totals -->
-                <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:16px;flex-wrap:wrap;align-items:flex-end;">
-                    <div>
-                        <div style="font-size:14px;font-weight:600;">Subtotal</div>
-                        <div id="subtotalDisplay" style="font-size:20px;font-weight:800;">$0.00</div>
-                    </div>
-                    <div>
-                        <div style="font-size:14px;font-weight:600;">Total</div>
-                        <div id="totalDisplay" style="font-size:24px;font-weight:900;">$0.00</div>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
-                    <a href="/invoices" class="btn btn-secondary btn-compact">Cancel</a>
-                    <button type="submit" class="btn btn-brand">
-                        Save Invoice
+                <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <a href="/invoices" class="btn btn-secondary">Cancel</a>
+                    <button type="button" id="previewButton" class="btn btn-secondary">
+                        Preview Invoice
                     </button>
+                    <button type="submit" class="btn btn-brand">Save Invoice</button>
                 </div>
+
             </form>
         </div>
-    </div>
 
-    <!-- RIGHT: ASSISTANT / HINTS -->
-    <div class="invoice-helper-col">
-        <div class="assistant-card">
-            <div class="assistant-header">
-                <div class="assistant-icon">🤖</div>
-                <div>
-                    <h3 class="assistant-title">InvoicePro Assistant</h3>
-                    <p class="assistant-subtitle">
-                        Use the floating chat bubble to ask for help while filling this invoice.
-                    </p>
+        <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
+        <aside class="invoice-helper-col">
+            <div class="assistant-card">
+                <div class="assistant-header">
+                    <span class="assistant-icon">✨</span>
+                    <div>
+                        <h3 class="assistant-title">Invoice Assistant</h3>
+                        <p class="assistant-subtitle">Smart tips while you build.</p>
+                    </div>
                 </div>
+
+                {% if user_plan == "pro" or user_plan == "enterprise" %}
+                    <p class="assistant-text">
+                        As a Pro user, you’ll get richer suggestions here as we roll out AI features.
+                        For now, here are some recommended tweaks:
+                    </p>
+                    <ul class="assistant-list">
+                        <li>Make your line item descriptions specific (hours, deliverables, dates).</li>
+                        <li>Use payment terms that match how you actually collect (Net 7, Net 15, Net 30).</li>
+                        <li>Add a friendly note to increase on-time payments.</li>
+                        <li>Use the <strong>Preview</strong> button to sanity-check totals and wording.</li>
+                    </ul>
+                    <p class="assistant-footer">
+                        Coming soon: ask natural language questions like
+                        <em>“Help me rewrite this invoice to sound more professional.”</em>
+                    </p>
+                {% else %}
+                    <p class="assistant-text">
+                        The assistant gives you quick best-practice tips on the free plan.
+                        Upgrade to Pro later for deeper AI help.
+                    </p>
+                    <ul class="assistant-list">
+                        <li>Always double-check the client email before sending.</li>
+                        <li>Break big projects into multiple line items instead of one huge fee.</li>
+                        <li>Use clear due dates so there’s no confusion.</li>
+                    </ul>
+                    <p class="assistant-footer">
+                        Want smarter, AI-powered suggestions here?<br>
+                        <a href="/pricing" class="assistant-link">See Pro features →</a>
+                    </p>
+                {% endif %}
             </div>
+        </aside>
 
-            <p class="assistant-text">
-                You can ask things like:
-            </p>
-            <ul class="assistant-list">
-                <li>“What should I write in my invoice notes?”</li>
-                <li>“How do I price this job?”</li>
-                <li>“Which line items should I split out?”</li>
-                <li>“What can I send to overdue clients?”</li>
-            </ul>
-
-            <p class="assistant-footer">
-                Your dashboard also includes AI hints under each chart, so you can ask questions like:
-                <span class="assistant-link">“What does my revenue trend say?”</span>
-            </p>
-        </div>
     </div>
-
 </div>
 
-<!-- INLINE SCRIPT: line items + signature pad -->
+<!-- Keep Preview JS + add signature handling -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    /* ===============================
-       LINE ITEMS DYNAMIC + TOTALS
-    =============================== */
-    const itemsBody = document.getElementById('itemsBody');
-    const addItemRowBtn = document.getElementById('addItemRow');
-    const subtotalDisplay = document.getElementById('subtotalDisplay');
-    const totalDisplay = document.getElementById('totalDisplay');
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("invoiceForm");
+    const previewBtn = document.getElementById("previewButton");
 
-    function recalcTotals() {
-        let subtotal = 0;
-        if (!itemsBody) return;
+    if (form && previewBtn) {
+        previewBtn.addEventListener("click", function (e) {
+            e.preventDefault();
 
-        const rows = itemsBody.querySelectorAll('tr');
-        rows.forEach(row => {
-            const qtyInput = row.querySelector('input[name="item_quantity[]"]');
-            const priceInput = row.querySelector('input[name="item_unit_price[]"]');
-            const totalInput = row.querySelector('input[name="item_total[]"]');
+            const originalAction = form.action;
+            const originalTarget = form.target;
 
-            if (!qtyInput || !priceInput || !totalInput) return;
+            form.action = "/preview";
+            form.target = "_blank";
 
-            const qty = parseFloat(qtyInput.value) || 0;
-            const price = parseFloat(priceInput.value) || 0;
-            const rowTotal = qty * price;
+            form.submit();
 
-            totalInput.value = rowTotal.toFixed(2);
-            subtotal += rowTotal;
+            form.action = originalAction;
+            form.target = originalTarget;
         });
-
-        const total = subtotal; // hook for tax / discounts later
-
-        if (subtotalDisplay) {
-            subtotalDisplay.textContent = '$' + subtotal.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        }
-        if (totalDisplay) {
-            totalDisplay.textContent = '$' + total.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        }
-    }
-
-    window.removeItemRow = function (btn) {
-        const row = btn.closest('tr');
-        if (row && itemsBody.rows.length > 1) {
-            row.remove();
-            recalcTotals();
-        }
-    };
-
-    if (addItemRowBtn && itemsBody) {
-        addItemRowBtn.addEventListener('click', function () {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><input type="text" name="item_description[]" required></td>
-                <td><input type="number" step="0.01" name="item_quantity[]" value="1" required></td>
-                <td><input type="number" step="0.01" name="item_unit_price[]" value="0.00" required></td>
-                <td><input type="number" step="0.01" name="item_total[]" value="0.00" readonly></td>
-                <td class="remove-cell">
-                    <button type="button" class="btn-remove-row" onclick="removeItemRow(this)">✕</button>
-                </td>
-            `;
-            itemsBody.appendChild(row);
-            recalcTotals();
-        });
-    }
-
-    if (itemsBody) {
-        itemsBody.addEventListener('input', function (e) {
-            if (e.target.matches('input[name="item_quantity[]"], input[name="item_unit_price[]"]')) {
-                recalcTotals();
-            }
-        });
-        // Initial calc on page load
-        recalcTotals();
     }
 
     /* ===============================
        SIGNATURE PAD (finger/mouse)
     =============================== */
-    const canvas = document.getElementById('signaturePad');
-    const clearBtn = document.getElementById('clearSignature');
-    const hiddenInput = document.getElementById('signatureData');
+    const canvas = document.getElementById("signaturePad");
+    const clearBtn = document.getElementById("clearSignature");
+    const hiddenInput = document.getElementById("signatureData");
 
     if (canvas && hiddenInput) {
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         let drawing = false;
         let lastX = 0;
         let lastY = 0;
 
         ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#111827';
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#111827";
 
         function getPos(evt) {
             const rect = canvas.getBoundingClientRect();
@@ -364,36 +311,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function endDraw() {
             drawing = false;
-            hiddenInput.value = canvas.toDataURL('image/png');
+            // save PNG into hidden field
+            hiddenInput.value = canvas.toDataURL("image/png");
         }
 
-        // mouse
-        canvas.addEventListener('mousedown', startDraw);
-        canvas.addEventListener('mousemove', draw);
-        window.addEventListener('mouseup', endDraw);
+        // mouse events
+        canvas.addEventListener("mousedown", startDraw);
+        canvas.addEventListener("mousemove", draw);
+        window.addEventListener("mouseup", endDraw);
 
-        // touch
-        canvas.addEventListener('touchstart', function (e) {
+        // touch events
+        canvas.addEventListener("touchstart", function (e) {
             startDraw(e);
         }, { passive: true });
 
-        canvas.addEventListener('touchmove', function (e) {
+        canvas.addEventListener("touchmove", function (e) {
             draw(e);
         }, { passive: false });
 
-        canvas.addEventListener('touchend', endDraw);
+        canvas.addEventListener("touchend", endDraw);
 
+        // Clear button
         if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
+            clearBtn.addEventListener("click", function () {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                hiddenInput.value = '';
+                hiddenInput.value = "";
             });
         }
 
-        const form = canvas.closest('form');
+        // Make sure signature is saved before submit
         if (form) {
-            form.addEventListener('submit', function () {
-                hiddenInput.value = canvas.toDataURL('image/png');
+            form.addEventListener("submit", function () {
+                hiddenInput.value = canvas.toDataURL("image/png");
             });
         }
     }
