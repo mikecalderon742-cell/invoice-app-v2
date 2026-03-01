@@ -86,7 +86,9 @@
                     <span class="chart-sub">Last few months</span>
                 </div>
             </div>
-            <canvas id="revenueChart" class="chart-canvas"></canvas>
+            <div class="chart-canvas-wrapper">
+                <canvas id="revenueChart" class="chart-canvas"></canvas>
+            </div>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “What does my revenue trend say about my business momentum?”
             </p>
@@ -101,7 +103,9 @@
                 </div>
             </div>
             <div class="chart-scroll-x">
-                <canvas id="dailyRevenueChart" class="chart-canvas wide-chart"></canvas>
+                <div class="chart-canvas-wrapper wide-wrapper">
+                    <canvas id="dailyRevenueChart" class="chart-canvas wide-chart"></canvas>
+                </div>
             </div>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “Which recent days were unusually strong or weak in revenue?”
@@ -116,7 +120,9 @@
                     <span class="chart-sub">Paid vs Sent vs Overdue</span>
                 </div>
             </div>
-            <canvas id="statusChart" class="chart-canvas"></canvas>
+            <div class="chart-canvas-wrapper">
+                <canvas id="statusChart" class="chart-canvas"></canvas>
+            </div>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “How should I prioritize following up based on my overdue vs sent invoices?”
             </p>
@@ -173,7 +179,9 @@
                     <span class="chart-sub">Most billed services / products</span>
                 </div>
             </div>
-            <canvas id="itemChart" class="chart-canvas"></canvas>
+            <div class="chart-canvas-wrapper">
+                <canvas id="itemChart" class="chart-canvas"></canvas>
+            </div>
             <p class="chart-ai-hint">
                 Tip: Ask the AI helper “What does my top items chart say about what I should sell more of?”
             </p>
@@ -318,7 +326,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -373,7 +381,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -433,7 +441,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: "bottom",
@@ -465,7 +473,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
