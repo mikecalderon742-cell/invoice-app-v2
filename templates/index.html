@@ -18,10 +18,9 @@
 
 <div class="form-wrapper fade-in-up">
 
-    <div class="invoice-layout-grid"
-         style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+    <div class="invoice-layout-grid">
         <!-- LEFT: main invoice form -->
-        <div class="invoice-form-col" style="flex:1 1 520px;min-width:0;">
+        <div class="invoice-form-col">
             <h2 style="margin-top:0;">New Invoice</h2>
 
             <!-- ✅ enctype added so photos + signature can be uploaded -->
@@ -120,7 +119,7 @@
                 <!-- LINE ITEMS -->
                 <h3>Line Items</h3>
                 <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    Add at least one service or product. You can add or remove rows as needed.
+                    Add at least one service or product. You can leave unused rows blank.
                 </p>
 
                 <div class="table-wrapper" style="margin-top:12px;">
@@ -131,19 +130,20 @@
                                 <th style="width:180px;">Amount</th>
                             </tr>
                         </thead>
-                        <tbody id="lineItemsBody">
-                            <!-- Rows are injected via JavaScript so you can add/remove line items -->
+                        <tbody>
+                            {% for i in range(3) %}
+                            <tr>
+                                <td>
+                                    <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <button
-                    type="button"
-                    id="addLineItemBtn"
-                    class="btn btn-secondary"
-                    style="margin-top:10px;"
-                >
-                    + Add line item
-                </button>
 
                 <!-- SIGNATURE -->
                 <h3>Client Signature (optional)</h3>
@@ -157,9 +157,10 @@
                             border:1px solid #e5e7eb;
                             border-radius:10px;
                             padding:10px;
-                            background:#F0F0F0;
+                            background:#0b1120;
                         "
                     >
+                        <!-- Note: width/height are still set, JS will rescale for DPI -->
                         <canvas
                             id="signature-pad"
                             width="600"
@@ -207,7 +208,7 @@
         </div>
 
         <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
-        <aside class="invoice-helper-col" style="flex:0 1 320px;max-width:380px;position:relative;z-index:0;">
+        <aside class="invoice-helper-col">
             <div class="assistant-card">
                 <div class="assistant-header">
                     <span class="assistant-icon">✨</span>
@@ -253,91 +254,11 @@
     </div>
 </div>
 
-<!-- Preview + Signature + Line Items JS -->
+<!-- Preview + Signature JS -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("invoiceForm");
     const previewBtn = document.getElementById("previewButton");
-
-    // ---------- LINE ITEMS: add / remove ----------
-    const lineItemsBody = document.getElementById("lineItemsBody");
-    const addLineItemBtn = document.getElementById("addLineItemBtn");
-
-    function createLineItemRow() {
-        const tr = document.createElement("tr");
-
-        // Description cell
-        const descTd = document.createElement("td");
-        const descInput = document.createElement("input");
-        descInput.type = "text";
-        descInput.name = "description";
-        descInput.placeholder = "e.g. Web development, 10 hours";
-        descTd.appendChild(descInput);
-
-        // Amount + remove button in second cell
-        const amtTd = document.createElement("td");
-        const amtWrapper = document.createElement("div");
-        amtWrapper.style.display = "flex";
-        amtWrapper.style.gap = "8px";
-        amtWrapper.style.alignItems = "center";
-
-        const amtInput = document.createElement("input");
-        amtInput.type = "number";
-        amtInput.name = "amount";
-        amtInput.step = "0.01";
-        amtInput.min = "0";
-        amtInput.placeholder = "0.00";
-
-        const removeBtn = document.createElement("button");
-        removeBtn.type = "button";
-        removeBtn.textContent = "Remove";
-        removeBtn.className = "btn btn-secondary btn-compact";
-        removeBtn.style.whiteSpace = "nowrap";
-
-        removeBtn.addEventListener("click", function () {
-            if (!lineItemsBody) return;
-            if (lineItemsBody.children.length > 1) {
-                tr.remove();
-            } else {
-                // If it's the only row, just clear it instead of removing
-                descInput.value = "";
-                amtInput.value = "";
-            }
-        });
-
-        amtWrapper.appendChild(amtInput);
-        amtWrapper.appendChild(removeBtn);
-        amtTd.appendChild(amtWrapper);
-
-        tr.appendChild(descTd);
-        tr.appendChild(amtTd);
-
-        return tr;
-    }
-
-    function addLineItemRow() {
-        if (!lineItemsBody) return;
-        const row = createLineItemRow();
-        lineItemsBody.appendChild(row);
-    }
-
-    function ensureInitialLineItems() {
-        if (!lineItemsBody) return;
-        if (lineItemsBody.children.length === 0) {
-            // Start with 3 rows like before
-            for (let i = 0; i < 3; i++) {
-                addLineItemRow();
-            }
-        }
-    }
-
-    ensureInitialLineItems();
-
-    if (addLineItemBtn) {
-        addLineItemBtn.addEventListener("click", function () {
-            addLineItemRow();
-        });
-    }
 
     // ---- Signature pad setup ----
     const canvas = document.getElementById("signature-pad");
@@ -352,13 +273,34 @@ document.addEventListener("DOMContentLoaded", function () {
     if (canvas && sigInput) {
         ctx = canvas.getContext("2d");
 
-        // Start with a clean dark background
+        // Clear canvas with dark background
         function clearCanvas() {
+            if (!ctx) return;
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform so fill covers full area
             ctx.fillStyle = "#020617";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
         }
 
-        clearCanvas();
+        // ✅ Pixel-perfect scaling: match canvas size to CSS size × devicePixelRatio
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+
+            // Set the "real" drawing size
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+
+            // Scale the context so 1 unit in JS = 1 CSS pixel
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            clearCanvas();
+        }
+
+        // Initial setup + resize handler
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
 
         function getCanvasPos(evt) {
             const rect = canvas.getBoundingClientRect();
@@ -381,6 +323,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!drawing) return;
             evt.preventDefault();
             const pos = getCanvasPos(evt);
+
             ctx.strokeStyle = "#facc15"; // yellow-ish ink
             ctx.lineWidth = 2;
             ctx.lineCap = "round";
@@ -399,7 +342,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Mouse events
-        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousedown", function (e) {
+            e.preventDefault();
+            startDrawing(e);
+        });
         canvas.addEventListener("mousemove", draw);
         canvas.addEventListener("mouseup", stopDrawing);
         canvas.addEventListener("mouseleave", stopDrawing);
