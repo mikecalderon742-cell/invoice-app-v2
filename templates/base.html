@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+{% set lang = request.args.get('lang', 'en') %}
+<html lang="{{ lang or 'en' }}">
 <head>
     <meta charset="UTF-8">
     <title>{{ business_profile.business_name or "BillBeam" }}</title>
@@ -269,10 +270,18 @@
         <h3>{{ business_profile.business_name or "BillBeam" }}</h3>
     </div>
 
-    <a href="/" class="sidebar-link">Create Invoice</a>
-    <a href="/invoices" class="sidebar-link">Invoice History</a>
-    <a href="/settings" class="sidebar-link">Settings</a>
-    <a href="/pricing" class="sidebar-link">Pricing</a>
+    <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+        {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+    </a>
+    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+        {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+    </a>
+    <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+        {% if lang == 'es' %}Configuración{% else %}Settings{% endif %}
+    </a>
+    <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+        {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
+    </a>
 </div>
 
 <!-- OVERLAY -->
@@ -293,25 +302,47 @@
 
     <div class="nav-right">
         {% if is_public_view %}
-            <span style="opacity:0.8; font-size:14px;">Client View</span>
+            <span style="opacity:0.8; font-size:14px;">
+                {% if lang == 'es' %}Vista de cliente{% else %}Client View{% endif %}
+            </span>
             <button id="themeToggle" class="theme-toggle">🌙</button>
         {% else %}
             {% if is_authenticated %}
                 <span style="margin-right:10px; font-size:13px; opacity:.85;">
                     {{ current_user.email }} · {{ user_plan|capitalize }}
                 </span>
-                <a href="/">Create Invoice</a>
-                <a href="/invoices">Invoice History</a>
-                <a href="/pricing">Pricing</a>
-                <a href="/settings">Settings</a>
-                <a href="/logout">Logout</a>
+                <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+                </a>
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Historial{% else %}Invoice History{% endif %}
+                </a>
+                <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
+                </a>
+                <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Configuración{% else %}Settings{% endif %}
+                </a>
+                <a href="/logout">
+                    {% if lang == 'es' %}Cerrar sesión{% else %}Logout{% endif %}
+                </a>
                 <button id="themeToggle" class="theme-toggle">🌙</button>
             {% else %}
-                <a href="/">Create Invoice</a>
-                <a href="/invoices">Invoice History</a>
-                <a href="/pricing">Pricing</a>
-                <a href="/login">Login</a>
-                <a href="/register">Sign Up</a>
+                <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+                </a>
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Historial{% else %}Invoice History{% endif %}
+                </a>
+                <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
+                </a>
+                <a href="/login{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Iniciar sesión{% else %}Login{% endif %}
+                </a>
+                <a href="/register{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Crear cuenta{% else %}Sign Up{% endif %}
+                </a>
                 <button id="themeToggle" class="theme-toggle">🌙</button>
             {% endif %}
         {% endif %}
@@ -353,14 +384,24 @@
 <div id="loader" class="loader"></div>
 
 {% if not is_public_view %}
-<a href="/" class="floating-btn">+</a>
+<a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="floating-btn">+</a>
 {% endif %}
 
 <div id="welcomeModal" class="welcome-modal hidden">
     <div class="welcome-content">
-        <h2>Welcome to BillBeam ⚡</h2>
-        <p>Your new command center for clean, fast invoices.</p>
-        <button id="closeWelcome" class="btn">Let's Go</button>
+        <h2>
+            {% if lang == 'es' %}Bienvenido a BillBeam ⚡{% else %}Welcome to BillBeam ⚡{% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Tu nuevo panel de control para facturas rápidas y claras.
+            {% else %}
+                Your new command center for clean, fast invoices.
+            {% endif %}
+        </p>
+        <button id="closeWelcome" class="btn">
+            {% if lang == 'es' %}Empezar{% else %}Let's Go{% endif %}
+        </button>
     </div>
 </div>
 
@@ -374,16 +415,29 @@
     <div class="ai-helper-panel" id="aiHelperPanel">
         <div class="ai-helper-header">
             <div class="ai-helper-title">
-                <span>BillBeam Assistant</span>
-                <small>Ask about invoices, clients, or workflows.</small>
+                <span>
+                    {% if lang == 'es' %}Asistente BillBeam{% else %}BillBeam Assistant{% endif %}
+                </span>
+                <small>
+                    {% if lang == 'es' %}
+                        Pregunta sobre facturas, clientes o flujos de trabajo.
+                    {% else %}
+                        Ask about invoices, clients, or workflows.
+                    {% endif %}
+                </small>
             </div>
             <button id="aiHelperClose" class="ai-helper-close" type="button">✕</button>
         </div>
 
         <div id="aiHelperMessages" class="ai-helper-messages">
             <div class="ai-message ai-message-system">
-                Hi {{ current_user.email or "there" }} 👋<br>
-                Ask me how to set up invoices, chase overdue payments, or read your dashboard.
+                {% if lang == 'es' %}
+                    Hola {{ current_user.email or "allí" }} 👋<br>
+                    Pregúntame cómo configurar facturas, dar seguimiento a pagos vencidos o leer tu panel.
+                {% else %}
+                    Hi {{ current_user.email or "there" }} 👋<br>
+                    Ask me how to set up invoices, chase overdue payments, or read your dashboard.
+                {% endif %}
             </div>
         </div>
 
@@ -391,10 +445,12 @@
             <input
                 type="text"
                 id="aiHelperInput"
-                placeholder="Ask a question about your invoices or clients..."
+                placeholder="{% if lang == 'es' %}Haz una pregunta sobre tus facturas o clientes...{% else %}Ask a question about your invoices or clients...{% endif %}"
                 autocomplete="off"
             />
-            <button type="submit" class="btn btn-brand ai-helper-send">Send</button>
+            <button type="submit" class="btn btn-brand ai-helper-send">
+                {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
+            </button>
         </form>
     </div>
 </div>
@@ -566,122 +622,133 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     /* ============================
-   AI HELPER WIDGET (enhanced)
-============================ */
-const aiHelper = document.getElementById("aiHelper");
-const aiPanel = document.getElementById("aiHelperPanel");
-const aiToggle = document.getElementById("aiHelperToggle");
-const aiClose = document.getElementById("aiHelperClose");
-const aiForm = document.getElementById("aiHelperForm");
-const aiInput = document.getElementById("aiHelperInput");
-const aiMessages = document.getElementById("aiHelperMessages");
+       AI HELPER WIDGET (enhanced)
+    ============================ */
+    const aiHelper = document.getElementById("aiHelper");
+    const aiPanel = document.getElementById("aiHelperPanel");
+    const aiToggle = document.getElementById("aiHelperToggle");
+    const aiClose = document.getElementById("aiHelperClose");
+    const aiForm = document.getElementById("aiHelperForm");
+    const aiInput = document.getElementById("aiHelperInput");
+    const aiMessages = document.getElementById("aiHelperMessages");
 
-function appendMessage(text, role) {
-    if (!aiMessages) return;
-    const div = document.createElement("div");
-    div.classList.add("ai-message");
-    if (role === "user") div.classList.add("ai-message-user");
-    if (role === "assistant") div.classList.add("ai-message-assistant");
-    if (role === "system") div.classList.add("ai-message-system");
+    function appendMessage(text, role) {
+        if (!aiMessages) return;
+        const div = document.createElement("div");
+        div.classList.add("ai-message");
+        if (role === "user") div.classList.add("ai-message-user");
+        if (role === "assistant") div.classList.add("ai-message-assistant");
+        if (role === "system") div.classList.add("ai-message-system");
 
-    div.innerHTML = String(text).replace(/\n/g, "<br>");
-    aiMessages.appendChild(div);
-    aiMessages.scrollTop = aiMessages.scrollHeight;
-}
-
-function appendLoadingBubble() {
-    if (!aiMessages) return null;
-    const div = document.createElement("div");
-    div.classList.add("ai-message", "ai-message-assistant");
-    div.dataset.loading = "true";
-    div.textContent = "Thinking...";
-    aiMessages.appendChild(div);
-    aiMessages.scrollTop = aiMessages.scrollHeight;
-    return div;
-}
-
-function removeLoadingBubble(el) {
-    if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
+        div.innerHTML = String(text).replace(/\n/g, "<br>");
+        aiMessages.appendChild(div);
+        aiMessages.scrollTop = aiMessages.scrollHeight;
     }
-}
 
-// Optional: show a one-time system hint if you want
-if (aiMessages && !aiMessages.dataset.initialized) {
-    appendMessage(
-        "Hi! I can help interpret your charts, suggest better invoice wording, " +
-        "and give ideas for handling overdue invoices.\n\n" +
-        "Try asking: “What does my revenue trend say about my business momentum?”",
-        "system"
-    );
-    aiMessages.dataset.initialized = "true";
-}
+    function appendLoadingBubble() {
+        if (!aiMessages) return null;
+        const div = document.createElement("div");
+        div.classList.add("ai-message", "ai-message-assistant");
+        div.dataset.loading = "true";
+        div.textContent = "{{ 'Thinking...' if lang == 'en' else 'Pensando...' }}";
+        aiMessages.appendChild(div);
+        aiMessages.scrollTop = aiMessages.scrollHeight;
+        return div;
+    }
 
-if (aiToggle && aiHelper) {
-    aiToggle.addEventListener("click", function () {
-        aiHelper.classList.toggle("open");
-        if (aiHelper.classList.contains("open") && aiInput) {
-            setTimeout(() => aiInput.focus(), 50);
+    function removeLoadingBubble(el) {
+        if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
         }
-    });
-}
+    }
 
-if (aiClose && aiHelper) {
-    aiClose.addEventListener("click", function () {
-        aiHelper.classList.remove("open");
-    });
-}
+    // Optional: show a one-time system hint
+    if (aiMessages && !aiMessages.dataset.initialized) {
+        appendMessage(
+            {% if lang == 'es' %}
+            "¡Hola! Puedo ayudarte a interpretar tus gráficos, sugerir mejores textos para tus facturas " +
+            "y darte ideas para manejar facturas vencidas.\n\n" +
+            "Prueba con: “¿Qué dice mi tendencia de ingresos sobre el impulso de mi negocio?”",
+            {% else %}
+            "Hi! I can help interpret your charts, suggest better invoice wording, " +
+            "and give ideas for handling overdue invoices.\n\n" +
+            "Try asking: “What does my revenue trend say about my business momentum?”",
+            {% endif %}
+            "system"
+        );
+        aiMessages.dataset.initialized = "true";
+    }
 
-if (aiForm && aiInput) {
-    aiForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const q = aiInput.value.trim();
-        if (!q) return;
-
-        appendMessage(q, "user");
-        aiInput.value = "";
-
-        const loadingBubble = appendLoadingBubble();
-
-        try {
-            const resp = await fetch("/ai-helper", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    question: q,
-                    page: window.location.pathname
-                })
-            });
-
-            if (!resp.ok) {
-                throw new Error("HTTP " + resp.status);
+    if (aiToggle && aiHelper) {
+        aiToggle.addEventListener("click", function () {
+            aiHelper.classList.toggle("open");
+            if (aiHelper.classList.contains("open") && aiInput) {
+                setTimeout(() => aiInput.focus(), 50);
             }
+        });
+    }
 
-            const data = await resp.json();
-            removeLoadingBubble(loadingBubble);
+    if (aiClose && aiHelper) {
+        aiClose.addEventListener("click", function () {
+            aiHelper.classList.remove("open");
+        });
+    }
 
-            if (data.answer) {
-                appendMessage(data.answer, "assistant");
-            } else if (data.error) {
-                appendMessage("Sorry, I ran into a problem: " + data.error, "system");
-            } else {
+    if (aiForm && aiInput) {
+        aiForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const q = aiInput.value.trim();
+            if (!q) return;
+
+            appendMessage(q, "user");
+            aiInput.value = "";
+
+            const loadingBubble = appendLoadingBubble();
+
+            try {
+                const resp = await fetch("/ai-helper", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        question: q,
+                        page: window.location.pathname,
+                        lang: "{{ lang or 'en' }}"
+                    })
+                });
+
+                if (!resp.ok) {
+                    throw new Error("HTTP " + resp.status);
+                }
+
+                const data = await resp.json();
+                removeLoadingBubble(loadingBubble);
+
+                if (data.answer) {
+                    appendMessage(data.answer, "assistant");
+                } else if (data.error) {
+                    appendMessage(
+                        "{{ 'Sorry, I ran into a problem: ' if lang == 'en' else 'Lo siento, hubo un problema: ' }}" +
+                        data.error,
+                        "system"
+                    );
+                } else {
+                    appendMessage(
+                        "{{ 'Hmm, I could not understand the response from the server.' if lang == 'en' else 'Hmm, no pude entender la respuesta del servidor.' }}",
+                        "system"
+                    );
+                }
+            } catch (err) {
+                console.error("AI helper error:", err);
+                removeLoadingBubble(loadingBubble);
                 appendMessage(
-                    "Hmm, I couldn't understand the response from the server.",
+                    "{{ 'Network or server error talking to the AI helper. Please try again.' if lang == 'en' else 'Error de red o servidor al hablar con el asistente. Inténtalo de nuevo.' }}",
                     "system"
                 );
             }
-        } catch (err) {
-            console.error("AI helper error:", err);
-            removeLoadingBubble(loadingBubble);
-            appendMessage(
-                "Network or server error talking to the AI helper. Please try again.",
-                "system"
-            );
-        }
-    });
-}
+        });
+    }
 
 });
 </script>
