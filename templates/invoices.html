@@ -1,11 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
 
+{# Language handling, same pattern as index.html #}
+{% set lang = request.args.get('lang', 'en') %}
+
+<!-- LANGUAGE SWITCHER -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <div style="font-size:13px;opacity:0.85;">
+        {% if lang == 'es' %}
+            Idioma:
+        {% else %}
+            Language:
+        {% endif %}
+        <a href="?lang=en"
+           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
+            EN
+        </a>
+        <span style="opacity:0.6;">|</span>
+        <a href="?lang=es"
+           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
+            ES
+        </a>
+    </div>
+</div>
+
 <div class="dashboard-header">
-    <h1>Dashboard Overview</h1>
+    <h1>
+        {% if lang == 'es' %}
+            Panel BillBeam
+        {% else %}
+            BillBeam Dashboard
+        {% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="/" class="btn">+ New Invoice</a>
-        <a href="/invoices" class="btn btn-secondary">Refresh</a>
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn">
+            {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Actualizar{% else %}Refresh{% endif %}
+        </a>
     </div>
 </div>
 
@@ -15,9 +48,13 @@
         <input
             type="text"
             name="q"
-            placeholder="Search client, invoice #, notes, terms..."
+            placeholder="{% if lang == 'es' %}Buscar cliente, factura #, notas, términos...{% else %}Search client, invoice #, notes, terms...{% endif %}"
             value="{{ q }}">
-        <button type="submit" class="btn btn-secondary">Search</button>
+        <button type="submit" class="btn btn-secondary">
+            {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+        </button>
+        {# Preserve lang when searching #}
+        <input type="hidden" name="lang" value="{{ lang }}">
     </form>
 </div>
 
@@ -28,36 +65,56 @@
 
         <div class="card kpi orange">
             <h2 class="kpi-number">{{ total_invoices }}</h2>
-            <p>Total Invoices</p>
+            <p>
+                {% if lang == 'es' %}Facturas totales{% else %}Total Invoices{% endif %}
+            </p>
         </div>
 
         <div class="card kpi green">
             <h2 class="kpi-number" id="totalRevenueKpi">
                 ${{ "{:,.2f}".format(total_revenue) }}
             </h2>
-            <p>Total Revenue</p>
-            <small class="kpi-live-label">Live counter</small>
+            <p>
+                {% if lang == 'es' %}Ingresos totales{% else %}Total Revenue{% endif %}
+            </p>
+            <small class="kpi-live-label">
+                {% if lang == 'es' %}Contador en vivo{% else %}Live counter{% endif %}
+            </small>
         </div>
 
         <div class="card kpi blue">
             <h2 class="kpi-number">${{ "{:,.2f}".format(monthly_revenue) }}</h2>
-            <p>This Month</p>
-            <small>{{ growth }}% of total revenue</small>
+            <p>
+                {% if lang == 'es' %}Este mes{% else %}This Month{% endif %}
+            </p>
+            <small>
+                {% if lang == 'es' %}
+                    {{ growth }}% de los ingresos totales
+                {% else %}
+                    {{ growth }}% of total revenue
+                {% endif %}
+            </small>
         </div>
 
         <div class="card kpi purple">
             <h2 class="kpi-number">${{ "{:,.2f}".format(avg_invoice) }}</h2>
-            <p>Average Invoice</p>
+            <p>
+                {% if lang == 'es' %}Factura promedio{% else %}Average Invoice{% endif %}
+            </p>
         </div>
 
         <div class="card kpi teal">
             <h2 class="kpi-number">{{ paid_count }}</h2>
-            <p>Paid</p>
+            <p>
+                {% if lang == 'es' %}Pagadas{% else %}Paid{% endif %}
+            </p>
         </div>
 
         <div class="card kpi red">
             <h2 class="kpi-number">{{ overdue_count }}</h2>
-            <p>Overdue</p>
+            <p>
+                {% if lang == 'es' %}Vencidas{% else %}Overdue{% endif %}
+            </p>
         </div>
 
     </div>
@@ -65,13 +122,25 @@
     <!-- STATUS SUMMARY STRIP -->
     <div class="status-summary">
         <div class="status-item paid">
-            Paid: {{ status_distribution["Paid"] }}
+            {% if lang == 'es' %}
+                Pagadas: {{ status_distribution["Paid"] }}
+            {% else %}
+                Paid: {{ status_distribution["Paid"] }}
+            {% endif %}
         </div>
         <div class="status-item sent">
-            Sent: {{ status_distribution["Sent"] }}
+            {% if lang == 'es' %}
+                Enviadas: {{ status_distribution["Sent"] }}
+            {% else %}
+                Sent: {{ status_distribution["Sent"] }}
+            {% endif %}
         </div>
         <div class="status-item draft">
-            Overdue: {{ status_distribution["Overdue"] }}
+            {% if lang == 'es' %}
+                Vencidas: {{ status_distribution["Overdue"] }}
+            {% else %}
+                Overdue: {{ status_distribution["Overdue"] }}
+            {% endif %}
         </div>
     </div>
 
@@ -82,15 +151,23 @@
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
-                    <h3>Revenue Trend</h3>
-                    <span class="chart-sub">Last few months</span>
+                    <h3>
+                        {% if lang == 'es' %}Tendencia de ingresos{% else %}Revenue Trend{% endif %}
+                    </h3>
+                    <span class="chart-sub">
+                        {% if lang == 'es' %}Últimos meses{% else %}Last few months{% endif %}
+                    </span>
                 </div>
             </div>
             <div class="chart-canvas-wrapper">
                 <canvas id="revenueChart" class="chart-canvas"></canvas>
             </div>
             <p class="chart-ai-hint">
-                Tip: Ask the AI helper “What does my revenue trend say about my business momentum?”
+                {% if lang == 'es' %}
+                    Consejo: Pregunta al asistente “¿Qué dice mi tendencia de ingresos sobre el impulso de mi negocio?”
+                {% else %}
+                    Tip: Ask the AI helper “What does my revenue trend say about my business momentum?”
+                {% endif %}
             </p>
         </div>
 
@@ -98,8 +175,12 @@
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
-                    <h3>Daily Revenue</h3>
-                    <span class="chart-sub">View one day at a time</span>
+                    <h3>
+                        {% if lang == 'es' %}Ingresos diarios{% else %}Daily Revenue{% endif %}
+                    </h3>
+                    <span class="chart-sub">
+                        {% if lang == 'es' %}Ver un día a la vez{% else %}View one day at a time{% endif %}
+                    </span>
                 </div>
             </div>
             <div style="margin-top:10px;">
@@ -107,7 +188,11 @@
                     for="dailyDateSelect"
                     style="display:block;font-size:12px;opacity:0.75;margin-bottom:4px;"
                 >
-                    Pick a day (last 30 days)
+                    {% if lang == 'es' %}
+                        Elige un día (últimos 30 días)
+                    {% else %}
+                        Pick a day (last 30 days)
+                    {% endif %}
                 </label>
                 <select id="dailyDateSelect" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid rgba(148,163,184,0.4);background:#020617;color:#e5e7eb;font-size:13px;">
                     {% if daily_chart_labels and daily_chart_totals %}
@@ -118,7 +203,13 @@
                             </option>
                         {% endfor %}
                     {% else %}
-                        <option value="">No recent invoices</option>
+                        <option value="">
+                            {% if lang == 'es' %}
+                                Sin facturas recientes
+                            {% else %}
+                                No recent invoices
+                            {% endif %}
+                        </option>
                     {% endif %}
                 </select>
                 <div
@@ -130,7 +221,11 @@
                 </div>
             </div>
             <p class="chart-ai-hint">
-                Tip: Ask the AI helper “Which recent days were unusually strong or weak in revenue?”
+                {% if lang == 'es' %}
+                    Consejo: Pregunta “¿Qué días recientes fueron inusualmente fuertes o débiles en ingresos?”
+                {% else %}
+                    Tip: Ask the AI helper “Which recent days were unusually strong or weak in revenue?”
+                {% endif %}
             </p>
         </div>
 
@@ -138,15 +233,23 @@
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
-                    <h3>Status Breakdown</h3>
-                    <span class="chart-sub">Paid vs Sent vs Overdue</span>
+                    <h3>
+                        {% if lang == 'es' %}Estado de facturas{% else %}Status Breakdown{% endif %}
+                    </h3>
+                    <span class="chart-sub">
+                        {% if lang == 'es' %}Pagadas vs Enviadas vs Vencidas{% else %}Paid vs Sent vs Overdue{% endif %}
+                    </span>
                 </div>
             </div>
             <div class="chart-canvas-wrapper">
                 <canvas id="statusChart" class="chart-canvas"></canvas>
             </div>
             <p class="chart-ai-hint">
-                Tip: Ask the AI helper “How should I prioritize following up based on my overdue vs sent invoices?”
+                {% if lang == 'es' %}
+                    Consejo: Pregunta “¿Cómo debo priorizar el seguimiento según mis facturas vencidas vs enviadas?”
+                {% else %}
+                    Tip: Ask the AI helper “How should I prioritize following up based on my overdue vs sent invoices?”
+                {% endif %}
             </p>
         </div>
 
@@ -154,42 +257,60 @@
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
-                    <h3>Top Clients</h3>
-                    <span class="chart-sub">By total billed amount</span>
+                    <h3>
+                        {% if lang == 'es' %}Mejores clientes{% else %}Top Clients{% endif %}
+                    </h3>
+                    <span class="chart-sub">
+                        {% if lang == 'es' %}Por monto total facturado{% else %}By total billed amount{% endif %}
+                    </span>
                 </div>
             </div>
 
-            {% if top_clients and top_clients|length > 0 %}
+            {% if top_clients && top_clients|length > 0 %}
                 <ul class="leaderboard">
                     {% for client in top_clients %}
                         {# expect: client = (name, total_amount, invoice_count, pct) #}
                         <li class="leader-item">
                             <div class="leader-left">
-                                <span class="rank">#{{ loop.index }}</span>
-                                <span class="client-name">
-                                    {{ client[0] or 'Unknown client' }}
-                                </span>
+                                <div class="leader-main">
+                                    <span class="rank">#{{ loop.index }}</span>
+                                    <span class="client-name">
+                                        {{ client[0] or (lang == 'es' and 'Cliente desconocido' or 'Unknown client') }}
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"
+                                         style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
+                                </div>
+                                <div class="leader-meta">
+                                    {% if lang == 'es' %}
+                                        {{ client[2] }} factura{{ '' if client[2] == 1 else 's' }}
+                                    {% else %}
+                                        {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="leader-right">
                                 ${{ "{:,.2f}".format(client[1]) }}
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill"
-                                     style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
-                            </div>
-                            <div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
-                                {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
                             </div>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
                 <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">
-                    Top clients will appear here as you send more invoices.
+                    {% if lang == 'es' %}
+                        Tus mejores clientes aparecerán aquí a medida que envíes más facturas.
+                    {% else %}
+                        Top clients will appear here as you send more invoices.
+                    {% endif %}
                 </p>
             {% endif %}
             <p class="chart-ai-hint">
-                Tip: Ask the AI helper “How should I nurture or price work for my top clients?”
+                {% if lang == 'es' %}
+                    Consejo: Pregunta “¿Cómo debería cuidar o fijar precios para mis mejores clientes?”
+                {% else %}
+                    Tip: Ask the AI helper “How should I nurture or price work for my top clients?”
+                {% endif %}
             </p>
         </div>
 
@@ -197,15 +318,23 @@
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
-                    <h3>Top Items</h3>
-                    <span class="chart-sub">Most billed services / products</span>
+                    <h3>
+                        {% if lang == 'es' %}Servicios principales{% else %}Top Items{% endif %}
+                    </h3>
+                    <span class="chart-sub">
+                        {% if lang == 'es' %}Servicios / productos más facturados{% else %}Most billed services / products{% endif %}
+                    </span>
                 </div>
             </div>
             <div class="chart-canvas-wrapper">
                 <canvas id="itemChart" class="chart-canvas"></canvas>
             </div>
             <p class="chart-ai-hint">
-                Tip: Ask the AI helper “What does my top items chart say about what I should sell more of?”
+                {% if lang == 'es' %}
+                    Consejo: Pregunta “¿Qué dice mi gráfico de servicios principales sobre lo que debería vender más?”
+                {% else %}
+                    Tip: Ask the AI helper “What does my top items chart say about what I should sell more of?”
+                {% endif %}
             </p>
         </div>
 
@@ -213,15 +342,47 @@
 
     <!-- TABLE -->
     <div class="table-wrapper">
+        <div class="table-section-header">
+            <div>
+                <h2>
+                    {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+                </h2>
+                <p>
+                    {% if lang == 'es' %}
+                        Revisa, descarga, envía y actualiza el estado de tus facturas.
+                    {% else %}
+                        Review, download, send, and update the status of your invoices.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="table-meta">
+                {% if lang == 'es' %}
+                    {{ invoices|length }} factura{{ '' if invoices|length == 1 else 's' }} en vista
+                {% else %}
+                    {{ invoices|length }} invoice{{ '' if invoices|length == 1 else 's' }} in view
+                {% endif %}
+            </div>
+        </div>
+
         <table class="modern-table">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Client</th>
-                    <th>Amount</th>
-                    <th>Created</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>
+                        {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                    </th>
+                    <th>
+                        {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                    </th>
+                    <th>
+                        {% if lang == 'es' %}Creada{% else %}Created{% endif %}
+                    </th>
+                    <th>
+                        {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+                    </th>
+                    <th>
+                        {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
+                    </th>
                 </tr>
             </thead>
 
@@ -240,11 +401,17 @@
 
                     <td>
                         {% if invoice[4] == "Paid" %}
-                            <span class="badge paid">Paid</span>
+                            <span class="badge paid">
+                                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+                            </span>
                         {% elif invoice[4] == "Overdue" %}
-                            <span class="badge overdue">Overdue</span>
+                            <span class="badge overdue">
+                                {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+                            </span>
                         {% elif invoice[4] == "Sent" %}
-                            <span class="badge sent">Sent</span>
+                            <span class="badge sent">
+                                {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+                            </span>
                         {% else %}
                             {{ invoice[4] }}
                         {% endif %}
@@ -252,37 +419,43 @@
 
                     <td class="action-buttons">
                         <!-- View / Preview -->
-                        <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}">View</a>
+                        <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                            {% if lang == 'es' %}Ver{% else %}View{% endif %}
+                        </a>
 
                         <!-- Download PDF -->
-                        <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}">
-                            PDF
+                        <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                            {% if lang == 'es' %}PDF{% else %}PDF{% endif %}
                         </a>
 
                         <!-- Edit -->
-                        <a class="btn btn-edit" href="/edit/{{ invoice[0] }}">Edit</a>
+                        <a class="btn btn-edit" href="/edit/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                            {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
+                        </a>
 
                         <!-- Mark Paid (if not already) -->
                         {% if invoice[4] != "Paid" %}
-                            <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid">
-                                Mark Paid
+                            <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
+                                {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
                             </a>
                         {% endif %}
 
                         <!-- Mark Sent (if Draft ever used) -->
                         {% if invoice[4] == "Draft" %}
-                            <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent">
-                                Mark Sent
+                            <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent{% if lang %}?lang={{ lang }}{% endif %}">
+                                {% if lang == 'es' %}Marcar enviada{% else %}Mark Sent{% endif %}
                             </a>
                         {% endif %}
 
                         <!-- SEND INVOICE VIA EMAIL -->
-                        <a class="btn btn-info" href="/send-email/{{ invoice[0] }}">
-                            Send
+                        <a class="btn btn-info" href="/send-email/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                            {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
                         </a>
 
                         <!-- DELETE -->
-                        <a class="btn btn-danger" href="/delete/{{ invoice[0] }}">Delete</a>
+                        <a class="btn btn-danger" href="/delete/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                            {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -294,9 +467,19 @@
 {% else %}
 
     <div class="empty-state">
-        <h3>No invoices yet</h3>
-        <p>Create your first invoice to get started.</p>
-        <a class="btn" href="/">Create Invoice</a>
+        <h3>
+            {% if lang == 'es' %}Todavía no hay facturas{% else %}No invoices yet{% endif %}
+        </h3>
+        <p>
+            {% if lang == 'es' %}
+                Crea tu primera factura para comenzar a ver estadísticas en BillBeam.
+            {% else %}
+                Create your first invoice to start seeing BillBeam analytics.
+            {% endif %}
+        </p>
+        <a class="btn" href="/{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+        </a>
     </div>
 
 {% endif %}
@@ -335,7 +518,7 @@ document.addEventListener("DOMContentLoaded", function() {
             data: {
                 labels: revenueLabels,
                 datasets: [{
-                    label: "Revenue",
+                    label: "{{ 'Revenue' if lang == 'en' else 'Ingresos' }}",
                     data: revenueValues,
                     fill: true,
                     tension: 0.35,
@@ -392,26 +575,35 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateDailySummary() {
         if (!dailySelect || !dailySummary || !dailyLabels || dailyLabels.length === 0) {
             if (dailySummary) {
-                dailySummary.textContent = "No daily revenue data.";
+                dailySummary.textContent = "{{ 'No daily revenue data.' if lang == 'en' else 'Sin datos de ingresos diarios.' }}";
             }
             return;
         }
 
         const idx = parseInt(dailySelect.value, 10);
         if (isNaN(idx) || idx < 0 || idx >= dailyLabels.length) {
-            dailySummary.textContent = "No daily revenue data.";
+            dailySummary.textContent = "{{ 'No daily revenue data.' if lang == 'en' else 'Sin datos de ingresos diarios.' }}";
             return;
         }
 
         const label = dailyLabels[idx];
         const total = dailyValues[idx] || 0;
 
-        dailySummary.textContent = "On " + label + ", you billed $" +
+        dailySummary.textContent =
+            {% if lang == 'es' %}
+            "El " + label + " facturaste $" +
+            {% else %}
+            "On " + label + ", you billed $" +
+            {% endif %}
             total.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }) +
-            " in invoices.";
+            {% if lang == 'es' %}
+            " en facturas."
+            {% else %}
+            " in invoices."
+            {% endif %};
     }
 
     if (dailySelect) {
@@ -461,7 +653,7 @@ document.addEventListener("DOMContentLoaded", function() {
             data: {
                 labels: itemLabels,
                 datasets: [{
-                    label: "Total billed",
+                    label: "{{ 'Total billed' if lang == 'en' else 'Total facturado' }}",
                     data: itemTotals,
                     backgroundColor: "rgba(249, 115, 22, 0.9)",  // orange
                     borderColor: "rgba(194, 65, 12, 1)",
@@ -483,7 +675,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 return "$" + total.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
-                                }) + " (" + count + " tx)";
+                                }) + " (" + count + " {{ 'tx' if lang == 'en' else 'mov' }})";
                             }
                         }
                     }
