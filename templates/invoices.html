@@ -266,7 +266,7 @@
                 </div>
             </div>
 
-            {% if top_clients && top_clients|length > 0 %}
+            {% if top_clients and top_clients|length > 0 %}
                 <ul class="leaderboard">
                     {% for client in top_clients %}
                         {# expect: client = (name, total_amount, invoice_count, pct) #}
