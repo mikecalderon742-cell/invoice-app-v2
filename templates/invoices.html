@@ -266,7 +266,6 @@
                 </div>
             </div>
 
-            {# ✅ Jinja-safe conditional (no &&) #}
             {% if top_clients and top_clients|length > 0 %}
                 <ul class="leaderboard">
                     {% for client in top_clients %}
@@ -523,8 +522,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     data: revenueValues,
                     fill: true,
                     tension: 0.35,
-                    borderColor: "rgba(59, 130, 246, 1)",          // blue line
-                    backgroundColor: "rgba(59, 130, 246, 0.18)",   // blue fill
+                    borderColor: "rgba(59, 130, 246, 1)",
+                    backgroundColor: "rgba(59, 130, 246, 0.18)",
                     borderWidth: 2.4,
                     pointRadius: 3,
                     pointHoverRadius: 4
@@ -656,7 +655,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     label: "{{ 'Total billed' if lang == 'en' else 'Total facturado' }}",
                     data: itemTotals,
-                    backgroundColor: "rgba(249, 115, 22, 0.9)",  // orange
+                    backgroundColor: "rgba(249, 115, 22, 0.9)",
                     borderColor: "rgba(194, 65, 12, 1)",
                     borderWidth: 1.5,
                     borderRadius: 3

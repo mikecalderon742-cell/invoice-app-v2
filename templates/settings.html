@@ -1,11 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% set lang = request.args.get('lang', 'en') %}
+
+<!-- LANGUAGE SWITCHER -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <div style="font-size:13px;opacity:0.85;">
+        {% if lang == 'es' %}
+            Idioma:
+        {% else %}
+            Language:
+        {% endif %}
+        <a href="?lang=en"
+           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
+            EN
+        </a>
+        <span style="opacity:0.6;">|</span>
+        <a href="?lang=es"
+           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
+            ES
+        </a>
+    </div>
+</div>
+
 <div class="dashboard-header">
-    <h1>Business Profile & Branding</h1>
+    <h1>
+        {% if lang == 'es' %}Perfil de negocio y marca{% else %}Business Profile & Branding{% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="/" class="btn btn-secondary">Back to Create</a>
-        <a href="/invoices" class="btn btn-secondary">Invoice History</a>
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver a crear{% else %}Back to Create{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+        </a>
     </div>
 </div>
 
@@ -32,52 +60,78 @@
         </div>
     {% endif %}
 
-    <form method="POST" action="/settings">
+    <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
 
             <!-- Business Info -->
             <div>
-                <h2 style="margin-top:0; font-size:18px;">Business Info</h2>
+                <h2 style="margin-top:0; font-size:18px;">
+                    {% if lang == 'es' %}Información del negocio{% else %}Business Info{% endif %}
+                </h2>
 
-                <label style="font-weight:600; font-size:14px;">Business Name</label>
+                <label style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Nombre del negocio{% else %}Business Name{% endif %}
+                </label>
                 <input type="text" name="business_name" value="{{ profile.business_name }}" required>
 
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">Business Email</label>
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">
+                    {% if lang == 'es' %}Correo del negocio{% else %}Business Email{% endif %}
+                </label>
                 <input type="email" name="email" value="{{ profile.email }}">
 
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">Phone</label>
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">
+                    {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
+                </label>
                 <input type="text" name="phone" value="{{ profile.phone }}">
 
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">Website</label>
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">
+                    {% if lang == 'es' %}Sitio web{% else %}Website{% endif %}
+                </label>
                 <input type="text" name="website" value="{{ profile.website }}">
 
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">Address</label>
+                <label style="font-weight:600; font-size:14px; margin-top:10px;">
+                    {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
+                </label>
                 <textarea
-    name="address"
-    rows="3"
-    style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
->{{ profile.address }}</textarea>
+                    name="address"
+                    rows="3"
+                    style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                >{{ profile.address }}</textarea>
             </div>
 
             <!-- Branding -->
             <div>
-                <h2 style="margin-top:0; font-size:18px;">Branding</h2>
+                <h2 style="margin-top:0; font-size:18px;">
+                    {% if lang == 'es' %}Marca{% else %}Branding{% endif %}
+                </h2>
 
-                <label style="font-weight:600; font-size:14px;">Logo URL</label>
+                <label style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}URL del logo{% else %}Logo URL{% endif %}
+                </label>
                 <input type="text" name="logo_url" value="{{ profile.logo_url }}" placeholder="https://...">
 
                 {% if profile.logo_url %}
                     <div style="margin-top:8px;">
-                        <span style="font-size:12px; opacity:.75;">Preview:</span><br>
+                        <span style="font-size:12px; opacity:.75;">
+                            {% if lang == 'es' %}Vista previa:{% else %}Preview:{% endif %}
+                        </span><br>
                         <img src="{{ profile.logo_url }}" alt="Logo preview" style="max-width:160px; margin-top:4px; border-radius:8px;">
                     </div>
                 {% endif %}
 
                 <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
                     <div style="flex:1;">
-                        <label style="font-weight:600; font-size:14px;">Primary Brand Color</label>
+                        <label style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}Color de marca principal{% else %}Primary Brand Color{% endif %}
+                        </label>
                         <input type="text" name="brand_color" value="{{ profile.brand_color }}">
-                        <small style="font-size:12px; opacity:.7;">Used for primary accent (buttons, cards).</small>
+                        <small style="font-size:12px; opacity:.7;">
+                            {% if lang == 'es' %}
+                                Se usa para el acento principal (botones, tarjetas).
+                            {% else %}
+                                Used for primary accent (buttons, cards).
+                            {% endif %}
+                        </small>
                     </div>
                     <div>
                         <label style="font-weight:600; font-size:14px;">&nbsp;</label><br>
@@ -87,9 +141,17 @@
 
                 <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
                     <div style="flex:1;">
-                        <label style="font-weight:600; font-size:14px;">Secondary Accent Color</label>
+                        <label style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}Color de acento secundario{% else %}Secondary Accent Color{% endif %}
+                        </label>
                         <input type="text" name="accent_color" value="{{ profile.accent_color }}">
-                        <small style="font-size:12px; opacity:.7;">Used for secondary accents / highlights.</small>
+                        <small style="font-size:12px; opacity:.7;">
+                            {% if lang == 'es' %}
+                                Se usa para acentos y resaltados secundarios.
+                            {% else %}
+                                Used for secondary accents / highlights.
+                            {% endif %}
+                        </small>
                     </div>
                     <div>
                         <label style="font-weight:600; font-size:14px;">&nbsp;</label><br>
@@ -102,28 +164,38 @@
 
         <!-- Defaults -->
         <div style="margin-top:24px;">
-            <h2 style="margin-top:0; font-size:18px;">Default Invoice Notes & Terms</h2>
+            <h2 style="margin-top:0; font-size:18px;">
+                {% if lang == 'es' %}Notas y condiciones por defecto{% else %}Default Invoice Notes & Terms{% endif %}
+            </h2>
 
-            <label style="font-weight:600; font-size:14px;">Default Notes</label>
+            <label style="font-weight:600; font-size:14px;">
+                {% if lang == 'es' %}Notas por defecto{% else %}Default Notes{% endif %}
+            </label>
             <textarea
-    name="default_notes"
-    rows="3"
-    style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
-    placeholder="Thank you for your business..."
->{{ profile.default_notes }}</textarea>
+                name="default_notes"
+                rows="3"
+                style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                placeholder="{% if lang == 'es' %}Gracias por su negocio...{% else %}Thank you for your business...{% endif %}"
+            >{{ profile.default_notes }}</textarea>
 
-            <label style="font-weight:600; font-size:14px; margin-top:10px;">Default Payment Terms</label>
+            <label style="font-weight:600; font-size:14px; margin-top:10px;">
+                {% if lang == 'es' %}Condiciones de pago por defecto{% else %}Default Payment Terms{% endif %}
+            </label>
             <textarea
-    name="default_terms"
-    rows="3"
-    style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
-    placeholder="Payment is due within 14 days..."
->{{ profile.default_terms }}</textarea>
+                name="default_terms"
+                rows="3"
+                style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                placeholder="{% if lang == 'es' %}El pago vence en 14 días...{% else %}Payment is due within 14 days...{% endif %}"
+            >{{ profile.default_terms }}</textarea>
         </div>
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
-            <a href="/invoices" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-brand">Save Settings</button>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            </a>
+            <button type="submit" class="btn btn-brand">
+                {% if lang == 'es' %}Guardar configuración{% else %}Save Settings{% endif %}
+            </button>
         </div>
 
     </form>

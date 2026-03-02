@@ -1,22 +1,54 @@
-{% extends "base.html" %} 
-
+{% extends "base.html" %}
 {% block content %}
+
+{% set lang = request.args.get('lang', 'en') %}
+
+<!-- LANGUAGE SWITCHER -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <div style="font-size:13px;opacity:0.85;">
+        {% if lang == 'es' %}
+            Idioma:
+        {% else %}
+            Language:
+        {% endif %}
+        <a href="?lang=en"
+           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
+            EN
+        </a>
+        <span style="opacity:0.6;">|</span>
+        <a href="?lang=es"
+           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
+            ES
+        </a>
+    </div>
+</div>
+
 <div class="dashboard-header">
-    <h1>Choose your plan</h1>
+    <h1>
+        {% if lang == 'es' %}Elige tu plan{% else %}Choose your plan{% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="{{ url_for('invoices_page') }}" class="btn btn-secondary btn-compact">
-            Back to Dashboard
+        <a href="{{ url_for('invoices_page') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
+            {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
         </a>
     </div>
 </div>
 
 {% if request.args.get('upgraded') %}
     <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:20px;">
-        🎉 Your upgrade was successful. Welcome to Pro!
+        {% if lang == 'es' %}
+            🎉 Tu actualización fue exitosa. ¡Bienvenido a Pro!
+        {% else %}
+            🎉 Your upgrade was successful. Welcome to Pro!
+        {% endif %}
     </div>
 {% elif request.args.get('canceled') %}
     <div class="alert-overdue" style="border-color:#f97316;background:#451a03;color:#fed7aa;margin-bottom:20px;">
-        Upgrade canceled. You can try again any time.
+        {% if lang == 'es' %}
+            Actualización cancelada. Puedes intentarlo de nuevo en cualquier momento.
+        {% else %}
+            Upgrade canceled. You can try again any time.
+        {% endif %}
     </div>
 {% endif %}
 
@@ -35,9 +67,13 @@
                     <div class="pricing-price" style="text-align:right;">
                         <span class="amount">{{ plan.price_label }}</span><br>
                         {% if key == user_plan %}
-                            <span class="pricing-pill current">Current plan</span>
+                            <span class="pricing-pill current">
+                                {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                            </span>
                         {% elif key == 'pro' %}
-                            <span class="pricing-pill recommended">Best for growing</span>
+                            <span class="pricing-pill recommended">
+                                {% if lang == 'es' %}Mejor para crecer{% else %}Best for growing{% endif %}
+                            </span>
                         {% endif %}
                     </div>
                 </div>
@@ -54,38 +90,86 @@
 
             {% if key == 'pro' %}
                 <div class="pricing-ai-callout">
-                    <strong>Includes InvoicePro Assistant:</strong>
+                    <strong>
+                        {% if lang == 'es' %}
+                            Incluye InvoicePro Assistant:
+                        {% else %}
+                            Includes InvoicePro Assistant:
+                        {% endif %}
+                    </strong>
                     <ul>
-                        <li>Explain your dashboard in plain English</li>
-                        <li>Help draft invoice notes & reminders</li>
-                        <li>Suggest follow-ups for overdue clients</li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Explica tu panel en lenguaje sencillo.
+                            {% else %}
+                                Explain your dashboard in plain English.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Ayuda a redactar notas y recordatorios de facturas.
+                            {% else %}
+                                Help draft invoice notes & reminders.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Sugiere seguimientos para clientes con facturas vencidas.
+                            {% else %}
+                                Suggest follow-ups for overdue clients.
+                            {% endif %}
+                        </li>
                     </ul>
                 </div>
             {% endif %}
 
             <div class="pricing-cta">
                 {% if key == user_plan %}
-                    <span class="badge paid">Current plan</span>
-                    <span class="pricing-note">You’re already on this plan.</span>
+                    <span class="badge paid">
+                        {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                    </span>
+                    <span class="pricing-note">
+                        {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
+                    </span>
 
                 {% elif key == 'pro' and not is_pro %}
                     <!-- Pre-launch: still disabled until Stripe checkout is wired -->
                     <button type="button" class="btn btn-brand btn-compact" disabled>
-                        Upgrade to Pro (coming soon)
+                        {% if lang == 'es' %}Actualizar a Pro (próximamente){% else %}Upgrade to Pro (coming soon){% endif %}
                     </button>
-                    <span class="pricing-note">Stripe billing will be enabled soon.</span>
+                    <span class="pricing-note">
+                        {% if lang == 'es' %}
+                            La facturación con Stripe se habilitará pronto.
+                        {% else %}
+                            Stripe billing will be enabled soon.
+                        {% endif %}
+                    </span>
 
                 {% else %}
                     {% if key == 'free' %}
-                        <span class="badge draft">Included</span>
-                        <span class="pricing-note">Perfect if you’re just getting started.</span>
+                        <span class="badge draft">
+                            {% if lang == 'es' %}Incluido{% else %}Included{% endif %}
+                        </span>
+                        <span class="pricing-note">
+                            {% if lang == 'es' %}
+                                Perfecto si estás empezando.
+                            {% else %}
+                                Perfect if you’re just getting started.
+                            {% endif %}
+                        </span>
                     {% else %}
                         <a href="mailto:support@mikeinvoices.com"
                            class="btn btn-secondary btn-compact"
                            style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
-                            Contact sales
+                            {% if lang == 'es' %}Contactar ventas{% else %}Contact sales{% endif %}
                         </a>
-                        <span class="pricing-note">We’ll help you design a higher-volume plan.</span>
+                        <span class="pricing-note">
+                            {% if lang == 'es' %}
+                                Te ayudaremos a diseñar un plan de mayor volumen.
+                            {% else %}
+                                We’ll help you design a higher-volume plan.
+                            {% endif %}
+                        </span>
                     {% endif %}
                 {% endif %}
             </div>
@@ -95,7 +179,11 @@
 
 {% if stripe_publishable_key %}
     <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">
-        Payments securely powered by Stripe.
+        {% if lang == 'es' %}
+            Pagos procesados de forma segura por Stripe.
+        {% else %}
+            Payments securely powered by Stripe.
+        {% endif %}
     </p>
 {% endif %}
 {% endblock %}

@@ -1,51 +1,101 @@
 {% extends "base.html" %}
 {% block content %}
 
+{# Language handling #}
+{% set lang = request.args.get('lang', 'en') %}
+
+<!-- LANGUAGE SWITCHER -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <div style="font-size:13px;opacity:0.85;">
+        {% if lang == 'es' %}
+            Idioma:
+        {% else %}
+            Language:
+        {% endif %}
+        <a href="?lang=en"
+           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
+            EN
+        </a>
+        <span style="opacity:0.6;">|</span>
+        <a href="?lang=es"
+           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
+            ES
+        </a>
+    </div>
+</div>
+
 <div class="dashboard-header">
-    <h1>Clients</h1>
+    <h1>
+        {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="/" class="btn btn-secondary">+ New Invoice</a>
-        <a href="/invoices" class="btn btn-secondary">Invoice History</a>
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+        </a>
     </div>
 </div>
 
 <div class="form-wrapper fade-in-up" style="margin-bottom:30px;">
-    <h2 style="margin-top:0;">Add New Client</h2>
-    <form method="POST" action="/clients/add">
+    <h2 style="margin-top:0;">
+        {% if lang == 'es' %}Añadir nuevo cliente{% else %}Add New Client{% endif %}
+    </h2>
+    <form method="POST" action="/clients/add{% if lang %}?lang={{ lang }}{% endif %}">
         <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
-                <label for="name" style="font-weight:600; font-size:14px;">Name *</label>
-                <input type="text" id="name" name="name" required placeholder="Client name">
+                <label for="name" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Nombre *{% else %}Name *{% endif %}
+                </label>
+                <input type="text" id="name" name="name" required
+                       placeholder="{% if lang == 'es' %}Nombre del cliente{% else %}Client name{% endif %}">
             </div>
             <div>
-                <label for="email" style="font-weight:600; font-size:14px;">Email</label>
+                <label for="email" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Correo electrónico{% else %}Email{% endif %}
+                </label>
                 <input type="email" id="email" name="email" placeholder="client@example.com">
             </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
-                <label for="company" style="font-weight:600; font-size:14px;">Company</label>
-                <input type="text" id="company" name="company" placeholder="Company (optional)">
+                <label for="company" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
+                </label>
+                <input type="text" id="company" name="company"
+                       placeholder="{% if lang == 'es' %}Empresa (opcional){% else %}Company (optional){% endif %}">
             </div>
             <div>
-                <label for="phone" style="font-weight:600; font-size:14px;">Phone</label>
-                <input type="text" id="phone" name="phone" placeholder="Phone (optional)">
+                <label for="phone" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
+                </label>
+                <input type="text" id="phone" name="phone"
+                       placeholder="{% if lang == 'es' %}Teléfono (opcional){% else %}Phone (optional){% endif %}">
             </div>
         </div>
 
         <div style="margin-bottom:12px;">
-            <label for="address" style="font-weight:600; font-size:14px;">Address</label>
-            <input type="text" id="address" name="address" placeholder="Address (optional)">
+            <label for="address" style="font-weight:600; font-size:14px;">
+                {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
+            </label>
+            <input type="text" id="address" name="address"
+                   placeholder="{% if lang == 'es' %}Dirección (opcional){% else %}Address (optional){% endif %}">
         </div>
 
         <div style="margin-bottom:12px;">
-            <label for="notes" style="font-weight:600; font-size:14px;">Notes</label>
-            <input type="text" id="notes" name="notes" placeholder="e.g. Prefers PayPal, pay in 7 days">
+            <label for="notes" style="font-weight:600; font-size:14px;">
+                {% if lang == 'es' %}Notas{% else %}Notes{% endif %}
+            </label>
+            <input type="text" id="notes" name="notes"
+                   placeholder="{% if lang == 'es' %}p.ej. Prefiere PayPal, pagar en 7 días{% else %}e.g. Prefers PayPal, pay in 7 days{% endif %}">
         </div>
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <button type="submit" class="btn btn-brand">Add Client</button>
+            <button type="submit" class="btn btn-brand">
+                {% if lang == 'es' %}Añadir cliente{% else %}Add Client{% endif %}
+            </button>
         </div>
     </form>
 </div>
@@ -54,11 +104,19 @@
     <table class="modern-table">
         <thead>
             <tr>
-                <th>Client</th>
+                <th>
+                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                </th>
                 <th>Email</th>
-                <th>Company</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>
+                    {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
+                </th>
+                <th>
+                    {% if lang == 'es' %}Creado{% else %}Created{% endif %}
+                </th>
+                <th>
+                    {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -70,10 +128,13 @@
                 <td>{{ client[3] or "—" }}</td>
                 <td>{{ client[4].strftime('%Y-%m-%d') if client[4] else "—" }}</td>
                 <td class="action-buttons">
-                    <a href="/" class="btn btn-edit">New Invoice</a>
-                    <a href="/clients/delete/{{ client[0] }}" class="btn btn-danger"
-                       onclick="return confirm('Delete this client? This does NOT delete their invoices, but may orphan references.');">
-                        Delete
+                    <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-edit">
+                        {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                    </a>
+                    <a href="/clients/delete/{{ client[0] }}{% if lang %}?lang={{ lang }}{% endif %}"
+                       class="btn btn-danger"
+                       onclick="return confirm('{% if lang == 'es' %}¿Eliminar este cliente? ESTO NO elimina sus facturas, pero puede dejar referencias huérfanas.{% else %}Delete this client? This does NOT delete their invoices, but may orphan references.{% endif %}');">
+                        {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
                     </a>
                 </td>
             </tr>
@@ -81,7 +142,11 @@
         {% else %}
             <tr>
                 <td colspan="5" style="text-align:center; padding:20px;">
-                    No clients yet. Add your first client above.
+                    {% if lang == 'es' %}
+                        Todavía no hay clientes. Añade tu primer cliente arriba.
+                    {% else %}
+                        No clients yet. Add your first client above.
+                    {% endif %}
                 </td>
             </tr>
         {% endif %}
