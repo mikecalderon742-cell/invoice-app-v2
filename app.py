@@ -1177,7 +1177,6 @@ def invoices_page():
         ORDER BY created_at DESC
         """,
         (user_id,),
-
     )
     all_rows = cursor.fetchall()
 
@@ -1883,7 +1882,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     conn.close()
 
     buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=LETTER)
+    pdf = canvas.Canvas(buffer, pagesizes=LETTER)
     page_width, page_height = LETTER
 
     # ---------- TEMPLATE STYLES ----------
@@ -2679,7 +2678,7 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
 @app.route("/ai-helper", methods=["POST"])
 def ai_helper():
     """
-    JSON API that powers the InvoicePro assistant.
+    JSON API that powers the BillBeam assistant.
 
     Request body: { "question": "...", "page": "/invoices" }
     Response: { "answer": "..." } or { "error": "..." }
