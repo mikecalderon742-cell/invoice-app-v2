@@ -1,24 +1,82 @@
 {% extends "base.html" %}
 {% block content %}
 
+{# Simple language picker: default to English if no ?lang= is set #}
+{% set lang = request.args.get('lang', 'en') %}
+
+<!-- LANGUAGE SWITCHER -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <div style="font-size:13px;opacity:0.85;">
+        {% if lang == 'es' %}
+            Idioma:
+        {% else %}
+            Language:
+        {% endif %}
+        <a href="?lang=en"
+           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
+            EN
+        </a>
+        <span style="opacity:0.6;">|</span>
+        <a href="?lang=es"
+           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
+            ES
+        </a>
+    </div>
+</div>
+
 <div class="hero reveal"
      style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
     <div class="hero-left"
          style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
-        <h1>Create a New Invoice</h1>
-        <p>Pick a client, add your services, and track your revenue with a clean dashboard.</p>
-        <a href="/invoices"
+        <h1>
+            {% if lang == 'es' %}
+                Crear una nueva factura
+            {% else %}
+                Create a New Invoice
+            {% endif %}
+        </h1>
+        <p>
+            {% if lang == 'es' %}
+                Elige un cliente, añade tus servicios y sigue tus ingresos con un panel limpio.
+            {% else %}
+                Pick a client, add your services, and track your revenue with a clean dashboard.
+            {% endif %}
+        </p>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}"
            class="btn hero-cta"
            style="align-self:flex-start;">
-           View Invoice History
+           {% if lang == 'es' %}
+               Ver historial de facturas
+           {% else %}
+               View Invoice History
+           {% endif %}
         </a>
     </div>
     <div class="hero-right"
          style="flex:1 1 260px;min-width:0;display:flex;justify-content:center;">
         <div class="mock-card">
-            <h3>InvoicePro Snapshot</h3>
-            <p style="margin: 10px 0;">Fast, modern, and built for solo devs and small teams.</p>
-            <p><strong>Tip:</strong> Add your frequent clients once, then select them in a click.</p>
+            <h3>
+                {% if lang == 'es' %}
+                    Resumen de InvoicePro
+                {% else %}
+                    InvoicePro Snapshot
+                {% endif %}
+            </h3>
+            <p style="margin: 10px 0;">
+                {% if lang == 'es' %}
+                    Rápido, moderno y creado para desarrolladores independientes y pequeños equipos.
+                {% else %}
+                    Fast, modern, and built for solo devs and small teams.
+                {% endif %}
+            </p>
+            <p>
+                <strong>{% if lang == 'es' %}Consejo:{% else %}Tip:{% endif %}</strong>
+                {% if lang == 'es' %}
+                    Añade tus clientes frecuentes una vez y luego selecciónalos con un clic.
+                {% else %}
+                    Add your frequent clients once, then select them in a click.
+                {% endif %}
+            </p>
         </div>
     </div>
 </div>
@@ -29,86 +87,184 @@
          style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
         <!-- LEFT: main invoice form -->
         <div class="invoice-form-col" style="flex:1 1 520px;min-width:0;">
-            <h2 style="margin-top:0;">New Invoice</h2>
+            <h2 style="margin-top:0;">
+                {% if lang == 'es' %}
+                    Nueva factura
+                {% else %}
+                    New Invoice
+                {% endif %}
+            </h2>
 
             <!-- ✅ enctype added so photos + signature can be uploaded -->
             <form id="invoiceForm" method="POST" action="/save" enctype="multipart/form-data">
 
                 <!-- CLIENT SECTION -->
-                <h3>Client</h3>
+                <h3>
+                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                </h3>
                 <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
 
                     <!-- Existing client dropdown -->
                     <div>
-                        <label for="client_id" style="font-weight:600; font-size:14px;">Existing Client (optional)</label>
+                        <label for="client_id" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Cliente existente (opcional)
+                            {% else %}
+                                Existing Client (optional)
+                            {% endif %}
+                        </label>
                         <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
-                            <option value="">-- Select existing client --</option>
+                            <option value="">
+                                {% if lang == 'es' %}
+                                    -- Seleccionar cliente existente --
+                                {% else %}
+                                    -- Select existing client --
+                                {% endif %}
+                            </option>
                             {% for client in clients %}
                                 <option value="{{ client[0] }}">
                                     {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
                                 </option>
                             {% endfor %}
                         </select>
-                        <small style="font-size:12px; opacity:0.7;">Choose a client you've already worked with, or add a new one below.</small>
+                        <small style="font-size:12px; opacity:0.7;">
+                            {% if lang == 'es' %}
+                                Elige un cliente con el que ya hayas trabajado o añade uno nuevo abajo.
+                            {% else %}
+                                Choose a client you've already worked with, or add a new one below.
+                            {% endif %}
+                        </small>
                     </div>
 
                     <!-- New client fields -->
                     <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
                         <div>
-                            <label for="new_client_name" style="font-weight:600; font-size:14px;">New Client Name</label>
-                            <input type="text" id="new_client_name" name="new_client_name" placeholder="e.g. Acme Corp or Jane Doe">
+                            <label for="new_client_name" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Nombre del nuevo cliente
+                                {% else %}
+                                    New Client Name
+                                {% endif %}
+                            </label>
+                            <input type="text" id="new_client_name" name="new_client_name"
+                                   placeholder="{% if lang == 'es' %}p.ej. Acme Corp o Jane Doe{% else %}e.g. Acme Corp or Jane Doe{% endif %}">
                         </div>
                         <div>
-                            <label for="new_client_email" style="font-weight:600; font-size:14px;">Client Email</label>
-                            <input type="email" id="new_client_email" name="new_client_email" placeholder="client@example.com">
+                            <label for="new_client_email" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Correo del cliente
+                                {% else %}
+                                    Client Email
+                                {% endif %}
+                            </label>
+                            <input type="email" id="new_client_email" name="new_client_email"
+                                   placeholder="client@example.com">
                         </div>
                     </div>
 
                     <div>
-                        <label for="new_client_company" style="font-weight:600; font-size:14px;">Company (optional)</label>
-                        <input type="text" id="new_client_company" name="new_client_company" placeholder="Company name">
+                        <label for="new_client_company" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Empresa (opcional)
+                            {% else %}
+                                Company (optional)
+                            {% endif %}
+                        </label>
+                        <input type="text" id="new_client_company" name="new_client_company"
+                               placeholder="{% if lang == 'es' %}Nombre de la empresa{% else %}Company name{% endif %}">
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                         <div>
-                            <label for="new_client_phone" style="font-weight:600; font-size:14px;">Phone (optional)</label>
-                            <input type="text" id="new_client_phone" name="new_client_phone" placeholder="+1 (555) 123-4567">
+                            <label for="new_client_phone" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Teléfono (opcional)
+                                {% else %}
+                                    Phone (optional)
+                                {% endif %}
+                            </label>
+                            <input type="text" id="new_client_phone" name="new_client_phone"
+                                   placeholder="+1 (555) 123-4567">
                         </div>
                         <div>
-                            <label for="new_client_address" style="font-weight:600; font-size:14px;">Address (optional)</label>
-                            <input type="text" id="new_client_address" name="new_client_address" placeholder="City, Country">
+                            <label for="new_client_address" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Dirección (opcional)
+                                {% else %}
+                                    Address (optional)
+                                {% endif %}
+                            </label>
+                            <input type="text" id="new_client_address" name="new_client_address"
+                                   placeholder="{% if lang == 'es' %}Ciudad, País{% else %}City, Country{% endif %}">
                         </div>
                     </div>
 
                     <div>
-                        <label for="new_client_notes" style="font-weight:600; font-size:14px;">Client Notes (optional)</label>
-                        <input type="text" id="new_client_notes" name="new_client_notes" placeholder="e.g. Prefers bank transfer, pay within 7 days">
+                        <label for="new_client_notes" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Notas del cliente (opcional)
+                            {% else %}
+                                Client Notes (optional)
+                            {% endif %}
+                        </label>
+                        <input type="text" id="new_client_notes" name="new_client_notes"
+                               placeholder="{% if lang == 'es' %}p.ej. Prefiere transferencia bancaria, pagar en 7 días{% else %}e.g. Prefers bank transfer, pay within 7 days{% endif %}">
                     </div>
 
                 </div>
 
                 <!-- INVOICE META -->
-                <h3>Invoice Details</h3>
+                <h3>
+                    {% if lang == 'es' %}
+                        Detalles de la factura
+                    {% else %}
+                        Invoice Details
+                    {% endif %}
+                </h3>
                 <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
                     <div>
-                        <label for="invoice_notes" style="font-weight:600; font-size:14px;">Invoice Notes (optional)</label>
-                        <input type="text" id="invoice_notes" name="invoice_notes" placeholder="e.g. Thanks for your business!">
+                        <label for="invoice_notes" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Notas de la factura (opcional)
+                            {% else %}
+                                Invoice Notes (optional)
+                            {% endif %}
+                        </label>
+                        <input type="text" id="invoice_notes" name="invoice_notes"
+                               placeholder="{% if lang == 'es' %}p.ej. ¡Gracias por su negocio!{% else %}e.g. Thanks for your business!{% endif %}">
                     </div>
                     <div>
-                        <label for="invoice_terms" style="font-weight:600; font-size:14px;">Payment Terms</label>
-                        <input type="text" id="invoice_terms" name="invoice_terms" value="Payment due within 30 days.">
+                        <label for="invoice_terms" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Condiciones de pago
+                            {% else %}
+                                Payment Terms
+                            {% endif %}
+                        </label>
+                        <input type="text" id="invoice_terms" name="invoice_terms"
+                               value="{% if lang == 'es' %}Pago debido dentro de 30 días.{% else %}Payment due within 30 days.{% endif %}">
                     </div>
                 </div>
 
                 <!-- ATTACHMENTS (PHOTOS) -->
-                <h3>Attachments (optional)</h3>
+                <h3>
+                    {% if lang == 'es' %}
+                        Adjuntos (opcional)
+                    {% else %}
+                        Attachments (optional)
+                    {% endif %}
+                </h3>
                 <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
+                    {% if lang == 'es' %}
+                        Añade fotos o capturas relacionadas con esta factura (p.ej. órdenes de trabajo firmadas, fotos de antes y después).
+                    {% else %}
+                        Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
+                    {% endif %}
                 </p>
 
                 <div style="margin-bottom:20px;">
                     <label for="attachments" style="font-weight:600; font-size:14px;">
-                        Photos
+                        {% if lang == 'es' %}Fotos{% else %}Photos{% endif %}
                     </label>
                     <input
                         type="file"
@@ -120,22 +276,40 @@
                         capture="environment"
                     >
                     <small style="font-size:12px; opacity:0.7;">
-                        On mobile you can use your camera or pick from your photo library.
+                        {% if lang == 'es' %}
+                            En el móvil puedes usar la cámara o elegir desde tu galería.
+                        {% else %}
+                            On mobile you can use your camera or pick from your photo library.
+                        {% endif %}
                     </small>
                 </div>
 
                 <!-- LINE ITEMS -->
-                <h3>Line Items</h3>
+                <h3>
+                    {% if lang == 'es' %}
+                        Conceptos
+                    {% else %}
+                        Line Items
+                    {% endif %}
+                </h3>
                 <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    Add at least one service or product. You can add or remove rows as needed.
+                    {% if lang == 'es' %}
+                        Añade al menos un servicio o producto. Puedes añadir o eliminar filas según lo necesites.
+                    {% else %}
+                        Add at least one service or product. You can add or remove rows as needed.
+                    {% endif %}
                 </p>
 
                 <div class="table-wrapper" style="margin-top:12px;">
                     <table class="modern-table">
                         <thead>
                             <tr>
-                                <th>Description</th>
-                                <th style="width:180px;">Amount</th>
+                                <th>
+                                    {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                                </th>
+                                <th style="width:180px;">
+                                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="lineItemsBody">
@@ -149,13 +323,27 @@
                     class="btn btn-secondary"
                     style="margin-top:10px;"
                 >
-                    + Add line item
+                    {% if lang == 'es' %}
+                        + Añadir concepto
+                    {% else %}
+                        + Add line item
+                    {% endif %}
                 </button>
 
                 <!-- SIGNATURE -->
-                <h3>Client Signature (optional)</h3>
+                <h3>
+                    {% if lang == 'es' %}
+                        Firma del cliente (opcional)
+                    {% else %}
+                        Client Signature (optional)
+                    {% endif %}
+                </h3>
                 <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    Capture a quick signature for on-site approvals.
+                    {% if lang == 'es' %}
+                        Captura una firma rápida para aprobaciones en sitio.
+                    {% else %}
+                        Capture a quick signature for on-site approvals.
+                    {% endif %}
                 </p>
 
                 <div style="margin-bottom:20px;">
@@ -175,10 +363,14 @@
                         ></canvas>
                         <div style="margin-top:8px; display:flex; justify-content:space-between; gap:10px;">
                             <small style="font-size:12px; opacity:0.7; align-self:center;">
-                                Sign with your finger or mouse.
+                                {% if lang == 'es' %}
+                                    Firma con tu dedo o mouse.
+                                {% else %}
+                                    Sign with your finger or mouse.
+                                {% endif %}
                             </small>
                             <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
-                                Clear
+                                {% if lang == 'es' %}Limpiar{% else %}Clear{% endif %}
                             </button>
                         </div>
                     </div>
@@ -189,69 +381,167 @@
                 <!-- TEMPLATE STYLE -->
                 <div class="form-row" style="margin-top:24px;">
                     <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
-                        Invoice style
+                        {% if lang == 'es' %}
+                            Estilo de factura
+                        {% else %}
+                            Invoice style
+                        {% endif %}
                     </label>
                     <select name="template_style" id="template_style" class="template-select">
-                        <option value="modern" selected>Modern Clean (default)</option>
-                        <option value="minimal">Minimal Grey</option>
-                        <option value="bold">Bold Accent</option>
-                        <option value="doodle">Playful / Doodle</option>
+                        <option value="modern" selected>
+                            {% if lang == 'es' %}
+                                Moderno limpio (por defecto)
+                            {% else %}
+                                Modern Clean (default)
+                            {% endif %}
+                        </option>
+                        <option value="minimal">
+                            {% if lang == 'es' %}Gris minimalista{% else %}Minimal Grey{% endif %}
+                        </option>
+                        <option value="bold">
+                            {% if lang == 'es' %}Acento atrevido{% else %}Bold Accent{% endif %}
+                        </option>
+                        <option value="doodle">
+                            {% if lang == 'es' %}Divertido / doodle{% else %}Playful / Doodle{% endif %}
+                        </option>
                     </select>
                     <small style="font-size:12px; opacity:0.7;">
-                        This controls the layout and feel of the PDF and client view.
+                        {% if lang == 'es' %}
+                            Esto controla el diseño y estilo del PDF y la vista del cliente.
+                        {% else %}
+                            This controls the layout and feel of the PDF and client view.
+                        {% endif %}
                     </small>
                 </div>
 
                 <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <a href="/invoices" class="btn btn-secondary">Cancel</a>
+                    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                        {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                    </a>
                     <button type="button" id="previewButton" class="btn btn-secondary">
-                        Preview Invoice
+                        {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
                     </button>
-                    <button type="submit" class="btn btn-brand">Save Invoice</button>
+                    <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
+                    </button>
                 </div>
 
             </form>
         </div>
 
         <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
-        <aside class="invoice-helper-col" style="flex:0 1 300px;max-width:380px;position:relative;z-index:0;">
+        <aside class="invoice-helper-col" style="flex:0 1 320px;max-width:380px;position:relative;z-index:0;">
             <div class="assistant-card">
                 <div class="assistant-header">
                     <span class="assistant-icon">✨</span>
                     <div>
-                        <h3 class="assistant-title">Invoice Assistant</h3>
-                        <p class="assistant-subtitle">Smart tips while you build.</p>
+                        <h3 class="assistant-title">
+                            {% if lang == 'es' %}
+                                Asistente de facturas
+                            {% else %}
+                                Invoice Assistant
+                            {% endif %}
+                        </h3>
+                        <p class="assistant-subtitle">
+                            {% if lang == 'es' %}
+                                Consejos inteligentes mientras creas.
+                            {% else %}
+                                Smart tips while you build.
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
 
                 {% if user_plan == "pro" or user_plan == "enterprise" %}
                     <p class="assistant-text">
-                        As a Pro user, you’ll get richer suggestions here as we roll out AI features.
-                        For now, here are some recommended tweaks:
+                        {% if lang == 'es' %}
+                            Como usuario Pro, obtendrás sugerencias más ricas aquí a medida que lancemos funciones de IA.
+                            Por ahora, aquí van algunos ajustes recomendados:
+                        {% else %}
+                            As a Pro user, you’ll get richer suggestions here as we roll out AI features.
+                            For now, here are some recommended tweaks:
+                        {% endif %}
                     </p>
                     <ul class="assistant-list">
-                        <li>Make your line item descriptions specific (hours, deliverables, dates).</li>
-                        <li>Use payment terms that match how you actually collect (Net 7, Net 15, Net 30).</li>
-                        <li>Add a friendly note to increase on-time payments.</li>
-                        <li>Use the <strong>Preview</strong> button to sanity-check totals and wording.</li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Haz que las descripciones de tus conceptos sean específicas (horas, entregables, fechas).
+                            {% else %}
+                                Make your line item descriptions specific (hours, deliverables, dates).
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Usa condiciones de pago que coincidan con cómo realmente cobras (Net 7, Net 15, Net 30).
+                            {% else %}
+                                Use payment terms that match how you actually collect (Net 7, Net 15, Net 30).
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Añade una nota amigable para aumentar los pagos puntuales.
+                            {% else %}
+                                Add a friendly note to increase on-time payments.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Usa el botón <strong>Vista previa</strong> para revisar totales y redacción.
+                            {% else %}
+                                Use the <strong>Preview</strong> button to sanity-check totals and wording.
+                            {% endif %}
+                        </li>
                     </ul>
                     <p class="assistant-footer">
-                        Coming soon: ask natural language questions like
-                        <em>“Help me rewrite this invoice to sound more professional.”</em>
+                        {% if lang == 'es' %}
+                            Próximamente: haz preguntas en lenguaje natural como
+                            <em>"Ayúdame a reescribir esta factura para que suene más profesional."</em>
+                        {% else %}
+                            Coming soon: ask natural language questions like
+                            <em>“Help me rewrite this invoice to sound more professional.”</em>
+                        {% endif %}
                     </p>
                 {% else %}
                     <p class="assistant-text">
-                        The assistant gives you quick best-practice tips on the free plan.
-                        Upgrade to Pro later for deeper AI help.
+                        {% if lang == 'es' %}
+                            El asistente te da consejos rápidos de buenas prácticas en el plan gratuito.
+                            Más adelante podrás actualizar a Pro para ayuda de IA más profunda.
+                        {% else %}
+                            The assistant gives you quick best-practice tips on the free plan.
+                            Upgrade to Pro later for deeper AI help.
+                        {% endif %}
                     </p>
                     <ul class="assistant-list">
-                        <li>Always double-check the client email before sending.</li>
-                        <li>Break big projects into multiple line items instead of one huge fee.</li>
-                        <li>Use clear due dates so there’s no confusion.</li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Revisa siempre el correo del cliente antes de enviar.
+                            {% else %}
+                                Always double-check the client email before sending.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Divide proyectos grandes en varios conceptos en lugar de una sola tarifa enorme.
+                            {% else %}
+                                Break big projects into multiple line items instead of one huge fee.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Usa fechas de vencimiento claras para evitar confusiones.
+                            {% else %}
+                                Use clear due dates so there’s no confusion.
+                            {% endif %}
+                        </li>
                     </ul>
                     <p class="assistant-footer">
-                        Want smarter, AI-powered suggestions here?<br>
-                        <a href="/pricing" class="assistant-link">See Pro features →</a>
+                        {% if lang == 'es' %}
+                            ¿Quieres sugerencias más inteligentes con IA aquí?<br>
+                            <a href="/pricing" class="assistant-link">Ver funciones Pro →</a>
+                        {% else %}
+                            Want smarter, AI-powered suggestions here?<br>
+                            <a href="/pricing" class="assistant-link">See Pro features →</a>
+                        {% endif %}
                     </p>
                 {% endif %}
             </div>
