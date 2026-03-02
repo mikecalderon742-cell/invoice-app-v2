@@ -874,6 +874,9 @@ def preview_invoice():
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
     template_style = request.form.get("template_style") or "modern"
 
+    # 🔹 NEW: signature preview
+    signature_data = request.form.get("signature_data") or ""
+
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
@@ -970,6 +973,7 @@ def preview_invoice():
         terms=terms,
         template_style=template_style,
         invoice_label=invoice_label,
+        signature_data=signature_data,  # 👈 show signature on preview
     )
 
 
@@ -2126,13 +2130,13 @@ def public_invoice(token):
             i.terms,
             c.name,
             c.email,
-            c.company
+            c.company,
+            i.signature_data
         FROM invoices i
         LEFT JOIN clients c ON i.client_id = c.id
         WHERE i.public_token = %s
         """,
         (token,),
-
     )
     inv_row = cursor.fetchone()
 
@@ -2154,6 +2158,7 @@ def public_invoice(token):
         client_name_from_client,
         client_email,
         client_company,
+        signature_data,
     ) = inv_row
 
     if client_name_from_client:
@@ -2212,6 +2217,7 @@ def public_invoice(token):
         pdf_url=pdf_url,
         is_public_view=True,
         public_token=token,
+        signature_data=signature_data,  # 👈 make available to template
     )
 
 
@@ -2240,7 +2246,8 @@ def invoice_detail(invoice_id):
             i.terms,
             c.name,
             c.email,
-            c.company
+            c.company,
+            i.signature_data
         FROM invoices i
         LEFT JOIN clients c ON i.client_id = c.id
         WHERE i.id = %s AND i.user_id = %s
@@ -2267,6 +2274,7 @@ def invoice_detail(invoice_id):
         client_name_from_client,
         client_email,
         client_company,
+        signature_data,
     ) = inv_row
 
     if client_name_from_client:
@@ -2325,6 +2333,7 @@ def invoice_detail(invoice_id):
         pdf_url=pdf_url,
         is_public_view=False,  # owner view, full app nav
         public_token=None,
+        signature_data=signature_data,  # 👈 show signature on owner view
     )
 
 

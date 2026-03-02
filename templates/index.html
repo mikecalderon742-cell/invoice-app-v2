@@ -119,7 +119,7 @@
                 <!-- LINE ITEMS -->
                 <h3>Line Items</h3>
                 <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    Add at least one service or product. You can leave unused rows blank.
+                    Add at least one service or product. You can add or remove rows as needed.
                 </p>
 
                 <div class="table-wrapper" style="margin-top:12px;">
@@ -130,20 +130,19 @@
                                 <th style="width:180px;">Amount</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for i in range(3) %}
-                            <tr>
-                                <td>
-                                    <input type="text" name="description" placeholder="e.g. Web development, 10 hours">
-                                </td>
-                                <td>
-                                    <input type="number" step="0.01" min="0" name="amount" placeholder="0.00">
-                                </td>
-                            </tr>
-                            {% endfor %}
+                        <tbody id="lineItemsBody">
+                            <!-- Rows are injected via JavaScript so you can add/remove line items -->
                         </tbody>
                     </table>
                 </div>
+                <button
+                    type="button"
+                    id="addLineItemBtn"
+                    class="btn btn-secondary"
+                    style="margin-top:10px;"
+                >
+                    + Add line item
+                </button>
 
                 <!-- SIGNATURE -->
                 <h3>Client Signature (optional)</h3>
@@ -253,11 +252,91 @@
     </div>
 </div>
 
-<!-- Preview + Signature JS -->
+<!-- Preview + Signature + Line Items JS -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("invoiceForm");
     const previewBtn = document.getElementById("previewButton");
+
+    // ---------- LINE ITEMS: add / remove ----------
+    const lineItemsBody = document.getElementById("lineItemsBody");
+    const addLineItemBtn = document.getElementById("addLineItemBtn");
+
+    function createLineItemRow() {
+        const tr = document.createElement("tr");
+
+        // Description cell
+        const descTd = document.createElement("td");
+        const descInput = document.createElement("input");
+        descInput.type = "text";
+        descInput.name = "description";
+        descInput.placeholder = "e.g. Web development, 10 hours";
+        descTd.appendChild(descInput);
+
+        // Amount + remove button in second cell
+        const amtTd = document.createElement("td");
+        const amtWrapper = document.createElement("div");
+        amtWrapper.style.display = "flex";
+        amtWrapper.style.gap = "8px";
+        amtWrapper.style.alignItems = "center";
+
+        const amtInput = document.createElement("input");
+        amtInput.type = "number";
+        amtInput.name = "amount";
+        amtInput.step = "0.01";
+        amtInput.min = "0";
+        amtInput.placeholder = "0.00";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "btn btn-secondary btn-compact";
+        removeBtn.style.whiteSpace = "nowrap";
+
+        removeBtn.addEventListener("click", function () {
+            if (!lineItemsBody) return;
+            if (lineItemsBody.children.length > 1) {
+                tr.remove();
+            } else {
+                // If it's the only row, just clear it instead of removing
+                descInput.value = "";
+                amtInput.value = "";
+            }
+        });
+
+        amtWrapper.appendChild(amtInput);
+        amtWrapper.appendChild(removeBtn);
+        amtTd.appendChild(amtWrapper);
+
+        tr.appendChild(descTd);
+        tr.appendChild(amtTd);
+
+        return tr;
+    }
+
+    function addLineItemRow() {
+        if (!lineItemsBody) return;
+        const row = createLineItemRow();
+        lineItemsBody.appendChild(row);
+    }
+
+    function ensureInitialLineItems() {
+        if (!lineItemsBody) return;
+        if (lineItemsBody.children.length === 0) {
+            // Start with 3 rows like before
+            for (let i = 0; i < 3; i++) {
+                addLineItemRow();
+            }
+        }
+    }
+
+    ensureInitialLineItems();
+
+    if (addLineItemBtn) {
+        addLineItemBtn.addEventListener("click", function () {
+            addLineItemRow();
+        });
+    }
 
     // ---- Signature pad setup ----
     const canvas = document.getElementById("signature-pad");
