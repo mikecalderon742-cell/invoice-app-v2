@@ -266,6 +266,7 @@
                 </div>
             </div>
 
+            {# ✅ Jinja-safe conditional (no &&) #}
             {% if top_clients and top_clients|length > 0 %}
                 <ul class="leaderboard">
                     {% for client in top_clients %}
