@@ -111,9 +111,10 @@
                 </label>
                 <select id="dailyDateSelect" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid rgba(148,163,184,0.4);background:#020617;color:#e5e7eb;font-size:13px;">
                     {% if daily_chart_labels and daily_chart_totals %}
-                        {% for lbl, total in daily_chart_labels|zip(daily_chart_totals) %}
-                            <option value="{{ loop.index0 }}" {% if loop.last %}selected{% endif %}>
-                                {{ lbl }}
+                        {% set last_index = daily_chart_labels|length - 1 %}
+                        {% for i in range(daily_chart_labels|length) %}
+                            <option value="{{ i }}" {% if i == last_index %}selected{% endif %}>
+                                {{ daily_chart_labels[i] }}
                             </option>
                         {% endfor %}
                     {% else %}

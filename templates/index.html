@@ -18,9 +18,10 @@
 
 <div class="form-wrapper fade-in-up">
 
-    <div class="invoice-layout-grid">
+    <div class="invoice-layout-grid"
+         style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
         <!-- LEFT: main invoice form -->
-        <div class="invoice-form-col">
+        <div class="invoice-form-col" style="flex:1 1 520px;min-width:0;">
             <h2 style="margin-top:0;">New Invoice</h2>
 
             <!-- ✅ enctype added so photos + signature can be uploaded -->
@@ -206,7 +207,7 @@
         </div>
 
         <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
-        <aside class="invoice-helper-col">
+        <aside class="invoice-helper-col" style="flex:0 1 340px;max-width:380px;position:relative;z-index:0;">
             <div class="assistant-card">
                 <div class="assistant-header">
                     <span class="assistant-icon">✨</span>
