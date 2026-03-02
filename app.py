@@ -2697,6 +2697,12 @@ def ai_helper():
     question = (data.get("question") or "").strip()
     page = (data.get("page") or "").strip()
 
+    # Figure out the language for this AI request
+    # Priority: JSON "lang" -> query param "lang" -> default "en"
+    user_lang = (data.get("lang") or request.args.get("lang") or "en").lower()
+    if user_lang not in ("en", "es"):
+        user_lang = "en"
+
     if not question:
         return {"error": "Missing question."}, 400
 
@@ -2716,8 +2722,13 @@ def ai_helper():
             kpi_summary = ""
 
     # Very small context string so the model knows the app shape
-    app_context = f"""
+        app_context = f"""
 You are the in-app assistant for an invoicing web app called BillBeam.
+
+User language code for this request: '{user_lang}'.
+- If it is 'es', you MUST respond in Spanish, with natural, clear business Spanish.
+- If it is 'en' or anything else, respond in English.
+- Do not mix both languages in the same answer unless explicitly asked.
 
 Key features and routes:
 - Create invoice at "/" (new invoice form with client + line items).
