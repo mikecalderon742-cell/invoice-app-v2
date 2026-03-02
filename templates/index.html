@@ -96,7 +96,10 @@
             </h2>
 
             <!-- ✅ enctype added so photos + signature can be uploaded -->
-            <form id="invoiceForm" method="POST" action="/save" enctype="multipart/form-data">
+            <form id="invoiceForm"
+                  method="POST"
+                  action="/save{% if lang %}?lang={{ lang }}{% endif %}"
+                  enctype="multipart/form-data">
 
                 <!-- CLIENT SECTION -->
                 <h3>
@@ -537,10 +540,10 @@
                     <p class="assistant-footer">
                         {% if lang == 'es' %}
                             ¿Quieres sugerencias más inteligentes con IA aquí?<br>
-                            <a href="/pricing" class="assistant-link">Ver funciones Pro →</a>
+                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="assistant-link">Ver funciones Pro →</a>
                         {% else %}
                             Want smarter, AI-powered suggestions here?<br>
-                            <a href="/pricing" class="assistant-link">See Pro features →</a>
+                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="assistant-link">See Pro features →</a>
                         {% endif %}
                     </p>
                 {% endif %}
@@ -568,7 +571,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const descInput = document.createElement("input");
         descInput.type = "text";
         descInput.name = "description";
-        descInput.placeholder = "e.g. Web development, 10 hours";
+        descInput.placeholder = {% if lang == 'es' %}
+            "p.ej. Desarrollo web, 10 horas"
+        {% else %}
+            "e.g. Web development, 10 hours"
+        {% endif %};
         descTd.appendChild(descInput);
 
         // Amount + remove button in second cell
@@ -587,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.textContent = "Remove";
+        removeBtn.textContent = {% if lang == 'es' %}"Quitar"{% else %}"Remove"{% endif %};
         removeBtn.className = "btn btn-secondary btn-compact";
         removeBtn.style.whiteSpace = "nowrap";
 
@@ -759,7 +766,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Make it available for debugging if needed
     window.captureSignatureToHiddenField = captureSignatureToHiddenField;
 
-    // Preview button → send to /preview in new tab
+    // Preview button → send to /preview in new tab (preserve lang)
     if (form && previewBtn) {
         previewBtn.addEventListener("click", function (e) {
             e.preventDefault();
@@ -769,7 +776,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const originalAction = form.action;
             const originalTarget = form.target;
 
-            form.action = "/preview";
+            form.action = "/preview{% if lang %}?lang={{ lang }}{% endif %}";
             form.target = "_blank";
 
             form.submit();
