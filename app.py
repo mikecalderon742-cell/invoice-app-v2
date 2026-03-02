@@ -64,41 +64,65 @@ AI_MODEL_FREE = "gpt-4o-mini"   # lightweight helper for free users
 AI_MODEL_PRO = "gpt-4.1-mini"   # more capable helper for Pro
 
 # -------------------------
-# PLAN DEFINITIONS
+# PLAN DEFINITIONS (with EN/ES variants)
 # -------------------------
 PLAN_DEFINITIONS = {
     "free": {
-        "name": "Starter",
+        "name_en": "Starter",
+        "name_es": "Inicio",
         "price_label": "$0 / month",
-        "tagline": "For freelancers just getting started.",
-        "features": [
+        "tagline_en": "For freelancers just getting started.",
+        "tagline_es": "Para freelancers que están empezando.",
+        "features_en": [
             "Up to 10 invoices / month",
             "Single invoice template",
             "Basic dashboard",
         ],
+        "features_es": [
+            "Hasta 10 facturas al mes",
+            "Una sola plantilla de factura",
+            "Panel básico",
+        ],
     },
     "pro": {
-        "name": "Pro",
+        "name_en": "Pro",
+        "name_es": "Pro",
         "price_label": "$29 / month",
-        "tagline": "For growing businesses who invoice regularly.",
-        "features": [
+        "tagline_en": "For growing businesses who invoice regularly.",
+        "tagline_es": "Para negocios en crecimiento que facturan con frecuencia.",
+        "features_en": [
             "Unlimited invoices",
             "Multiple invoice templates",
             "Email delivery + PDFs",
             "Public invoice links & Pay Now",
             "Recurring invoices",
         ],
+        "features_es": [
+            "Facturas ilimitadas",
+            "Múltiples plantillas de factura",
+            "Envío por email + PDFs",
+            "Enlaces públicos de factura y botón Pagar ahora",
+            "Facturas recurrentes",
+        ],
         "recommended": True,
     },
     "enterprise": {
-        "name": "Studio",
+        "name_en": "Studio",
+        "name_es": "Studio",
         "price_label": "Contact us",
-        "tagline": "For agencies and teams that need more.",
-        "features": [
+        "tagline_en": "For agencies and teams that need more.",
+        "tagline_es": "Para agencias y equipos que necesitan más.",
+        "features_en": [
             "All Pro features",
             "Custom branding & domains",
             "Priority support",
             "Team access (coming soon)",
+        ],
+        "features_es": [
+            "Todas las funciones Pro",
+            "Branding y dominios personalizados",
+            "Soporte prioritario",
+            "Acceso para equipos (próximamente)",
         ],
     },
 }
@@ -836,13 +860,40 @@ def pricing():
     user_plan = user.get("plan") or "free"
     is_pro = PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0)
 
+    # Language from query (?lang=en|es), default English
+    lang = (request.args.get("lang") or "en").lower()
+    if lang not in ("en", "es"):
+        lang = "en"
+
+    # Build a per-request localized plans dict
+    localized_plans = {}
+    for key, p in PLAN_DEFINITIONS.items():
+        if lang == "es":
+            name = p.get("name_es", p.get("name_en"))
+            tagline = p.get("tagline_es", p.get("tagline_en"))
+            features = p.get("features_es", p.get("features_en", []))
+        else:
+            name = p.get("name_en")
+            tagline = p.get("tagline_en")
+            features = p.get("features_en", [])
+
+        localized_plans[key] = {
+            "name": name,
+            "tagline": tagline,
+            "price_label": p.get("price_label"),
+            "features": features,
+        }
+        if "recommended" in p:
+            localized_plans[key]["recommended"] = p["recommended"]
+
     return render_template(
         "pricing.html",
         current_user=user,
         user_plan=user_plan,
-        plans=PLAN_DEFINITIONS,
+        plans=localized_plans,
         stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
         is_pro=is_pro,
+        lang=lang,
     )
 
 
