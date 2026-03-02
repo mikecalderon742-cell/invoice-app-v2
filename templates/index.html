@@ -28,7 +28,7 @@
      style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
     <div class="hero-left"
          style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
-        <h1>
+        <h1 class="billbeam-title">
             {% if lang == 'es' %}
                 Crear una nueva factura
             {% else %}
@@ -43,7 +43,7 @@
             {% endif %}
         </p>
         <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}"
-           class="btn hero-cta"
+           class="btn hero-cta billbeam-cta"
            style="align-self:flex-start;">
            {% if lang == 'es' %}
                Ver historial de facturas
@@ -57,9 +57,9 @@
         <div class="mock-card">
             <h3>
                 {% if lang == 'es' %}
-                    Resumen de InvoicePro
+                    Resumen de BillBeam
                 {% else %}
-                    InvoicePro Snapshot
+                    BillBeam Snapshot
                 {% endif %}
             </h3>
             <p style="margin: 10px 0;">
@@ -787,5 +787,51 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
+
+<!-- Small BillBeam-specific styles just for this page -->
+<style>
+.billbeam-title {
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: 0.02em;
+}
+
+.billbeam-cta {
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    border: none;
+    color: #020617;
+    font-weight: 600;
+}
+
+.billbeam-cta:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+}
+
+.hero-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.hero-left p {
+    max-width: 420px;
+}
+
+@media (max-width: 640px) {
+    .hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .hero-left, .hero-right {
+        width: 100%;
+    }
+    .hero-cta {
+        align-self: flex-start;
+        margin-top: 10px;
+    }
+}
+</style>
 
 {% endblock %}

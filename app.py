@@ -556,14 +556,15 @@ def get_business_profile():
     if not row:
         return {
             "id": None,
-            "business_name": "InvoicePro",
+            "business_name": "BillBeam",
             "email": "",
             "phone": "",
             "website": "",
             "address": "",
             "logo_url": "",
-            "brand_color": "#151B54",
-            "accent_color": "#1d4ed8",
+            # Dark-mode first brand
+            "brand_color": "#020617",   # deep midnight
+            "accent_color": "#3A8BFF",  # beam blue
             "default_terms": "",
             "default_notes": "",
             "user_id": user_id,
@@ -585,14 +586,14 @@ def get_business_profile():
 
     return {
         "id": bp_id,
-        "business_name": business_name or "InvoicePro",
+        "business_name": business_name or "BillBeam",
         "email": email or "",
         "phone": phone or "",
         "website": website or "",
         "address": address or "",
         "logo_url": logo_url or "",
-        "brand_color": brand_color or "#151B54",
-        "accent_color": accent_color or "#1d4ed8",
+        "brand_color": brand_color or "#020617",
+        "accent_color": accent_color or "#3A8BFF",
         "default_terms": default_terms or "",
         "default_notes": default_notes or "",
         "user_id": user_id,
@@ -950,7 +951,7 @@ def preview_invoice():
 
     # Business profile for branding
     profile = get_business_profile()
-    business_name = profile.get("business_name") or "InvoicePro"
+    business_name = profile.get("business_name") or "BillBeam"
 
     # "Virtual" invoice label (not saved yet)
     invoice_label = "PREVIEW — Not saved"
@@ -2353,7 +2354,7 @@ def send_email_via_resend(
         return (
             False,
             "Resend configuration missing: RESEND_FROM is not set. "
-            "Set RESEND_FROM to something like 'InvoicePro <billing@mikeinvoices.com>'.",
+            "Set RESEND_FROM to something like 'BillBeam <billing@billbeam.com>'.",
         )
 
     if "gmail.com" in resend_from.lower():
@@ -2497,7 +2498,7 @@ def send_email_view(invoice_id):
         )
 
     profile = get_business_profile()
-    business_name = profile["business_name"] or "InvoicePro"
+    business_name = profile["business_name"] or "BillBeam"
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2717,7 +2718,7 @@ def ai_helper():
 
     # Very small context string so the model knows the app shape
     app_context = f"""
-You are the in-app assistant for an invoicing web app called InvoicePro.
+You are the in-app assistant for an invoicing web app called BillBeam.
 
 Key features and routes:
 - Create invoice at "/" (new invoice form with client + line items).

@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ business_profile.business_name or "InvoicePro" }}</title>
+    <title>{{ business_profile.business_name or "BillBeam" }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Body font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Brand / logo / hero font for BillBeam -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -15,12 +19,12 @@
         {% if business_profile.brand_color %}
         --accent: {{ business_profile.brand_color }};
         {% else %}
-        --accent: #1d4ed8;
+        --accent: #3A8BFF;  /* BillBeam blue */
         {% endif %}
         {% if business_profile.accent_color %}
         --accent-light: {{ business_profile.accent_color }};
         {% else %}
-        --accent-light: #60a5fa;
+        --accent-light: #FCDC2A; /* BillBeam yellow pop */
         {% endif %}
         --bg-light: #f3f4f6;
         --bg-dark: #050816;
@@ -262,7 +266,7 @@
 <!-- SIDEBAR -->
 <div id="sidebar" class="sidebar" {% if is_public_view %}style="display:none;"{% endif %}>
     <div class="sidebar-header">
-        <h3>{{ business_profile.business_name or "InvoicePro" }}</h3>
+        <h3>{{ business_profile.business_name or "BillBeam" }}</h3>
     </div>
 
     <a href="/" class="sidebar-link">Create Invoice</a>
@@ -283,7 +287,7 @@
                  style="height:28px; margin-right:10px; border-radius:6px;">
         {% endif %}
         <span class="logo">
-            {{ business_profile.business_name or "InvoicePro" }}
+            {{ business_profile.business_name or "BillBeam" }}
         </span>
     </div>
 
@@ -343,7 +347,7 @@
 </div>
 
 <footer class="footer">
-   © • InvoicePro v2.1 • Mike Calderon • 2026
+   © • BillBeam v2.1 • Mike Calderon • 2026
 </footer>
 
 <div id="loader" class="loader"></div>
@@ -354,8 +358,8 @@
 
 <div id="welcomeModal" class="welcome-modal hidden">
     <div class="welcome-content">
-        <h2>Welcome to InvoicePro 🚀</h2>
-        <p>You're now using a modern invoicing platform.</p>
+        <h2>Welcome to BillBeam ⚡</h2>
+        <p>Your new command center for clean, fast invoices.</p>
         <button id="closeWelcome" class="btn">Let's Go</button>
     </div>
 </div>
@@ -370,7 +374,7 @@
     <div class="ai-helper-panel" id="aiHelperPanel">
         <div class="ai-helper-header">
             <div class="ai-helper-title">
-                <span>InvoicePro Assistant</span>
+                <span>BillBeam Assistant</span>
                 <small>Ask about invoices, clients, or workflows.</small>
             </div>
             <button id="aiHelperClose" class="ai-helper-close" type="button">✕</button>
@@ -515,14 +519,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("welcomeModal");
     const closeBtn = document.getElementById("closeWelcome");
 
-    if (modal && !localStorage.getItem("invoiceProWelcomeSeen")) {
+    if (modal && !localStorage.getItem("billBeamWelcomeSeen")) {
         modal.classList.remove("hidden");
     }
 
     if (closeBtn && modal) {
         closeBtn.addEventListener("click", function () {
             modal.classList.add("hidden");
-            localStorage.setItem("invoiceProWelcomeSeen", "true");
+            localStorage.setItem("billBeamWelcomeSeen", "true");
         });
     }
 
