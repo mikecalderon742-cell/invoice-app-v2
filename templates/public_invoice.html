@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+{% set lang = request.args.get('lang', 'en') %}
 
 <div class="public-portal">
 
@@ -12,20 +13,25 @@
         {% endif %}
         <div>
           <div class="public-title">{{ business_profile.business_name or "InvoicePro" }}</div>
-          <div class="public-subtitle">Invoice Portal</div>
+          <div class="public-subtitle">
+            {% if lang == 'es' %}Portal de facturas{% else %}Invoice Portal{% endif %}
+          </div>
         </div>
       </div>
 
       <div class="public-inv-meta">
-        <div class="inv-label">Invoice <span class="mono">{{ inv_label }}</span></div>
+        <div class="inv-label">
+          {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+          <span class="mono">{{ inv_label }}</span>
+        </div>
         <div class="inv-dates">
           <span>
-            Created:
+            {% if lang == 'es' %}Creada:{% else %}Created:{% endif %}
             <strong>{{ created_at.strftime('%Y-%m-%d') if created_at else '—' }}</strong>
           </span>
           <span class="dot">•</span>
           <span>
-            Due:
+            {% if lang == 'es' %}Vence:{% else %}Due:{% endif %}
             <strong>{{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}</strong>
           </span>
         </div>
@@ -33,14 +39,24 @@
 
       <div class="public-status-row">
         {% if status == "Paid" %}
-          <span class="status-pill paid">Paid</span>
+          <span class="status-pill paid">
+            {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+          </span>
         {% elif status == "Overdue" %}
-          <span class="status-pill overdue">Overdue</span>
+          <span class="status-pill overdue">
+            {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+          </span>
         {% else %}
-          <span class="status-pill sent">Sent</span>
+          <span class="status-pill sent">
+            {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+          </span>
         {% endif %}
         <span class="status-note">
-          This is a secure link. Keep it private.
+          {% if lang == 'es' %}
+            Este es un enlace seguro. No lo compartas públicamente.
+          {% else %}
+            This is a secure link. Keep it private.
+          {% endif %}
         </span>
       </div>
     </div>
@@ -48,7 +64,9 @@
     <div class="public-hero-right">
       <div class="summary-card">
         <div class="summary-top">
-          <div class="summary-label">Balance Due</div>
+          <div class="summary-label">
+            {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
+          </div>
           <div class="summary-amount">
             ${{ "{:,.2f}".format(balance) }}
           </div>
@@ -56,11 +74,11 @@
 
         <div class="summary-breakdown">
           <div class="row">
-            <span>Total</span>
+            <span>{% if lang == 'es' %}Total{% else %}Total{% endif %}</span>
             <strong>${{ "{:,.2f}".format(amount) }}</strong>
           </div>
           <div class="row">
-            <span>Paid</span>
+            <span>{% if lang == 'es' %}Pagado{% else %}Paid{% endif %}</span>
             <strong>${{ "{:,.2f}".format(total_paid) }}</strong>
           </div>
         </div>
@@ -68,18 +86,22 @@
         <div class="summary-actions">
           <!-- Pay Now UI (we’ll wire later) -->
           <button class="btn btn-brand btn-pay" disabled title="Coming soon">
-            Pay Now (Coming Soon)
+            {% if lang == 'es' %}Pagar ahora (próximamente){% else %}Pay Now (Coming Soon){% endif %}
           </button>
 
           {% if pdf_url %}
             <a class="btn btn-secondary btn-wide" href="{{ pdf_url }}" target="_blank" rel="noopener">
-              Download PDF
+              {% if lang == 'es' %}Descargar PDF{% else %}Download PDF{% endif %}
             </a>
           {% endif %}
         </div>
 
         <div class="summary-foot">
-          Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>
+          {% if lang == 'es' %}
+            ¿Dudas? Escribe a <strong>{{ business_profile.email or "tu negocio" }}</strong>
+          {% else %}
+            Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -88,10 +110,12 @@
   <!-- CLIENT CARD -->
   <div class="public-grid">
     <div class="public-card">
-      <div class="card-title">Billed To</div>
+      <div class="card-title">
+        {% if lang == 'es' %}Facturado a{% else %}Billed To{% endif %}
+      </div>
 
       <div class="client-block">
-        <div class="client-name">{{ client_name or "Client" }}</div>
+        <div class="client-name">{{ client_name or (lang == 'es' and "Cliente" or "Client") }}</div>
         {% if client_company %}
           <div class="client-sub">{{ client_company }}</div>
         {% endif %}
@@ -103,27 +127,41 @@
       </div>
 
       <div class="mini-hint">
-        Tip: download the PDF for your records.
+        {% if lang == 'es' %}
+          Consejo: descarga el PDF para tus registros.
+        {% else %}
+          Tip: download the PDF for your records.
+        {% endif %}
       </div>
     </div>
 
     <div class="public-card">
-      <div class="card-title">Invoice Snapshot</div>
+      <div class="card-title">
+        {% if lang == 'es' %}Resumen de factura{% else %}Invoice Snapshot{% endif %}
+      </div>
       <div class="snapshot">
         <div class="snap-item">
-          <div class="snap-label">Status</div>
+          <div class="snap-label">
+            {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+          </div>
           <div class="snap-value">{{ status }}</div>
         </div>
         <div class="snap-item">
-          <div class="snap-label">Items</div>
+          <div class="snap-label">
+            {% if lang == 'es' %}Conceptos{% else %}Items{% endif %}
+          </div>
           <div class="snap-value">{{ items|length }}</div>
         </div>
         <div class="snap-item">
-          <div class="snap-label">Paid</div>
+          <div class="snap-label">
+            {% if lang == 'es' %}Pagado{% else %}Paid{% endif %}
+          </div>
           <div class="snap-value">${{ "{:,.2f}".format(total_paid) }}</div>
         </div>
         <div class="snap-item">
-          <div class="snap-label">Due</div>
+          <div class="snap-label">
+            {% if lang == 'es' %}Pendiente{% else %}Due{% endif %}
+          </div>
           <div class="snap-value">${{ "{:,.2f}".format(balance) }}</div>
         </div>
       </div>
@@ -132,14 +170,20 @@
 
   <!-- LINE ITEMS -->
   <div class="public-card public-card-wide">
-    <div class="card-title">Line Items</div>
+    <div class="card-title">
+      {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
+    </div>
 
     <div class="public-table-wrap">
       <table class="public-table">
         <thead>
           <tr>
-            <th>Description</th>
-            <th class="right">Amount</th>
+            <th>
+              {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+            </th>
+            <th class="right">
+              {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -152,15 +196,21 @@
         </tbody>
         <tfoot>
           <tr>
-            <td class="right">Total</td>
+            <td class="right">
+              {% if lang == 'es' %}Total{% else %}Total{% endif %}
+            </td>
             <td class="right"><strong>${{ "{:,.2f}".format(amount) }}</strong></td>
           </tr>
           <tr>
-            <td class="right">Paid</td>
+            <td class="right">
+              {% if lang == 'es' %}Pagado{% else %}Paid{% endif %}
+            </td>
             <td class="right"><strong>${{ "{:,.2f}".format(total_paid) }}</strong></td>
           </tr>
           <tr>
-            <td class="right">Balance Due</td>
+            <td class="right">
+              {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
+            </td>
             <td class="right"><strong>${{ "{:,.2f}".format(balance) }}</strong></td>
           </tr>
         </tfoot>
@@ -171,7 +221,9 @@
   <!-- PAYMENTS + NOTES -->
   <div class="public-grid">
     <div class="public-card">
-      <div class="card-title">Payment History</div>
+      <div class="card-title">
+        {% if lang == 'es' %}Historial de pagos{% else %}Payment History{% endif %}
+      </div>
 
       {% if payments and payments|length > 0 %}
         <div class="timeline">
@@ -186,7 +238,7 @@
                   </span>
                 </div>
                 <div class="timeline-sub">
-                  {{ p[1] or "Payment" }}
+                  {{ p[1] or (lang == 'es' and "Pago" or "Payment") }}
                   {% if p[2] %} — <span class="muted">{{ p[2] }}</span>{% endif %}
                 </div>
               </div>
@@ -194,29 +246,47 @@
           {% endfor %}
         </div>
       {% else %}
-        <p class="muted" style="margin-top:10px;">No payments recorded yet.</p>
+        <p class="muted" style="margin-top:10px;">
+          {% if lang == 'es' %}
+            Todavía no hay pagos registrados.
+          {% else %}
+            No payments recorded yet.
+          {% endif %}
+        </p>
       {% endif %}
     </div>
 
     <div class="public-card">
-      <div class="card-title">Notes & Terms</div>
+      <div class="card-title">
+        {% if lang == 'es' %}Notas y términos{% else %}Notes & Terms{% endif %}
+      </div>
 
       {% if notes %}
         <div class="note-block">
-          <div class="note-label">Notes</div>
+          <div class="note-label">
+            {% if lang == 'es' %}Notas{% else %}Notes{% endif %}
+          </div>
           <div class="note-text">{{ notes }}</div>
         </div>
       {% endif %}
 
       {% if terms %}
         <div class="note-block">
-          <div class="note-label">Terms</div>
+          <div class="note-label">
+            {% if lang == 'es' %}Términos{% else %}Terms{% endif %}
+          </div>
           <div class="note-text">{{ terms }}</div>
         </div>
       {% endif %}
 
       {% if not notes and not terms %}
-        <p class="muted" style="margin-top:10px;">No notes or terms provided.</p>
+        <p class="muted" style="margin-top:10px;">
+          {% if lang == 'es' %}
+            No se proporcionaron notas ni términos.
+          {% else %}
+            No notes or terms provided.
+          {% endif %}
+        </p>
       {% endif %}
 
       {% if attachment_paths or signature_path %}
@@ -224,7 +294,7 @@
         {% if attachment_paths %}
             <div class="invoice-attachments" style="margin-bottom:16px;">
                 <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
-                    Attachments
+                    {% if lang == 'es' %}Archivos adjuntos{% else %}Attachments{% endif %}
                 </h3>
                 <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
                     {% for path in attachment_paths %}
@@ -242,14 +312,14 @@
         {% if signature_path %}
             <div class="invoice-signature">
                 <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
-                    Signature
+                    {% if lang == 'es' %}Firma{% else %}Signature{% endif %}
                 </h3>
                 <div style="margin-top:8px; padding:10px; border-radius:10px; background:#020617; border:1px solid rgba(148,163,184,0.5); max-width:320px;">
                     <img src="{{ url_for('uploaded_file', filename=signature_path) }}"
                          alt="Signature"
                          style="display:block; width:100%; max-width:100%;">
                     <div style="margin-top:6px; font-size:12px; opacity:0.7;">
-                        Signed on file
+                        {% if lang == 'es' %}Firma en archivo{% else %}Signed on file{% endif %}
                     </div>
                 </div>
             </div>
@@ -258,15 +328,25 @@
 {% endif %}
 
       <div class="trust-row">
-        <div class="trust-pill">Secure Link</div>
-        <div class="trust-pill">PDF Available</div>
-        <div class="trust-pill">Client Portal</div>
+        <div class="trust-pill">
+            {% if lang == 'es' %}Enlace seguro{% else %}Secure Link{% endif %}
+        </div>
+        <div class="trust-pill">
+            {% if lang == 'es' %}PDF disponible{% else %}PDF Available{% endif %}
+        </div>
+        <div class="trust-pill">
+            {% if lang == 'es' %}Portal de cliente{% else %}Client Portal{% endif %}
+        </div>
       </div>
     </div>
   </div>
 
   <div class="powered-by">
-    Powered by <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+    {% if lang == 'es' %}
+        Desarrollado por <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+    {% else %}
+        Powered by <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+    {% endif %}
   </div>
 
 </div>

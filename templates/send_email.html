@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
+{% set lang = request.args.get('lang', 'en') %}
 
 <div class="dashboard-header">
-    <h1>Send Invoice</h1>
+    <h1>
+        {% if lang == 'es' %}Enviar factura{% else %}Send Invoice{% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="/invoices" class="btn btn-secondary">Back to Invoices</a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
+        </a>
     </div>
 </div>
 
@@ -31,18 +36,40 @@
         </div>
     {% endif %}
 
-    <h2 style="margin-top:0;">Invoice {{ inv_label }}</h2>
-    <p style="font-size:14px; opacity:.85; margin-bottom:18px;">
-        Client: <strong>{{ client_name }}</strong><br>
-        Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-        Status: <strong>{{ status }}</strong><br>
-        {% if due_date %}
-            Due date: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
+    <h2 style="margin-top:0;">
+        {% if lang == 'es' %}
+            Factura {{ inv_label }}
+        {% else %}
+            Invoice {{ inv_label }}
         {% endif %}
-        {% if last_emailed_at %}
-            Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
-            {% if last_emailed_to %}
-                to <strong>{{ last_emailed_to }}</strong>
+    </h2>
+
+    <p style="font-size:14px; opacity:.85; margin-bottom:18px;">
+        {% if lang == 'es' %}
+            Cliente: <strong>{{ client_name }}</strong><br>
+            Importe: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
+            Estado: <strong>{{ status }}</strong><br>
+            {% if due_date %}
+                Vence: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
+            {% endif %}
+            {% if last_emailed_at %}
+                Último envío: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+                {% if last_emailed_to %}
+                    a <strong>{{ last_emailed_to }}</strong>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            Client: <strong>{{ client_name }}</strong><br>
+            Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
+            Status: <strong>{{ status }}</strong><br>
+            {% if due_date %}
+                Due date: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
+            {% endif %}
+            {% if last_emailed_at %}
+                Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+                {% if last_emailed_to %}
+                    to <strong>{{ last_emailed_to }}</strong>
+                {% endif %}
             {% endif %}
         {% endif %}
     </p>
@@ -56,19 +83,27 @@
             background: rgba(219,234,254,0.6);
             font-size:13px;
         ">
-            <strong>Public Invoice Link</strong><br>
+            <strong>
+                {% if lang == 'es' %}Enlace público de factura{% else %}Public Invoice Link{% endif %}
+            </strong><br>
             <span style="word-break:break-all;">{{ public_url }}</span><br>
             <span style="opacity:0.8;">
-                This link is included in the default email body. You can also copy it and send manually if needed.
+                {% if lang == 'es' %}
+                    Este enlace se incluye en el cuerpo del correo por defecto. También puedes copiarlo y enviarlo manualmente si lo prefieres.
+                {% else %}
+                    This link is included in the default email body. You can also copy it and send manually if needed.
+                {% endif %}
             </span>
         </div>
     {% endif %}
 
-    <form method="POST" action="/send-email/{{ invoice_id }}">
+    <form method="POST" action="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
         <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
 
             <div>
-                <label for="to_email" style="font-weight:600; font-size:14px;">To</label>
+                <label for="to_email" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Para{% else %}To{% endif %}
+                </label>
                 <input
                     type="email"
                     id="to_email"
@@ -80,7 +115,9 @@
             </div>
 
             <div>
-                <label for="subject" style="font-weight:600; font-size:14px;">Subject</label>
+                <label for="subject" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Asunto{% else %}Subject{% endif %}
+                </label>
                 <input
                     type="text"
                     id="subject"
@@ -91,7 +128,9 @@
             </div>
 
             <div>
-                <label for="message" style="font-weight:600; font-size:14px;">Message</label>
+                <label for="message" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Mensaje{% else %}Message{% endif %}
+                </label>
                 <textarea
                     id="message"
                     name="message"
@@ -99,15 +138,23 @@
                     style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
                 >{{ default_message }}</textarea>
                 <small style="font-size:12px; opacity:.7;">
-                    The invoice PDF will be attached automatically.
+                    {% if lang == 'es' %}
+                        El PDF de la factura se adjuntará automáticamente.
+                    {% else %}
+                        The invoice PDF will be attached automatically.
+                    {% endif %}
                 </small>
             </div>
 
         </div>
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <a href="/invoices" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-brand">Send Email</button>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            </a>
+            <button type="submit" class="btn btn-brand">
+                {% if lang == 'es' %}Enviar correo{% else %}Send Email{% endif %}
+            </button>
         </div>
     </form>
 

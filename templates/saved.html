@@ -1,31 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Invoice Saved</title>
+    <title>
+        {% set lang = request.args.get('lang', 'en') %}
+        {% if lang == 'es' %}Factura guardada{% else %}Invoice Saved{% endif %}
+    </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
 <div class="navbar">
     <div>
-        <a href="/">InvoicePro</a>
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}">InvoicePro</a>
     </div>
     <div>
-        <a href="/">Create Invoice</a>
-        <a href="/invoices">Invoice History</a>
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+        </a>
     </div>
 </div>
 
 <div class="container">
-    <h1>Invoice Saved Successfully</h1>
+    <h1>
+        {% if lang == 'es' %}Factura guardada con éxito{% else %}Invoice Saved Successfully{% endif %}
+    </h1>
 
-    <p><strong>Invoice ID:</strong> {{ invoice_id }}</p>
-    <p><strong>Client:</strong> {{ client }}</p>
-    <p><strong>Amount:</strong> ${{ amount }}</p>
+    <p><strong>{% if lang == 'es' %}ID de factura:{% else %}Invoice ID:{% endif %}</strong> {{ invoice_id }}</p>
+    <p><strong>{% if lang == 'es' %}Cliente:{% else %}Client:{% endif %}</strong> {{ client }}</p>
+    <p><strong>{% if lang == 'es' %}Importe:{% else %}Amount:{% endif %}</strong> ${{ amount }}</p>
 
     <br>
 
-    <a href="/invoices">View Invoice History</a>
+    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Ver historial de facturas{% else %}View Invoice History{% endif %}
+    </a>
 </div>
 
 </body>

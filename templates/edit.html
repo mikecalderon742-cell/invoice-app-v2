@@ -1,28 +1,61 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set lang = request.args.get('lang', 'en') %}
 
-<h1>Edit Invoice #{{ invoice_id }}</h1>
-
-<form method="POST" action="/update/{{ invoice_id }}">
-
-    <label>Client Name:</label><br>
-    <input type="text" name="client" value="{{ client }}" required><br><br>
-
-    <h3>Items</h3>
-
-    {% for item in items %}
-    <div class="item-row">
-        <input type="text" name="description" value="{{ item[0] }}" placeholder="Description" required>
-        <input type="number" step="0.01" name="amount" value="{{ item[1] }}" placeholder="Amount" required>
+<div class="dashboard-header">
+    <h1>
+        {% if lang == 'es' %}
+            Editar factura #{{ invoice_id }}
+        {% else %}
+            Edit Invoice #{{ invoice_id }}
+        {% endif %}
+    </h1>
+    <div class="quick-actions">
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+        </a>
     </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+    <form method="POST" action="/update/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+
+        <label style="font-weight:600; font-size:14px;">
+            {% if lang == 'es' %}Nombre del cliente:{% else %}Client Name:{% endif %}
+        </label><br>
+        <input type="text" name="client" value="{{ client }}" required><br><br>
+
+        <h3>
+            {% if lang == 'es' %}Conceptos{% else %}Items{% endif %}
+        </h3>
+
+        {% for item in items %}
+        <div class="item-row">
+            <input type="text"
+                   name="description"
+                   value="{{ item[0] }}"
+                   placeholder="{% if lang == 'es' %}Descripción{% else %}Description{% endif %}"
+                   required>
+            <input type="number"
+                   step="0.01"
+                   name="amount"
+                   value="{{ item[1] }}"
+                   placeholder="{% if lang == 'es' %}Importe{% else %}Amount{% endif %}"
+                   required>
+        </div>
+        <br>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-brand">
+            {% if lang == 'es' %}Actualizar factura{% else %}Update Invoice{% endif %}
+        </button>
+    </form>
+
     <br>
-    {% endfor %}
-
-    <button type="submit">Update Invoice</button>
-</form>
-
-<br>
-<a href="/invoices">Back to Invoice History</a>
+    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Volver al historial de facturas{% else %}Back to Invoice History{% endif %}
+    </a>
+</div>
 
 {% endblock %}

@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Invoice Deleted</title>
+    <title>
+        {% set lang = request.args.get('lang', 'en') %}
+        {% if lang == 'es' %}Factura eliminada{% else %}Invoice Deleted{% endif %}
+    </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <div class="container">
-    <h1>Invoice Deleted</h1>
-    <a href="/invoices">Back to History</a>
+    <h1>
+        {% if lang == 'es' %}Factura eliminada{% else %}Invoice Deleted{% endif %}
+    </h1>
+    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Volver al historial{% else %}Back to History{% endif %}
+    </a>
 </div>
 </body>
 </html>

@@ -1,38 +1,99 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
 <div class="form-wrapper" style="max-width: 720px; margin: 40px auto;">
     <div class="dashboard-header" style="margin-bottom: 16px;">
-        <h1>{{ title or "Upgrade required" }}</h1>
+        <h1>
+            {% if lang == 'es' %}
+                {{ title or "Se requiere actualización" }}
+            {% else %}
+                {{ title or "Upgrade required" }}
+            {% endif %}
+        </h1>
     </div>
 
     <p style="font-size: 0.95rem; margin-bottom: 20px;">
-        {{ reason or "This feature is not available on your current plan." }}
+        {% if lang == 'es' %}
+            {{ reason or "Esta función no está disponible en tu plan actual." }}
+        {% else %}
+            {{ reason or "This feature is not available on your current plan." }}
+        {% endif %}
     </p>
 
     <div class="status-summary" style="margin-bottom: 24px;">
         <span class="status-item sent">
-            Current plan: <strong>{{ user_plan|capitalize }}</strong>
+            {% if lang == 'es' %}
+                Plan actual: <strong>{{ user_plan|capitalize }}</strong>
+            {% else %}
+                Current plan: <strong>{{ user_plan|capitalize }}</strong>
+            {% endif %}
         </span>
         <span class="status-item paid">
-            Required plan: <strong>{{ required_plan|capitalize }}</strong> or higher
+            {% if lang == 'es' %}
+                Plan requerido: <strong>{{ required_plan|capitalize }}</strong> o superior
+            {% else %}
+                Required plan: <strong>{{ required_plan|capitalize }}</strong> or higher
+            {% endif %}
         </span>
     </div>
 
     <div class="dashboard-cards">
         {% for key, plan in plans.items() %}
             <div class="card kpi {% if key == 'pro' %}blue{% else %}teal{% endif %}">
-                <h2>{{ plan.name }}</h2>
+                <h2>
+                    {% if lang == 'es' %}
+                        {% if key == 'free' %}Starter{% elif key == 'pro' %}Pro{% else %}Studio{% endif %}
+                    {% else %}
+                        {{ plan.name }}
+                    {% endif %}
+                </h2>
                 <p>{{ plan.price_label }}</p>
-                <small>{{ plan.tagline }}</small>
+                <small>
+                    {% if lang == 'es' %}
+                        {% if key == 'free' %}
+                            Para freelancers que están empezando.
+                        {% elif key == 'pro' %}
+                            Para negocios en crecimiento que facturan con frecuencia.
+                        {% else %}
+                            Para agencias y equipos que necesitan más.
+                        {% endif %}
+                    {% else %}
+                        {{ plan.tagline }}
+                    {% endif %}
+                </small>
                 <ul style="margin-top: 12px; padding-left: 18px; font-size: 0.85rem;">
-                    {% for f in plan.features %}
-                        <li>{{ f }}</li>
-                    {% endfor %}
+                    {% if lang == 'es' %}
+                        {% if key == 'free' %}
+                            <li>Hasta 10 facturas al mes</li>
+                            <li>Una sola plantilla de factura</li>
+                            <li>Panel básico</li>
+                        {% elif key == 'pro' %}
+                            <li>Facturas ilimitadas</li>
+                            <li>Múltiples plantillas de factura</li>
+                            <li>Envío por correo + PDFs</li>
+                            <li>Enlaces públicos y botón “Pagar ahora”</li>
+                            <li>Facturas recurrentes</li>
+                        {% else %}
+                            <li>Todas las funciones Pro</li>
+                            <li>Branding y dominios personalizados</li>
+                            <li>Soporte prioritario</li>
+                            <li>Acceso por equipo (próximamente)</li>
+                        {% endif %}
+                    {% else %}
+                        {% for f in plan.features %}
+                            <li>{{ f }}</li>
+                        {% endfor %}
+                    {% endif %}
                 </ul>
                 <div style="margin-top: 16px;">
-                    <a href="{{ url_for('pricing') }}" class="btn btn-brand">
-                        View {{ plan.name }} details
+                    <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                        {% if lang == 'es' %}
+                            Ver detalles de {{ key == 'free' and 'Starter' or key == 'pro' and 'Pro' or 'Studio' }}
+                        {% else %}
+                            View {{ plan.name }} details
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -40,7 +101,11 @@
     </div>
 
     <div style="text-align:center; margin-top: 20px; font-size: 0.85rem; opacity: 0.8;">
-        You can continue using all existing features on your current plan.
+        {% if lang == 'es' %}
+            Puedes seguir usando todas las funciones disponibles en tu plan actual.
+        {% else %}
+            You can continue using all existing features on your current plan.
+        {% endif %}
     </div>
 </div>
 {% endblock %}

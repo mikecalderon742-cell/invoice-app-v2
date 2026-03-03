@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
+{% set lang = request.args.get('lang', 'en') %}
 
 <div class="dashboard-header">
-    <h1>Record Payment</h1>
+    <h1>
+        {% if lang == 'es' %}Registrar pago{% else %}Record Payment{% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="/invoices" class="btn btn-secondary">Back to Invoices</a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
+        </a>
     </div>
 </div>
 
@@ -31,57 +36,82 @@
         </div>
     {% endif %}
 
-    <h2 style="margin-top:0;">Invoice {{ inv_label }}</h2>
+    <h2 style="margin-top:0;">
+        {% if lang == 'es' %}
+            Factura {{ inv_label }}
+        {% else %}
+            Invoice {{ inv_label }}
+        {% endif %}
+    </h2>
+
     <p style="font-size:14px; opacity:.85; margin-bottom:18px;">
-        Client: <strong>{{ client_name }}</strong><br>
-        Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-        Total Paid: <strong>${{ "{:,.2f}".format(total_paid) }}</strong><br>
-        Balance Due: <strong>${{ "{:,.2f}".format(balance) }}</strong><br>
-        Status: <strong>{{ status }}</strong>
+        {% if lang == 'es' %}
+            Cliente: <strong>{{ client_name }}</strong><br>
+            Importe: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
+            Pagado: <strong>${{ "{:,.2f}".format(total_paid) }}</strong><br>
+            Saldo pendiente: <strong>${{ "{:,.2f}".format(balance) }}</strong><br>
+            Estado: <strong>{{ status }}</strong>
+        {% else %}
+            Client: <strong>{{ client_name }}</strong><br>
+            Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
+            Total Paid: <strong>${{ "{:,.2f}".format(total_paid) }}</strong><br>
+            Balance Due: <strong>${{ "{:,.2f}".format(balance) }}</strong><br>
+            Status: <strong>{{ status }}</strong>
+        {% endif %}
     </p>
 
-    <form method="POST" action="/add-payment/{{ invoice_id }}">
+    <form method="POST" action="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
         <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
 
             <div>
-                <label for="amount" style="font-weight:600; font-size:14px;">Payment Amount</label>
+                <label for="amount" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Importe del pago{% else %}Payment Amount{% endif %}
+                </label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
                     id="amount"
                     name="amount"
-                    placeholder="e.g. 250.00"
+                    placeholder="{% if lang == 'es' %}Ej. 250.00{% else %}e.g. 250.00{% endif %}"
                     required
                 >
             </div>
 
             <div>
-                <label for="method" style="font-weight:600; font-size:14px;">Method (optional)</label>
+                <label for="method" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Método (opcional){% else %}Method (optional){% endif %}
+                </label>
                 <input
                     type="text"
                     id="method"
                     name="method"
-                    placeholder="e.g. Cash, Card, Bank Transfer"
+                    placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
                 >
             </div>
 
             <div>
-                <label for="note" style="font-weight:600; font-size:14px;">Note (optional)</label>
+                <label for="note" style="font-weight:600; font-size:14px;">
+                    {% if lang == 'es' %}Nota (opcional){% else %}Note (optional){% endif %}
+                </label>
                 <textarea
                     id="note"
                     name="note"
                     rows="3"
                     style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
-                    placeholder="Reference number, partial payment details, etc."
+                    placeholder="{% if lang == 'es' %}Número de referencia, detalles de pago parcial, etc.{% else %}Reference number, partial payment details, etc.{% endif %}"
                 ></textarea>
             </div>
 
         </div>
 
         <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <a href="/invoices" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-success">Save Payment</button>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            </a>
+            <button type="submit" class="btn btn-success">
+                {% if lang == 'es' %}Guardar pago{% else %}Save Payment{% endif %}
+            </button>
         </div>
     </form>
 
@@ -92,19 +122,33 @@
     <table class="modern-table">
         <thead>
             <tr>
-                <th>Amount</th>
-                <th>Method</th>
-                <th>Note</th>
-                <th>Recorded</th>
+                <th>
+                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                </th>
+                <th>
+                    {% if lang == 'es' %}Método{% else %}Method{% endif %}
+                </th>
+                <th>
+                    {% if lang == 'es' %}Nota{% else %}Note{% endif %}
+                </th>
+                <th>
+                    {% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}
+                </th>
             </tr>
         </thead>
         <tbody>
         {% for p in payments %}
             <tr>
-                <td data-label="Amount">${{ "{:,.2f}".format(p[0]) }}</td>
-                <td data-label="Method">{{ p[1] or "—" }}</td>
-                <td data-label="Note">{{ p[2] or "—" }}</td>
-                <td data-label="Recorded">
+                <td data-label="{% if lang == 'es' %}Importe{% else %}Amount{% endif %}">
+                    ${{ "{:,.2f}".format(p[0]) }}
+                </td>
+                <td data-label="{% if lang == 'es' %}Método{% else %}Method{% endif %}">
+                    {{ p[1] or "—" }}
+                </td>
+                <td data-label="{% if lang == 'es' %}Nota{% else %}Note{% endif %}">
+                    {{ p[2] or "—" }}
+                </td>
+                <td data-label="{% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}">
                     {% if p[3] %}
                         {{ p[3].strftime('%Y-%m-%d %H:%M') }}
                     {% else %}

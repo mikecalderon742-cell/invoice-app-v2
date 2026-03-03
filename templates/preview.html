@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
+{% set lang = request.args.get('lang', 'en') %}
 
 <div class="preview-banner">
-    <span class="preview-pill">Preview only</span>
-    <p>This invoice has not been saved yet. Use your browser's Back button to adjust details.</p>
+    <span class="preview-pill">
+        {% if lang == 'es' %}Solo vista previa{% else %}Preview only{% endif %}
+    </span>
+    <p>
+        {% if lang == 'es' %}
+            Esta factura aún no se ha guardado. Usa el botón Atrás de tu navegador para ajustar los detalles.
+        {% else %}
+            This invoice has not been saved yet. Use your browser's Back button to adjust details.
+        {% endif %}
+    </p>
 </div>
 
 <div class="invoice-preview-shell">
@@ -19,23 +28,35 @@
                 {% endif %}
                 <div>
                     <h1 class="preview-brand-name">{{ business_name }}</h1>
-                    <p class="preview-subtitle">Invoice summary preview</p>
+                    <p class="preview-subtitle">
+                        {% if lang == 'es' %}
+                            Vista previa de resumen de factura
+                        {% else %}
+                            Invoice summary preview
+                        {% endif %}
+                    </p>
                 </div>
             </div>
 
             <div class="invoice-meta">
                 <div>
-                    <span class="meta-label">Invoice</span>
+                    <span class="meta-label">
+                        {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+                    </span>
                     <div class="meta-value">{{ invoice_label }}</div>
                 </div>
                 <div>
-                    <span class="meta-label">Created</span>
+                    <span class="meta-label">
+                        {% if lang == 'es' %}Creada{% else %}Created{% endif %}
+                    </span>
                     <div class="meta-value">
                         {{ created_at.strftime('%Y-%m-%d %I:%M %p') }}
                     </div>
                 </div>
                 <div>
-                    <span class="meta-label">Due</span>
+                    <span class="meta-label">
+                        {% if lang == 'es' %}Vence{% else %}Due{% endif %}
+                    </span>
                     <div class="meta-value">
                         {{ due_date.strftime('%Y-%m-%d') }}
                     </div>
@@ -45,7 +66,9 @@
 
         <section class="invoice-section two-col">
             <div>
-                <h3 class="section-title">Bill to</h3>
+                <h3 class="section-title">
+                    {% if lang == 'es' %}Facturar a{% else %}Bill to{% endif %}
+                </h3>
                 <p class="client-main">{{ client_name }}</p>
                 {% if client_company %}
                     <p class="client-line">{{ client_company }}</p>
@@ -60,12 +83,16 @@
                     <p class="client-line">{{ client_address }}</p>
                 {% endif %}
                 {% if client_notes %}
-                    <p class="client-notes">Notes: {{ client_notes }}</p>
+                    <p class="client-notes">
+                        {% if lang == 'es' %}Notas:{% else %}Notes:{% endif %} {{ client_notes }}
+                    </p>
                 {% endif %}
             </div>
 
             <div class="business-contact">
-                <h3 class="section-title">From</h3>
+                <h3 class="section-title">
+                    {% if lang == 'es' %}De{% else %}From{% endif %}
+                </h3>
                 <p class="client-main">{{ business_profile.business_name or business_name }}</p>
                 {% if business_profile.email %}
                     <p class="client-line">{{ business_profile.email }}</p>
@@ -80,13 +107,19 @@
         </section>
 
         <section class="invoice-section">
-            <h3 class="section-title">Line items</h3>
+            <h3 class="section-title">
+                {% if lang == 'es' %}Conceptos{% else %}Line items{% endif %}
+            </h3>
             <div class="preview-table-wrapper">
                 <table class="preview-table">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th style="width:180px; text-align:right;">Amount</th>
+                            <th>
+                                {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                            </th>
+                            <th style="width:180px; text-align:right;">
+                                {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,7 +135,11 @@
                         {% else %}
                             <tr>
                                 <td colspan="2" style="text-align:center; font-size:13px; opacity:0.7;">
-                                    No line items yet. Add at least one before saving.
+                                    {% if lang == 'es' %}
+                                        Todavía no hay conceptos. Agrega al menos uno antes de guardar.
+                                    {% else %}
+                                        No line items yet. Add at least one before saving.
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endif %}
@@ -111,7 +148,9 @@
             </div>
 
             <div class="preview-total-row">
-                <span>Total</span>
+                <span>
+                    {% if lang == 'es' %}Total{% else %}Total{% endif %}
+                </span>
                 <span class="preview-total-amount">
                     ${{ "{:,.2f}".format(total) }}
                 </span>
@@ -120,28 +159,56 @@
 
         <section class="invoice-section small-print">
             {% if notes %}
-                <p><strong>Invoice notes:</strong> {{ notes }}</p>
+                <p>
+                    <strong>
+                        {% if lang == 'es' %}Notas de la factura:{% else %}Invoice notes:{% endif %}
+                    </strong>
+                    {{ notes }}
+                </p>
             {% endif %}
             {% if terms %}
-                <p><strong>Payment terms:</strong> {{ terms }}</p>
+                <p>
+                    <strong>
+                        {% if lang == 'es' %}Términos de pago:{% else %}Payment terms:{% endif %}
+                    </strong>
+                    {{ terms }}
+                </p>
             {% endif %}
         </section>
     </div>
 
     <!-- Right: style hint / legend (optional) -->
     <aside class="preview-sidebar">
-        <h3>Template style: <span class="pill">{{ template_style|capitalize }}</span></h3>
+        <h3>
+            {% if lang == 'es' %}Estilo de plantilla:{% else %}Template style:{% endif %}
+            <span class="pill">{{ template_style|capitalize }}</span>
+        </h3>
         <p class="preview-tip">
-            This preview reflects your selected style and content. When you save,
-            the PDF and client view will follow this layout.
+            {% if lang == 'es' %}
+                Esta vista previa refleja el estilo y contenido seleccionados. Al guardar,
+                el PDF y la vista del cliente seguirán este diseño.
+            {% else %}
+                This preview reflects your selected style and content. When you save,
+                the PDF and client view will follow this layout.
+            {% endif %}
         </p>
         <ul class="preview-checklist">
-            <li>✓ Client details look correct</li>
-            <li>✓ Line items + totals are accurate</li>
-            <li>✓ Notes & terms say what you want</li>
+            <li>
+                {% if lang == 'es' %}✓ Los datos del cliente son correctos{% else %}✓ Client details look correct{% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}✓ Los conceptos y totales son precisos{% else %}✓ Line items + totals are accurate{% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}✓ Las notas y términos dicen lo que quieres{% else %}✓ Notes & terms say what you want{% endif %}
+            </li>
         </ul>
         <p class="preview-footer-text">
-            Happy with it? Close this tab and hit <strong>Save Invoice</strong> back in the app.
+            {% if lang == 'es' %}
+                ¿Listo? Cierra esta pestaña y haz clic en <strong>Guardar factura</strong> en la app.
+            {% else %}
+                Happy with it? Close this tab and hit <strong>Save Invoice</strong> back in the app.
+            {% endif %}
         </p>
     </aside>
 
