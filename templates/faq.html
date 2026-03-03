@@ -1,145 +1,215 @@
 {% extends "base.html" %}
+
 {% block content %}
+<div style="max-width: 900px; margin: 0 auto 28px;">
+    <header style="margin-bottom: 20px;">
+        <p style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.75;">
+            {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
+        </p>
+        <h1 style="font-size: 26px; margin: 0 0 6px;">
+            {% if lang == 'es' %}
+                Preguntas frecuentes sobre BillBeam
+            {% else %}
+                Frequently Asked Questions about BillBeam
+            {% endif %}
+        </h1>
+        <p style="font-size: 14px; opacity: 0.8; max-width: 560px;">
+            {% if lang == 'es' %}
+                Respuestas rápidas sobre planes, límites, facturas y qué pasa con tus datos.
+            {% else %}
+                Quick answers about plans, limits, invoices, and what happens to your data.
+            {% endif %}
+        </p>
+    </header>
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}
-            Registro de cambios
-        {% else %}
-            Changelog
-        {% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
-        </a>
-    </div>
+    <section style="display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: 26px;">
+        <!-- LEFT COLUMN: MAIN FAQ -->
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Q1 -->
+            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 16px; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        ¿Necesito tarjeta para empezar?
+                    {% else %}
+                        Do I need a credit card to get started?
+                    {% endif %}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
+                    {% if lang == 'es' %}
+                        No. El plan Starter de BillBeam te deja crear hasta 10 facturas al mes sin
+                        introducir tarjeta. Cuando de verdad te esté ahorrando tiempo y dolores de cabeza,
+                        puedes pasar al plan Pro.
+                    {% else %}
+                        No. BillBeam’s Starter plan lets you create up to 10 invoices per month with no
+                        card on file. Once it’s clearly saving you time and stress, you can upgrade to Pro.
+                    {% endif %}
+                </p>
+            </article>
+
+            <!-- Q2 -->
+            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 16px; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        ¿Cuál es la diferencia entre Starter y Pro?
+                    {% else %}
+                        What’s the difference between Starter and Pro?
+                    {% endif %}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.85; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        Starter está pensado para freelancers y negocios pequeños que emiten pocas
+                        facturas al mes. Pro está pensado para cuando ya facturas de forma constante.
+                    {% else %}
+                        Starter is designed for solo freelancers and small businesses who send a few
+                        invoices each month. Pro is for when billing becomes a regular part of your week.
+                    {% endif %}
+                </p>
+                <ul style="padding-left: 18px; margin: 0; font-size: 13px; opacity: 0.9;">
+                    {% if lang == 'es' %}
+                        <li>Starter: hasta 10 facturas/mes, panel básico.</li>
+                        <li>Pro: facturas ilimitadas, plantillas adicionales, envíos por email,
+                            enlaces públicos y más automatización.</li>
+                    {% else %}
+                        <li>Starter: up to 10 invoices / month, basic dashboard.</li>
+                        <li>Pro: unlimited invoices, extra templates, email sending,
+                            public links, and more automation.</li>
+                    {% endif %}
+                </ul>
+            </article>
+
+            <!-- Q3 -->
+            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 16px; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        ¿Puedo enviar facturas por correo electrónico desde BillBeam?
+                    {% else %}
+                        Can I send invoices by email directly from BillBeam?
+                    {% endif %}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
+                    {% if lang == 'es' %}
+                        Sí, en el plan Pro puedes enviar facturas por email con el PDF adjunto y un
+                        enlace público para tu cliente. Desde Starter siempre puedes descargar el PDF y
+                        enviarlo manualmente desde tu correo.
+                    {% else %}
+                        Yes. On the Pro plan you can send invoices by email with the PDF attached and a
+                        public link for your client. On Starter, you can always download the PDF and send
+                        it manually from your own email.
+                    {% endif %}
+                </p>
+            </article>
+
+            <!-- Q4 -->
+            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 16px; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        ¿Qué pasa con mis datos si dejo de usar BillBeam?
+                    {% else %}
+                        What happens to my data if I stop using BillBeam?
+                    {% endif %}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
+                    {% if lang == 'es' %}
+                        Tus facturas y clientes siguen siendo tuyos. Puedes exportar PDFs y usar tu
+                        propio sistema (Excel, CRM, etc.). Si en el futuro quieres borrar tus datos,
+                        puedes escribirnos y los eliminaremos de forma segura.
+                    {% else %}
+                        Your invoices and client data are yours. You can export PDFs and move back to
+                        your old system (Excel, CRM, etc.). If you ever want your account wiped, you can
+                        reach out and we’ll delete your data safely.
+                    {% endif %}
+                </p>
+            </article>
+
+            <!-- Q5 -->
+            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 16px; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        ¿BillBeam es compatible con clientes en otros países e idiomas?
+                    {% else %}
+                        Does BillBeam work with clients in other countries and languages?
+                    {% endif %}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
+                    {% if lang == 'es' %}
+                        Sí. La interfaz está disponible en inglés y español, y puedes escribir la
+                        descripción de tus servicios en el idioma que necesites. También puedes ajustar
+                        moneda, impuestos y notas en tus plantillas.
+                    {% else %}
+                        Yes. The interface is available in English and Spanish, and you can write invoice
+                        descriptions in whatever language you need. You can also adjust currency, tax
+                        details, and notes in your templates.
+                    {% endif %}
+                </p>
+            </article>
+
+            <!-- Q6 -->
+            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 16px; margin: 0 0 6px;">
+                    {% if lang == 'es' %}
+                        ¿BillBeam reemplaza a mi contable?
+                    {% else %}
+                        Does BillBeam replace my accountant?
+                    {% endif %}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
+                    {% if lang == 'es' %}
+                        No. BillBeam te ayuda con el día a día de emitir y organizar facturas, pero no
+                        da asesoría legal, fiscal o contable. Para temas de impuestos o normativa siempre
+                        es mejor hablar con un profesional.
+                    {% else %}
+                        No. BillBeam helps with the day-to-day of sending and organizing invoices, but it
+                        doesn’t give legal, tax, or accounting advice. For tax questions or compliance,
+                        it’s always best to talk to a professional.
+                    {% endif %}
+                </p>
+            </article>
+        </div>
+
+        <!-- RIGHT COLUMN: QUICK INFO / CONTACT -->
+        <aside style="display: flex; flex-direction: column; gap: 14px;">
+            <section style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.8; margin:0 0 8px;">
+                    {% if lang == 'es' %}Resumen rápido{% else %}At a glance{% endif %}
+                </h2>
+                <ul style="margin: 0; padding-left: 16px; font-size: 13px; opacity: 0.9;">
+                    {% if lang == 'es' %}
+                        <li>Starter: hasta 10 facturas/mes, sin tarjeta.</li>
+                        <li>Pro: facturas ilimitadas, email integrado y más automatización.</li>
+                        <li>Puedes exportar y llevarte tus datos cuando quieras.</li>
+                    {% else %}
+                        <li>Starter: up to 10 invoices / month, no card required.</li>
+                        <li>Pro: unlimited invoices, built-in email, more automation.</li>
+                        <li>You can export and take your data with you any time.</li>
+                    {% endif %}
+                </ul>
+            </section>
+
+            <section style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
+                <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.8; margin:0 0 8px;">
+                    {% if lang == 'es' %}¿Sigues con dudas?{% else %}Still have questions?{% endif %}
+                </h2>
+                <p style="font-size: 13px; opacity: 0.9; margin: 0 0 8px;">
+                    {% if lang == 'es' %}
+                        Abre el asistente de BillBeam abajo a la derecha o crea una cuenta y pregúntale
+                        directamente dentro del panel.
+                    {% else %}
+                        Open the BillBeam assistant in the bottom-right corner, or create an account and
+                        ask it directly from your dashboard.
+                    {% endif %}
+                </p>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
+                    <a href="/register{% if lang %}?lang={{ lang }}{% endif %}"
+                       style="font-size: 13px; padding: 6px 10px; border-radius: 999px; border: none; background:#3b82f6; color:#fff; text-decoration:none;">
+                        {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
+                    </a>
+                    <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}"
+                       style="font-size: 13px; padding: 6px 10px; border-radius: 999px; border:1px solid rgba(148,163,184,0.6); text-decoration:none;">
+                        {% if lang == 'es' %}Ver planes{% else %}View plans{% endif %}
+                    </a>
+                </div>
+            </section>
+        </aside>
+    </section>
 </div>
-
-<div class="table-wrapper fade-in-up" style="max-width:980px;">
-    <table class="modern-table">
-        <thead>
-            <tr>
-                <th style="width:120px;">
-                    {% if lang == 'es' %}Versión{% else %}Version{% endif %}
-                </th>
-                <th style="width:140px;">
-                    {% if lang == 'es' %}Fecha{% else %}Date{% endif %}
-                </th>
-                <th>
-                    {% if lang == 'es' %}Cambios{% else %}Changes{% endif %}
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- v2.1 -->
-            <tr>
-                <td data-label="Version">v2.1</td>
-                <td data-label="Date">2026-03-02</td>
-                <td data-label="Changes">
-                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
-                        <li>
-                            {% if lang == 'es' %}
-                                Nueva página pública de lanzamiento y checklist de lanzamiento.
-                            {% else %}
-                                New public launch page and launch checklist page.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Mejora de la vista pública de factura con historial de pagos,
-                                notas, adjuntos e imagen de firma.
-                            {% else %}
-                                Improved public invoice view with payment history, notes,
-                                attachments, and signature image.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Selector de idioma EN / ES más visible en la barra superior.
-                            {% else %}
-                                More visible EN / ES language toggle in the top bar.
-                            {% endif %}
-                        </li>
-                    </ul>
-                </td>
-            </tr>
-
-            <!-- v2.0 -->
-            <tr>
-                <td data-label="Version">v2.0</td>
-                <td data-label="Date">2026-02-20</td>
-                <td data-label="Changes">
-                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
-                        <li>
-                            {% if lang == 'es' %}
-                                Rediseño del panel con métricas, tarjetas y modo oscuro.
-                            {% else %}
-                                Redesigned dashboard with metrics, cards, and dark mode.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Asistente BillBeam integrado para ayuda contextual dentro de la app.
-                            {% else %}
-                                Integrated BillBeam Assistant for contextual in-app help.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Nuevos estilos de facturas y vista previa mejorada antes de guardar.
-                            {% else %}
-                                New invoice styles and improved preview before saving.
-                            {% endif %}
-                        </li>
-                    </ul>
-                </td>
-            </tr>
-
-            <!-- v1.5 -->
-            <tr>
-                <td data-label="Version">v1.5</td>
-                <td data-label="Date">2025-11-10</td>
-                <td data-label="Changes">
-                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
-                        <li>
-                            {% if lang == 'es' %}
-                                Soporte para pagos parciales y balance pendiente por factura.
-                            {% else %}
-                                Support for partial payments and per-invoice outstanding balances.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Historial de facturas mejorado con filtros básicos.
-                            {% else %}
-                                Improved invoice history with basic filters.
-                            {% endif %}
-                        </li>
-                    </ul>
-                </td>
-            </tr>
-
-            <!-- v1.0 -->
-            <tr>
-                <td data-label="Version">v1.0</td>
-                <td data-label="Date">2025-06-01</td>
-                <td data-label="Changes">
-                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
-                        <li>
-                            {% if lang == 'es' %}
-                                Primera versión pública de BillBeam con creación de facturas,
-                                envío por correo básico e historial inicial.
-                            {% else %}
-                                First public version of BillBeam with invoice creation, basic
-                                email sending, and initial history view.
-                            {% endif %}
-                        </li>
-                    </ul>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
 {% endblock %}

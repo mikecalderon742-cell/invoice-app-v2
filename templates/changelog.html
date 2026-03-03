@@ -1,115 +1,153 @@
 {% extends "base.html" %}
+
 {% block content %}
+<div style="max-width: 900px; margin: 0 auto 28px;">
+    <header style="margin-bottom: 20px;">
+        <p style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.75;">
+            {% if lang == 'es' %}Registro de cambios{% else %}Changelog{% endif %}
+        </p>
+        <h1 style="font-size: 26px; margin: 0 0 6px;">
+            {% if lang == 'es' %}
+                Cómo ha ido evolucionando BillBeam
+            {% else %}
+                How BillBeam is evolving over time
+            {% endif %}
+        </h1>
+        <p style="font-size: 14px; opacity: 0.8; max-width: 560px;">
+            {% if lang == 'es' %}
+                Un resumen de las mejoras recientes en el creador de facturas, el panel y el asistente de IA.
+            {% else %}
+                A running log of improvements to the invoice editor, dashboard, and in-app AI assistant.
+            {% endif %}
+        </p>
+    </header>
 
-{% set lang = request.args.get('lang', 'en') %}
+    <section style="display:flex; flex-direction:column; gap:16px;">
+        <!-- v2.1 – AI assistant + landing -->
+        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
+            <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+                <div>
+                    <h2 style="font-size:16px; margin:0 0 4px;">
+                        {% if lang == 'es' %}
+                            v2.1 — Asistente BillBeam y nueva landing
+                        {% else %}
+                            v2.1 — BillBeam Assistant & new landing
+                        {% endif %}
+                    </h2>
+                    <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
+                        {% if lang == 'es' %}
+                            Lanzado en 2026
+                        {% else %}
+                            Shipped in 2026
+                        {% endif %}
+                    </p>
+                </div>
+                <span style="font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid rgba(56,189,248,0.7); opacity:0.9;">
+                    {% if lang == 'es' %}Actual{% else %}Current{% endif %}
+                </span>
+            </div>
+            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
+                {% if lang == 'es' %}
+                    <li>Nuevo asistente de IA dentro del panel, accesible desde la parte inferior derecha.</li>
+                    <li>Responde en inglés o español según el idioma de la interfaz.</li>
+                    <li>Plantilla pública de landing / marketing con mensajes claros para freelancers.</li>
+                    <li>Mejoras visuales en el modo oscuro y el tema de marca por defecto.</li>
+                {% else %}
+                    <li>New in-app AI assistant, accessible from the bottom-right of your dashboard.</li>
+                    <li>Answers in English or Spanish based on the interface language.</li>
+                    <li>Public marketing landing page tuned for freelancers and small studios.</li>
+                    <li>Visual polish to dark mode and default brand theme.</li>
+                {% endif %}
+            </ul>
+        </article>
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}Novedades & cambios{% else %}What’s new & changelog{% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-        </a>
-        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
-        </a>
-    </div>
-</div>
+        <!-- v2.0 – Analytics & client portal -->
+        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
+            <h2 style="font-size:16px; margin:0 0 4px;">
+                {% if lang == 'es' %}
+                    v2.0 — Panel de métricas y vista pública de facturas
+                {% else %}
+                    v2.0 — Analytics dashboard & public invoice view
+                {% endif %}
+            </h2>
+            <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
+                {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
+            </p>
+            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
+                {% if lang == 'es' %}
+                    <li>KPIs clave en la parte superior del historial de facturas:
+                        ingresos, facturas pagadas y vencidas, ticket promedio.</li>
+                    <li>Gráficas de ingresos mensuales y diarios para ver tendencias.</li>
+                    <li>Enlaces públicos para que tus clientes vean la factura y descarguen el PDF.</li>
+                    <li>Detección automática de facturas vencidas según la fecha de vencimiento.</li>
+                {% else %}
+                    <li>Key KPIs above invoice history: revenue, paid vs overdue, and average invoice size.</li>
+                    <li>Monthly and daily revenue charts to spot trends at a glance.</li>
+                    <li>Public invoice links so clients can view and download PDFs in a browser.</li>
+                    <li>Automatic “Overdue” status once invoices pass their due date.</li>
+                {% endif %}
+            </ul>
+        </article>
 
-<div class="form-wrapper fade-in-up">
-    <p style="font-size:14px; opacity:.85;">
+        <!-- v1.5 – Clients & payments -->
+        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
+            <h2 style="font-size:16px; margin:0 0 4px;">
+                {% if lang == 'es' %}
+                    v1.5 — Gestión de clientes y pagos parciales
+                {% else %}
+                    v1.5 — Clients & partial payments
+                {% endif %}
+            </h2>
+            <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
+                {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
+            </p>
+            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
+                {% if lang == 'es' %}
+                    <li>Sección de clientes para ver y reutilizar datos de contacto.</li>
+                    <li>Registro de pagos parciales con método y notas por factura.</li>
+                    <li>Cálculo automático del saldo pendiente de cada factura.</li>
+                {% else %}
+                    <li>Clients section to store and reuse contact details.</li>
+                    <li>Partial payments with method and notes per invoice.</li>
+                    <li>Automatic remaining balance calculation for each invoice.</li>
+                {% endif %}
+            </ul>
+        </article>
+
+        <!-- v1.0 – First release -->
+        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
+            <h2 style="font-size:16px; margin:0 0 4px;">
+                {% if lang == 'es' %}
+                    v1.0 — Creador de facturas minimalista
+                {% else %}
+                    v1.0 — Minimalist invoice creator
+                {% endif %}
+            </h2>
+            <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
+                {% if lang == 'es' %}Lanzado en 2024{% else %}Shipped in 2024{% endif %}
+            </p>
+            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
+                {% if lang == 'es' %}
+                    <li>Formulario sencillo de creación de facturas con concepto + importe.</li>
+                    <li>Descarga de PDF lista para enviar a clientes.</li>
+                    <li>Historial básico de facturas en una sola vista.</li>
+                {% else %}
+                    <li>Simple invoice creation flow with client + line items + totals.</li>
+                    <li>PDF download ready to send to clients.</li>
+                    <li>Basic invoice history in a single list view.</li>
+                {% endif %}
+            </ul>
+        </article>
+    </section>
+
+    <footer style="margin-top: 28px; font-size: 13px; opacity: 0.85;">
         {% if lang == 'es' %}
-            Aquí verás un resumen rápido de las mejoras recientes en BillBeam.
-            Puedes usar esta página como referencia cuando comuniques cambios a tus clientes.
+            ¿Quieres ver qué viene después? Las próximas ideas suelen empezar como notas aquí
+            antes de llegar al producto.
         {% else %}
-            Here you’ll see a quick summary of recent improvements to BillBeam.
-            You can use this page as a reference when communicating changes to your clients.
+            Want to see what comes next? Future ideas usually start as notes here
+            before they ship into the product.
         {% endif %}
-    </p>
-
-    <div class="timeline" style="margin-top:18px;">
-
-        <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-body">
-                <div class="timeline-top">
-                    <strong>
-                        {% if lang == 'es' %}
-                            Versión 1.0 – Lanzamiento inicial
-                        {% else %}
-                            Version 1.0 – Initial launch
-                        {% endif %}
-                    </strong>
-                    <span class="muted">2025-01-01</span>
-                </div>
-                <div class="timeline-sub">
-                    {% if lang == 'es' %}
-                        Creación de facturas, historial, clientes básicos y descarga de PDF.
-                    {% else %}
-                        Invoice creation, history, basic clients, and PDF download.
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-body">
-                <div class="timeline-top">
-                    <strong>
-                        {% if lang == 'es' %}
-                            Panel mejorado & gráficos
-                        {% else %}
-                            Improved dashboard & charts
-                        {% endif %}
-                    </strong>
-                    <span class="muted">2025-02-01</span>
-                </div>
-                <div class="timeline-sub">
-                    {% if lang == 'es' %}
-                        Nuevas tarjetas de métricas, gráfico de ingresos mensuales y servicios principales.
-                    {% else %}
-                        New KPI cards, monthly revenue chart, and top services analytics.
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-body">
-                <div class="timeline-top">
-                    <strong>
-                        {% if lang == 'es' %}
-                            Portal público & firma del cliente
-                        {% else %}
-                            Public portal & client signature
-                        {% endif %}
-                    </strong>
-                    <span class="muted">2025-03-01</span>
-                </div>
-                <div class="timeline-sub">
-                    {% if lang == 'es' %}
-                        Portal de facturas para clientes con descarga de PDF, historial de pagos
-                        y soporte para firma en la factura.
-                    {% else %}
-                        Client-facing invoice portal with PDF download, payment history,
-                        and invoice signature support.
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <p style="margin-top:20px; font-size:13px; opacity:.7;">
-        {% if lang == 'es' %}
-            Próximamente añadiremos más entradas de cambios a medida que lancemos nuevas funciones.
-        {% else %}
-            We’ll add more entries here as we ship new features.
-        {% endif %}
-    </p>
+    </footer>
 </div>
-
 {% endblock %}
