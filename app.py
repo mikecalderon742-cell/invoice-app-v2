@@ -1972,6 +1972,10 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     amount_float = float(amount)
     template_style = (template_style or "modern").lower()
 
+    # Business name for header (fallback to BillBeam)
+    profile = get_business_profile()
+    business_name = profile.get("business_name") or "BillBeam"
+
     c.execute(
         "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
         (invoice_id,),
@@ -1984,17 +1988,16 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     page_width, page_height = LETTER
 
     # ---------- TEMPLATE STYLES ----------
-
+    # Use brand/business name as the header title
     header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
-    title_text = "Invoice"
     accent_color = header_bar_color
+    title_text = business_name  # 👈 main title is your business name
 
     if template_style == "minimal":
         header_bar_color = (0.18, 0.20, 0.24)  # dark slate
         accent_color = (0.6, 0.6, 0.65)
     elif template_style == "bold":
         header_bar_color = (0.97, 0.45, 0.09)  # orange
-        title_text = "Invoice Statement"
         accent_color = (0.97, 0.45, 0.09)
     elif template_style == "doodle":
         header_bar_color = (0.33, 0.27, 0.96)  # purple/blue
