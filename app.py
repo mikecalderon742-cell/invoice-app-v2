@@ -17,6 +17,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import stripe  # installed and ready
 from openai import OpenAI  # ✅ AI helper
+from flask import request, jsonify
+
+client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY"))
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -2881,6 +2884,81 @@ Never:
     except Exception as e:
         # Don't blow up the app on AI issues
         return {"error": f"AI error: {e}"}, 500
+
+
+@app.route("/api/ai-assistant", methods=["POST"])
+def api_ai_assistant():
+    data = request.get_json() or {}
+    user_message = (data.get("message") or "").strip()
+    lang = data.get("lang") or request.args.get("lang", "en")
+    page = data.get("page") or ""
+    extra = data.get("extra_context") or {}
+
+    if not user_message:
+        return jsonify({"error": "No message provided."}), 400
+
+    # You can enrich this with actual data later (totals, top clients, etc.)
+    # For now we give the model context about what BillBeam is.
+    if lang == "es":
+        system_prompt = (
+            "Eres InvoicePro Assistant, un asistente amable y claro dentro de BillBeam, "
+            "una app de facturación para freelancers y pequeños negocios. "
+            "Tu trabajo es ayudar a los usuarios a:\n"
+            "- Entender su panel de facturas y métricas (ingresos, estados, clientes principales).\n"
+            "- Redactar notas de facturas, recordatorios de pago y correos de seguimiento.\n"
+            "- Decidir cómo organizar conceptos (servicios, horas, productos) y términos de pago.\n"
+            "- Dar sugerencias de buenas prácticas, siempre con un tono breve, calmado y práctico.\n"
+            "Evita respuestas muy largas. No inventes datos numéricos específicos del usuario; "
+            "si necesitas un número exacto, di que no puedes verlo directamente y sugiere dónde buscarlo en BillBeam. "
+            "Nunca inventes información sobre pagos reales o clientes específicos."
+        )
+    else:
+        system_prompt = (
+            "You are InvoicePro Assistant, a warm, practical AI living inside BillBeam, "
+            "an invoicing app for freelancers and small businesses. "
+            "Your job is to help users:\n"
+            "- Understand their invoice dashboard and metrics (revenue, statuses, top clients).\n"
+            "- Draft invoice notes, payment reminders, and follow-up emails.\n"
+            "- Decide how to structure line items (services, hours, products) and payment terms.\n"
+            "- Suggest best practices in a short, calm, encouraging tone.\n"
+            "Keep answers concise (a few short paragraphs max). "
+            "Do not fabricate specific user numbers; if you’d need live data, say you can’t see it directly "
+            "and point them to where in BillBeam they can check. "
+            "Never make up details about specific clients or actual payments."
+        )
+
+    # Optional: include some context hints
+    context_hint_parts = []
+    if page:
+        context_hint_parts.append(f"User is currently on the page: {page}.")
+    if extra:
+        context_hint_parts.append(f"Extra context: {extra}")
+
+    context_hint = "\n".join(context_hint_parts)
+
+    user_content = user_message
+    if context_hint:
+        user_content = context_hint + "\n\nUser question:\n" + user_message
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.4,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+        )
+        reply = completion.choices[0].message.content
+        return jsonify({"reply": reply})
+    except Exception as e:
+        # You can log this properly if you like
+        print("AI error:", e)
+        if lang == "es":
+            msg = "Lo siento, el asistente tuvo un problema. Intenta de nuevo en un momento."
+        else:
+            msg = "Sorry, the assistant ran into a problem. Try again in a moment."
+        return jsonify({"error": msg}), 500
 
 
 @app.route("/stripe/webhook", methods=["POST"])
