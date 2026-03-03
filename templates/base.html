@@ -194,6 +194,32 @@
     body.dark .kpi-live-label {
         color: #9ca3af;
     }
+
+    /* ---------- FOOTER LINKS ---------- */
+    .footer-links {
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:center;
+        gap:16px;
+        font-size:13px;
+        margin-bottom:6px;
+        opacity:0.9;
+    }
+
+    .footer-links a {
+        color:inherit;
+        text-decoration:none;
+    }
+
+    .footer-links a:hover {
+        text-decoration:underline;
+    }
+
+    .footer-copy {
+        font-size:12px;
+        opacity:0.65;
+        text-align:center;
+    }
     </style>
 </head>
 
@@ -378,7 +404,23 @@
 </div>
 
 <footer class="footer">
-   © • BillBeam v2.1 • Mike Calderon • 2026
+    <div class="footer-links">
+        <a href="/about{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Acerca de{% else %}About{% endif %}
+        </a>
+        <a href="/help{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Ayuda{% else %}Help{% endif %}
+        </a>
+        <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}">
+            FAQ
+        </a>
+        <a href="/changelog{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Cambios{% else %}Changelog{% endif %}
+        </a>
+    </div>
+    <div class="footer-copy">
+        © • BillBeam v2.1 • Mike Calderon • {{ now().year }}
+    </div>
 </footer>
 
 <div id="loader" class="loader"></div>
