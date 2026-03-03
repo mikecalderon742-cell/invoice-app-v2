@@ -195,6 +195,48 @@
         color: #9ca3af;
     }
 
+    /* ---------- LANGUAGE TOGGLE PILL ---------- */
+    .lang-toggle {
+        display:inline-flex;
+        align-items:center;
+        gap:4px;
+        padding:3px;
+        border-radius:999px;
+        background:rgba(15,23,42,0.06);
+        border:1px solid rgba(148,163,184,0.4);
+        margin-right:10px;
+    }
+
+    body.dark .lang-toggle {
+        background:rgba(15,23,42,0.8);
+        border-color:rgba(148,163,184,0.8);
+    }
+
+    .lang-toggle a {
+        font-size:11px;
+        padding:4px 9px;
+        border-radius:999px;
+        text-decoration:none;
+        color:inherit;
+        opacity:0.7;
+        transition:background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .lang-toggle a:hover {
+        opacity:1;
+    }
+
+    .lang-toggle a.active {
+        background:var(--accent);
+        color:#ffffff;
+        opacity:1;
+    }
+
+    body.dark .lang-toggle a.active {
+        background:var(--accent-light);
+        color:#020617;
+    }
+
     /* ---------- FOOTER LINKS ---------- */
     .footer-links {
         display:flex;
@@ -331,6 +373,18 @@
             <span style="opacity:0.8; font-size:14px;">
                 {% if lang == 'es' %}Vista de cliente{% else %}Client View{% endif %}
             </span>
+
+            <div class="lang-toggle">
+                <a
+                    href="{{ request.path }}?lang=en"
+                    class="{% if lang != 'es' %}active{% endif %}"
+                >EN</a>
+                <a
+                    href="{{ request.path }}?lang=es"
+                    class="{% if lang == 'es' %}active{% endif %}"
+                >ES</a>
+            </div>
+
             <button id="themeToggle" class="theme-toggle">🌙</button>
         {% else %}
             {% if is_authenticated %}
@@ -352,6 +406,18 @@
                 <a href="/logout">
                     {% if lang == 'es' %}Cerrar sesión{% else %}Logout{% endif %}
                 </a>
+
+                <div class="lang-toggle">
+                    <a
+                        href="{{ request.path }}?lang=en"
+                        class="{% if lang != 'es' %}active{% endif %}"
+                    >EN</a>
+                    <a
+                        href="{{ request.path }}?lang=es"
+                        class="{% if lang == 'es' %}active{% endif %}"
+                    >ES</a>
+                </div>
+
                 <button id="themeToggle" class="theme-toggle">🌙</button>
             {% else %}
                 <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
@@ -369,6 +435,18 @@
                 <a href="/register{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Crear cuenta{% else %}Sign Up{% endif %}
                 </a>
+
+                <div class="lang-toggle">
+                    <a
+                        href="{{ request.path }}?lang=en"
+                        class="{% if lang != 'es' %}active{% endif %}"
+                    >EN</a>
+                    <a
+                        href="{{ request.path }}?lang=es"
+                        class="{% if lang == 'es' %}active{% endif %}"
+                    >ES</a>
+                </div>
+
                 <button id="themeToggle" class="theme-toggle">🌙</button>
             {% endif %}
         {% endif %}

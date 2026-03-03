@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="checklist-shell">
+    <header class="checklist-header">
+        <h1>
+            {% if lang == 'es' %}
+                Checklist de lanzamiento de BillBeam
+            {% else %}
+                BillBeam Launch Checklist
+            {% endif %}
+        </h1>
+        <p>
+            {% if lang == 'es' %}
+                Una vista rápida de todo lo que queda por hacer desde ahora hasta el día de lanzamiento.
+            {% else %}
+                A quick view of everything from now through launch day.
+            {% endif %}
+        </p>
+        <span class="checklist-tag">v1.0</span>
+    </header>
+
+    <div class="checklist-grid">
+
+        <!-- Phase: Polish & Stability -->
+        <section class="checklist-card">
+            <h2>0. {% if lang == 'es' %}Estabilidad y pulido{% else %}Stability & polish{% endif %}</h2>
+            <ul>
+                <li>✔ Signature canvas & PDF output feel right</li>
+                <li>✔ All screens responsive (mobile, tablet, desktop)</li>
+                <li>✔ Charts readable on small screens</li>
+                <li>✔ No obvious 500 errors in normal flows</li>
+                <li>✔ All main buttons visible & centered</li>
+            </ul>
+        </section>
+
+        <!-- Phase: Spanish & UX -->
+        <section class="checklist-card">
+            <h2>1. {% if lang == 'es' %}Experiencia bilingüe{% else %}Bilingual experience{% endif %}</h2>
+            <ul>
+                <li>✔ EN/ES toggle wired on all main routes</li>
+                <li>✔ App copy translated where it matters (clients & invoices)</li>
+                <li>✔ Email templates tested in English and Spanish</li>
+                <li>✔ Public invoice portal looks good in both languages</li>
+            </ul>
+        </section>
+
+        <!-- Phase: Launch Day Setup -->
+        <section class="checklist-card">
+            <h2>2. {% if lang == 'es' %}Día de lanzamiento{% else %}Launch day{% endif %}</h2>
+            <ul>
+                <li>⬜ Create Product Hunt listing assets</li>
+                <li>⬜ Short Loom walkthrough of the app</li>
+                <li>⬜ Screenshots for landing + socials</li>
+                <li>⬜ Draft announcement posts (X, Threads, LinkedIn)</li>
+                <li>⬜ Decide launch day & time</li>
+            </ul>
+        </section>
+
+        <!-- Phase: After Launch -->
+        <section class="checklist-card">
+            <h2>3. {% if lang == 'es' %}Después del lanzamiento{% else %}Post-launch{% endif %}</h2>
+            <ul>
+                <li>⬜ Add simple feedback form / link</li>
+                <li>⬜ Track first 10–20 users & their use cases</li>
+                <li>⬜ Capture testimonials & friction points</li>
+                <li>⬜ Decide the next “one big thing” after launch</li>
+            </ul>
+        </section>
+
+    </div>
+
+    <div class="checklist-footer">
+        {% if lang == 'es' %}
+            ¿Algo nuevo que quieras añadir? Solo edita este archivo HTML;
+            la estructura ya está lista para crecer.
+        {% else %}
+            Want to add more? Just edit this HTML file – the structure is ready to grow with you.
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.checklist-shell {
+    max-width: 920px;
+    margin: 24px auto 10px;
+}
+.checklist-header {
+    position: relative;
+    margin-bottom: 20px;
+}
+.checklist-header h1 {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+}
+.checklist-header p {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    max-width: 520px;
+}
+.checklist-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.6);
+    opacity: 0.8;
+}
+.checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+.checklist-card {
+    border-radius: 16px;
+    padding: 14px 14px 10px;
+    background: var(--card-light);
+    border: 1px solid var(--border-subtle-light);
+    font-size: 0.9rem;
+}
+body.dark .checklist-card {
+    background: radial-gradient(circle at top left, #111827, #020617);
+    border-color: var(--border-subtle-dark);
+}
+.checklist-card h2 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+}
+.checklist-card ul {
+    padding-left: 18px;
+}
+.checklist-card li + li {
+    margin-top: 3px;
+}
+.checklist-footer {
+    font-size: 0.8rem;
+    opacity: 0.75;
+    margin-top: 14px;
+}
+</style>
+
+{% endblock %}
