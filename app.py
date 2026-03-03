@@ -762,13 +762,6 @@ def home():
     return render_template("index.html", clients=clients)
 
 
-@app.route("/")
-def home():
-    if current_user.is_authenticated:
-        return redirect(url_for("invoices"))
-    return render_template("landing.html")
-
-
 # -------------------------
 # AUTH
 # -------------------------
@@ -946,11 +939,6 @@ def faq_page():
 @app.route("/changelog")
 def changelog_page():
     return render_template("changelog.html")
-
-
-@app.route("/landing")
-def marketing_landing():
-    return render_template("landing.html")
 
 
 # Stub route so url_for('create_checkout_session') works.
@@ -1993,6 +1981,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     page_width, page_height = LETTER
 
     # ---------- TEMPLATE STYLES ----------
+
     header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
     title_text = "Invoice"
     accent_color = header_bar_color
@@ -2829,7 +2818,7 @@ def ai_helper():
             kpi_summary = ""
 
     # Very small context string so the model knows the app shape
-        app_context = f"""
+    app_context = f"""
 You are the in-app assistant for an invoicing web app called BillBeam.
 
 User language code for this request: '{user_lang}'.
