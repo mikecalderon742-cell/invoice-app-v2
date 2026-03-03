@@ -1,113 +1,145 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% set lang = request.args.get('lang', 'en') %}
-
 <div class="dashboard-header">
-    <h1>FAQ</h1>
+    <h1>
+        {% if lang == 'es' %}
+            Registro de cambios
+        {% else %}
+            Changelog
+        {% endif %}
+    </h1>
     <div class="quick-actions">
-        <a href="/?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-        </a>
-        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
         </a>
     </div>
 </div>
 
-<div class="form-wrapper fade-in-up">
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}
-            Preguntas frecuentes
-        {% else %}
-            Frequently asked questions
-        {% endif %}
-    </h2>
+<div class="table-wrapper fade-in-up" style="max-width:980px;">
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th style="width:120px;">
+                    {% if lang == 'es' %}Versión{% else %}Version{% endif %}
+                </th>
+                <th style="width:140px;">
+                    {% if lang == 'es' %}Fecha{% else %}Date{% endif %}
+                </th>
+                <th>
+                    {% if lang == 'es' %}Cambios{% else %}Changes{% endif %}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- v2.1 -->
+            <tr>
+                <td data-label="Version">v2.1</td>
+                <td data-label="Date">2026-03-02</td>
+                <td data-label="Changes">
+                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+                        <li>
+                            {% if lang == 'es' %}
+                                Nueva página pública de lanzamiento y checklist de lanzamiento.
+                            {% else %}
+                                New public launch page and launch checklist page.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Mejora de la vista pública de factura con historial de pagos,
+                                notas, adjuntos e imagen de firma.
+                            {% else %}
+                                Improved public invoice view with payment history, notes,
+                                attachments, and signature image.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Selector de idioma EN / ES más visible en la barra superior.
+                            {% else %}
+                                More visible EN / ES language toggle in the top bar.
+                            {% endif %}
+                        </li>
+                    </ul>
+                </td>
+            </tr>
 
-    <div class="public-card">
-        <div class="card-title">
-            {% if lang == 'es' %}
-                ¿Puedo usar BillBeam gratis?
-            {% else %}
-                Can I use BillBeam for free?
-            {% endif %}
-        </div>
-        <p style="font-size:14px; opacity:.9;">
-            {% if lang == 'es' %}
-                Sí. El plan Starter te permite crear hasta 10 facturas al mes
-                con el panel básico y PDF descargable.
-            {% else %}
-                Yes. The Starter plan lets you create up to 10 invoices per month
-                with the basic dashboard and downloadable PDFs.
-            {% endif %}
-        </p>
-    </div>
+            <!-- v2.0 -->
+            <tr>
+                <td data-label="Version">v2.0</td>
+                <td data-label="Date">2026-02-20</td>
+                <td data-label="Changes">
+                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+                        <li>
+                            {% if lang == 'es' %}
+                                Rediseño del panel con métricas, tarjetas y modo oscuro.
+                            {% else %}
+                                Redesigned dashboard with metrics, cards, and dark mode.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Asistente BillBeam integrado para ayuda contextual dentro de la app.
+                            {% else %}
+                                Integrated BillBeam Assistant for contextual in-app help.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Nuevos estilos de facturas y vista previa mejorada antes de guardar.
+                            {% else %}
+                                New invoice styles and improved preview before saving.
+                            {% endif %}
+                        </li>
+                    </ul>
+                </td>
+            </tr>
 
-    <div class="public-card">
-        <div class="card-title">
-            {% if lang == 'es' %}
-                ¿Qué incluye el plan Pro?
-            {% else %}
-                What does the Pro plan include?
-            {% endif %}
-        </div>
-        <p style="font-size:14px; opacity:.9;">
-            {% if lang == 'es' %}
-                Pro desbloquea facturas ilimitadas, funciones avanzadas de envío
-                por correo, plantillas adicionales y más ayuda con IA para interpretar
-                tus métricas y redactar mensajes.
-            {% else %}
-                Pro unlocks unlimited invoices, advanced email sending, additional
-                templates, and more AI help for interpreting your metrics and
-                drafting messages.
-            {% endif %}
-            <br>
-            <a href="/pricing?lang={{ lang }}" style="font-size:13px;">
-                {% if lang == 'es' %}Ver detalles de precios{% else %}View pricing details{% endif %}
-            </a>
-        </p>
-    </div>
+            <!-- v1.5 -->
+            <tr>
+                <td data-label="Version">v1.5</td>
+                <td data-label="Date">2025-11-10</td>
+                <td data-label="Changes">
+                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+                        <li>
+                            {% if lang == 'es' %}
+                                Soporte para pagos parciales y balance pendiente por factura.
+                            {% else %}
+                                Support for partial payments and per-invoice outstanding balances.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Historial de facturas mejorado con filtros básicos.
+                            {% else %}
+                                Improved invoice history with basic filters.
+                            {% endif %}
+                        </li>
+                    </ul>
+                </td>
+            </tr>
 
-    <div class="public-card">
-        <div class="card-title">
-            {% if lang == 'es' %}
-                ¿Cómo envío una factura a un cliente?
-            {% else %}
-                How do I email an invoice to a client?
-            {% endif %}
-        </div>
-        <p style="font-size:14px; opacity:.9;">
-            {% if lang == 'es' %}
-                Desde el historial de facturas, haz clic en “Enviar” en la factura
-                que quieras enviar. Podrás revisar el correo y el enlace público
-                antes de enviarlo. Esta opción requiere el plan Pro.
-            {% else %}
-                From the invoice history, click “Send” on the invoice you want to
-                email. You’ll be able to review the email and public link before
-                sending. This feature requires the Pro plan.
-            {% endif %}
-        </p>
-    </div>
-
-    <div class="public-card">
-        <div class="card-title">
-            {% if lang == 'es' %}
-                ¿Puedo cambiar mi información de negocio y logo?
-            {% else %}
-                Can I change my business info and logo?
-            {% endif %}
-        </div>
-        <p style="font-size:14px; opacity:.9;">
-            {% if lang == 'es' %}
-                Sí. Ve a la página de “Business Profile & Branding” en el menú
-                de ajustes para actualizar nombre, dirección, logo y colores.
-            {% else %}
-                Yes. Go to the “Business Profile & Branding” page in settings to
-                update your name, address, logo, and colors.
-            {% endif %}
-        </p>
-    </div>
-
+            <!-- v1.0 -->
+            <tr>
+                <td data-label="Version">v1.0</td>
+                <td data-label="Date">2025-06-01</td>
+                <td data-label="Changes">
+                    <ul style="margin:0; padding-left:1.2rem; font-size:0.9rem;">
+                        <li>
+                            {% if lang == 'es' %}
+                                Primera versión pública de BillBeam con creación de facturas,
+                                envío por correo básico e historial inicial.
+                            {% else %}
+                                First public version of BillBeam with invoice creation, basic
+                                email sending, and initial history view.
+                            {% endif %}
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 {% endblock %}

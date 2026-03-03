@@ -1,136 +1,140 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% set lang = request.args.get('lang', 'en') %}
-
 <div class="dashboard-header">
     <h1>
-        {% if lang == 'es' %}Ayuda & Soporte{% else %}Help & Support{% endif %}
+        {% if lang == 'es' %}
+            Centro de ayuda
+        {% else %}
+            Help Center
+        {% endif %}
     </h1>
     <div class="quick-actions">
-        <a href="/?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-        </a>
-        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Ver preguntas frecuentes{% else %}View FAQs{% endif %}
         </a>
     </div>
 </div>
 
-<div class="form-wrapper fade-in-up">
+<div class="form-wrapper fade-in-up" style="max-width:900px;">
+    <section class="reveal" style="margin-bottom:24px;">
+        <h2 style="margin-top:0;">
+            {% if lang == 'es' %}
+                Empezar con BillBeam
+            {% else %}
+                Getting started with BillBeam
+            {% endif %}
+        </h2>
+        <ol style="font-size:0.95rem; padding-left:1.4rem; margin-top:10px;">
+            <li>
+                {% if lang == 'es' %}
+                    Crea una cuenta o inicia sesión con tu correo.
+                {% else %}
+                    Create an account or sign in with your email.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Configura tu perfil de negocio en la sección de Configuración (logo, nombre,
+                    datos de contacto).
+                {% else %}
+                    Set up your business profile in Settings (logo, name, contact details).
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Usa “Crear factura” para capturar a tu cliente, agregar conceptos y revisar
+                    el total.
+                {% else %}
+                    Use “Create Invoice” to add your client, line items, and review the total.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Guarda la factura y, si quieres, envíala por correo directamente desde
+                    BillBeam.
+                {% else %}
+                    Save the invoice and optionally send it by email directly from BillBeam.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Registra pagos desde el historial de facturas para mantener tu balance al día.
+                {% else %}
+                    Record payments from the invoice history to keep your balances up to date.
+                {% endif %}
+            </li>
+        </ol>
+    </section>
 
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}
-            ¿Necesitas ayuda con BillBeam?
-        {% else %}
-            Need help with BillBeam?
-        {% endif %}
-    </h2>
+    <section class="reveal" style="margin-bottom:24px;">
+        <h3>
+            {% if lang == 'es' %}¿Cómo uso la vista pública de factura?{% else %}How do public invoice links work?{% endif %}
+        </h3>
+        <p style="font-size:0.95rem; opacity:0.9;">
+            {% if lang == 'es' %}
+                Cuando guardas una factura, BillBeam puede generar un enlace público seguro
+                para tu cliente. Desde ese enlace, tu cliente puede ver un resumen moderno de
+                la factura, el historial de pagos y descargar el PDF.
+            {% else %}
+                When you save an invoice, BillBeam can generate a secure public link for your
+                client. From that link, they can see a modern invoice summary, payment history,
+                and download the PDF.
+            {% endif %}
+        </p>
+        <p style="font-size:0.9rem; opacity:0.85;">
+            {% if lang == 'es' %}
+                El enlace está pensado para compartirse por correo o mensajería. No lo publiques
+                en páginas abiertas si incluye información sensible.
+            {% else %}
+                The link is meant to be shared via email or messaging. Avoid posting it on fully
+                public pages if it contains sensitive information.
+            {% endif %}
+        </p>
+    </section>
 
-    <p style="font-size:14px; opacity:.9; line-height:1.6;">
-        {% if lang == 'es' %}
-            Aquí tienes algunas rutas rápidas para resolver problemas comunes. Si aún
-            necesitas ayuda, puedes escribirnos por correo.
-        {% else %}
-            Here are some quick paths to solve common issues. If you still need help,
-            you can always reach us by email.
-        {% endif %}
-    </p>
+    <section class="reveal" style="margin-bottom:24px;">
+        <h3>
+            {% if lang == 'es' %}Asistente BillBeam{% else %}BillBeam Assistant{% endif %}
+        </h3>
+        <p style="font-size:0.95rem; opacity:0.9;">
+            {% if lang == 'es' %}
+                En la esquina de la app verás un botón de chat. Ahí puedes hacer preguntas sobre
+                tus facturas, términos sugeridos, recordatorios de cobro y más. El asistente usa
+                el contexto de la página donde estás para darte mejores respuestas.
+            {% else %}
+                In the corner of the app you’ll see a chat bubble. You can ask questions about
+                your invoices, suggested wording, follow-up ideas for overdue payments, and more.
+                The assistant uses page context to give more relevant answers.
+            {% endif %}
+        </p>
+    </section>
 
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:18px;">
-
-        <div class="public-card">
-            <div class="card-title">
-                {% if lang == 'es' %}Facturación básica{% else %}Basic invoicing{% endif %}
-            </div>
-            <ul style="font-size:13px; opacity:.9; margin-top:8px; padding-left:18px;">
-                <li>
-                    {% if lang == 'es' %}
-                        Crea una factura desde la página principal “Nueva factura”.
-                    {% else %}
-                        Create an invoice from the main “New invoice” page.
-                    {% endif %}
-                </li>
-                <li>
-                    {% if lang == 'es' %}
-                        Guarda clientes para reutilizarlos en futuras facturas.
-                    {% else %}
-                        Save clients to reuse them on future invoices.
-                    {% endif %}
-                </li>
-                <li>
-                    {% if lang == 'es' %}
-                        Descarga un PDF desde el historial de facturas.
-                    {% else %}
-                        Download a PDF from the invoice history page.
-                    {% endif %}
-                </li>
-            </ul>
-        </div>
-
-        <div class="public-card">
-            <div class="card-title">
-                {% if lang == 'es' %}Pagos & estados{% else %}Payments & statuses{% endif %}
-            </div>
-            <ul style="font-size:13px; opacity:.9; margin-top:8px; padding-left:18px;">
-                <li>
-                    {% if lang == 'es' %}
-                        Usa “Record Payment” para registrar pagos parciales o totales.
-                    {% else %}
-                        Use “Record Payment” to log partial or full payments.
-                    {% endif %}
-                </li>
-                <li>
-                    {% if lang == 'es' %}
-                        Las facturas vencidas se marcan automáticamente como “Overdue”.
-                    {% else %}
-                        Overdue invoices are marked automatically when past due date.
-                    {% endif %}
-                </li>
-                <li>
-                    {% if lang == 'es' %}
-                        Marca manualmente como “Paid” desde el historial si lo prefieres.
-                    {% else %}
-                        Manually mark as “Paid” from history if you prefer.
-                    {% endif %}
-                </li>
-            </ul>
-        </div>
-
-        <div class="public-card">
-            <div class="card-title">
-                {% if lang == 'es' %}Asistente con IA{% else %}AI helper{% endif %}
-            </div>
-            <ul style="font-size:13px; opacity:.9; margin-top:8px; padding-left:18px;">
-                <li>
-                    {% if lang == 'es' %}
-                        Pregunta cosas como “¿Qué dice mi panel sobre mi último mes?”.
-                    {% else %}
-                        Ask things like “What does my dashboard say about last month?”.
-                    {% endif %}
-                </li>
-                <li>
-                    {% if lang == 'es' %}
-                        Pídele que mejore notas, recordatorios o correos de seguimiento.
-                    {% else %}
-                        Ask it to improve notes, reminders, or follow-up emails.
-                    {% endif %}
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <div style="margin-top:24px; padding:12px 14px; border-radius:10px; border:1px solid rgba(148,163,184,0.5); font-size:13px;">
-        <strong>
-            {% if lang == 'es' %}Soporte por correo{% else %}Email support{% endif %}
-        </strong><br>
-        {% if lang == 'es' %}
-            Si algo no funciona como esperas, escríbenos a
-        {% else %}
-            If something isn’t working as expected, email us at
-        {% endif %}
-        <a href="mailto:support@mikeinvoices.com">support@mikeinvoices.com</a>.
-    </div>
+    <section class="reveal">
+        <h3>
+            {% if lang == 'es' %}Soporte y contacto{% else %}Support & contact{% endif %}
+        </h3>
+        <p style="font-size:0.95rem; opacity:0.9;">
+            {% if lang == 'es' %}
+                Si algo no funciona como esperas, o necesitas ayuda con un caso específico,
+                comparte una descripción clara del problema, el navegador que usas y, si es
+                posible, capturas de pantalla.
+            {% else %}
+                If something isn’t working as expected or you need help with a specific case,
+                please include a clear description of the issue, which browser you’re using,
+                and screenshots if possible.
+            {% endif %}
+        </p>
+        <p style="font-size:0.9rem; opacity:0.85;">
+            {% if lang == 'es' %}
+                Puedes enviar tu mensaje desde esta página de ayuda o respondiendo a cualquier
+                correo de BillBeam.
+            {% else %}
+                You can reach out from this Help section or by replying to any BillBeam email
+                you receive.
+            {% endif %}
+        </p>
+    </section>
 </div>
 
 {% endblock %}

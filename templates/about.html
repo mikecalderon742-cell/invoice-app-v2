@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% set lang = request.args.get('lang', 'en') %}
-
 <div class="dashboard-header">
     <h1>
         {% if lang == 'es' %}
@@ -12,103 +10,120 @@
         {% endif %}
     </h1>
     <div class="quick-actions">
-        <a href="/?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-        </a>
-        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
-            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
         </a>
     </div>
 </div>
 
-<div class="form-wrapper fade-in-up">
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}
-            Diseñado para freelancers y pequeños negocios
-        {% else %}
-            Built for freelancers and small businesses
-        {% endif %}
-    </h2>
+<div class="form-wrapper fade-in-up" style="max-width:900px;">
+    <section class="reveal" style="margin-bottom:24px;">
+        <h2 style="margin-top:0;">
+            {% if lang == 'es' %}
+                Tu panel de control para facturas rápidas y claras
+            {% else %}
+                Your command center for clean, fast invoices
+            {% endif %}
+        </h2>
+        <p style="font-size:0.95rem; opacity:0.9;">
+            {% if lang == 'es' %}
+                BillBeam está diseñado para freelancers, agencias pequeñas y equipos que necesitan
+                enviar facturas claras sin perder tiempo peleando con hojas de cálculo pesadas o
+                herramientas demasiado complejas. La meta es simple: ayudarte a cobrar más rápido
+                y con menos fricción.
+            {% else %}
+                BillBeam is built for freelancers, small agencies, and lean teams who want to send
+                clear invoices without wrestling with bloated spreadsheets or overly complex tools.
+                The goal is simple: help you get paid faster, with less friction.
+            {% endif %}
+        </p>
+    </section>
 
-    <p style="font-size:14px; opacity:.9; line-height:1.6;">
-        {% if lang == 'es' %}
-            BillBeam te ayuda a crear facturas limpias y profesionales en segundos,
-            hacer seguimiento de pagos y entender tus ingresos sin pelearte con hojas
-            de cálculo. La interfaz está pensada para que puedas enviar una factura
-            completa en menos de un minuto.
-        {% else %}
-            BillBeam helps you create clean, professional invoices in seconds, follow
-            up on payments, and understand your revenue without wrestling with
-            spreadsheets. The interface is designed so you can send a complete invoice
-            in under a minute.
-        {% endif %}
-    </p>
+    <section class="reveal" style="margin-bottom:28px;">
+        <h3>
+            {% if lang == 'es' %}Qué hace BillBeam bien{% else %}What BillBeam focuses on{% endif %}
+        </h3>
+        <ul style="font-size:0.95rem; padding-left:1.2rem; margin-top:10px;">
+            <li>
+                {% if lang == 'es' %}
+                    Crear facturas en segundos con un flujo simple.
+                {% else %}
+                    Create invoices in seconds with a streamlined flow.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Ver el historial de facturas y pagos sin perderte en mil pantallas.
+                {% else %}
+                    See invoice and payment history without getting lost in ten screens.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Compartir enlaces públicos modernos de facturas con tus clientes.
+                {% else %}
+                    Share modern public invoice pages with your clients.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Mantener un registro claro de pagos parciales y facturas vencidas.
+                {% else %}
+                    Keep a clear record of partial payments and overdue invoices.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Recibir ayuda inteligente dentro de la app con el Asistente BillBeam.
+                {% else %}
+                    Get in-app guidance from the BillBeam Assistant when you’re stuck.
+                {% endif %}
+            </li>
+        </ul>
+    </section>
 
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:20px;">
-        <div class="card kpi blue">
-            <h2 class="kpi-number">⚡</h2>
-            <p>
-                {% if lang == 'es' %}
-                    Facturación rápida
-                {% else %}
-                    Fast invoicing
-                {% endif %}
-            </p>
-            <small>
-                {% if lang == 'es' %}
-                    Guarda clientes, reutiliza conceptos y genera PDFs listos para enviar.
-                {% else %}
-                    Save clients, reuse line items, and generate ready-to-send PDFs.
-                {% endif %}
-            </small>
-        </div>
+    <section class="reveal" style="margin-bottom:28px;">
+        <h3>
+            {% if lang == 'es' %}Filosofía del producto{% else %}Product philosophy{% endif %}
+        </h3>
+        <p style="font-size:0.95rem; opacity:0.9;">
+            {% if lang == 'es' %}
+                En lugar de intentar ser “la herramienta para todo”, BillBeam se enfoca en hacer
+                una cosa extremadamente bien: ayudarte a enviar facturas profesionales y dar
+                seguimiento a los pagos sin dolores de cabeza. La interfaz está pensada para ser
+                rápida, minimalista y amigable incluso si no eres “persona de sistemas”.
+            {% else %}
+                Instead of trying to be “everything software,” BillBeam focuses on doing one
+                thing extremely well: helping you send professional invoices and track payments
+                without headaches. The interface aims to be fast, minimal, and friendly even if
+                you don’t consider yourself “a systems person.”
+            {% endif %}
+        </p>
+    </section>
 
-        <div class="card kpi green">
-            <h2 class="kpi-number">📊</h2>
-            <p>
-                {% if lang == 'es' %}
-                    Panel con métricas
-                {% else %}
-                    Insightful dashboard
-                {% endif %}
-            </p>
-            <small>
-                {% if lang == 'es' %}
-                    Ve ingresos totales, estado de facturas y tus mejores clientes de un vistazo.
-                {% else %}
-                    See total revenue, invoice status, and top clients at a glance.
-                {% endif %}
-            </small>
-        </div>
-
-        <div class="card kpi purple">
-            <h2 class="kpi-number">🧠</h2>
-            <p>
-                {% if lang == 'es' %}
-                    Asistente con IA
-                {% else %}
-                    AI helper
-                {% endif %}
-            </p>
-            <small>
-                {% if lang == 'es' %}
-                    Te ayuda a redactar notas, recordatorios y entender tus métricas.
-                {% else %}
-                    Helps you draft notes, reminders, and understand your metrics.
-                {% endif %}
-            </small>
-        </div>
-    </div>
-
-    <p style="margin-top:24px; font-size:13px; opacity:.7;">
-        {% if lang == 'es' %}
-            BillBeam está en evolución constante. Si ves algo que podríamos mejorar,
-            envía tus comentarios desde la sección de ayuda.
-        {% else %}
-            BillBeam is evolving constantly. If you see something we could improve,
-            send feedback from the Help section.
-        {% endif %}
-    </p>
+    <section class="reveal">
+        <h3>
+            {% if lang == 'es' %}Contacto y retroalimentación{% else %}Contact & feedback{% endif %}
+        </h3>
+        <p style="font-size:0.95rem; opacity:0.9;">
+            {% if lang == 'es' %}
+                ¿Tienes ideas, comentarios o encontraste un bug raro? Este proyecto está vivo y
+                siempre mejorando. Tu feedback ayuda a priorizar qué construir después.
+            {% else %}
+                Have ideas, feedback, or found a weird bug? This project is alive and always
+                improving. Your feedback helps shape what gets built next.
+            {% endif %}
+        </p>
+        <p style="font-size:0.9rem; opacity:0.85;">
+            {% if lang == 'es' %}
+                Envía tus comentarios desde la sección de Ayuda dentro de la app o responde a
+                cualquier correo de BillBeam.
+            {% else %}
+                You can send feedback from the Help section inside the app or by replying to any
+                BillBeam email you receive.
+            {% endif %}
+        </p>
+    </section>
 </div>
 
 {% endblock %}

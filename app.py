@@ -762,6 +762,13 @@ def home():
     return render_template("index.html", clients=clients)
 
 
+@app.route("/")
+def home():
+    if current_user.is_authenticated:
+        return redirect(url_for("invoices"))
+    return render_template("landing.html")
+
+
 # -------------------------
 # AUTH
 # -------------------------
@@ -895,6 +902,30 @@ def pricing():
         is_pro=is_pro,
         lang=lang,
     )
+
+
+@app.route("/landing")
+def landing_page():
+    """
+    Public marketing landing page.
+    Does not require login.
+    """
+    # lang is read in base.html via request.args, but we include it here
+    lang = (request.args.get("lang") or "en").lower()
+    if lang not in ("en", "es"):
+        lang = "en"
+    return render_template("landing.html", lang=lang)
+
+
+@app.route("/launch-checklist")
+def launch_checklist_page():
+    """
+    Public launch checklist page (for you, or to share with friends/advisors).
+    """
+    lang = (request.args.get("lang") or "en").lower()
+    if lang not in ("en", "es"):
+        lang = "en"
+    return render_template("launch_checklist.html", lang=lang)
 
 
 @app.route("/about")

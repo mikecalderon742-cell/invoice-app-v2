@@ -12,6 +12,12 @@
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    {% if lang == 'es' %}
+        <meta name="description" content="BillBeam es tu panel minimalista para crear, enviar y hacer seguimiento de facturas sin pelearte con hojas de cálculo o software complicado.">
+    {% else %}
+        <meta name="description" content="BillBeam is your minimalist control center for creating, sending, and tracking invoices without spreadsheets or heavyweight software.">
+    {% endif %}
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
@@ -133,7 +139,7 @@
                 0 0 0 1px rgba(148, 163, 184, 0.9);
         }
 
-        /* Lang toggle (uses same idea as app) */
+        /* Lang toggle (matches app vibe) */
         .lang-toggle {
             display: inline-flex;
             align-items: center;
@@ -142,10 +148,10 @@
         }
 
         .lang-pill {
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: var(--pill-radius);
             border: 1px solid rgba(148, 163, 184, 0.7);
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -252,6 +258,11 @@
             font-size: 0.9rem;
             color: var(--muted);
             background: transparent;
+        }
+
+        .hero-secondary:hover {
+            border-style: solid;
+            color: #e5e7eb;
         }
 
         .hero-footnote {
@@ -395,22 +406,22 @@
     <!-- NAVBAR -->
     <header class="landing-nav">
         <div class="nav-left">
-            <div class="nav-logo-mark"></div>
+            <div class="nav-logo-mark" aria-hidden="true"></div>
             <div class="nav-logo-text">BillBeam</div>
         </div>
 
-        <nav class="nav-right">
+        <nav class="nav-right" aria-label="Primary">
             <a href="#product" class="nav-link">
                 {% if lang == 'es' %}Producto{% else %}Product{% endif %}
             </a>
-            <a href="/pricing?lang={{ lang }}" class="nav-link">
+            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="nav-link">
                 {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
             </a>
-            <a href="#faq" class="nav-link nav-link-ghost">
+            <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}" class="nav-link nav-link-ghost">
                 FAQ
             </a>
 
-            <div class="lang-toggle">
+            <div class="lang-toggle" aria-label="Language toggle">
                 <a href="{{ request.path }}?lang=en" class="lang-pill {% if lang != 'es' %}active{% endif %}">
                     EN
                 </a>
@@ -419,10 +430,10 @@
                 </a>
             </div>
 
-            <a href="/login?lang={{ lang }}" class="nav-link">
+            <a href="/login{% if lang %}?lang={{ lang }}{% endif %}" class="nav-link">
                 {% if lang == 'es' %}Entrar{% else %}Login{% endif %}
             </a>
-            <a href="/register?lang={{ lang }}" class="nav-link nav-link-cta">
+            <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="nav-link nav-link-cta">
                 {% if lang == 'es' %}Empezar gratis{% else %}Start free{% endif %}
             </a>
         </nav>
@@ -457,10 +468,10 @@
             </p>
 
             <div class="hero-cta-row">
-                <a href="/register?lang={{ lang }}" class="hero-primary">
+                <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="hero-primary">
                     {% if lang == 'es' %}Crear cuenta en 30 segundos{% else %}Start in 30 seconds{% endif %}
                 </a>
-                <a href="/invoices?lang={{ lang }}" class="hero-secondary">
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="hero-secondary">
                     {% if lang == 'es' %}Ver demo en vivo{% else %}See live dashboard demo{% endif %}
                 </a>
             </div>
@@ -664,13 +675,13 @@
             {% endif %}
         </div>
         <div class="footer-links">
-            <a href="/pricing?lang={{ lang }}" class="footer-link">
+            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
                 {% if lang == 'es' %}Ver planes{% else %}View plans{% endif %}
             </a>
-            <a href="/login?lang={{ lang }}" class="footer-link">
+            <a href="/login{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
                 {% if lang == 'es' %}Entrar{% else %}Login{% endif %}
             </a>
-            <a href="/register?lang={{ lang }}" class="footer-link">
+            <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
                 {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
             </a>
         </div>
