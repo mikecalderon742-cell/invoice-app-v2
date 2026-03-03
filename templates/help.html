@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <h1>
+        {% if lang == 'es' %}Ayuda & Soporte{% else %}Help & Support{% endif %}
+    </h1>
+    <div class="quick-actions">
+        <a href="/?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+        </a>
+        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+
+    <h2 style="margin-top:0;">
+        {% if lang == 'es' %}
+            ¿Necesitas ayuda con BillBeam?
+        {% else %}
+            Need help with BillBeam?
+        {% endif %}
+    </h2>
+
+    <p style="font-size:14px; opacity:.9; line-height:1.6;">
+        {% if lang == 'es' %}
+            Aquí tienes algunas rutas rápidas para resolver problemas comunes. Si aún
+            necesitas ayuda, puedes escribirnos por correo.
+        {% else %}
+            Here are some quick paths to solve common issues. If you still need help,
+            you can always reach us by email.
+        {% endif %}
+    </p>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:18px;">
+
+        <div class="public-card">
+            <div class="card-title">
+                {% if lang == 'es' %}Facturación básica{% else %}Basic invoicing{% endif %}
+            </div>
+            <ul style="font-size:13px; opacity:.9; margin-top:8px; padding-left:18px;">
+                <li>
+                    {% if lang == 'es' %}
+                        Crea una factura desde la página principal “Nueva factura”.
+                    {% else %}
+                        Create an invoice from the main “New invoice” page.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Guarda clientes para reutilizarlos en futuras facturas.
+                    {% else %}
+                        Save clients to reuse them on future invoices.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Descarga un PDF desde el historial de facturas.
+                    {% else %}
+                        Download a PDF from the invoice history page.
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        <div class="public-card">
+            <div class="card-title">
+                {% if lang == 'es' %}Pagos & estados{% else %}Payments & statuses{% endif %}
+            </div>
+            <ul style="font-size:13px; opacity:.9; margin-top:8px; padding-left:18px;">
+                <li>
+                    {% if lang == 'es' %}
+                        Usa “Record Payment” para registrar pagos parciales o totales.
+                    {% else %}
+                        Use “Record Payment” to log partial or full payments.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Las facturas vencidas se marcan automáticamente como “Overdue”.
+                    {% else %}
+                        Overdue invoices are marked automatically when past due date.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Marca manualmente como “Paid” desde el historial si lo prefieres.
+                    {% else %}
+                        Manually mark as “Paid” from history if you prefer.
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        <div class="public-card">
+            <div class="card-title">
+                {% if lang == 'es' %}Asistente con IA{% else %}AI helper{% endif %}
+            </div>
+            <ul style="font-size:13px; opacity:.9; margin-top:8px; padding-left:18px;">
+                <li>
+                    {% if lang == 'es' %}
+                        Pregunta cosas como “¿Qué dice mi panel sobre mi último mes?”.
+                    {% else %}
+                        Ask things like “What does my dashboard say about last month?”.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Pídele que mejore notas, recordatorios o correos de seguimiento.
+                    {% else %}
+                        Ask it to improve notes, reminders, or follow-up emails.
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="margin-top:24px; padding:12px 14px; border-radius:10px; border:1px solid rgba(148,163,184,0.5); font-size:13px;">
+        <strong>
+            {% if lang == 'es' %}Soporte por correo{% else %}Email support{% endif %}
+        </strong><br>
+        {% if lang == 'es' %}
+            Si algo no funciona como esperas, escríbenos a
+        {% else %}
+            If something isn’t working as expected, email us at
+        {% endif %}
+        <a href="mailto:support@mikeinvoices.com">support@mikeinvoices.com</a>.
+    </div>
+</div>
+
+{% endblock %}

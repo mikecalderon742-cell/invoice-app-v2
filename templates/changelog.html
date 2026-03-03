@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <h1>
+        {% if lang == 'es' %}Novedades & cambios{% else %}What’s new & changelog{% endif %}
+    </h1>
+    <div class="quick-actions">
+        <a href="/?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+        </a>
+        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+    <p style="font-size:14px; opacity:.85;">
+        {% if lang == 'es' %}
+            Aquí verás un resumen rápido de las mejoras recientes en BillBeam.
+            Puedes usar esta página como referencia cuando comuniques cambios a tus clientes.
+        {% else %}
+            Here you’ll see a quick summary of recent improvements to BillBeam.
+            You can use this page as a reference when communicating changes to your clients.
+        {% endif %}
+    </p>
+
+    <div class="timeline" style="margin-top:18px;">
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+                <div class="timeline-top">
+                    <strong>
+                        {% if lang == 'es' %}
+                            Versión 1.0 – Lanzamiento inicial
+                        {% else %}
+                            Version 1.0 – Initial launch
+                        {% endif %}
+                    </strong>
+                    <span class="muted">2025-01-01</span>
+                </div>
+                <div class="timeline-sub">
+                    {% if lang == 'es' %}
+                        Creación de facturas, historial, clientes básicos y descarga de PDF.
+                    {% else %}
+                        Invoice creation, history, basic clients, and PDF download.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+                <div class="timeline-top">
+                    <strong>
+                        {% if lang == 'es' %}
+                            Panel mejorado & gráficos
+                        {% else %}
+                            Improved dashboard & charts
+                        {% endif %}
+                    </strong>
+                    <span class="muted">2025-02-01</span>
+                </div>
+                <div class="timeline-sub">
+                    {% if lang == 'es' %}
+                        Nuevas tarjetas de métricas, gráfico de ingresos mensuales y servicios principales.
+                    {% else %}
+                        New KPI cards, monthly revenue chart, and top services analytics.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+                <div class="timeline-top">
+                    <strong>
+                        {% if lang == 'es' %}
+                            Portal público & firma del cliente
+                        {% else %}
+                            Public portal & client signature
+                        {% endif %}
+                    </strong>
+                    <span class="muted">2025-03-01</span>
+                </div>
+                <div class="timeline-sub">
+                    {% if lang == 'es' %}
+                        Portal de facturas para clientes con descarga de PDF, historial de pagos
+                        y soporte para firma en la factura.
+                    {% else %}
+                        Client-facing invoice portal with PDF download, payment history,
+                        and invoice signature support.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <p style="margin-top:20px; font-size:13px; opacity:.7;">
+        {% if lang == 'es' %}
+            Próximamente añadiremos más entradas de cambios a medida que lancemos nuevas funciones.
+        {% else %}
+            We’ll add more entries here as we ship new features.
+        {% endif %}
+    </p>
+</div>
+
+{% endblock %}

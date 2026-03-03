@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <h1>FAQ</h1>
+    <div class="quick-actions">
+        <a href="/?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+        </a>
+        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+    <h2 style="margin-top:0;">
+        {% if lang == 'es' %}
+            Preguntas frecuentes
+        {% else %}
+            Frequently asked questions
+        {% endif %}
+    </h2>
+
+    <div class="public-card">
+        <div class="card-title">
+            {% if lang == 'es' %}
+                ¿Puedo usar BillBeam gratis?
+            {% else %}
+                Can I use BillBeam for free?
+            {% endif %}
+        </div>
+        <p style="font-size:14px; opacity:.9;">
+            {% if lang == 'es' %}
+                Sí. El plan Starter te permite crear hasta 10 facturas al mes
+                con el panel básico y PDF descargable.
+            {% else %}
+                Yes. The Starter plan lets you create up to 10 invoices per month
+                with the basic dashboard and downloadable PDFs.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="public-card">
+        <div class="card-title">
+            {% if lang == 'es' %}
+                ¿Qué incluye el plan Pro?
+            {% else %}
+                What does the Pro plan include?
+            {% endif %}
+        </div>
+        <p style="font-size:14px; opacity:.9;">
+            {% if lang == 'es' %}
+                Pro desbloquea facturas ilimitadas, funciones avanzadas de envío
+                por correo, plantillas adicionales y más ayuda con IA para interpretar
+                tus métricas y redactar mensajes.
+            {% else %}
+                Pro unlocks unlimited invoices, advanced email sending, additional
+                templates, and more AI help for interpreting your metrics and
+                drafting messages.
+            {% endif %}
+            <br>
+            <a href="/pricing?lang={{ lang }}" style="font-size:13px;">
+                {% if lang == 'es' %}Ver detalles de precios{% else %}View pricing details{% endif %}
+            </a>
+        </p>
+    </div>
+
+    <div class="public-card">
+        <div class="card-title">
+            {% if lang == 'es' %}
+                ¿Cómo envío una factura a un cliente?
+            {% else %}
+                How do I email an invoice to a client?
+            {% endif %}
+        </div>
+        <p style="font-size:14px; opacity:.9;">
+            {% if lang == 'es' %}
+                Desde el historial de facturas, haz clic en “Enviar” en la factura
+                que quieras enviar. Podrás revisar el correo y el enlace público
+                antes de enviarlo. Esta opción requiere el plan Pro.
+            {% else %}
+                From the invoice history, click “Send” on the invoice you want to
+                email. You’ll be able to review the email and public link before
+                sending. This feature requires the Pro plan.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="public-card">
+        <div class="card-title">
+            {% if lang == 'es' %}
+                ¿Puedo cambiar mi información de negocio y logo?
+            {% else %}
+                Can I change my business info and logo?
+            {% endif %}
+        </div>
+        <p style="font-size:14px; opacity:.9;">
+            {% if lang == 'es' %}
+                Sí. Ve a la página de “Business Profile & Branding” en el menú
+                de ajustes para actualizar nombre, dirección, logo y colores.
+            {% else %}
+                Yes. Go to the “Business Profile & Branding” page in settings to
+                update your name, address, logo, and colors.
+            {% endif %}
+        </p>
+    </div>
+
+</div>
+
+{% endblock %}

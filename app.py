@@ -897,6 +897,26 @@ def pricing():
     )
 
 
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.route("/help")
+def help_page():
+    return render_template("help.html")
+
+
+@app.route("/faq")
+def faq_page():
+    return render_template("faq.html")
+
+
+@app.route("/changelog")
+def changelog_page():
+    return render_template("changelog.html")
+
+
 # Stub route so url_for('create_checkout_session') works.
 # The button can show "Coming soon" and just bounce back to pricing for now.
 @app.route("/create-checkout-session", methods=["POST"])

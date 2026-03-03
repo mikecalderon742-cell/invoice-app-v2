@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <h1>
+        {% if lang == 'es' %}
+            Acerca de BillBeam
+        {% else %}
+            About BillBeam
+        {% endif %}
+    </h1>
+    <div class="quick-actions">
+        <a href="/?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+        </a>
+        <a href="/invoices?lang={{ lang }}" class="btn btn-secondary">
+            {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up">
+    <h2 style="margin-top:0;">
+        {% if lang == 'es' %}
+            Diseñado para freelancers y pequeños negocios
+        {% else %}
+            Built for freelancers and small businesses
+        {% endif %}
+    </h2>
+
+    <p style="font-size:14px; opacity:.9; line-height:1.6;">
+        {% if lang == 'es' %}
+            BillBeam te ayuda a crear facturas limpias y profesionales en segundos,
+            hacer seguimiento de pagos y entender tus ingresos sin pelearte con hojas
+            de cálculo. La interfaz está pensada para que puedas enviar una factura
+            completa en menos de un minuto.
+        {% else %}
+            BillBeam helps you create clean, professional invoices in seconds, follow
+            up on payments, and understand your revenue without wrestling with
+            spreadsheets. The interface is designed so you can send a complete invoice
+            in under a minute.
+        {% endif %}
+    </p>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:20px;">
+        <div class="card kpi blue">
+            <h2 class="kpi-number">⚡</h2>
+            <p>
+                {% if lang == 'es' %}
+                    Facturación rápida
+                {% else %}
+                    Fast invoicing
+                {% endif %}
+            </p>
+            <small>
+                {% if lang == 'es' %}
+                    Guarda clientes, reutiliza conceptos y genera PDFs listos para enviar.
+                {% else %}
+                    Save clients, reuse line items, and generate ready-to-send PDFs.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi green">
+            <h2 class="kpi-number">📊</h2>
+            <p>
+                {% if lang == 'es' %}
+                    Panel con métricas
+                {% else %}
+                    Insightful dashboard
+                {% endif %}
+            </p>
+            <small>
+                {% if lang == 'es' %}
+                    Ve ingresos totales, estado de facturas y tus mejores clientes de un vistazo.
+                {% else %}
+                    See total revenue, invoice status, and top clients at a glance.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi purple">
+            <h2 class="kpi-number">🧠</h2>
+            <p>
+                {% if lang == 'es' %}
+                    Asistente con IA
+                {% else %}
+                    AI helper
+                {% endif %}
+            </p>
+            <small>
+                {% if lang == 'es' %}
+                    Te ayuda a redactar notas, recordatorios y entender tus métricas.
+                {% else %}
+                    Helps you draft notes, reminders, and understand your metrics.
+                {% endif %}
+            </small>
+        </div>
+    </div>
+
+    <p style="margin-top:24px; font-size:13px; opacity:.7;">
+        {% if lang == 'es' %}
+            BillBeam está en evolución constante. Si ves algo que podríamos mejorar,
+            envía tus comentarios desde la sección de ayuda.
+        {% else %}
+            BillBeam is evolving constantly. If you see something we could improve,
+            send feedback from the Help section.
+        {% endif %}
+    </p>
+</div>
+
+{% endblock %}
