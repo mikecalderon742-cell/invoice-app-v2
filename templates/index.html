@@ -1,732 +1,778 @@
 {% extends "base.html" %}
 {% block content %}
 
-{# Language handling, same pattern as index.html #}
+{# Simple language handling: default to English if no ?lang= is set #}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}
-            Panel BillBeam
-        {% else %}
-            BillBeam Dashboard
-        {% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn">
-            {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Actualizar{% else %}Refresh{% endif %}
-        </a>
-    </div>
-</div>
-
-<!-- SEARCH BAR -->
-<div class="search-bar modern">
-    <form method="get" action="/invoices">
-        <input
-            type="text"
-            name="q"
-            placeholder="{% if lang == 'es' %}Buscar cliente, factura #, notas, términos...{% else %}Search client, invoice #, notes, terms...{% endif %}"
-            value="{{ q }}">
-        <button type="submit" class="btn btn-secondary">
-            {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
-        </button>
-        {# Preserve lang when searching #}
-        <input type="hidden" name="lang" value="{{ lang }}">
-    </form>
-</div>
-
-{% if invoices %}
-
-    <!-- KPI STRIP -->
-    <div class="dashboard-cards enhanced">
-
-        <div class="card kpi orange">
-            <h2 class="kpi-number">{{ total_invoices }}</h2>
-            <p>
-                {% if lang == 'es' %}Facturas totales{% else %}Total Invoices{% endif %}
-            </p>
-        </div>
-
-        <div class="card kpi green">
-            <h2 class="kpi-number" id="totalRevenueKpi">
-                ${{ "{:,.2f}".format(total_revenue) }}
-            </h2>
-            <p>
-                {% if lang == 'es' %}Ingresos totales{% else %}Total Revenue{% endif %}
-            </p>
-            <small class="kpi-live-label">
-                {% if lang == 'es' %}Contador en vivo{% else %}Live counter{% endif %}
-            </small>
-        </div>
-
-        <div class="card kpi blue">
-            <h2 class="kpi-number">${{ "{:,.2f}".format(monthly_revenue) }}</h2>
-            <p>
-                {% if lang == 'es' %}Este mes{% else %}This Month{% endif %}
-            </p>
-            <small>
-                {% if lang == 'es' %}
-                    {{ growth }}% de los ingresos totales
-                {% else %}
-                    {{ growth }}% of total revenue
-                {% endif %}
-            </small>
-        </div>
-
-        <div class="card kpi purple">
-            <h2 class="kpi-number">${{ "{:,.2f}".format(avg_invoice) }}</h2>
-            <p>
-                {% if lang == 'es' %}Factura promedio{% else %}Average Invoice{% endif %}
-            </p>
-        </div>
-
-        <div class="card kpi teal">
-            <h2 class="kpi-number">{{ paid_count }}</h2>
-            <p>
-                {% if lang == 'es' %}Pagadas{% else %}Paid{% endif %}
-            </p>
-        </div>
-
-        <div class="card kpi red">
-            <h2 class="kpi-number">{{ overdue_count }}</h2>
-            <p>
-                {% if lang == 'es' %}Vencidas{% else %}Overdue{% endif %}
-            </p>
-        </div>
-
-    </div>
-
-    <!-- STATUS SUMMARY STRIP -->
-    <div class="status-summary">
-        <div class="status-item paid">
+<div class="hero reveal"
+     style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+    <div class="hero-left"
+         style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
+        <h1>
             {% if lang == 'es' %}
-                Pagadas: {{ status_distribution["Paid"] }}
+                Crear una nueva factura con BillBeam
             {% else %}
-                Paid: {{ status_distribution["Paid"] }}
+                Create a New Invoice with BillBeam
             {% endif %}
-        </div>
-        <div class="status-item sent">
-            {% if lang == 'es' %}
-                Enviadas: {{ status_distribution["Sent"] }}
-            {% else %}
-                Sent: {{ status_distribution["Sent"] }}
-            {% endif %}
-        </div>
-        <div class="status-item draft">
-            {% if lang == 'es' %}
-                Vencidas: {{ status_distribution["Overdue"] }}
-            {% else %}
-                Overdue: {{ status_distribution["Overdue"] }}
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- ANALYTICS ROW: CHARTS + TOP CLIENTS + ITEMS -->
-    <div class="charts-row">
-
-        <!-- Revenue over time (monthly) -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>
-                        {% if lang == 'es' %}Tendencia de ingresos{% else %}Revenue Trend{% endif %}
-                    </h3>
-                    <span class="chart-sub">
-                        {% if lang == 'es' %}Últimos meses{% else %}Last few months{% endif %}
-                    </span>
-                </div>
-            </div>
-            <div class="chart-canvas-wrapper">
-                <canvas id="revenueChart" class="chart-canvas"></canvas>
-            </div>
-            <p class="chart-ai-hint">
-                {% if lang == 'es' %}
-                    Consejo: Pregunta al asistente “¿Qué dice mi tendencia de ingresos sobre el impulso de mi negocio?”
-                {% else %}
-                    Tip: Ask the AI helper “What does my revenue trend say about my business momentum?”
-                {% endif %}
-            </p>
-        </div>
-
-        <!-- Daily revenue (single-day viewer instead of scrollable chart) -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>
-                        {% if lang == 'es' %}Ingresos diarios{% else %}Daily Revenue{% endif %}
-                    </h3>
-                    <span class="chart-sub">
-                        {% if lang == 'es' %}Ver un día a la vez{% else %}View one day at a time{% endif %}
-                    </span>
-                </div>
-            </div>
-            <div style="margin-top:10px;">
-                <label
-                    for="dailyDateSelect"
-                    style="display:block;font-size:12px;opacity:0.75;margin-bottom:4px;"
-                >
-                    {% if lang == 'es' %}
-                        Elige un día (últimos 30 días)
-                    {% else %}
-                        Pick a day (last 30 days)
-                    {% endif %}
-                </label>
-                <select id="dailyDateSelect" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid rgba(148,163,184,0.4);background:#020617;color:#e5e7eb;font-size:13px;">
-                    {% if daily_chart_labels and daily_chart_totals %}
-                        {% set last_index = daily_chart_labels|length - 1 %}
-                        {% for i in range(daily_chart_labels|length) %}
-                            <option value="{{ i }}" {% if i == last_index %}selected{% endif %}>
-                                {{ daily_chart_labels[i] }}
-                            </option>
-                        {% endfor %}
-                    {% else %}
-                        <option value="">
-                            {% if lang == 'es' %}
-                                Sin facturas recientes
-                            {% else %}
-                                No recent invoices
-                            {% endif %}
-                        </option>
-                    {% endif %}
-                </select>
-                <div
-                    id="dailyRevenueSummary"
-                    class="chart-sub"
-                    style="margin-top:10px;font-size:13px;opacity:0.8;"
-                >
-                    <!-- Filled by JS -->
-                </div>
-            </div>
-            <p class="chart-ai-hint">
-                {% if lang == 'es' %}
-                    Consejo: Pregunta “¿Qué días recientes fueron inusualmente fuertes o débiles en ingresos?”
-                {% else %}
-                    Tip: Ask the AI helper “Which recent days were unusually strong or weak in revenue?”
-                {% endif %}
-            </p>
-        </div>
-
-        <!-- Status breakdown -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>
-                        {% if lang == 'es' %}Estado de facturas{% else %}Status Breakdown{% endif %}
-                    </h3>
-                    <span class="chart-sub">
-                        {% if lang == 'es' %}Pagadas vs Enviadas vs Vencidas{% else %}Paid vs Sent vs Overdue{% endif %}
-                    </span>
-                </div>
-            </div>
-            <div class="chart-canvas-wrapper">
-                <canvas id="statusChart" class="chart-canvas"></canvas>
-            </div>
-            <p class="chart-ai-hint">
-                {% if lang == 'es' %}
-                    Consejo: Pregunta “¿Cómo debo priorizar el seguimiento según mis facturas vencidas vs enviadas?”
-                {% else %}
-                    Tip: Ask the AI helper “How should I prioritize following up based on my overdue vs sent invoices?”
-                {% endif %}
-            </p>
-        </div>
-
-        <!-- Top clients -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>
-                        {% if lang == 'es' %}Mejores clientes{% else %}Top Clients{% endif %}
-                    </h3>
-                    <span class="chart-sub">
-                        {% if lang == 'es' %}Por monto total facturado{% else %}By total billed amount{% endif %}
-                    </span>
-                </div>
-            </div>
-
-            {% if top_clients and top_clients|length > 0 %}
-                <ul class="leaderboard">
-                    {% for client in top_clients %}
-                        {# expect: client = (name, total_amount, invoice_count, pct) #}
-                        <li class="leader-item">
-                            <div class="leader-left">
-                                <div class="leader-main">
-                                    <span class="rank">#{{ loop.index }}</span>
-                                    <span class="client-name">
-                                        {{ client[0] or (lang == 'es' and 'Cliente desconocido' or 'Unknown client') }}
-                                    </span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill"
-                                         style="width: {{ client[3] if client|length > 3 else 0 }}%;"></div>
-                                </div>
-                                <div class="leader-meta">
-                                    {% if lang == 'es' %}
-                                        {{ client[2] }} factura{{ '' if client[2] == 1 else 's' }}
-                                    {% else %}
-                                        {{ client[2] }} invoice{{ '' if client[2] == 1 else 's' }}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="leader-right">
-                                ${{ "{:,.2f}".format(client[1]) }}
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">
-                    {% if lang == 'es' %}
-                        Tus mejores clientes aparecerán aquí a medida que envíes más facturas.
-                    {% else %}
-                        Top clients will appear here as you send more invoices.
-                    {% endif %}
-                </p>
-            {% endif %}
-            <p class="chart-ai-hint">
-                {% if lang == 'es' %}
-                    Consejo: Pregunta “¿Cómo debería cuidar o fijar precios para mis mejores clientes?”
-                {% else %}
-                    Tip: Ask the AI helper “How should I nurture or price work for my top clients?”
-                {% endif %}
-            </p>
-        </div>
-
-        <!-- Top items / services -->
-        <div class="chart-card brand-accent">
-            <div class="chart-header">
-                <div>
-                    <h3>
-                        {% if lang == 'es' %}Servicios principales{% else %}Top Items{% endif %}
-                    </h3>
-                    <span class="chart-sub">
-                        {% if lang == 'es' %}Servicios / productos más facturados{% else %}Most billed services / products{% endif %}
-                    </span>
-                </div>
-            </div>
-            <div class="chart-canvas-wrapper">
-                <canvas id="itemChart" class="chart-canvas"></canvas>
-            </div>
-            <p class="chart-ai-hint">
-                {% if lang == 'es' %}
-                    Consejo: Pregunta “¿Qué dice mi gráfico de servicios principales sobre lo que debería vender más?”
-                {% else %}
-                    Tip: Ask the AI helper “What does my top items chart say about what I should sell more of?”
-                {% endif %}
-            </p>
-        </div>
-
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-wrapper">
-        <div class="table-section-header">
-            <div>
-                <h2>
-                    {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
-                </h2>
-                <p>
-                    {% if lang == 'es' %}
-                        Revisa, descarga, envía y actualiza el estado de tus facturas.
-                    {% else %}
-                        Review, download, send, and update the status of your invoices.
-                    {% endif %}
-                </p>
-            </div>
-            <div class="table-meta">
-                {% if lang == 'es' %}
-                    {{ invoices|length }} factura{{ '' if invoices|length == 1 else 's' }} en vista
-                {% else %}
-                    {{ invoices|length }} invoice{{ '' if invoices|length == 1 else 's' }} in view
-                {% endif %}
-            </div>
-        </div>
-
-        <table class="modern-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>
-                        {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Creada{% else %}Created{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Estado{% else %}Status{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
-                    </th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for invoice in invoices %}
-                <tr class="
-                    {% if invoice[4] == 'Paid' %}row-paid
-                    {% elif invoice[4] == 'Overdue' %}row-overdue
-                    {% elif invoice[4] == 'Sent' %}row-sent
-                    {% endif %}
-                ">
-                    <td>#{{ invoice[0] }}</td>
-                    <td>{{ invoice[1] }}</td>
-                    <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-                    <td>{{ invoice[3].strftime('%Y-%m-%d %I:%M %p') }}</td>
-
-                    <td>
-                        {% if invoice[4] == "Paid" %}
-                            <span class="badge paid">
-                                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-                            </span>
-                        {% elif invoice[4] == "Overdue" %}
-                            <span class="badge overdue">
-                                {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
-                            </span>
-                        {% elif invoice[4] == "Sent" %}
-                            <span class="badge sent">
-                                {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
-                            </span>
-                        {% else %}
-                            {{ invoice[4] }}
-                        {% endif %}
-                    </td>
-
-                    <td class="action-buttons">
-                        <!-- View / Preview -->
-                        <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Ver{% else %}View{% endif %}
-                        </a>
-
-                        <!-- Download PDF -->
-                        <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}PDF{% else %}PDF{% endif %}
-                        </a>
-
-                        <!-- Edit -->
-                        <a class="btn btn-edit" href="/edit/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
-                        </a>
-
-                        <!-- Mark Paid (if not already) -->
-                        {% if invoice[4] != "Paid" %}
-                            <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
-                                {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
-                            </a>
-                        {% endif %}
-
-                        <!-- Mark Sent (if Draft ever used) -->
-                        {% if invoice[4] == "Draft" %}
-                            <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent{% if lang %}?lang={{ lang }}{% endif %}">
-                                {% if lang == 'es' %}Marcar enviada{% else %}Mark Sent{% endif %}
-                            </a>
-                        {% endif %}
-
-                        <!-- SEND INVOICE VIA EMAIL -->
-                        <a class="btn btn-info" href="/send-email/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
-                        </a>
-
-                        <!-- DELETE -->
-                        <a class="btn btn-danger" href="/delete/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
-    </div>
-
-{% else %}
-
-    <div class="empty-state">
-        <h3>
-            {% if lang == 'es' %}Todavía no hay facturas{% else %}No invoices yet{% endif %}
-        </h3>
+        </h1>
         <p>
             {% if lang == 'es' %}
-                Crea tu primera factura para comenzar a ver estadísticas en BillBeam.
+                Elige un cliente, añade tus servicios y sigue tus ingresos con un panel limpio.
             {% else %}
-                Create your first invoice to start seeing BillBeam analytics.
+                Pick a client, add your services, and track your revenue with a clean dashboard.
             {% endif %}
         </p>
-        <a class="btn" href="/{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}"
+           class="btn hero-cta"
+           style="align-self:flex-start;">
+           {% if lang == 'es' %}
+               Ver historial de facturas
+           {% else %}
+               View Invoice History
+           {% endif %}
         </a>
     </div>
+    <div class="hero-right"
+         style="flex:1 1 260px;min-width:0;display:flex;justify-content:center;">
+        <div class="mock-card">
+            <h3>
+                {% if lang == 'es' %}
+                    Resumen de BillBeam
+                {% else %}
+                    BillBeam Snapshot
+                {% endif %}
+            </h3>
+            <p style="margin: 10px 0;">
+                {% if lang == 'es' %}
+                    Rápido, moderno y creado para desarrolladores independientes y pequeños equipos.
+                {% else %}
+                    Fast, modern, and built for solo devs and small teams.
+                {% endif %}
+            </p>
+            <p>
+                <strong>{% if lang == 'es' %}Consejo:{% else %}Tip:{% endif %}</strong>
+                {% if lang == 'es' %}
+                    Añade tus clientes frecuentes una vez y luego selecciónalos con un clic.
+                {% else %}
+                    Add your frequent clients once, then select them in a click.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
 
-{% endif %}
+<div class="form-wrapper fade-in-up">
 
-<!-- CHART.JS SCRIPT (data from Flask + live revenue counter + daily single-day viewer) -->
+    <div class="invoice-layout-grid"
+         style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+        <!-- LEFT: main invoice form -->
+        <div class="invoice-form-col" style="flex:1 1 520px;min-width:0;">
+            <h2 style="margin-top:0;">
+                {% if lang == 'es' %}
+                    Nueva factura
+                {% else %}
+                    New Invoice
+                {% endif %}
+            </h2>
+
+            <!-- ✅ enctype added so photos + signature can be uploaded -->
+            <form id="invoiceForm"
+                  method="POST"
+                  action="/save{% if lang %}?lang={{ lang }}{% endif %}"
+                  enctype="multipart/form-data">
+
+                <!-- CLIENT SECTION -->
+                <h3>
+                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                </h3>
+                <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
+
+                    <!-- Existing client dropdown -->
+                    <div>
+                        <label for="client_id" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Cliente existente (opcional)
+                            {% else %}
+                                Existing Client (optional)
+                            {% endif %}
+                        </label>
+                        <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+                            <option value="">
+                                {% if lang == 'es' %}
+                                    -- Seleccionar cliente existente --
+                                {% else %}
+                                    -- Select existing client --
+                                {% endif %}
+                            </option>
+                            {% for client in clients %}
+                                <option value="{{ client[0] }}">
+                                    {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small style="font-size:12px; opacity:0.7;">
+                            {% if lang == 'es' %}
+                                Elige un cliente con el que ya hayas trabajado o añade uno nuevo abajo.
+                            {% else %}
+                                Choose a client you've already worked with, or add a new one below.
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <!-- New client fields -->
+                    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
+                        <div>
+                            <label for="new_client_name" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Nombre del nuevo cliente
+                                {% else %}
+                                    New Client Name
+                                {% endif %}
+                            </label>
+                            <input type="text" id="new_client_name" name="new_client_name"
+                                   placeholder="{% if lang == 'es' %}p.ej. Acme Corp o Jane Doe{% else %}e.g. Acme Corp or Jane Doe{% endif %}">
+                        </div>
+                        <div>
+                            <label for="new_client_email" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Correo del cliente
+                                {% else %}
+                                    Client Email
+                                {% endif %}
+                            </label>
+                            <input type="email" id="new_client_email" name="new_client_email"
+                                   placeholder="client@example.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="new_client_company" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Empresa (opcional)
+                            {% else %}
+                                Company (optional)
+                            {% endif %}
+                        </label>
+                        <input type="text" id="new_client_company" name="new_client_company"
+                               placeholder="{% if lang == 'es' %}Nombre de la empresa{% else %}Company name{% endif %}">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div>
+                            <label for="new_client_phone" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Teléfono (opcional)
+                                {% else %}
+                                    Phone (optional)
+                                {% endif %}
+                            </label>
+                            <input type="text" id="new_client_phone" name="new_client_phone"
+                                   placeholder="+1 (555) 123-4567">
+                        </div>
+                        <div>
+                            <label for="new_client_address" style="font-weight:600; font-size:14px;">
+                                {% if lang == 'es' %}
+                                    Dirección (opcional)
+                                {% else %}
+                                    Address (optional)
+                                {% endif %}
+                            </label>
+                            <input type="text" id="new_client_address" name="new_client_address"
+                                   placeholder="{% if lang == 'es' %}Ciudad, País{% else %}City, Country{% endif %}">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="new_client_notes" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Notas del cliente (opcional)
+                            {% else %}
+                                Client Notes (optional)
+                            {% endif %}
+                        </label>
+                        <input type="text" id="new_client_notes" name="new_client_notes"
+                               placeholder="{% if lang == 'es' %}p.ej. Prefiere transferencia bancaria, pagar en 7 días{% else %}e.g. Prefers bank transfer, pay within 7 days{% endif %}">
+                    </div>
+
+                </div>
+
+                <!-- INVOICE META -->
+                <h3>
+                    {% if lang == 'es' %}
+                        Detalles de la factura
+                    {% else %}
+                        Invoice Details
+                    {% endif %}
+                </h3>
+                <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
+                    <div>
+                        <label for="invoice_notes" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Notas de la factura (opcional)
+                            {% else %}
+                                Invoice Notes (optional)
+                            {% endif %}
+                        </label>
+                        <input type="text" id="invoice_notes" name="invoice_notes"
+                               placeholder="{% if lang == 'es' %}p.ej. ¡Gracias por su negocio!{% else %}e.g. Thanks for your business!{% endif %}">
+                    </div>
+                    <div>
+                        <label for="invoice_terms" style="font-weight:600; font-size:14px;">
+                            {% if lang == 'es' %}
+                                Condiciones de pago
+                            {% else %}
+                                Payment Terms
+                            {% endif %}
+                        </label>
+                        <input type="text" id="invoice_terms" name="invoice_terms"
+                               value="{% if lang == 'es' %}Pago debido dentro de 30 días.{% else %}Payment due within 30 days.{% endif %}">
+                    </div>
+                </div>
+
+                <!-- ATTACHMENTS (PHOTOS) -->
+                <h3>
+                    {% if lang == 'es' %}
+                        Adjuntos (opcional)
+                    {% else %}
+                        Attachments (optional)
+                    {% endif %}
+                </h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    {% if lang == 'es' %}
+                        Añade fotos o capturas relacionadas con esta factura (p.ej. órdenes de trabajo firmadas, fotos de antes y después).
+                    {% else %}
+                        Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
+                    {% endif %}
+                </p>
+
+                <div style="margin-bottom:20px;">
+                    <label for="attachments" style="font-weight:600; font-size:14px;">
+                        {% if lang == 'es' %}Fotos{% else %}Photos{% endif %}
+                    </label>
+                    <input
+                        type="file"
+                        id="attachments"
+                        name="attachments"
+                        accept="image/*"
+                        multiple
+                        style="display:block; margin-top:6px;"
+                        capture="environment"
+                    >
+                    <small style="font-size:12px; opacity:0.7;">
+                        {% if lang == 'es' %}
+                            En el móvil puedes usar la cámara o elegir desde tu galería.
+                        {% else %}
+                            On mobile you can use your camera or pick from your photo library.
+                        {% endif %}
+                    </small>
+                </div>
+
+                <!-- LINE ITEMS -->
+                <h3>
+                    {% if lang == 'es' %}
+                        Conceptos
+                    {% else %}
+                        Line Items
+                    {% endif %}
+                </h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    {% if lang == 'es' %}
+                        Añade al menos un servicio o producto. Puedes añadir o eliminar filas según lo necesites.
+                    {% else %}
+                        Add at least one service or product. You can add or remove rows as needed.
+                    {% endif %}
+                </p>
+
+                <div class="table-wrapper" style="margin-top:12px;">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                                </th>
+                                <th style="width:180px;">
+                                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="lineItemsBody">
+                            <!-- Rows are injected via JavaScript so you can add/remove line items -->
+                        </tbody>
+                    </table>
+                </div>
+                <button
+                    type="button"
+                    id="addLineItemBtn"
+                    class="btn btn-secondary"
+                    style="margin-top:10px;"
+                >
+                    {% if lang == 'es' %}
+                        + Añadir concepto
+                    {% else %}
+                        + Add line item
+                    {% endif %}
+                </button>
+
+                <!-- SIGNATURE -->
+                <h3>
+                    {% if lang == 'es' %}
+                        Firma del cliente (opcional)
+                    {% else %}
+                        Client Signature (optional)
+                    {% endif %}
+                </h3>
+                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
+                    {% if lang == 'es' %}
+                        Captura una firma rápida para aprobaciones en sitio.
+                    {% else %}
+                        Capture a quick signature for on-site approvals.
+                    {% endif %}
+                </p>
+
+                <div style="margin-bottom:20px;">
+                    <div
+                        style="
+                            border:1px solid #e5e7eb;
+                            border-radius:10px;
+                            padding:10px;
+                            background:#F0F0F0;
+                        "
+                    >
+                        <canvas
+                            id="signature-pad"
+                            width="600"
+                            height="200"
+                            style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
+                        ></canvas>
+                        <div style="margin-top:8px; display:flex; justify-content:space-between; gap:10px;">
+                            <small style="font-size:12px; opacity:0.7; align-self:center;">
+                                {% if lang == 'es' %}
+                                    Firma con tu dedo o mouse.
+                                {% else %}
+                                    Sign with your finger or mouse.
+                                {% endif %}
+                            </small>
+                            <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
+                                {% if lang == 'es' %}Limpiar{% else %}Clear{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Hidden field we populate with base64 PNG -->
+                    <input type="hidden" name="signature_data" id="signature_data">
+                </div>
+
+                <!-- TEMPLATE STYLE -->
+                <div class="form-row" style="margin-top:24px;">
+                    <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
+                        {% if lang == 'es' %}
+                            Estilo de factura
+                        {% else %}
+                            Invoice style
+                        {% endif %}
+                    </label>
+                    <select name="template_style" id="template_style" class="template-select">
+                        <option value="modern" selected>
+                            {% if lang == 'es' %}
+                                Moderno limpio (por defecto)
+                            {% else %}
+                                Modern Clean (default)
+                            {% endif %}
+                        </option>
+                        <option value="minimal">
+                            {% if lang == 'es' %}Gris minimalista{% else %}Minimal Grey{% endif %}
+                        </option>
+                        <option value="bold">
+                            {% if lang == 'es' %}Acento atrevido{% else %}Bold Accent{% endif %}
+                        </option>
+                        <option value="doodle">
+                            {% if lang == 'es' %}Divertido / doodle{% else %}Playful / Doodle{% endif %}
+                        </option>
+                    </select>
+                    <small style="font-size:12px; opacity:0.7;">
+                        {% if lang == 'es' %}
+                            Esto controla el diseño y estilo del PDF y la vista del cliente.
+                        {% else %}
+                            This controls the layout and feel of the PDF and client view.
+                        {% endif %}
+                    </small>
+                </div>
+
+                <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                        {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                    </a>
+                    <button type="button" id="previewButton" class="btn btn-secondary">
+                        {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
+                    </button>
+                    <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
+        <aside class="invoice-helper-col" style="flex:0 1 320px;max-width:380px;position:relative;z-index:0;">
+            <div class="assistant-card">
+                <div class="assistant-header">
+                    <span class="assistant-icon">✨</span>
+                    <div>
+                        <h3 class="assistant-title">
+                            {% if lang == 'es' %}
+                                Asistente de facturas
+                            {% else %}
+                                Invoice Assistant
+                            {% endif %}
+                        </h3>
+                        <p class="assistant-subtitle">
+                            {% if lang == 'es' %}
+                                Consejos inteligentes mientras creas.
+                            {% else %}
+                                Smart tips while you build.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                {% if user_plan == "pro" or user_plan == "enterprise" %}
+                    <p class="assistant-text">
+                        {% if lang == 'es' %}
+                            Como usuario Pro, obtendrás sugerencias más ricas aquí a medida que lancemos funciones de IA.
+                            Por ahora, aquí van algunos ajustes recomendados:
+                        {% else %}
+                            As a Pro user, you’ll get richer suggestions here as we roll out AI features.
+                            For now, here are some recommended tweaks:
+                        {% endif %}
+                    </p>
+                    <ul class="assistant-list">
+                        <li>
+                            {% if lang == 'es' %}
+                                Haz que las descripciones de tus conceptos sean específicas (horas, entregables, fechas).
+                            {% else %}
+                                Make your line item descriptions specific (hours, deliverables, dates).
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Usa condiciones de pago que coincidan con cómo realmente cobras (Net 7, Net 15, Net 30).
+                            {% else %}
+                                Use payment terms that match how you actually collect (Net 7, Net 15, Net 30).
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Añade una nota amigable para aumentar los pagos puntuales.
+                            {% else %}
+                                Add a friendly note to increase on-time payments.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Usa el botón <strong>Vista previa</strong> para revisar totales y redacción.
+                            {% else %}
+                                Use the <strong>Preview</strong> button to sanity-check totals and wording.
+                            {% endif %}
+                        </li>
+                    </ul>
+                    <p class="assistant-footer">
+                        {% if lang == 'es' %}
+                            Próximamente: haz preguntas en lenguaje natural como
+                            <em>"Ayúdame a reescribir esta factura para que suene más profesional."</em>
+                        {% else %}
+                            Coming soon: ask natural language questions like
+                            <em>“Help me rewrite this invoice to sound more professional.”</em>
+                        {% endif %}
+                    </p>
+                {% else %}
+                    <p class="assistant-text">
+                        {% if lang == 'es' %}
+                            El asistente te da consejos rápidos de buenas prácticas en el plan gratuito.
+                            Más adelante podrás actualizar a Pro para ayuda de IA más profunda.
+                        {% else %}
+                            The assistant gives you quick best-practice tips on the free plan.
+                            Upgrade to Pro later for deeper AI help.
+                        {% endif %}
+                    </p>
+                    <ul class="assistant-list">
+                        <li>
+                            {% if lang == 'es' %}
+                                Revisa siempre el correo del cliente antes de enviar.
+                            {% else %}
+                                Always double-check the client email before sending.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Divide proyectos grandes en varios conceptos en lugar de una sola tarifa enorme.
+                            {% else %}
+                                Break big projects into multiple line items instead of one huge fee.
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if lang == 'es' %}
+                                Usa fechas de vencimiento claras para evitar confusiones.
+                            {% else %}
+                                Use clear due dates so there’s no confusion.
+                            {% endif %}
+                        </li>
+                    </ul>
+                    <p class="assistant-footer">
+                        {% if lang == 'es' %}
+                            ¿Quieres sugerencias más inteligentes con IA aquí?<br>
+                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="assistant-link">Ver funciones Pro →</a>
+                        {% else %}
+                            Want smarter, AI-powered suggestions here?<br>
+                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="assistant-link">See Pro features →</a>
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+<!-- Preview + Signature + Line Items JS -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    {% if invoices %}
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("invoiceForm");
+    const previewBtn = document.getElementById("previewButton");
 
-    // ---------- GLOBAL CHART DEFAULTS (BOLDER GRID, KEEP COLORS) ----------
-    if (window.Chart && Chart.defaults && Chart.defaults.scale) {
-        if (Chart.defaults.scale.grid) {
-            Chart.defaults.scale.grid.color = "rgba(148, 163, 184, 0.35)";
-            Chart.defaults.scale.grid.lineWidth = 1.1;
+    // ---------- LINE ITEMS: add / remove ----------
+    const lineItemsBody = document.getElementById("lineItemsBody");
+    const addLineItemBtn = document.getElementById("addLineItemBtn");
+
+    function createLineItemRow() {
+        const tr = document.createElement("tr");
+
+        // Description cell
+        const descTd = document.createElement("td");
+        const descInput = document.createElement("input");
+        descInput.type = "text";
+        descInput.name = "description";
+        descInput.placeholder = {% if lang == 'es' %}
+            "p.ej. Desarrollo web, 10 horas"
+        {% else %}
+            "e.g. Web development, 10 hours"
+        {% endif %};
+        descTd.appendChild(descInput);
+
+        // Amount + remove button in second cell
+        const amtTd = document.createElement("td");
+        const amtWrapper = document.createElement("div");
+        amtWrapper.style.display = "flex";
+        amtWrapper.style.gap = "8px";
+        amtWrapper.style.alignItems = "center";
+
+        const amtInput = document.createElement("input");
+        amtInput.type = "number";
+        amtInput.name = "amount";
+        amtInput.step = "0.01";
+        amtInput.min = "0";
+        amtInput.placeholder = "0.00";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.textContent = {% if lang == 'es' %}"Quitar"{% else %}"Remove"{% endif %};
+        removeBtn.className = "btn btn-secondary btn-compact";
+        removeBtn.style.whiteSpace = "nowrap";
+
+        removeBtn.addEventListener("click", function () {
+            if (!lineItemsBody) return;
+            if (lineItemsBody.children.length > 1) {
+                tr.remove();
+            } else {
+                // If it's the only row, just clear it instead of removing
+                descInput.value = "";
+                amtInput.value = "";
+            }
+        });
+
+        amtWrapper.appendChild(amtInput);
+        amtWrapper.appendChild(removeBtn);
+        amtTd.appendChild(amtWrapper);
+
+        tr.appendChild(descTd);
+        tr.appendChild(amtTd);
+
+        return tr;
+    }
+
+    function addLineItemRow() {
+        if (!lineItemsBody) return;
+        const row = createLineItemRow();
+        lineItemsBody.appendChild(row);
+    }
+
+    function ensureInitialLineItems() {
+        if (!lineItemsBody) return;
+        if (lineItemsBody.children.length === 0) {
+            // Start with 3 rows like before
+            for (let i = 0; i < 3; i++) {
+                addLineItemRow();
+            }
         }
     }
 
-    // Data from Flask
-    const revenueLabels = {{ monthly_chart_labels|tojson }};
-    const revenueValues = {{ monthly_chart_totals|tojson }};
-    const statusLabels  = {{ status_chart_labels|tojson }};
-    const statusValues  = {{ status_chart_values|tojson }};
-    const dailyLabels   = {{ daily_chart_labels|tojson }};
-    const dailyValues   = {{ daily_chart_totals|tojson }};
+    ensureInitialLineItems();
 
-    // Top items data
-    const itemLabels = {{ item_labels|default([], true)|tojson }};
-    const itemTotals = {{ item_totals|default([], true)|tojson }};
-    const itemCounts = {{ item_counts|default([], true)|tojson }};
-
-    // ---------- Revenue chart (monthly, line) ----------
-    const revCtx = document.getElementById("revenueChart");
-    if (revCtx && revenueLabels.length > 0) {
-        new Chart(revCtx, {
-            type: "line",
-            data: {
-                labels: revenueLabels,
-                datasets: [{
-                    label: "{{ 'Revenue' if lang == 'en' else 'Ingresos' }}",
-                    data: revenueValues,
-                    fill: true,
-                    tension: 0.35,
-                    borderColor: "rgba(59, 130, 246, 1)",
-                    backgroundColor: "rgba(59, 130, 246, 0.18)",
-                    borderWidth: 2.4,
-                    pointRadius: 3,
-                    pointHoverRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                const v = ctx.parsed.y || 0;
-                                return "$" + v.toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                });
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { autoSkip: true },
-                        grid: {
-                            color: "rgba(148, 163, 184, 0.45)",
-                            lineWidth: 1.2,
-                            drawBorder: true
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: "rgba(148, 163, 184, 0.55)",
-                            lineWidth: 1.4,
-                            drawBorder: true
-                        }
-                    }
-                }
-            }
+    if (addLineItemBtn) {
+        addLineItemBtn.addEventListener("click", function () {
+            addLineItemRow();
         });
     }
 
-    // ---------- Daily revenue single-day viewer ----------
-    const dailySelect = document.getElementById("dailyDateSelect");
-    const dailySummary = document.getElementById("dailyRevenueSummary");
+    // ---- Signature pad setup ----
+    const canvas = document.getElementById("signature-pad");
+    const clearBtn = document.getElementById("clear-signature");
+    const sigInput = document.getElementById("signature_data");
 
-    function updateDailySummary() {
-        if (!dailySelect || !dailySummary || !dailyLabels || dailyLabels.length === 0) {
-            if (dailySummary) {
-                dailySummary.textContent = "{{ 'No daily revenue data.' if lang == 'en' else 'Sin datos de ingresos diarios.' }}";
-            }
-            return;
+    let ctx = null;
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let hasDrawn = false; // track if user actually signed
+
+    if (canvas && sigInput) {
+        ctx = canvas.getContext("2d");
+
+        // Keep canvas scaled to CSS size + device pixel ratio
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+
+            // Reset transform, then scale so 1 unit in code = 1 CSS pixel
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            clearCanvas();
         }
 
-        const idx = parseInt(dailySelect.value, 10);
-        if (isNaN(idx) || idx < 0 || idx >= dailyLabels.length) {
-            dailySummary.textContent = "{{ 'No daily revenue data.' if lang == 'en' else 'Sin datos de ingresos diarios.' }}";
-            return;
+        // Start with a clean dark background
+        function clearCanvas() {
+            ctx.fillStyle = "#020617";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            hasDrawn = false;
         }
 
-        const label = dailyLabels[idx];
-        const total = dailyValues[idx] || 0;
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
 
-        dailySummary.textContent =
-            {% if lang == 'es' %}
-            "El " + label + " facturaste $" +
-            {% else %}
-            "On " + label + ", you billed $" +
-            {% endif %}
-            total.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }) +
-            {% if lang == 'es' %}
-            " en facturas."
-            {% else %}
-            " in invoices."
-            {% endif %};
-    }
+        function getCanvasPos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+            const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
 
-    if (dailySelect) {
-        dailySelect.addEventListener("change", updateDailySummary);
-        updateDailySummary();
-    }
+        function startDrawing(evt) {
+            drawing = true;
+            const pos = getCanvasPos(evt);
+            lastX = pos.x;
+            lastY = pos.y;
+        }
 
-    // ---------- Status chart (doughnut) ----------
-    const statusCtx = document.getElementById("statusChart");
-    if (statusCtx && statusLabels.length > 0) {
-        new Chart(statusCtx, {
-            type: "doughnut",
-            data: {
-                labels: statusLabels,
-                datasets: [{
-                    data: statusValues,
-                    backgroundColor: [
-                        "#22c55e", // Paid - green
-                        "#3b82f6", // Sent - blue
-                        "#ef4444"  // Overdue - red
-                    ],
-                    borderColor: "#020617",
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "bottom",
-                        labels: {
-                            usePointStyle: true
-                        }
-                    }
-                },
-                cutout: "60%"
-            }
+        function draw(evt) {
+            if (!drawing) return;
+            evt.preventDefault();
+            const pos = getCanvasPos(evt);
+            ctx.strokeStyle = "#facc15"; // yellow-ish ink
+            ctx.lineWidth = 2;
+            ctx.lineCap = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+            hasDrawn = true;
+        }
+
+        function stopDrawing() {
+            drawing = false;
+        }
+
+        // Mouse events
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseleave", stopDrawing);
+
+        // Touch events
+        canvas.addEventListener("touchstart", function (e) {
+            e.preventDefault();
+            startDrawing(e);
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", function (e) {
+            draw(e);
+        }, { passive: false });
+
+        canvas.addEventListener("touchend", function () {
+            stopDrawing();
         });
-    }
 
-    // ---------- Top items (bar chart by total billed) ----------
-    const itemCtx = document.getElementById("itemChart");
-    if (itemCtx && itemLabels.length > 0) {
-        new Chart(itemCtx, {
-            type: "bar",
-            data: {
-                labels: itemLabels,
-                datasets: [{
-                    label: "{{ 'Total billed' if lang == 'en' else 'Total facturado' }}",
-                    data: itemTotals,
-                    backgroundColor: "rgba(249, 115, 22, 0.9)",
-                    borderColor: "rgba(194, 65, 12, 1)",
-                    borderWidth: 1.5,
-                    borderRadius: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                const total = ctx.parsed.y || 0;
-                                const idx = ctx.dataIndex;
-                                const count = itemCounts[idx] || 0;
-                                return "$" + total.toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                }) + " (" + count + " {{ 'tx' if lang == 'en' else 'mov' }})";
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            maxRotation: 40,
-                            minRotation: 0
-                        },
-                        grid: {
-                            color: "rgba(148, 163, 184, 0.45)",
-                            lineWidth: 1.2,
-                            drawBorder: true
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return "$" + value.toLocaleString();
-                            }
-                        },
-                        grid: {
-                            color: "rgba(148, 163, 184, 0.55)",
-                            lineWidth: 1.4,
-                            drawBorder: true
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // ---------- Live animated counter for Total Revenue ----------
-    const totalRevenue = {{ total_revenue|tojson }};
-    const totalRevenueEl = document.getElementById("totalRevenueKpi");
-    if (totalRevenueEl && !isNaN(totalRevenue)) {
-        const duration = 800; // ms
-        const start = performance.now();
-        const startValue = 0;
-
-        function animate(now) {
-            const elapsed = now - start;
-            const progress = Math.min(elapsed / duration, 1);
-            const current = startValue + (totalRevenue - startValue) * progress;
-
-            totalRevenueEl.textContent = "$" + current.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener("click", function () {
+                clearCanvas();
+                sigInput.value = "";
             });
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            }
         }
-
-        requestAnimationFrame(animate);
     }
 
-    {% endif %}
+    // Helper to capture base64 into the hidden field
+    function captureSignatureToHiddenField() {
+        if (!canvas || !ctx || !sigInput) return;
+
+        // If user never drew anything, don't send a signature
+        if (!hasDrawn) {
+            sigInput.value = "";
+            return;
+        }
+
+        const dataUrl = canvas.toDataURL("image/png");
+        sigInput.value = dataUrl;
+    }
+
+    // Make it available for debugging if needed
+    window.captureSignatureToHiddenField = captureSignatureToHiddenField;
+
+    // Preview button → send to /preview in new tab (preserve lang)
+    if (form && previewBtn) {
+        previewBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            captureSignatureToHiddenField();
+
+            const originalAction = form.action;
+            const originalTarget = form.target;
+
+            form.action = "/preview{% if lang %}?lang={{ lang }}{% endif %}";
+            form.target = "_blank";
+
+            form.submit();
+
+            form.action = originalAction;
+            form.target = originalTarget;
+        });
+    }
+
+    // Normal save submit → capture signature too
+    if (form) {
+        form.addEventListener("submit", function () {
+            captureSignatureToHiddenField();
+        });
+    }
 });
 </script>
-
-<style>
-.dashboard-header h1 {
-    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
-    -webkit-background-clip: text;
-    color: transparent;
-    letter-spacing: 0.02em;
-}
-</style>
 
 {% endblock %}
