@@ -3,26 +3,6 @@
 
 {% set lang = request.args.get('lang', 'en') %}
 
-<!-- LANGUAGE SWITCHER -->
-<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-    <div style="font-size:13px;opacity:0.85;">
-        {% if lang == 'es' %}
-            Idioma:
-        {% else %}
-            Language:
-        {% endif %}
-        <a href="?lang=en"
-           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
-            EN
-        </a>
-        <span style="opacity:0.6;">|</span>
-        <a href="?lang=es"
-           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
-            ES
-        </a>
-    </div>
-</div>
-
 <div class="dashboard-header">
     <h1>
         {% if lang == 'es' %}Perfil de negocio y marca{% else %}Business Profile & Branding{% endif %}
