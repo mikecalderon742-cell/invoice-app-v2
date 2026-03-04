@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-{# Simple language handling: default to English if no ?lang= is set #}
+{# Language handling for copy (no visible switcher here) #}
 {% set lang = request.args.get('lang', 'en') %}
 
 <div class="hero reveal"
@@ -65,7 +65,7 @@
 
     <div class="invoice-layout-grid"
          style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
-        <!-- LEFT: main invoice form -->
+        <!-- LEFT: main invoice form ONLY (assistant sidebar removed) -->
         <div class="invoice-form-col" style="flex:1 1 520px;min-width:0;">
             <h2 style="margin-top:0;">
                 {% if lang == 'es' %}
@@ -411,125 +411,7 @@
 
             </form>
         </div>
-
-        <!-- RIGHT: Invoice Assistant (Phase 1 AI helper) -->
-        <aside class="invoice-helper-col" style="flex:0 1 320px;max-width:380px;position:relative;z-index:0;">
-            <div class="assistant-card">
-                <div class="assistant-header">
-                    <span class="assistant-icon">✨</span>
-                    <div>
-                        <h3 class="assistant-title">
-                            {% if lang == 'es' %}
-                                Asistente de facturas
-                            {% else %}
-                                Invoice Assistant
-                            {% endif %}
-                        </h3>
-                        <p class="assistant-subtitle">
-                            {% if lang == 'es' %}
-                                Consejos inteligentes mientras creas.
-                            {% else %}
-                                Smart tips while you build.
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-
-                {% if user_plan == "pro" or user_plan == "enterprise" %}
-                    <p class="assistant-text">
-                        {% if lang == 'es' %}
-                            Como usuario Pro, obtendrás sugerencias más ricas aquí a medida que lancemos funciones de IA.
-                            Por ahora, aquí van algunos ajustes recomendados:
-                        {% else %}
-                            As a Pro user, you’ll get richer suggestions here as we roll out AI features.
-                            For now, here are some recommended tweaks:
-                        {% endif %}
-                    </p>
-                    <ul class="assistant-list">
-                        <li>
-                            {% if lang == 'es' %}
-                                Haz que las descripciones de tus conceptos sean específicas (horas, entregables, fechas).
-                            {% else %}
-                                Make your line item descriptions specific (hours, deliverables, dates).
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Usa condiciones de pago que coincidan con cómo realmente cobras (Net 7, Net 15, Net 30).
-                            {% else %}
-                                Use payment terms that match how you actually collect (Net 7, Net 15, Net 30).
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Añade una nota amigable para aumentar los pagos puntuales.
-                            {% else %}
-                                Add a friendly note to increase on-time payments.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Usa el botón <strong>Vista previa</strong> para revisar totales y redacción.
-                            {% else %}
-                                Use the <strong>Preview</strong> button to sanity-check totals and wording.
-                            {% endif %}
-                        </li>
-                    </ul>
-                    <p class="assistant-footer">
-                        {% if lang == 'es' %}
-                            Próximamente: haz preguntas en lenguaje natural como
-                            <em>"Ayúdame a reescribir esta factura para que suene más profesional."</em>
-                        {% else %}
-                            Coming soon: ask natural language questions like
-                            <em>“Help me rewrite this invoice to sound more professional.”</em>
-                        {% endif %}
-                    </p>
-                {% else %}
-                    <p class="assistant-text">
-                        {% if lang == 'es' %}
-                            El asistente te da consejos rápidos de buenas prácticas en el plan gratuito.
-                            Más adelante podrás actualizar a Pro para ayuda de IA más profunda.
-                        {% else %}
-                            The assistant gives you quick best-practice tips on the free plan.
-                            Upgrade to Pro later for deeper AI help.
-                        {% endif %}
-                    </p>
-                    <ul class="assistant-list">
-                        <li>
-                            {% if lang == 'es' %}
-                                Revisa siempre el correo del cliente antes de enviar.
-                            {% else %}
-                                Always double-check the client email before sending.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Divide proyectos grandes en varios conceptos en lugar de una sola tarifa enorme.
-                            {% else %}
-                                Break big projects into multiple line items instead of one huge fee.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Usa fechas de vencimiento claras para evitar confusiones.
-                            {% else %}
-                                Use clear due dates so there’s no confusion.
-                            {% endif %}
-                        </li>
-                    </ul>
-                    <p class="assistant-footer">
-                        {% if lang == 'es' %}
-                            ¿Quieres sugerencias más inteligentes con IA aquí?<br>
-                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="assistant-link">Ver funciones Pro →</a>
-                        {% else %}
-                            Want smarter, AI-powered suggestions here?<br>
-                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="assistant-link">See Pro features →</a>
-                        {% endif %}
-                    </p>
-                {% endif %}
-            </div>
-        </aside>
-
+        <!-- ✅ No assistant sidebar here anymore; floating AI bubble is the single assistant -->
     </div>
 </div>
 
