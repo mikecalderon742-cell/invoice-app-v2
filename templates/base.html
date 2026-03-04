@@ -375,14 +375,8 @@
             </span>
 
             <div class="lang-toggle">
-                <a
-                    href="{{ request.path }}?lang=en"
-                    class="{% if lang != 'es' %}active{% endif %}"
-                >EN</a>
-                <a
-                    href="{{ request.path }}?lang=es"
-                    class="{% if lang == 'es' %}active{% endif %}"
-                >ES</a>
+                <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
+                <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
             </div>
 
             <button id="themeToggle" class="theme-toggle">🌙</button>
@@ -408,14 +402,8 @@
                 </a>
 
                 <div class="lang-toggle">
-                    <a
-                        href="{{ request.path }}?lang=en"
-                        class="{% if lang != 'es' %}active{% endif %}"
-                    >EN</a>
-                    <a
-                        href="{{ request.path }}?lang=es"
-                        class="{% if lang == 'es' %}active{% endif %}"
-                    >ES</a>
+                    <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
+                    <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
                 </div>
 
                 <button id="themeToggle" class="theme-toggle">🌙</button>
@@ -437,14 +425,8 @@
                 </a>
 
                 <div class="lang-toggle">
-                    <a
-                        href="{{ request.path }}?lang=en"
-                        class="{% if lang != 'es' %}active{% endif %}"
-                    >EN</a>
-                    <a
-                        href="{{ request.path }}?lang=es"
-                        class="{% if lang == 'es' %}active{% endif %}"
-                    >ES</a>
+                    <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
+                    <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
                 </div>
 
                 <button id="themeToggle" class="theme-toggle">🌙</button>
@@ -526,7 +508,7 @@
 </div>
 
 {% if not is_public_view %}
-<!-- AI HELPER WIDGET -->
+<!-- AI HELPER WIDGET (BillBeam Assistant) -->
 <div id="aiHelper" class="ai-helper">
     <button id="aiHelperToggle" class="ai-helper-toggle" type="button">
         💬
@@ -742,7 +724,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     /* ============================
-       AI HELPER WIDGET (enhanced)
+       AI HELPER WIDGET (BillBeam)
     ============================ */
     const aiHelper = document.getElementById("aiHelper");
     const aiPanel = document.getElementById("aiHelperPanel");
@@ -828,9 +810,7 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 const resp = await fetch("/ai-helper", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         question: q,
                         page: window.location.pathname,
@@ -838,9 +818,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     })
                 });
 
-                if (!resp.ok) {
-                    throw new Error("HTTP " + resp.status);
-                }
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
 
                 const data = await resp.json();
                 removeLoadingBubble(loadingBubble);
@@ -870,231 +848,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-});
-</script>
-
-{% set lang = request.args.get('lang', 'en') %}
-
-<!-- InvoicePro Assistant floating widget -->
-<div id="ai-assistant-launcher"
-     style="
-        position: fixed;
-        left: 20px;
-        bottom: 20px;
-        z-index: 9999;
-        width: 52px;
-        height: 52px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #3B82F6, #FACC15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-        cursor: pointer;
-        border: 1px solid rgba(15,23,42,0.7);
-     ">
-    <span style="font-size:24px;">✨</span>
-</div>
-
-<div id="ai-assistant-panel"
-     style="
-        position: fixed;
-        left: 20px;
-        bottom: 84px;
-        width: 360px;
-        max-width: calc(100% - 40px);
-        max-height: 60vh;
-        background: #020617;
-        color: #e5e7eb;
-        border-radius: 18px;
-        box-shadow: 0 18px 40px rgba(0,0,0,0.6);
-        border: 1px solid rgba(148,163,184,0.7);
-        display: none;
-        flex-direction: column;
-        z-index: 9999;
-        overflow: hidden;
-     ">
-    <div style="padding:10px 12px; border-bottom:1px solid rgba(51,65,85,0.9); display:flex; align-items:center; justify-content:space-between;">
-        <div>
-            <div style="font-weight:600; font-size:14px;">
-                {% if lang == 'es' %}InvoicePro Assistant{% else %}InvoicePro Assistant{% endif %}
-            </div>
-            <div style="font-size:11px; opacity:0.7; margin-top:2px;">
-                {% if lang == 'es' %}
-                    Haz preguntas sobre tus facturas, panel y texto de recordatorios.
-                {% else %}
-                    Ask about your invoices, dashboard, and payment wording.
-                {% endif %}
-            </div>
-        </div>
-        <button id="ai-assistant-close"
-                style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:4px;">
-            ✕
-        </button>
-    </div>
-
-    <div id="ai-assistant-messages"
-         style="flex:1; padding:10px 12px; overflow-y:auto; font-size:13px; display:flex; flex-direction:column; gap:8px;">
-        <div style="align-self:flex-start; max-width:100%; padding:8px 10px; border-radius:10px; background:#020617; border:1px solid rgba(148,163,184,0.55);">
-            {% if lang == 'es' %}
-                Hola 👋 Soy InvoicePro Assistant. Puedo ayudarte a redactar notas de facturas, recordatorios de pago,
-                y entender lo que ves en tu panel. ¿En qué te ayudo?
-            {% else %}
-                Hey 👋 I’m InvoicePro Assistant. I can help you write invoice notes and payment reminders,
-                and make sense of your dashboard. What would you like help with?
-            {% endif %}
-        </div>
-    </div>
-
-    <form id="ai-assistant-form"
-          style="padding:8px 10px; border-top:1px solid rgba(51,65,85,0.9); display:flex; gap:6px; align-items:flex-end;">
-        <textarea
-            id="ai-assistant-input"
-            rows="2"
-            placeholder="{% if lang == 'es' %}Ej: Ayúdame a escribir un recordatorio educado para una factura vencida.{% else %}E.g. Help me write a friendly reminder for an overdue invoice.{% endif %}"
-            style="
-                flex:1;
-                resize:none;
-                border-radius:10px;
-                border:1px solid rgba(71,85,105,0.9);
-                padding:7px 9px;
-                background:#020617;
-                color:#e5e7eb;
-                font-size:13px;
-                font-family:inherit;
-            "
-        ></textarea>
-        <button type="submit"
-                id="ai-assistant-send"
-                style="
-                    padding:8px 10px;
-                    border-radius:999px;
-                    border:none;
-                    background:linear-gradient(135deg,#3B82F6,#FACC15);
-                    color:#020617;
-                    font-size:13px;
-                    font-weight:600;
-                    cursor:pointer;
-                    white-space:nowrap;
-                ">
-            {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
-        </button>
-    </form>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const launcher = document.getElementById("ai-assistant-launcher");
-    const panel = document.getElementById("ai-assistant-panel");
-    const closeBtn = document.getElementById("ai-assistant-close");
-    const form = document.getElementById("ai-assistant-form");
-    const input = document.getElementById("ai-assistant-input");
-    const messages = document.getElementById("ai-assistant-messages");
-
-    if (!launcher || !panel || !form || !input || !messages) return;
-
-    const lang = "{{ lang }}";
-    const pagePath = "{{ request.path }}";
-
-    function togglePanel() {
-        if (panel.style.display === "none" || !panel.style.display) {
-            panel.style.display = "flex";
-            input.focus();
-        } else {
-            panel.style.display = "none";
-        }
-    }
-
-    launcher.addEventListener("click", togglePanel);
-    if (closeBtn) {
-        closeBtn.addEventListener("click", function () {
-            panel.style.display = "none";
-        });
-    }
-
-    function appendMessage(text, role) {
-        const bubble = document.createElement("div");
-        bubble.style.maxWidth = "100%";
-        bubble.style.padding = "8px 10px";
-        bubble.style.borderRadius = "10px";
-        bubble.style.fontSize = "13px";
-        bubble.style.whiteSpace = "pre-wrap";
-
-        if (role === "user") {
-            bubble.style.alignSelf = "flex-end";
-            bubble.style.background = "#1d283a";
-            bubble.style.border = "1px solid rgba(148,163,184,0.7)";
-        } else {
-            bubble.style.alignSelf = "flex-start";
-            bubble.style.background = "#020617";
-            bubble.style.border = "1px solid rgba(148,163,184,0.55)";
-        }
-
-        bubble.textContent = text;
-        messages.appendChild(bubble);
-        messages.scrollTop = messages.scrollHeight;
-    }
-
-    let sending = false;
-
-    form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const raw = input.value.trim();
-        if (!raw || sending) return;
-
-        const userText = raw;
-        input.value = "";
-        appendMessage(userText, "user");
-
-        sending = true;
-        const sendButton = document.getElementById("ai-assistant-send");
-        const oldLabel = sendButton ? sendButton.textContent : "";
-        if (sendButton) {
-            sendButton.disabled = true;
-            sendButton.textContent = lang === "es" ? "Pensando..." : "Thinking...";
-        }
-
-        try {
-            const resp = await fetch("/api/ai-assistant", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    message: userText,
-                    lang: lang,
-                    page: pagePath,
-                    extra_context: {}
-                })
-            });
-
-            const data = await resp.json();
-            if (data && data.reply) {
-                appendMessage(data.reply, "assistant");
-            } else {
-                const fallback =
-                    (data && data.error) ||
-                    (lang === "es"
-                        ? "Hubo un problema con el asistente."
-                        : "There was a problem with the assistant.");
-                appendMessage(fallback, "assistant");
-            }
-        } catch (err) {
-            console.error("AI assistant error:", err);
-            appendMessage(
-                lang === "es"
-                    ? "Hubo un problema de conexión. Intenta de nuevo."
-                    : "There was a connection error. Please try again.",
-                "assistant"
-            );
-        } finally {
-            sending = false;
-            if (sendButton) {
-                sendButton.disabled = false;
-                sendButton.textContent = oldLabel;
-            }
-        }
-    });
 });
 </script>
 

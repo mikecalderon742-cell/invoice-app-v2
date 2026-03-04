@@ -3557,3 +3557,60 @@ body.dark .lang-pill.active {
     color: #020617;
     border-color: var(--accent-light);
 }
+
+/* BILLBEAM ASSISTANT */
+
+#billbeam-assistant {
+position: fixed;
+bottom: 22px;
+left: 22px;
+width: 320px;
+background: #020617;
+border: 1px solid rgba(255,255,255,0.08);
+border-radius: 14px;
+box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+overflow: hidden;
+z-index: 9999;
+font-family: Inter, sans-serif;
+}
+
+#billbeam-assistant-header {
+background: linear-gradient(135deg,#3A8BFF,#2563eb);
+color:white;
+padding:12px 16px;
+font-weight:600;
+font-size:14px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+#billbeam-assistant-body {
+padding:12px;
+max-height:260px;
+overflow-y:auto;
+font-size:13px;
+color:#e5e7eb;
+}
+
+#billbeam-assistant-input {
+display:flex;
+border-top:1px solid rgba(255,255,255,0.08);
+}
+
+#billbeam-assistant-input input{
+flex:1;
+padding:10px;
+border:none;
+background:#020617;
+color:white;
+font-size:13px;
+}
+
+#billbeam-assistant-input button{
+background:#3A8BFF;
+border:none;
+color:white;
+padding:0 14px;
+cursor:pointer;
+}
