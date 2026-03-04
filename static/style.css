@@ -3070,7 +3070,7 @@ body.dark .pricing-card {
 }
 
 .pricing-pill.current {
-    background: rgba(16,185,129,0.1);
+    background: rgba(16,185,129,0.1); /* yellow tint */
     color: #166534;
     border: 1px solid rgba(16,185,129,0.7);
 }
