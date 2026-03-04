@@ -112,18 +112,43 @@
                         {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
                     </span>
 
-                {% elif key == 'pro' and not is_pro %}
-                    <!-- Pre-launch: still disabled until Stripe checkout is wired -->
-                    <button type="button" class="btn btn-brand btn-compact" disabled>
-                        {% if lang == 'es' %}Actualizar a Pro (próximamente){% else %}Upgrade to Pro (coming soon){% endif %}
-                    </button>
-                    <span class="pricing-note">
-                        {% if lang == 'es' %}
-                            La facturación con Stripe se habilitará pronto.
-                        {% else %}
-                            Stripe billing will be enabled soon.
-                        {% endif %}
-                    </span>
+                <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
+  {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
+</button>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("upgradeProBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", async function () {
+    btn.disabled = true;
+    const oldText = btn.textContent;
+    btn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
+
+    try {
+      const resp = await fetch("/create-checkout-session?lang={{ lang }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+
+      const data = await resp.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not start checkout.");
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    } catch (e) {
+      alert("Network error starting checkout.");
+      btn.disabled = false;
+      btn.textContent = oldText;
+    }
+  });
+});
+</script>
 
                 {% else %}
                     {% if key == 'free' %}

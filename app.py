@@ -19,6 +19,8 @@ import stripe  # installed and ready
 from openai import OpenAI  # ✅ AI helper
 from flask import request, jsonify
 
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
 client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY"))
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -947,8 +949,36 @@ def changelog_page():
 # Stub route so url_for('create_checkout_session') works.
 # The button can show "Coming soon" and just bounce back to pricing for now.
 @app.route("/create-checkout-session", methods=["POST"])
-def create_checkout_session_route():
-    return redirect(url_for("pricing", upgraded="stub"))
+def create_checkout_session():
+    # If you have auth, keep this:
+    # if not current_user.is_authenticated:
+    #     return jsonify({"error": "Unauthorized"}), 401
+
+    price_id = os.getenv("STRIPE_PRICE_PRO_MONTHLY")
+    if not price_id:
+        return jsonify({"error": "Missing STRIPE_PRICE_PRO_MONTHLY"}), 500
+
+    base_url = os.getenv("APP_BASE_URL", "").rstrip("/")
+    if not base_url:
+        # fallback (works locally), but in prod you should set APP_BASE_URL
+        base_url = request.host_url.rstrip("/")
+
+    lang = request.args.get("lang", "en")
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            payment_method_types=["card"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=f"{base_url}/pricing?upgraded=1&lang={lang}",
+            cancel_url=f"{base_url}/pricing?canceled=1&lang={lang}",
+            # Optional: auto-fill email if you have it
+            # customer_email=current_user.email if current_user.is_authenticated else None,
+            allow_promotion_codes=True,
+        )
+        return jsonify({"url": session.url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # -------------------------
