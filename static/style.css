@@ -3070,10 +3070,9 @@ body.dark .pricing-card {
 }
 
 .pricing-pill.current {
-    background: rgba(16,185,129,0.1); /* yellow tint */
+    background: rgba(16,185,129,0.1);
     color: #166534;
     border: 1px solid rgba(16,185,129,0.7);
-    font-weight: 700;
 }
 
 .pricing-pill.recommended{
