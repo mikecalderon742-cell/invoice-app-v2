@@ -4,6 +4,32 @@
 
 <div class="public-portal">
 
+  {# --- Payment alerts --- #}
+  {% if request.args.get('paid') %}
+    <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:16px;">
+      {% if lang == 'es' %}
+        ✅ Pago recibido. Gracias — esta factura se está actualizando.
+      {% else %}
+        ✅ Payment received. Thank you — this invoice is updating.
+      {% endif %}
+      <div style="opacity:.85;font-size:.9rem;margin-top:6px;">
+        {% if lang == 'es' %}
+          Si aún aparece “Pendiente”, recarga en unos segundos.
+        {% else %}
+          If it still shows “Due”, refresh in a few seconds.
+        {% endif %}
+      </div>
+    </div>
+  {% elif request.args.get('canceled') %}
+    <div class="alert-overdue" style="border-color:#f97316;background:#451a03;color:#fed7aa;margin-bottom:16px;">
+      {% if lang == 'es' %}
+        Pago cancelado. Puedes intentarlo nuevamente cuando quieras.
+      {% else %}
+        Payment canceled. You can try again any time.
+      {% endif %}
+    </div>
+  {% endif %}
+
   <!-- HERO -->
   <div class="public-hero">
     <div class="public-hero-left">
@@ -84,9 +110,22 @@
         </div>
 
         <div class="summary-actions">
-          <!-- Pay Now UI (we’ll wire later) -->
-          <button class="btn btn-brand btn-pay" disabled title="Coming soon">
-            {% if lang == 'es' %}Pagar ahora (próximamente){% else %}Pay Now (Coming Soon){% endif %}
+          {# Pay Now button states #}
+          {% set can_pay = (status != "Paid") and (balance and balance > 0) %}
+          <button
+            class="btn btn-brand btn-pay"
+            id="payNowBtn"
+            {% if not can_pay %}disabled{% endif %}
+            data-token="{{ public_token }}"
+            title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
+          >
+            {% if status == "Paid" %}
+              {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+            {% elif balance <= 0 %}
+              {% if lang == 'es' %}Sin saldo{% else %}No balance{% endif %}
+            {% else %}
+              {% if lang == 'es' %}Pagar ahora{% else %}Pay Now{% endif %}
+            {% endif %}
           </button>
 
           {% if pdf_url %}
@@ -290,52 +329,52 @@
       {% endif %}
 
       {% if attachment_paths or signature_path %}
-    <section class="invoice-extras" style="margin-top:24px;">
-        {% if attachment_paths %}
+        <section class="invoice-extras" style="margin-top:24px;">
+          {% if attachment_paths %}
             <div class="invoice-attachments" style="margin-bottom:16px;">
-                <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
-                    {% if lang == 'es' %}Archivos adjuntos{% else %}Attachments{% endif %}
-                </h3>
-                <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
-                    {% for path in attachment_paths %}
-                        <a href="{{ url_for('uploaded_file', filename=path) }}" target="_blank"
-                           style="display:inline-block; border-radius:8px; overflow:hidden; border:1px solid rgba(148,163,184,0.4);">
-                            <img src="{{ url_for('uploaded_file', filename=path) }}"
-                                 alt="Attachment"
-                                 style="display:block; max-height:120px;">
-                        </a>
-                    {% endfor %}
-                </div>
+              <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
+                {% if lang == 'es' %}Archivos adjuntos{% else %}Attachments{% endif %}
+              </h3>
+              <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+                {% for path in attachment_paths %}
+                  <a href="{{ url_for('uploaded_file', filename=path) }}" target="_blank"
+                     style="display:inline-block; border-radius:8px; overflow:hidden; border:1px solid rgba(148,163,184,0.4);">
+                    <img src="{{ url_for('uploaded_file', filename=path) }}"
+                         alt="Attachment"
+                         style="display:block; max-height:120px;">
+                  </a>
+                {% endfor %}
+              </div>
             </div>
-        {% endif %}
+          {% endif %}
 
-        {% if signature_path %}
+          {% if signature_path %}
             <div class="invoice-signature">
-                <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
-                    {% if lang == 'es' %}Firma{% else %}Signature{% endif %}
-                </h3>
-                <div style="margin-top:8px; padding:10px; border-radius:10px; background:#020617; border:1px solid rgba(148,163,184,0.5); max-width:320px;">
-                    <img src="{{ url_for('uploaded_file', filename=signature_path) }}"
-                         alt="Signature"
-                         style="display:block; width:100%; max-width:100%;">
-                    <div style="margin-top:6px; font-size:12px; opacity:0.7;">
-                        {% if lang == 'es' %}Firma en archivo{% else %}Signed on file{% endif %}
-                    </div>
+              <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
+                {% if lang == 'es' %}Firma{% else %}Signature{% endif %}
+              </h3>
+              <div style="margin-top:8px; padding:10px; border-radius:10px; background:#020617; border:1px solid rgba(148,163,184,0.5); max-width:320px;">
+                <img src="{{ url_for('uploaded_file', filename=signature_path) }}"
+                     alt="Signature"
+                     style="display:block; width:100%; max-width:100%;">
+                <div style="margin-top:6px; font-size:12px; opacity:0.7;">
+                  {% if lang == 'es' %}Firma en archivo{% else %}Signed on file{% endif %}
                 </div>
+              </div>
             </div>
-        {% endif %}
-    </section>
-{% endif %}
+          {% endif %}
+        </section>
+      {% endif %}
 
       <div class="trust-row">
         <div class="trust-pill">
-            {% if lang == 'es' %}Enlace seguro{% else %}Secure Link{% endif %}
+          {% if lang == 'es' %}Enlace seguro{% else %}Secure Link{% endif %}
         </div>
         <div class="trust-pill">
-            {% if lang == 'es' %}PDF disponible{% else %}PDF Available{% endif %}
+          {% if lang == 'es' %}PDF disponible{% else %}PDF Available{% endif %}
         </div>
         <div class="trust-pill">
-            {% if lang == 'es' %}Portal de cliente{% else %}Client Portal{% endif %}
+          {% if lang == 'es' %}Portal de cliente{% else %}Client Portal{% endif %}
         </div>
       </div>
     </div>
@@ -343,12 +382,59 @@
 
   <div class="powered-by">
     {% if lang == 'es' %}
-        Desarrollado por <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+      Desarrollado por <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
     {% else %}
-        Powered by <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+      Powered by <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
     {% endif %}
   </div>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("payNowBtn");
+  if (!btn || btn.disabled) return;
+
+  // If Stripe redirected back with ?paid=1, do one soft refresh after a short delay
+  // (webhook can land milliseconds after redirect)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("paid") === "1") {
+    setTimeout(() => {
+      // remove session_id from URL if present, keep paid=1 optional
+      const url = new URL(window.location.href);
+      url.searchParams.delete("session_id");
+      window.location.replace(url.toString());
+    }, 1500);
+  }
+
+  btn.addEventListener("click", async function () {
+    const oldText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "{{ 'Redirigiendo…' if lang == 'es' else 'Redirecting…' }}";
+
+    try {
+      const token = btn.getAttribute("data-token");
+      const resp = await fetch(`/public/${token}/create-pay-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+
+      const data = await resp.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not start payment.");
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    } catch (e) {
+      alert("Network error starting payment.");
+      btn.disabled = false;
+      btn.textContent = oldText;
+    }
+  });
+});
+</script>
 
 {% endblock %}

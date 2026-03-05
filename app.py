@@ -295,6 +295,22 @@ def init_db():
 
     conn.commit()
 
+    # -------------------------
+    # Stripe linkage for invoice payments (Pay Now)
+    # -------------------------
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_checkout_session_id TEXT;")
+
+    # Optional: track last Stripe payment intent on invoice (handy for debugging)
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS stripe_last_payment_intent_id TEXT;")
+
+    # Create an idempotency guarantee: the same Stripe payment intent cannot be inserted twice
+    # (Postgres supports IF NOT EXISTS for indexes)
+    cursor.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS payments_stripe_pi_unique ON payments(stripe_payment_intent_id) "
+        "WHERE stripe_payment_intent_id IS NOT NULL;"
+    )
+
     # DEFAULT OWNER USER
     cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1;")
     row = cursor.fetchone()
@@ -463,6 +479,61 @@ def get_current_user():
 def get_plan_for_current_user():
     user = get_current_user()
     return user.get("plan") or "free"
+
+def get_user_plan_by_user_id(user_id: int) -> str:
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT plan FROM users WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return (row[0] if row and row[0] else "free")
+
+
+def get_invoice_by_public_token(token: str):
+    """
+    Returns invoice + computed totals by public token:
+      invoice_id, user_id, status, amount_total, total_paid, balance, invoice_number
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            i.id,
+            i.user_id,
+            i.status,
+            i.amount,
+            i.invoice_number,
+            COALESCE(SUM(p.amount), 0) AS total_paid
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id
+        WHERE i.public_token = %s
+        GROUP BY i.id, i.user_id, i.status, i.amount, i.invoice_number
+        """,
+        (token,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return None
+
+    invoice_id, user_id, status, amount_total, invoice_number, total_paid = row
+    amount_total = float(amount_total or 0)
+    total_paid = float(total_paid or 0)
+    balance = max(amount_total - total_paid, 0.0)
+
+    return {
+        "invoice_id": invoice_id,
+        "user_id": user_id,
+        "status": status or "Sent",
+        "amount_total": amount_total,
+        "total_paid": total_paid,
+        "balance": balance,
+        "invoice_number": invoice_number,
+    }
 
 
 @app.route("/debug-plan")
@@ -987,6 +1058,71 @@ def create_checkout_session():
 
     except Exception as e:
         print(f"[Stripe] create_checkout_session error: {e}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/public/<string:token>/create-pay-session", methods=["POST"])
+def create_public_invoice_pay_session(token):
+    """
+    Creates a Stripe Checkout Session (mode=payment) for the invoice BALANCE due.
+    Called from the public invoice page "Pay Now" button.
+    """
+    base_url = os.getenv("APP_BASE_URL", "").rstrip("/") or request.host_url.rstrip("/")
+    currency = (os.getenv("STRIPE_CURRENCY") or "usd").lower()
+
+    inv = get_invoice_by_public_token(token)
+    if not inv:
+        return jsonify({"error": "Invoice not found."}), 404
+
+    # Only allow Pay Now if the invoice owner is Pro+
+    owner_plan = get_user_plan_by_user_id(inv["user_id"])
+    if PLAN_LEVELS.get(owner_plan, 0) < PLAN_LEVELS.get("pro", 0):
+        return jsonify({"error": "Pay Now is not enabled for this invoice."}), 403
+
+    if inv["status"] == "Paid" or inv["balance"] <= 0:
+        return jsonify({"error": "This invoice is already paid."}), 400
+
+    # Stripe expects cents (integer)
+    amount_cents = int(round(inv["balance"] * 100))
+    if amount_cents < 50:  # Stripe min charge is typically $0.50 in many configs
+        return jsonify({"error": "Balance too small to charge via Stripe."}), 400
+
+    invoice_label = inv["invoice_number"] or f"#{inv['invoice_id']}"
+    line_desc = f"Invoice {invoice_label} — Balance Due"
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            mode="payment",
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": currency,
+                        "unit_amount": amount_cents,
+                        "product_data": {
+                            "name": line_desc,
+                        },
+                    },
+                    "quantity": 1,
+                }
+            ],
+            # Redirect back to the public invoice page
+            success_url=f"{base_url}/public/{token}?paid=1&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{base_url}/public/{token}?canceled=1",
+
+            # Critical metadata for webhook → DB update
+            metadata={
+                "kind": "invoice_payment",
+                "invoice_id": str(inv["invoice_id"]),
+                "public_token": token,
+                "invoice_user_id": str(inv["user_id"]),
+            },
+        )
+
+        return jsonify({"url": checkout_session.url})
+
+    except Exception as e:
+        print(f"[Stripe] create_public_invoice_pay_session error: {e}", flush=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -3095,61 +3231,169 @@ def stripe_webhook():
     print(f"[Stripe] Received event: {event_type}", flush=True)
 
     # -------------------------------------------------------
-    # 1) Checkout completed => upgrade user via metadata user_id
+    # 1) Checkout completed => subscription OR invoice payment
     # -------------------------------------------------------
     if event_type == "checkout.session.completed":
         session_obj = event["data"]["object"]
-
+        mode = (session_obj.get("mode") or "").lower()
         metadata = session_obj.get("metadata") or {}
-        user_id_str = metadata.get("user_id")
-
-        # Fallback: client_reference_id
-        if not user_id_str:
-            user_id_str = session_obj.get("client_reference_id")
-
-        stripe_customer_id = session_obj.get("customer")
-        session_id = session_obj.get("id")
 
         print(
-            f"[Stripe] checkout.session.completed session_id={session_id} "
-            f"user_id_str={user_id_str} customer={stripe_customer_id} metadata={metadata}",
+            f"[Stripe] checkout.session.completed mode={mode} session_id={session_obj.get('id')} metadata={metadata}",
             flush=True
         )
 
-        if not user_id_str:
-            print("[Stripe] No user_id found in metadata or client_reference_id; cannot upgrade", flush=True)
+        # -----------------------------
+        # A) Subscription checkout -> upgrade user
+        # -----------------------------
+        if mode == "subscription":
+            user_id_str = metadata.get("user_id") or session_obj.get("client_reference_id")
+            stripe_customer_id = session_obj.get("customer")
+
+            if not user_id_str:
+                print("[Stripe] Subscription checkout missing user_id; cannot upgrade", flush=True)
+                return "OK", 200
+
+            try:
+                user_id = int(user_id_str)
+            except ValueError:
+                print(f"[Stripe] Invalid user_id value: {user_id_str}", flush=True)
+                return "OK", 200
+
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                if stripe_customer_id:
+                    cursor.execute(
+                        "UPDATE users SET plan = %s, stripe_customer_id = %s WHERE id = %s",
+                        ("pro", stripe_customer_id, user_id),
+                    )
+                else:
+                    cursor.execute(
+                        "UPDATE users SET plan = %s WHERE id = %s",
+                        ("pro", user_id),
+                    )
+                conn.commit()
+                updated = cursor.rowcount
+                cursor.close()
+                conn.close()
+                print(f"[Stripe] Upgraded user {user_id} to Pro (rows_updated={updated})", flush=True)
+            except Exception as e:
+                print(f"[Stripe] DB error upgrading user {user_id}: {e}", flush=True)
+
             return "OK", 200
 
-        try:
-            user_id = int(user_id_str)
-        except ValueError:
-            print(f"[Stripe] Invalid user_id value: {user_id_str}", flush=True)
-            return "Bad metadata", 200
+        # -----------------------------
+        # B) One-time invoice payment -> record payment + mark paid
+        # -----------------------------
+        if mode == "payment" and metadata.get("kind") == "invoice_payment":
+            invoice_id_str = metadata.get("invoice_id")
+            token = metadata.get("public_token")
+            payment_intent_id = session_obj.get("payment_intent")
+            checkout_session_id = session_obj.get("id")
 
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
+            # Amount is stored in cents on the session for payment mode
+            amount_total_cents = session_obj.get("amount_total") or 0
+            amount_paid = float(amount_total_cents) / 100.0
 
-            # Upgrade plan + store customer id (recommended)
-            if stripe_customer_id:
+            payment_status = (session_obj.get("payment_status") or "").lower()
+            if payment_status != "paid":
+                print(f"[Stripe] Invoice payment not paid yet (status={payment_status})", flush=True)
+                return "OK", 200
+
+            if not invoice_id_str or not payment_intent_id:
+                print("[Stripe] Missing invoice_id or payment_intent on invoice payment session", flush=True)
+                return "OK", 200
+
+            try:
+                invoice_id = int(invoice_id_str)
+            except ValueError:
+                print(f"[Stripe] Invalid invoice_id: {invoice_id_str}", flush=True)
+                return "OK", 200
+
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+
+                # Idempotency: skip if we already recorded this payment intent
                 cursor.execute(
-                    "UPDATE users SET plan = %s, stripe_customer_id = %s WHERE id = %s",
-                    ("pro", stripe_customer_id, user_id),
+                    "SELECT id FROM payments WHERE stripe_payment_intent_id = %s LIMIT 1",
+                    (payment_intent_id,),
                 )
-            else:
+                existing = cursor.fetchone()
+                if existing:
+                    print(f"[Stripe] Payment intent already recorded: {payment_intent_id}", flush=True)
+                    cursor.close()
+                    conn.close()
+                    return "OK", 200
+
+                # Insert payment record
                 cursor.execute(
-                    "UPDATE users SET plan = %s WHERE id = %s",
-                    ("pro", user_id),
+                    """
+                    INSERT INTO payments (invoice_id, amount, method, note, stripe_payment_intent_id, stripe_checkout_session_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        invoice_id,
+                        amount_paid,
+                        "Stripe",
+                        f"Stripe Checkout (session {checkout_session_id})",
+                        payment_intent_id,
+                        checkout_session_id,
+                    ),
                 )
 
-            conn.commit()
-            updated = cursor.rowcount
-            cursor.close()
-            conn.close()
+                # Store last PI on invoice (optional, for debugging)
+                cursor.execute(
+                    "UPDATE invoices SET stripe_last_payment_intent_id = %s WHERE id = %s",
+                    (payment_intent_id, invoice_id),
+                )
 
-            print(f"[Stripe] Upgraded user {user_id} to Pro (rows_updated={updated})", flush=True)
-        except Exception as e:
-            print(f"[Stripe] DB error while upgrading user {user_id}: {e}", flush=True)
+                # Recompute totals and mark Paid if fully covered
+                cursor.execute("SELECT amount FROM invoices WHERE id = %s", (invoice_id,))
+                inv_row = cursor.fetchone()
+                if not inv_row:
+                    conn.rollback()
+                    cursor.close()
+                    conn.close()
+                    print(f"[Stripe] Invoice id not found in DB: {invoice_id}", flush=True)
+                    return "OK", 200
+
+                invoice_total = float(inv_row[0] or 0)
+
+                cursor.execute(
+                    "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
+                    (invoice_id,),
+                )
+                total_paid = float(cursor.fetchone()[0] or 0)
+
+                if total_paid >= invoice_total and invoice_total > 0:
+                    cursor.execute(
+                        "UPDATE invoices SET status = 'Paid' WHERE id = %s",
+                        (invoice_id,),
+                    )
+                    print(
+                        f"[Stripe] Marked invoice {invoice_id} as Paid. total_paid={total_paid} total={invoice_total}",
+                        flush=True
+                    )
+                else:
+                    print(
+                        f"[Stripe] Payment recorded but invoice not fully paid. invoice={invoice_id} total_paid={total_paid} total={invoice_total}",
+                        flush=True
+                    )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+            except Exception as e:
+                print(f"[Stripe] Error recording invoice payment: {e}", flush=True)
+
+            return "OK", 200
+
+        # Unknown checkout session mode -> ignore safely
+        print(f"[Stripe] checkout.session.completed ignored mode={mode}", flush=True)
+        return "OK", 200
 
     # -------------------------------------------------------
     # 2) Subscription changes => sync plan by stripe_customer_id
