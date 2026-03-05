@@ -3072,7 +3072,9 @@ def api_ai_assistant():
 def stripe_webhook():
     """
     Handle Stripe webhooks to mark users as Pro when checkout completes.
-    This is a simplified version that ONLY updates the user's plan.
+    This version:
+      - checkout.session.completed => upgrades by metadata.user_id
+      - customer.subscription.updated/deleted => sync by stripe_customer_id
     """
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
@@ -3094,40 +3096,18 @@ def stripe_webhook():
         print("[Stripe] Invalid signature", flush=True)
         return "Invalid signature", 400
 
-    print(f"[Stripe] Received event: {event['type']}", flush=True)
+    event_type = event.get("type")
+    print(f"[Stripe] Received event: {event_type}", flush=True)
 
-    if event["type"] == "checkout.session.completed":
+    # -------------------------------------------------------
+    # 1) Checkout completed => upgrade user via metadata user_id
+    # -------------------------------------------------------
+    if event_type == "checkout.session.completed":
         session_obj = event["data"]["object"]
         metadata = session_obj.get("metadata") or {}
         user_id_str = metadata.get("user_id")
 
         print(f"[Stripe] checkout.session.completed metadata={metadata}", flush=True)
-
-        if event["type"] in ("customer.subscription.updated", "customer.subscription.deleted"):
-        sub = event["data"]["object"]
-        customer_id = sub.get("customer")
-        status = (sub.get("status") or "").lower()
-
-        # Decide plan based on subscription status
-        new_plan = "pro" if status in ("active", "trialing") else "free"
-
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                UPDATE users
-                SET plan = %s,
-                    stripe_subscription_id = %s
-                WHERE stripe_customer_id = %s
-                """,
-                (new_plan, sub.get("id"), customer_id),
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-        except Exception as e:
-            print(f"[Stripe] subscription sync error: {e}", flush=True)
 
         if user_id_str:
             try:
@@ -3152,6 +3132,46 @@ def stripe_webhook():
         else:
             print("[Stripe] No user_id in metadata; cannot upgrade", flush=True)
 
+    # -------------------------------------------------------
+    # 2) Subscription changes => sync plan by stripe_customer_id
+    # -------------------------------------------------------
+    elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+        sub = event["data"]["object"]
+        customer_id = sub.get("customer")
+        status = (sub.get("status") or "").lower()
+
+        # Decide plan based on subscription status
+        # deleted often has status=canceled; either way we treat as free
+        new_plan = "pro" if status in ("active", "trialing") else "free"
+
+        print(
+            f"[Stripe] Subscription sync customer={customer_id} sub={sub.get('id')} status={status} => plan={new_plan}",
+            flush=True,
+        )
+
+        if not customer_id:
+            print("[Stripe] Missing customer_id on subscription event", flush=True)
+            return "OK", 200
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE users
+                SET plan = %s,
+                    stripe_subscription_id = %s
+                WHERE stripe_customer_id = %s
+                """,
+                (new_plan, sub.get("id"), customer_id),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"[Stripe] subscription sync error: {e}", flush=True)
+
+    # Ignore all other events safely
     return "OK", 200
 
 
