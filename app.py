@@ -295,6 +295,9 @@ def init_db():
 
     conn.commit()
 
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;")
+    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS payments_pi_unique ON payments(stripe_payment_intent_id);")
+
     # -------------------------
     # Stripe linkage for invoice payments (Pay Now)
     # -------------------------
@@ -3434,6 +3437,93 @@ def stripe_webhook():
             print(f"[Stripe] Subscription sync rows_updated={updated} for customer_id={customer_id}", flush=True)
         except Exception as e:
             print(f"[Stripe] subscription sync error: {e}", flush=True)
+
+    return "OK", 200
+
+    elif event_type == "checkout.session.completed":
+    session_obj = event["data"]["object"]
+
+    mode = session_obj.get("mode")
+    if mode != "payment":
+        # your subscription upgrade flow can remain elsewhere
+        return "OK", 200
+
+    metadata = session_obj.get("metadata") or {}
+    invoice_id_str = metadata.get("invoice_id")
+    token = metadata.get("token")
+
+    payment_intent_id = session_obj.get("payment_intent")
+    amount_total = session_obj.get("amount_total") or 0
+    amount_paid = amount_total / 100.0  # Stripe uses cents
+
+    print(
+        f"[Stripe] payment checkout.session.completed invoice_id={invoice_id_str} token={token} "
+        f"pi={payment_intent_id} amount_paid={amount_paid}",
+        flush=True
+    )
+
+    if not invoice_id_str:
+        print("[Stripe] Missing invoice_id in metadata for payment checkout", flush=True)
+        return "OK", 200
+
+    try:
+        invoice_id = int(invoice_id_str)
+    except ValueError:
+        print(f"[Stripe] Bad invoice_id in metadata: {invoice_id_str}", flush=True)
+        return "OK", 200
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # ✅ Idempotency: don't double-insert if Stripe retries webhook
+        # Requires you add stripe_payment_intent_id column (see below)
+        if payment_intent_id:
+            cur.execute(
+                "SELECT id FROM payments WHERE stripe_payment_intent_id = %s LIMIT 1",
+                (payment_intent_id,),
+            )
+            existing = cur.fetchone()
+            if existing:
+                print(f"[Stripe] Payment already recorded for pi={payment_intent_id}", flush=True)
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO payments (invoice_id, amount, method, note, stripe_payment_intent_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (invoice_id, amount_paid, "Stripe", "Stripe Checkout", payment_intent_id),
+                )
+        else:
+            # fallback if no PI id
+            cur.execute(
+                """
+                INSERT INTO payments (invoice_id, amount, method, note)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (invoice_id, amount_paid, "Stripe", "Stripe Checkout"),
+            )
+
+        # ✅ Recompute totals and flip status if paid-in-full
+        cur.execute("SELECT amount FROM invoices WHERE id = %s", (invoice_id,))
+        inv = cur.fetchone()
+        if inv:
+            inv_total = float(inv[0] or 0)
+            cur.execute("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s", (invoice_id,))
+            total_paid = float(cur.fetchone()[0] or 0)
+
+            if total_paid >= inv_total and inv_total > 0:
+                cur.execute("UPDATE invoices SET status = 'Paid' WHERE id = %s", (invoice_id,))
+                print(f"[Stripe] Invoice {invoice_id} marked Paid (paid={total_paid} total={inv_total})", flush=True)
+            else:
+                print(f"[Stripe] Partial payment invoice {invoice_id} paid={total_paid} total={inv_total}", flush=True)
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"[Stripe] Error recording Stripe payment: {e}", flush=True)
 
     return "OK", 200
 

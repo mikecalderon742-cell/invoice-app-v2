@@ -393,19 +393,33 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("payNowBtn");
-  if (!btn || btn.disabled) return;
 
-  // If Stripe redirected back with ?paid=1, do one soft refresh after a short delay
-  // (webhook can land milliseconds after redirect)
+  // ✅ Prevent infinite refresh loops:
+  // only do the "post-payment refresh" once per tab using sessionStorage.
   const params = new URLSearchParams(window.location.search);
   if (params.get("paid") === "1") {
-    setTimeout(() => {
-      // remove session_id from URL if present, keep paid=1 optional
+    const alreadyRefreshed = sessionStorage.getItem("bb_paid_refresh_done");
+    if (!alreadyRefreshed) {
+      sessionStorage.setItem("bb_paid_refresh_done", "1");
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("session_id");
+        url.searchParams.delete("paid");   // ✅ remove paid too so it doesn't repeat
+        window.location.replace(url.toString());
+      }, 1200);
+    } else {
+      // Clean URL now that we've already done our one refresh
       const url = new URL(window.location.href);
       url.searchParams.delete("session_id");
-      window.location.replace(url.toString());
-    }, 1500);
+      url.searchParams.delete("paid");
+      window.history.replaceState({}, "", url.toString());
+    }
+  } else {
+    // Reset flag when not in paid flow
+    sessionStorage.removeItem("bb_paid_refresh_done");
   }
+
+  if (!btn || btn.disabled) return;
 
   btn.addEventListener("click", async function () {
     const oldText = btn.textContent;
