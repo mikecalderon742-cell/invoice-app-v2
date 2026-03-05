@@ -3068,12 +3068,6 @@ def api_ai_assistant():
 
 @app.route("/stripe/webhook", methods=["POST"])
 def stripe_webhook():
-    """
-    Handle Stripe webhooks to mark users as Pro when checkout completes.
-    This version:
-      - checkout.session.completed => upgrades by metadata.user_id
-      - customer.subscription.updated/deleted => sync by stripe_customer_id
-    """
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
 
@@ -3098,104 +3092,80 @@ def stripe_webhook():
     print(f"[Stripe] Received event: {event_type}", flush=True)
 
     # -------------------------------------------------------
-# 1) Checkout completed => upgrade user via metadata user_id
-# -------------------------------------------------------
-if event_type == "checkout.session.completed":
-    session_obj = event["data"]["object"]
+    # 1) Checkout completed => upgrade user via metadata user_id
+    # -------------------------------------------------------
+    if event_type == "checkout.session.completed":
+        session_obj = event["data"]["object"]
 
-    metadata = session_obj.get("metadata") or {}
-    user_id_str = metadata.get("user_id")
+        metadata = session_obj.get("metadata") or {}
+        user_id_str = metadata.get("user_id")
 
-    # ✅ Fallback: client_reference_id (very reliable)
-    if not user_id_str:
-        user_id_str = session_obj.get("client_reference_id")
+        # Fallback: client_reference_id
+        if not user_id_str:
+            user_id_str = session_obj.get("client_reference_id")
 
-    stripe_customer_id = session_obj.get("customer")  # helpful for subscription sync
-    session_id = session_obj.get("id")
+        stripe_customer_id = session_obj.get("customer")
+        session_id = session_obj.get("id")
 
-    print(
-        f"[Stripe] checkout.session.completed session_id={session_id} "
-        f"user_id_str={user_id_str} customer={stripe_customer_id} metadata={metadata}",
-        flush=True
-    )
-
-    if not user_id_str:
-        print("[Stripe] No user_id found in metadata or client_reference_id; cannot upgrade", flush=True)
-        return "OK", 200
-
-    try:
-        user_id = int(user_id_str)
-    except ValueError:
-        print(f"[Stripe] Invalid user_id value: {user_id_str}", flush=True)
-        return "Bad metadata", 200
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # ✅ Upgrade plan, and (recommended) store stripe_customer_id if present
-        if stripe_customer_id:
-            cursor.execute(
-                "UPDATE users SET plan = %s, stripe_customer_id = %s WHERE id = %s",
-                ("pro", stripe_customer_id, user_id),
-            )
-        else:
-            cursor.execute(
-                "UPDATE users SET plan = %s WHERE id = %s",
-                ("pro", user_id),
-            )
-
-        conn.commit()
-        updated = cursor.rowcount
-        cursor.close()
-        conn.close()
-
-        print(f"[Stripe] Upgraded user {user_id} to Pro (rows_updated={updated})", flush=True)
-    except Exception as e:
-        print(f"[Stripe] DB error while upgrading user {user_id}: {e}", flush=True)
-
-# -------------------------------------------------------
-# 2) Subscription changes => sync plan by stripe_customer_id
-# -------------------------------------------------------
-elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
-    sub = event["data"]["object"]
-    customer_id = sub.get("customer")
-    status = (sub.get("status") or "").lower()
-
-    new_plan = "pro" if status in ("active", "trialing") else "free"
-
-    print(
-        f"[Stripe] Subscription sync customer={customer_id} sub={sub.get('id')} status={status} => plan={new_plan}",
-        flush=True,
-    )
-
-    if not customer_id:
-        print("[Stripe] Missing customer_id on subscription event", flush=True)
-        return "OK", 200
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            UPDATE users
-            SET plan = %s,
-                stripe_subscription_id = %s
-            WHERE stripe_customer_id = %s
-            """,
-            (new_plan, sub.get("id"), customer_id),
+        print(
+            f"[Stripe] checkout.session.completed session_id={session_id} "
+            f"user_id_str={user_id_str} customer={stripe_customer_id} metadata={metadata}",
+            flush=True
         )
-        conn.commit()
-        updated = cursor.rowcount
-        cursor.close()
-        conn.close()
 
-        print(f"[Stripe] Subscription sync rows_updated={updated} for customer_id={customer_id}", flush=True)
-    except Exception as e:
-        print(f"[Stripe] subscription sync error: {e}", flush=True)
+        if not user_id_str:
+            print("[Stripe] No user_id found in metadata or client_reference_id; cannot upgrade", flush=True)
+            return "OK", 200
 
-# Ignore all other events safely
-return "OK", 200
+        try:
+            user_id = int(user_id_str)
+        except ValueError:
+            print(f"[Stripe] Invalid user_id value: {user_id_str}", flush=True)
+            return "Bad metadata", 200
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            # Upgrade plan + store customer id (recommended)
+            if stripe_customer_id:
+                cursor.execute(
+                    "UPDATE users SET plan = %s, stripe_customer_id = %s WHERE id = %s",
+                    ("pro", stripe_customer_id, user_id),
+                )
+            else:
+                cursor.execute(
+                    "UPDATE users SET plan = %s WHERE id = %s",
+                    ("pro", user_id),
+                )
+
+            conn.commit()
+            updated = cursor.rowcount
+            cursor.close()
+            conn.close()
+
+            print(f"[Stripe] Upgraded user {user_id} to Pro (rows_updated={updated})", flush=True)
+        except Exception as e:
+            print(f"[Stripe] DB error while upgrading user {user_id}: {e}", flush=True)
+
+    # -------------------------------------------------------
+    # 2) Subscription changes => sync plan by stripe_customer_id
+    # -------------------------------------------------------
+    elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+        sub = event["data"]["object"]
+        customer_id = sub.get("customer")
+        status = (sub.get("status") or "").lower()
+
+        new_plan = "pro" if status in ("active", "trialing") else "free"
+
+        print(
+            f"[Stripe] Subscription sync customer={customer_id} sub={sub.get('id')} status={status} => plan={new_plan}",
+            flush=True,
+        )
+
+        if not customer_id:
+            print("[Stripe] Missing customer_id on subscription event", flush=True)
+            return "OK", 200
 
         try:
             conn = get_db_connection()
@@ -3210,12 +3180,14 @@ return "OK", 200
                 (new_plan, sub.get("id"), customer_id),
             )
             conn.commit()
+            updated = cursor.rowcount
             cursor.close()
             conn.close()
+
+            print(f"[Stripe] Subscription sync rows_updated={updated} for customer_id={customer_id}", flush=True)
         except Exception as e:
             print(f"[Stripe] subscription sync error: {e}", flush=True)
 
-    # Ignore all other events safely
     return "OK", 200
 
 
