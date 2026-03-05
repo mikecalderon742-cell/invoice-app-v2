@@ -861,44 +861,30 @@ def logout():
 
 @app.route("/pricing")
 def pricing():
+    lang = request.args.get("lang", "en")
+
+    # Determine current user plan
     user = get_current_user()
-    user_plan = user.get("plan") or "free"
-    is_pro = PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0)
+    user_plan = user.get("plan", "free") if user else "free"
 
-    # Language from query (?lang=en|es), default English
-    lang = (request.args.get("lang") or "en").lower()
-    if lang not in ("en", "es"):
-        lang = "en"
+    # Build translated plans for template
+    plans = {}
 
-    # Build a per-request localized plans dict
-    localized_plans = {}
     for key, p in PLAN_DEFINITIONS.items():
-        if lang == "es":
-            name = p.get("name_es", p.get("name_en"))
-            tagline = p.get("tagline_es", p.get("tagline_en"))
-            features = p.get("features_es", p.get("features_en", []))
-        else:
-            name = p.get("name_en")
-            tagline = p.get("tagline_en")
-            features = p.get("features_en", [])
-
-        localized_plans[key] = {
-            "name": name,
-            "tagline": tagline,
-            "price_label": p.get("price_label"),
-            "features": features,
+        plans[key] = {
+            "name": p.get(f"name_{lang}", p.get("name_en")),
+            "price_label": p["price_label"],
+            "tagline": p.get(f"tagline_{lang}", p.get("tagline_en")),
+            "features": p.get(f"features_{lang}", p.get("features_en")),
+            "recommended": p.get("recommended", False),
         }
-        if "recommended" in p:
-            localized_plans[key]["recommended"] = p["recommended"]
 
     return render_template(
         "pricing.html",
-        current_user=user,
+        plans=plans,
         user_plan=user_plan,
-        plans=localized_plans,
-        stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
-        is_pro=is_pro,
-        lang=lang,
+        is_pro=(user_plan == "pro"),
+        stripe_publishable_key=os.getenv("STRIPE_PUBLISHABLE_KEY"),
     )
 
 
@@ -948,37 +934,125 @@ def changelog_page():
 
 # Stub route so url_for('create_checkout_session') works.
 # The button can show "Coming soon" and just bounce back to pricing for now.
+
+
 @app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
-    # If you have auth, keep this:
-    # if not current_user.is_authenticated:
-    #     return jsonify({"error": "Unauthorized"}), 401
+    user = get_current_user()
+    user_id = user.get("id")
+    user_email = user.get("email")
 
-    price_id = os.getenv("STRIPE_PRICE_PRO_MONTHLY")
+    if not user_id:
+        return jsonify({"error": "No logged-in user found."}), 401
+
+    # Use your existing env var name (you already use this below)
+    price_id = os.getenv("STRIPE_PRICE_PRO_MONTHLY") or os.getenv("STRIPE_PRICE_PRO")
     if not price_id:
-        return jsonify({"error": "Missing STRIPE_PRICE_PRO_MONTHLY"}), 500
+        return jsonify({"error": "Missing STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_PRO)"}), 500
 
     base_url = os.getenv("APP_BASE_URL", "").rstrip("/")
     if not base_url:
-        # fallback (works locally), but in prod you should set APP_BASE_URL
         base_url = request.host_url.rstrip("/")
 
     lang = request.args.get("lang", "en")
 
     try:
-        session = stripe.checkout.Session.create(
+        checkout_session = stripe.checkout.Session.create(
             mode="subscription",
             payment_method_types=["card"],
             line_items=[{"price": price_id, "quantity": 1}],
-            success_url=f"{base_url}/pricing?upgraded=1&lang={lang}",
-            cancel_url=f"{base_url}/pricing?canceled=1&lang={lang}",
-            # Optional: auto-fill email if you have it
-            # customer_email=current_user.email if current_user.is_authenticated else None,
+
+            # IMPORTANT: route through a success handler that updates DB
+            success_url=f"{base_url}/billing/success?session_id={{CHECKOUT_SESSION_ID}}&lang={lang}",
+            cancel_url=f"{base_url}/billing/cancel?lang={lang}",
+
             allow_promotion_codes=True,
+
+            # ✅ This is what your webhook needs
+            metadata={
+                "user_id": str(user_id),
+                "user_email": user_email or "",
+            },
+
+            # Optional but helpful in Stripe dashboard
+            client_reference_id=str(user_id),
+
+            # Pre-fill email (Stripe will still ask if needed)
+            customer_email=user_email if user_email else None,
         )
-        return jsonify({"url": session.url})
+        return jsonify({"url": checkout_session.url})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/billing/success")
+def billing_success():
+    session_id = request.args.get("session_id")
+    lang = request.args.get("lang", "en")
+
+    if not session_id:
+        return redirect(url_for("pricing", lang=lang))
+
+    try:
+        # Expand subscription so we can store it
+        s = stripe.checkout.Session.retrieve(
+            session_id,
+            expand=["subscription", "customer"]
+        )
+    except Exception:
+        # If Stripe is flaky, don’t crash—just return to pricing
+        return redirect(url_for("pricing", upgraded=1, lang=lang))
+
+    metadata = s.get("metadata") or {}
+    user_id_str = metadata.get("user_id")
+
+    # Fallback: if metadata missing, try session user (less reliable, but helps)
+    if not user_id_str:
+        user = get_current_user()
+        user_id_str = str(user.get("id") or "")
+
+    try:
+        user_id = int(user_id_str)
+    except Exception:
+        return redirect(url_for("pricing", upgraded=1, lang=lang))
+
+    customer_id = s.get("customer")
+    subscription = s.get("subscription")
+    subscription_id = None
+    if isinstance(subscription, dict):
+        subscription_id = subscription.get("id")
+    elif isinstance(subscription, str):
+        subscription_id = subscription
+
+    # ✅ Update DB: plan + stripe ids
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE users
+            SET plan = %s,
+                stripe_customer_id = COALESCE(stripe_customer_id, %s),
+                stripe_subscription_id = COALESCE(stripe_subscription_id, %s)
+            WHERE id = %s
+            """,
+            ("pro", customer_id, subscription_id, user_id),
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception:
+        # Even if DB fails, still send user back
+        pass
+
+    # Now pricing page will render "Current plan" correctly
+    return redirect(url_for("pricing", upgraded=1, lang=lang))
+
+
+@app.route("/billing/cancel")
+def billing_cancel():
+    lang = request.args.get("lang", "en")
+    return redirect(url_for("pricing", canceled=1, lang=lang))
 
 
 # -------------------------
@@ -3028,6 +3102,32 @@ def stripe_webhook():
         user_id_str = metadata.get("user_id")
 
         print(f"[Stripe] checkout.session.completed metadata={metadata}", flush=True)
+
+        if event["type"] in ("customer.subscription.updated", "customer.subscription.deleted"):
+        sub = event["data"]["object"]
+        customer_id = sub.get("customer")
+        status = (sub.get("status") or "").lower()
+
+        # Decide plan based on subscription status
+        new_plan = "pro" if status in ("active", "trialing") else "free"
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE users
+                SET plan = %s,
+                    stripe_subscription_id = %s
+                WHERE stripe_customer_id = %s
+                """,
+                (new_plan, sub.get("id"), customer_id),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"[Stripe] subscription sync error: {e}", flush=True)
 
         if user_id_str:
             try:

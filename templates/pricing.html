@@ -44,13 +44,15 @@
                         <div class="pricing-name">{{ plan.name }}</div>
                         <p class="pricing-tagline">{{ plan.tagline }}</p>
                     </div>
+
                     <div class="pricing-price" style="text-align:right;">
                         <span class="amount">{{ plan.price_label }}</span><br>
+
                         {% if key == user_plan %}
                             <span class="pricing-pill current">
                                 {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
                             </span>
-                        {% elif key == 'pro' %}
+                        {% elif plan.recommended %}
                             <span class="pricing-pill recommended">
                                 {% if lang == 'es' %}Mejor para crecer{% else %}Best for growing{% endif %}
                             </span>
@@ -104,6 +106,7 @@
             {% endif %}
 
             <div class="pricing-cta">
+                {# 1) If THIS is the user’s current plan, show status only #}
                 {% if key == user_plan %}
                     <span class="badge paid">
                         {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
@@ -112,10 +115,53 @@
                         {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
                     </span>
 
-                <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
-  {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
-</button>
+                {# 2) If this is PRO and user is NOT pro, show upgrade button #}
+                {% elif key == 'pro' and user_plan != 'pro' %}
+                    <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
+                        {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
+                    </button>
+                    <span class="pricing-note">
+                        {% if lang == 'es' %}
+                            Activa Pro en segundos con Stripe.
+                        {% else %}
+                            Turn on Pro in seconds with Stripe.
+                        {% endif %}
+                    </span>
 
+                {# 3) Free card when not current: show Included copy #}
+                {% elif key == 'free' %}
+                    <span class="badge draft">
+                        {% if lang == 'es' %}Incluido{% else %}Included{% endif %}
+                    </span>
+                    <span class="pricing-note">
+                        {% if lang == 'es' %}
+                            Perfecto si estás empezando.
+                        {% else %}
+                            Perfect if you’re just getting started.
+                        {% endif %}
+                    </span>
+
+                {# 4) Enterprise card: contact sales #}
+                {% else %}
+                    <a href="mailto:support@mikeinvoices.com"
+                       class="btn btn-secondary btn-compact"
+                       style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
+                        {% if lang == 'es' %}Contactar ventas{% else %}Contact sales{% endif %}
+                    </a>
+                    <span class="pricing-note">
+                        {% if lang == 'es' %}
+                            Te ayudaremos a diseñar un plan de mayor volumen.
+                        {% else %}
+                            We’ll help you design a higher-volume plan.
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# ✅ Script ONLY ONCE (outside the loop) #}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("upgradeProBtn");
@@ -150,38 +196,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-                {% else %}
-                    {% if key == 'free' %}
-                        <span class="badge draft">
-                            {% if lang == 'es' %}Incluido{% else %}Included{% endif %}
-                        </span>
-                        <span class="pricing-note">
-                            {% if lang == 'es' %}
-                                Perfecto si estás empezando.
-                            {% else %}
-                                Perfect if you’re just getting started.
-                            {% endif %}
-                        </span>
-                    {% else %}
-                        <a href="mailto:support@mikeinvoices.com"
-                           class="btn btn-secondary btn-compact"
-                           style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
-                            {% if lang == 'es' %}Contactar ventas{% else %}Contact sales{% endif %}
-                        </a>
-                        <span class="pricing-note">
-                            {% if lang == 'es' %}
-                                Te ayudaremos a diseñar un plan de mayor volumen.
-                            {% else %}
-                                We’ll help you design a higher-volume plan.
-                            {% endif %}
-                        </span>
-                    {% endif %}
-                {% endif %}
-            </div>
-        </div>
-    {% endfor %}
-</div>
-
 {% if stripe_publishable_key %}
     <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">
         {% if lang == 'es' %}
@@ -191,4 +205,5 @@ document.addEventListener("DOMContentLoaded", function () {
         {% endif %}
     </p>
 {% endif %}
+
 {% endblock %}

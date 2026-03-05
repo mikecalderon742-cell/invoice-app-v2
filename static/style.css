@@ -3624,3 +3624,46 @@ color:white;
 padding:0 14px;
 cursor:pointer;
 }
+
+/* =========================================================
+   PRICING PILL FINAL OVERRIDES
+   - Yellow tint for Current Plan (Free too)
+   - Yellow pill for Recommended (so it pops on Pro)
+   - Prevent wrapping
+   ========================================================= */
+
+.pricing-pill{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important; /* keep "Current plan" on one line */
+  line-height: 1.1 !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+}
+
+/* Current plan (yellow tint) */
+.pricing-pill.current{
+  background: rgba(252, 211, 77, 0.28) !important; /* warm yellow */
+  border: 1px solid rgba(252, 211, 77, 0.80) !important;
+  color: #0b1120 !important; /* dark text for readability */
+  font-weight: 800 !important;
+  box-shadow: 0 10px 25px rgba(252, 211, 77, 0.18) !important;
+}
+
+/* Recommended / Best for growing (yellow tint) */
+.pricing-pill.recommended{
+  background: rgba(252, 211, 77, 0.28) !important; /* same family as current */
+  border: 1px solid rgba(252, 211, 77, 0.80) !important;
+  color: #0b1120 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 12px 30px rgba(252, 211, 77, 0.20) !important;
+}
+
+/* Dark mode: keep the SAME yellow treatment (don’t let it flip blue) */
+body.dark .pricing-pill.current,
+body.dark .pricing-pill.recommended{
+  background: rgba(252, 211, 77, 0.30) !important;
+  border: 1px solid rgba(252, 211, 77, 0.85) !important;
+  color: #0b1120 !important;
+}
