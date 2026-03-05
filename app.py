@@ -958,28 +958,35 @@ def create_checkout_session():
     try:
         checkout_session = stripe.checkout.Session.create(
             mode="subscription",
-            payment_method_types=["card"],
             line_items=[{"price": price_id, "quantity": 1}],
+            allow_promotion_codes=True,
 
+            # ✅ after payment we will verify session_id server-side and flip plan in DB
             success_url=f"{base_url}/billing/success?session_id={{CHECKOUT_SESSION_ID}}&lang={lang}",
             cancel_url=f"{base_url}/billing/cancel?lang={lang}",
 
-            allow_promotion_codes=True,
-
-            # ✅ Webhook pickup
+            # ✅ stored on Checkout Session (used by billing_success + checkout.session.completed)
             metadata={
                 "user_id": str(user_id),
                 "user_email": user_email or "",
             },
 
-            # ✅ Fallback pickup (webhook)
-            client_reference_id=str(user_id),
+            # ✅ stored on Subscription too (useful for subscription.updated events later)
+            subscription_data={
+                "metadata": {
+                    "user_id": str(user_id),
+                    "user_email": user_email or "",
+                }
+            },
 
-            # Pre-fill email
+            client_reference_id=str(user_id),
             customer_email=user_email if user_email else None,
         )
+
         return jsonify({"url": checkout_session.url})
+
     except Exception as e:
+        print(f"[Stripe] create_checkout_session error: {e}", flush=True)
         return jsonify({"error": str(e)}), 500
 
 
@@ -989,62 +996,58 @@ def billing_success():
     lang = request.args.get("lang", "en")
 
     if not session_id:
-        return redirect(url_for("pricing", lang=lang))
+        return "Missing session_id", 400
 
     try:
-        # Expand subscription so we can store it
-        s = stripe.checkout.Session.retrieve(
-            session_id,
-            expand=["subscription", "customer"]
+        cs = stripe.checkout.Session.retrieve(session_id)
+
+        metadata = cs.get("metadata") or {}
+        user_id_str = metadata.get("user_id") or cs.get("client_reference_id")
+
+        customer_id = cs.get("customer")
+        subscription_id = cs.get("subscription")
+
+        print(
+            f"[BillingSuccess] session_id={session_id} user_id_str={user_id_str} "
+            f"customer_id={customer_id} subscription_id={subscription_id} metadata={metadata}",
+            flush=True,
         )
-    except Exception:
-        # If Stripe is flaky, don’t crash—just return to pricing
-        return redirect(url_for("pricing", upgraded=1, lang=lang))
 
-    metadata = s.get("metadata") or {}
-    user_id_str = metadata.get("user_id")
+        if not user_id_str:
+            print("[BillingSuccess] No user_id on session; cannot upgrade", flush=True)
+            return redirect(url_for("pricing", lang=lang, canceled=1))
 
-    # Fallback: if metadata missing, try session user (less reliable, but helps)
-    if not user_id_str:
-        user = get_current_user()
-        user_id_str = str(user.get("id") or "")
-
-    try:
         user_id = int(user_id_str)
-    except Exception:
-        return redirect(url_for("pricing", upgraded=1, lang=lang))
 
-    customer_id = s.get("customer")
-    subscription = s.get("subscription")
-    subscription_id = None
-    if isinstance(subscription, dict):
-        subscription_id = subscription.get("id")
-    elif isinstance(subscription, str):
-        subscription_id = subscription
-
-    # ✅ Update DB: plan + stripe ids
-    try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             """
             UPDATE users
             SET plan = %s,
-                stripe_customer_id = COALESCE(stripe_customer_id, %s),
-                stripe_subscription_id = COALESCE(stripe_subscription_id, %s)
+                stripe_customer_id = COALESCE(%s, stripe_customer_id),
+                stripe_subscription_id = COALESCE(%s, stripe_subscription_id)
             WHERE id = %s
             """,
             ("pro", customer_id, subscription_id, user_id),
         )
         conn.commit()
+        updated = cursor.rowcount
         cursor.close()
         conn.close()
-    except Exception:
-        # Even if DB fails, still send user back
-        pass
 
-    # Now pricing page will render "Current plan" correctly
-    return redirect(url_for("pricing", upgraded=1, lang=lang))
+        print(f"[BillingSuccess] DB updated rows={updated} for user_id={user_id}", flush=True)
+
+        # If rowcount is 0, you're upgrading a user_id that doesn't exist in DB
+        if updated == 0:
+            print("[BillingSuccess] WARNING: No user row matched. Check user_id.", flush=True)
+            return redirect(url_for("pricing", lang=lang, canceled=1))
+
+    except Exception as e:
+        print(f"[BillingSuccess] error: {e}", flush=True)
+        return redirect(url_for("pricing", lang=lang, canceled=1))
+
+    return redirect(url_for("pricing", lang=lang, upgraded=1))
 
 
 @app.route("/billing/cancel")
