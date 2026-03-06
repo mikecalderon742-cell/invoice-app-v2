@@ -45,7 +45,7 @@ STRIPE_CURRENCY = (os.environ.get("STRIPE_CURRENCY") or "usd").lower()
 APP_BASE_URL = (os.environ.get("APP_BASE_URL") or "").rstrip("/")
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_AI_KEY")
-client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY")) if os.getenv("OPENAI_AI_KEY") else None
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 ai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 AI_MODEL_FREE = "gpt-4o-mini"
@@ -53,10 +53,34 @@ AI_MODEL_PRO = "gpt-4.1-mini"
 
 DB_PATH = Path("invoices.db")
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
 else:
     logger.warning("STRIPE_SECRET_KEY is not set")
+
+# -------------------------
+# DB CONNECTION
+# -------------------------
+def get_db_connection():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL environment variable is not set.")
+
+    result = urlparse(DATABASE_URL)
+    conn = psycopg2.connect(
+        dbname=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port,
+    )
+    return conn
+
 
 # -------------------------
 # PLAN DEFINITIONS (with EN/ES variants)
@@ -122,10 +146,7 @@ PLAN_DEFINITIONS = {
     },
 }
 
-# Simple numeric levels for gating
 PLAN_LEVELS = {"free": 1, "pro": 2, "enterprise": 3}
-
-DB_PATH = Path("invoices.db")
 
 
 # -------------------------
@@ -135,7 +156,6 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # USERS
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -151,7 +171,6 @@ def init_db():
         """
     )
 
-    # INVOICES
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoices (
@@ -176,7 +195,6 @@ def init_db():
         """
     )
 
-    # CLIENTS
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS clients (
@@ -193,7 +211,6 @@ def init_db():
         """
     )
 
-    # ITEMS
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoice_items (
@@ -205,7 +222,6 @@ def init_db():
         """
     )
 
-    # PAYMENTS
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS payments (
@@ -221,7 +237,6 @@ def init_db():
         """
     )
 
-    # RECURRING
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS recurring_invoices (
@@ -236,7 +251,6 @@ def init_db():
         """
     )
 
-    # BUSINESS PROFILE
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS business_profile (
@@ -257,10 +271,6 @@ def init_db():
         """
     )
 
-    # -------------------------
-    # SCHEMA EVOLUTION SAFETY
-    # Ensures older databases get new columns too
-    # -------------------------
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
 
@@ -270,7 +280,7 @@ def init_db():
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS terms TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_at TIMESTAMP;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_to TEXT;")
-    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS signature_data TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS template_style TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id INTEGER;")
@@ -283,9 +293,6 @@ def init_db():
     cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;")
     cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_checkout_session_id TEXT;")
 
-    # -------------------------
-    # Idempotency indexes
-    # -------------------------
     cursor.execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS payments_stripe_pi_unique
@@ -300,8 +307,14 @@ def init_db():
         WHERE stripe_checkout_session_id IS NOT NULL;
         """
     )
+    cursor.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS invoices_public_token_unique
+        ON invoices(public_token)
+        WHERE public_token IS NOT NULL;
+        """
+    )
 
-    # DEFAULT OWNER USER (optional dev bootstrap)
     cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1;")
     row = cursor.fetchone()
     if not row:
@@ -325,10 +338,6 @@ def init_db():
 
 
 def update_overdue_statuses():
-    """
-    Mark invoices as Overdue when past due_date and not already Paid/Overdue.
-    Runs each time the invoices page is loaded.
-    """
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -346,17 +355,10 @@ def update_overdue_statuses():
 
 
 def get_or_create_public_token(invoice_id: int) -> str:
-    """
-    Ensure an invoice has a unique public_token used for the /public/<token> link.
-    Returns the token string.
-    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT public_token FROM invoices WHERE id = %s",
-        (invoice_id,),
-    )
+    cursor.execute("SELECT public_token FROM invoices WHERE id = %s", (invoice_id,))
     row = cursor.fetchone()
     if not row:
         cursor.close()
@@ -372,19 +374,13 @@ def get_or_create_public_token(invoice_id: int) -> str:
     token = None
     while True:
         candidate = secrets.token_urlsafe(16)
-        cursor.execute(
-            "SELECT id FROM invoices WHERE public_token = %s",
-            (candidate,),
-        )
+        cursor.execute("SELECT id FROM invoices WHERE public_token = %s", (candidate,))
         clash = cursor.fetchone()
         if not clash:
             token = candidate
             break
 
-    cursor.execute(
-        "UPDATE invoices SET public_token = %s WHERE id = %s",
-        (token, invoice_id),
-    )
+    cursor.execute("UPDATE invoices SET public_token = %s WHERE id = %s", (token, invoice_id))
     conn.commit()
     cursor.close()
     conn.close()
@@ -395,9 +391,6 @@ def get_or_create_public_token(invoice_id: int) -> str:
 # USER + PLAN HELPERS
 # -------------------------
 def get_default_user():
-    """
-    Fallback user if no session user is set.
-    """
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -427,10 +420,6 @@ def get_default_user():
 
 
 def get_current_user():
-    """
-    If session['user_id'] is set, return that user.
-    Otherwise, return the default user.
-    """
     user_id = session.get("user_id")
     if user_id:
         conn = get_db_connection()
@@ -461,6 +450,7 @@ def get_plan_for_current_user():
     user = get_current_user()
     return user.get("plan") or "free"
 
+
 def get_user_plan_by_user_id(user_id: int) -> str:
     conn = get_db_connection()
     cur = conn.cursor()
@@ -468,14 +458,10 @@ def get_user_plan_by_user_id(user_id: int) -> str:
     row = cur.fetchone()
     cur.close()
     conn.close()
-    return (row[0] if row and row[0] else "free")
+    return row[0] if row and row[0] else "free"
 
 
 def get_invoice_by_public_token(token: str):
-    """
-    Returns invoice + computed totals by public token:
-      invoice_id, user_id, status, amount_total, total_paid, balance, invoice_number
-    """
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -519,9 +505,6 @@ def get_invoice_by_public_token(token: str):
 
 @app.route("/debug-plan")
 def debug_plan():
-    """
-    Quick JSON view of the current user + plan, for debugging.
-    """
     user = get_current_user()
     return {
         "id": user.get("id"),
@@ -532,10 +515,6 @@ def debug_plan():
 
 @app.route("/dev/force-pro")
 def dev_force_pro():
-    """
-    DEV ONLY: Force the current user to Pro in the database.
-    This bypasses Stripe entirely so we can move forward.
-    """
     user = get_current_user()
     user_id = user.get("id")
 
@@ -545,10 +524,7 @@ def dev_force_pro():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET plan = %s WHERE id = %s",
-            ("pro", user_id),
-        )
+        cursor.execute("UPDATE users SET plan = %s WHERE id = %s", ("pro", user_id))
         conn.commit()
         cursor.close()
         conn.close()
@@ -559,20 +535,11 @@ def dev_force_pro():
 
 
 def plan_allows(required_plan: str) -> bool:
-    """
-    Return True if the current user's plan is >= required_plan.
-    """
     user_plan = get_plan_for_current_user()
     return PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get(required_plan, 0)
 
 
 def check_invoice_quota_or_reason():
-    """
-    Enforce simple invoice quotas by plan.
-
-    free -> max 10 invoices / calendar month
-    pro / enterprise -> unlimited
-    """
     user = get_current_user()
     user_id = user["id"]
     plan = user.get("plan") or "free"
@@ -601,19 +568,12 @@ def check_invoice_quota_or_reason():
     conn.close()
 
     if count >= 10:
-        return (
-            False,
-            "You've reached the 10 invoices / month limit on the Starter plan.",
-        )
+        return False, "You've reached the 10 invoices / month limit on the Starter plan."
 
     return True, None
 
 
 def get_business_profile():
-    """
-    Return a dict of business profile settings for the current user.
-    If no row exists, return sensible defaults.
-    """
     user = get_current_user()
     user_id = user["id"]
 
@@ -643,9 +603,8 @@ def get_business_profile():
             "website": "",
             "address": "",
             "logo_url": "",
-            # Dark-mode first brand
-            "brand_color": "#020617",   # deep midnight
-            "accent_color": "#3A8BFF",  # beam blue
+            "brand_color": "#020617",
+            "accent_color": "#3A8BFF",
             "default_terms": "",
             "default_notes": "",
             "user_id": user_id,
@@ -682,9 +641,6 @@ def get_business_profile():
 
 
 def upsert_business_profile(data: dict):
-    """
-    Insert or update the business_profile row for the current user.
-    """
     user = get_current_user()
     user_id = user["id"]
 
@@ -696,7 +652,6 @@ def upsert_business_profile(data: dict):
         (user_id,),
     )
     row = cursor.fetchone()
-
     now = datetime.now()
 
     if row:
@@ -796,7 +751,7 @@ def inject_current_user_ctx():
 
 
 # -------------------------
-# HOME (NEW INVOICE FORM)
+# HOME
 # -------------------------
 @app.route("/")
 def home():
@@ -860,7 +815,7 @@ def register():
                 conn.close()
 
                 if row:
-                    user_id, plan = row
+                    user_id, _plan = row
                     session["user_id"] = user_id
                     return redirect(url_for("invoices_page"))
 
@@ -891,7 +846,7 @@ def login():
             if not row:
                 error = "Invalid email or password."
             else:
-                user_id, user_email, password_hash, plan, is_active = row
+                user_id, _user_email, password_hash, _plan, is_active = row
                 if not is_active:
                     error = "This account is inactive."
                 elif not password_hash:
@@ -914,14 +869,10 @@ def logout():
 @app.route("/pricing")
 def pricing():
     lang = request.args.get("lang", "en")
-
-    # Determine current user plan
     user = get_current_user()
     user_plan = user.get("plan", "free") if user else "free"
 
-    # Build translated plans for template
     plans = {}
-
     for key, p in PLAN_DEFINITIONS.items():
         plans[key] = {
             "name": p.get(f"name_{lang}", p.get("name_en")),
@@ -936,17 +887,12 @@ def pricing():
         plans=plans,
         user_plan=user_plan,
         is_pro=(user_plan == "pro"),
-        stripe_publishable_key=os.getenv("STRIPE_PUBLISHABLE_KEY"),
+        stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
     )
 
 
 @app.route("/landing")
 def landing_page():
-    """
-    Public marketing landing page.
-    Does not require login.
-    """
-    # lang is read in base.html via request.args, but we include it here
     lang = (request.args.get("lang") or "en").lower()
     if lang not in ("en", "es"):
         lang = "en"
@@ -955,9 +901,6 @@ def landing_page():
 
 @app.route("/launch-checklist")
 def launch_checklist_page():
-    """
-    Public launch checklist page (for you, or to share with friends/advisors).
-    """
     lang = (request.args.get("lang") or "en").lower()
     if lang not in ("en", "es"):
         lang = "en"
@@ -984,10 +927,14 @@ def changelog_page():
     return render_template("changelog.html")
 
 
-# Stub route so url_for('create_checkout_session') works.
-# The button can show "Coming soon" and just bounce back to pricing for now.
+@app.route("/uploads/<path:filename>")
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
+# -------------------------
+# STRIPE CHECKOUT
+# -------------------------
 @app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     user = get_current_user()
@@ -997,14 +944,11 @@ def create_checkout_session():
     if not user_id:
         return jsonify({"error": "No logged-in user found."}), 401
 
-    price_id = os.getenv("STRIPE_PRICE_PRO_MONTHLY") or os.getenv("STRIPE_PRICE_PRO")
+    price_id = STRIPE_PRICE_PRO
     if not price_id:
-        return jsonify({"error": "Missing STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_PRO)"}), 500
+        return jsonify({"error": "Missing STRIPE_PRICE_PRO or STRIPE_PRICE_PRO_MONTHLY"}), 500
 
-    base_url = os.getenv("APP_BASE_URL", "").rstrip("/")
-    if not base_url:
-        base_url = request.host_url.rstrip("/")
-
+    base_url = APP_BASE_URL or request.host_url.rstrip("/")
     lang = request.args.get("lang", "en")
 
     try:
@@ -1012,29 +956,21 @@ def create_checkout_session():
             mode="subscription",
             line_items=[{"price": price_id, "quantity": 1}],
             allow_promotion_codes=True,
-
-            # ✅ after payment we will verify session_id server-side and flip plan in DB
             success_url=f"{base_url}/billing/success?session_id={{CHECKOUT_SESSION_ID}}&lang={lang}",
             cancel_url=f"{base_url}/billing/cancel?lang={lang}",
-
-            # ✅ stored on Checkout Session (used by billing_success + checkout.session.completed)
             metadata={
                 "user_id": str(user_id),
                 "user_email": user_email or "",
             },
-
-            # ✅ stored on Subscription too (useful for subscription.updated events later)
             subscription_data={
                 "metadata": {
                     "user_id": str(user_id),
                     "user_email": user_email or "",
                 }
             },
-
             client_reference_id=str(user_id),
             customer_email=user_email if user_email else None,
         )
-
         return jsonify({"url": checkout_session.url})
 
     except Exception as e:
@@ -1044,12 +980,8 @@ def create_checkout_session():
 
 @app.route("/public/<string:token>/create-pay-session", methods=["POST"])
 def create_public_invoice_pay_session(token):
-    """
-    Creates a Stripe Checkout Session (mode=payment) for the invoice BALANCE due.
-    Called from the public invoice page "Pay Now" button.
-    """
-    base_url = os.getenv("APP_BASE_URL", "").rstrip("/") or request.host_url.rstrip("/")
-    currency = (os.getenv("STRIPE_CURRENCY") or "usd").lower()
+    base_url = APP_BASE_URL or request.host_url.rstrip("/")
+    currency = STRIPE_CURRENCY
 
     inv = get_invoice_by_public_token(token)
     if not inv:
@@ -1095,7 +1027,6 @@ def create_public_invoice_pay_session(token):
                 "invoice_user_id": str(inv["user_id"]),
             },
         )
-
         return jsonify({"url": checkout_session.url})
 
     except Exception as e:
@@ -1151,7 +1082,6 @@ def billing_success():
 
         print(f"[BillingSuccess] DB updated rows={updated} for user_id={user_id}", flush=True)
 
-        # If rowcount is 0, you're upgrading a user_id that doesn't exist in DB
         if updated == 0:
             print("[BillingSuccess] WARNING: No user row matched. Check user_id.", flush=True)
             return redirect(url_for("pricing", lang=lang, canceled=1))
@@ -1170,15 +1100,10 @@ def billing_cancel():
 
 
 # -------------------------
-# PREVIEW (optional)
+# PREVIEW
 # -------------------------
 @app.route("/preview", methods=["POST"])
 def preview_invoice():
-    """
-    Live preview of an invoice BEFORE saving.
-    Mirrors most of the /save logic but does NOT write to the database.
-    """
-    # ---- CLIENT RESOLUTION (same idea as /save) ----
     selected_client_id = request.form.get("client_id")
     new_client_name = request.form.get("new_client_name")
     new_client_email = request.form.get("new_client_email")
@@ -1190,8 +1115,6 @@ def preview_invoice():
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
     template_style = request.form.get("template_style") or "modern"
-
-    # 🔹 NEW: signature preview
     signature_data = request.form.get("signature_data") or ""
 
     descriptions = request.form.getlist("description")
@@ -1215,7 +1138,6 @@ def preview_invoice():
     user = get_current_user()
     user_id = user["id"]
 
-    # Figure out what name/email would be used for this invoice
     display_client_name = None
     display_client_email = new_client_email or ""
     display_client_company = new_client_company or ""
@@ -1239,14 +1161,7 @@ def preview_invoice():
             )
             row = cursor.fetchone()
             if row:
-                (
-                    db_name,
-                    db_email,
-                    db_company,
-                    db_phone,
-                    db_address,
-                    db_notes,
-                ) = row
+                db_name, db_email, db_company, db_phone, db_address, db_notes = row
                 display_client_name = db_name
                 display_client_email = display_client_email or (db_email or "")
                 display_client_company = display_client_company or (db_company or "")
@@ -1265,11 +1180,8 @@ def preview_invoice():
     cursor.close()
     conn.close()
 
-    # Business profile for branding
     profile = get_business_profile()
     business_name = profile.get("business_name") or "BillBeam"
-
-    # "Virtual" invoice label (not saved yet)
     invoice_label = "PREVIEW — Not saved"
 
     return render_template(
@@ -1290,24 +1202,15 @@ def preview_invoice():
         terms=terms,
         template_style=template_style,
         invoice_label=invoice_label,
-        signature_data=signature_data,  # 👈 show signature on preview
+        signature_data=signature_data,
     )
 
 
 # -------------------------
-# SAVE INVOICE (with free-plan quota)
+# SAVE INVOICE
 # -------------------------
 @app.route("/save", methods=["POST"])
 def save():
-    """
-    Save a new invoice:
-    - Enforces free plan monthly quota
-    - Uses existing client if client_id is provided
-    - Or creates a new client if new_client_name is provided
-    - Falls back to plain 'client' text if needed
-    - Stores selected template_style for later PDF/web rendering
-    - Stores optional client signature_data
-    """
     allowed, reason = check_invoice_quota_or_reason()
     if not allowed:
         return render_template(
@@ -1328,11 +1231,7 @@ def save():
 
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
-
-    # 🔹 NEW: template style selection from the form
     template_style = request.form.get("template_style") or "modern"
-
-    # 🔹 NEW: signature data (data URL from hidden field)
     signature_data = request.form.get("signature_data") or None
 
     descriptions = request.form.getlist("description")
@@ -1396,7 +1295,6 @@ def save():
     if not client_name_for_invoice:
         client_name_for_invoice = request.form.get("client") or "Unknown client"
 
-    # 🔹 NEW: store template_style & signature_data column
     cursor.execute(
         """
         INSERT INTO invoices (
@@ -1431,8 +1329,8 @@ def save():
     )
 
     invoice_id = cursor.fetchone()[0]
-
     invoice_number = f"INV-{invoice_id:05d}"
+
     cursor.execute(
         "UPDATE invoices SET invoice_number = %s WHERE id = %s",
         (invoice_number, invoice_id),
@@ -1484,7 +1382,6 @@ def invoices_page():
     current_user = get_current_user()
     user_id = current_user["id"]
 
-    # ---------------- KPIs (same idea as before) ----------------
     cursor.execute(
         """
         SELECT id, client, amount, created_at, status
@@ -1515,12 +1412,8 @@ def invoices_page():
         if inv[3].month == current_month and inv[3].year == current_year
     )
 
-    growth = (
-        round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
-    )
-    avg_invoice = (
-        round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
-    )
+    growth = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0
+    avg_invoice = round(total_revenue / total_invoices, 2) if total_invoices > 0 else 0
 
     paid_count = sum(1 for inv in all_invoices if inv[4] == "Paid")
     overdue_count = sum(1 for inv in all_invoices if inv[4] == "Overdue")
@@ -1531,7 +1424,6 @@ def invoices_page():
         "Overdue": overdue_count,
     }
 
-    # ---------------- Monthly revenue chart (last 6 months) ----------------
     cursor.execute(
         """
         SELECT date_trunc('month', created_at) AS month, SUM(amount) AS total
@@ -1551,7 +1443,6 @@ def invoices_page():
         monthly_chart_labels.append(month_dt.strftime("%b %Y"))
         monthly_chart_totals.append(float(total_amt))
 
-    # ---------------- Daily revenue chart (last 30 days) ----------------
     cursor.execute(
         """
         SELECT DATE(created_at) AS day, SUM(amount) AS total
@@ -1571,7 +1462,6 @@ def invoices_page():
         daily_chart_labels.append(day_dt.strftime("%b %d"))
         daily_chart_totals.append(float(total_amt))
 
-    # ---------------- Status chart data ----------------
     status_chart_labels = ["Paid", "Sent", "Overdue"]
     status_chart_values = [
         paid_count,
@@ -1579,7 +1469,6 @@ def invoices_page():
         overdue_count,
     ]
 
-    # ---------------- Top clients (leaderboard) ----------------
     cursor.execute(
         """
         SELECT
@@ -1601,12 +1490,9 @@ def invoices_page():
         top_total = float(tc_rows[0][1]) if tc_rows[0][1] is not None else 0.0
         for name, total_amt, inv_count in tc_rows:
             total_float = float(total_amt or 0)
-            pct = 0.0
-            if top_total > 0:
-                pct = round((total_float / top_total) * 100, 1)
+            pct = round((total_float / top_total) * 100, 1) if top_total > 0 else 0.0
             top_clients.append([name, total_float, inv_count, pct])
 
-    # ---------------- NEW: Top items / services (for Top Items chart) ----------------
     cursor.execute(
         """
         SELECT
@@ -1633,7 +1519,6 @@ def invoices_page():
         item_totals.append(float(total_amt or 0))
         item_counts.append(line_count or 0)
 
-    # ---------------- Filtered table query ----------------
     base_sql = """
         SELECT
             i.id,
@@ -1751,7 +1636,6 @@ def global_search():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Clients search
         cursor.execute(
             """
             SELECT id, name, email, company, created_at
@@ -1769,7 +1653,6 @@ def global_search():
         )
         client_results = cursor.fetchall()
 
-        # Invoices search
         cursor.execute(
             """
             SELECT id, client, amount, created_at, status, invoice_number
@@ -1986,9 +1869,7 @@ def add_payment(invoice_id):
                 )
 
             conn.commit()
-            feedback_message = (
-                f"Recorded payment of ${pay_amount:,.2f} on invoice {inv_label}."
-            )
+            feedback_message = f"Recorded payment of ${pay_amount:,.2f} on invoice {inv_label}."
             feedback_type = "success"
 
     cursor.execute(
@@ -2052,14 +1933,12 @@ def edit(invoice_id):
 
     conn.close()
 
-    return render_template(
-        "edit.html", invoice_id=invoice_id, client=invoice[1], items=items
-    )
+    return render_template("edit.html", invoice_id=invoice_id, client=invoice[1], items=items)
 
 
 @app.route("/update/<int:invoice_id>", methods=["POST"])
 def update(invoice_id):
-    client = request.form.get("client")
+    client_name = request.form.get("client")
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
@@ -2080,13 +1959,10 @@ def update(invoice_id):
 
     c.execute(
         "UPDATE invoices SET client = %s, amount = %s WHERE id = %s AND user_id = %s",
-        (client, total, invoice_id, user_id),
+        (client_name, total, invoice_id, user_id),
     )
 
-    c.execute(
-        "DELETE FROM invoice_items WHERE invoice_id = %s",
-        (invoice_id,),
-    )
+    c.execute("DELETE FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
 
     for desc, amt in cleaned_items:
         c.execute(
@@ -2146,7 +2022,7 @@ def delete(invoice_id):
 
 
 # -------------------------
-# PDF GENERATION (template-aware, with signature)
+# PDF GENERATION
 # -------------------------
 def generate_invoice_pdf_bytes(invoice_id: int):
     conn = get_db_connection()
@@ -2176,7 +2052,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         return None, "Invoice not found"
 
     (
-        client,
+        client_name,
         amount,
         created_at,
         due_date,
@@ -2190,38 +2066,31 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     amount_float = float(amount)
     template_style = (template_style or "modern").lower()
 
-    # Business name for header (fallback to BillBeam)
     profile = get_business_profile()
     business_name = profile.get("business_name") or "BillBeam"
 
-    c.execute(
-        "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
-        (invoice_id,),
-    )
+    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
     items = c.fetchall()
     conn.close()
 
     buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesizes=LETTER)
+    pdf = canvas.Canvas(buffer, pagesize=LETTER)
     page_width, page_height = LETTER
 
-    # ---------- TEMPLATE STYLES ----------
-    # Use brand/business name as the header title
-    header_bar_color = (21 / 255, 27 / 255, 84 / 255)  # deep blue
+    header_bar_color = (21 / 255, 27 / 255, 84 / 255)
     accent_color = header_bar_color
-    title_text = business_name  # 👈 main title is your business name
+    title_text = business_name
 
     if template_style == "minimal":
-        header_bar_color = (0.18, 0.20, 0.24)  # dark slate
+        header_bar_color = (0.18, 0.20, 0.24)
         accent_color = (0.6, 0.6, 0.65)
     elif template_style == "bold":
-        header_bar_color = (0.97, 0.45, 0.09)  # orange
+        header_bar_color = (0.97, 0.45, 0.09)
         accent_color = (0.97, 0.45, 0.09)
     elif template_style == "doodle":
-        header_bar_color = (0.33, 0.27, 0.96)  # purple/blue
+        header_bar_color = (0.33, 0.27, 0.96)
         accent_color = (0.33, 0.27, 0.96)
 
-        # Soft doodle-like shapes in background
         pdf.setFillColorRGB(0.93, 0.95, 1.0)
         pdf.circle(60, page_height - 120, 26, fill=1, stroke=0)
         pdf.setFillColorRGB(0.96, 0.92, 1.0)
@@ -2229,7 +2098,6 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         pdf.setFillColorRGB(0.90, 0.96, 0.98)
         pdf.rect(page_width - 150, 40, 120, 60, fill=1, stroke=0)
 
-    # ---------- HEADER BAR ----------
     pdf.setFillColorRGB(*header_bar_color)
     pdf.rect(0, page_height - 60, page_width, 60, fill=1, stroke=0)
 
@@ -2237,7 +2105,6 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     pdf.setFont("Helvetica-Bold", 22)
     pdf.drawString(72, page_height - 40, title_text)
 
-    # ---------- INVOICE META ----------
     pdf.setFillColorRGB(0.1, 0.1, 0.15)
     pdf.setFont("Helvetica", 11)
 
@@ -2246,25 +2113,16 @@ def generate_invoice_pdf_bytes(invoice_id: int):
 
     pdf.drawString(72, y, f"Invoice: {inv_label}")
     y -= 16
-    pdf.drawString(72, y, f"Client: {client}")
+    pdf.drawString(72, y, f"Client: {client_name}")
     y -= 16
 
     if created_at:
-        pdf.drawString(
-            72,
-            y,
-            f"Created: {created_at.strftime('%Y-%m-%d %I:%M %p')}",
-        )
+        pdf.drawString(72, y, f"Created: {created_at.strftime('%Y-%m-%d %I:%M %p')}")
         y -= 16
     if due_date:
-        pdf.drawString(
-            72,
-            y,
-            f"Due: {due_date.strftime('%Y-%m-%d')}",
-        )
+        pdf.drawString(72, y, f"Due: {due_date.strftime('%Y-%m-%d')}")
         y -= 16
 
-    # Right side total box
     right_box_top = page_height - 90
     right_box_left = page_width - 220
     pdf.setFillColorRGB(1, 1, 1)
@@ -2276,13 +2134,8 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     pdf.drawString(right_box_left + 10, right_box_top - 20, "Total")
     pdf.setFont("Helvetica-Bold", 14)
     pdf.setFillColorRGB(*accent_color)
-    pdf.drawRightString(
-        right_box_left + 170,
-        right_box_top - 30,
-        f"${amount_float:,.2f}",
-    )
+    pdf.drawRightString(right_box_left + 170, right_box_top - 30, f"${amount_float:,.2f}")
 
-    # ---------- LINE ITEMS ----------
     y = right_box_top - 80
     pdf.setFillColorRGB(0.1, 0.1, 0.15)
     pdf.setFont("Helvetica-Bold", 12)
@@ -2305,20 +2158,15 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     for desc, amt in items:
         amt_float = float(amt)
         pdf.drawString(72, y, f"{desc}")
-        pdf.drawRightString(
-            page_width - 72,
-            y,
-            f"${amt_float:,.2f}",
-        )
+        pdf.drawRightString(page_width - 72, y, f"${amt_float:,.2f}")
         y -= 16
-        if y < 120:  # keep space for footer / notes
+        if y < 120:
             pdf.showPage()
             page_width, page_height = LETTER
             y = page_height - 100
             pdf.setFont("Helvetica", 10)
             pdf.setFillColorRGB(0.1, 0.1, 0.15)
 
-    # ---------- NOTES & TERMS ----------
     if y < 120:
         pdf.showPage()
         page_width, page_height = LETTER
@@ -2346,10 +2194,8 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         pdf.drawString(72, y, terms[:160])
         y -= 20
 
-    # ---------- CLIENT SIGNATURE (if captured) ----------
     if signature_data:
         try:
-            # signature_data is typically "data:image/png;base64,AAAA..."
             if signature_data.startswith("data:image"):
                 _, b64_data = signature_data.split(",", 1)
             else:
@@ -2359,7 +2205,6 @@ def generate_invoice_pdf_bytes(invoice_id: int):
             sig_buf = io.BytesIO(sig_bytes)
             sig_img = ImageReader(sig_buf)
 
-            # Ensure we have enough space; otherwise new page
             if y < 140:
                 pdf.showPage()
                 page_width, page_height = LETTER
@@ -2382,15 +2227,13 @@ def generate_invoice_pdf_bytes(invoice_id: int):
                 y - sig_box_height + 6,
                 width=sig_box_width - 12,
                 height=sig_box_height - 12,
-                mask='auto'
+                mask="auto",
             )
 
             y -= sig_box_height + 16
         except Exception:
-            # If anything goes wrong with the signature, just skip it
             pass
 
-    # ---------- TOTAL FOOTER ----------
     if y < 80:
         pdf.showPage()
         page_width, page_height = LETTER
@@ -2402,11 +2245,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
 
     pdf.setFont("Helvetica-Bold", 12)
     pdf.setFillColorRGB(*accent_color)
-    pdf.drawRightString(
-        page_width - 72,
-        y,
-        f"Total Due: ${amount_float:,.2f}",
-    )
+    pdf.drawRightString(page_width - 72, y, f"Total Due: ${amount_float:,.2f}")
 
     pdf.showPage()
     pdf.save()
@@ -2537,16 +2376,12 @@ def public_invoice(token):
         pdf_url=pdf_url,
         is_public_view=True,
         public_token=token,
-        signature_data=signature_data,  # 👈 make available to template
+        signature_data=signature_data,
     )
 
 
 @app.route("/invoice/<int:invoice_id>")
 def invoice_detail(invoice_id):
-    """
-    Internal preview of an invoice (owner view).
-    Uses the same layout as the client portal, but keeps full app chrome.
-    """
     current_user = get_current_user()
     user_id = current_user["id"]
 
@@ -2651,18 +2486,16 @@ def invoice_detail(invoice_id):
         total_paid=total_paid,
         balance=balance,
         pdf_url=pdf_url,
-        is_public_view=False,  # owner view, full app nav
+        is_public_view=False,
         public_token=None,
-        signature_data=signature_data,  # 👈 show signature on owner view
+        signature_data=signature_data,
     )
 
 
 # -------------------------
-# EMAIL (Resend / SMTP)
+# EMAIL
 # -------------------------
-def send_email_via_resend(
-    to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str
-):
+def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str):
     api_key = os.environ.get("RESEND_API_KEY")
     resend_from = os.environ.get("RESEND_FROM")
 
@@ -2670,18 +2503,16 @@ def send_email_via_resend(
         return False, "Resend configuration missing: RESEND_API_KEY is not set."
 
     if not resend_from:
-        return (
-            False,
+        return False, (
             "Resend configuration missing: RESEND_FROM is not set. "
-            "Set RESEND_FROM to something like 'BillBeam <billing@billbeam.com>'.",
+            "Set RESEND_FROM to something like 'BillBeam <billing@billbeam.com>'."
         )
 
     if "gmail.com" in resend_from.lower():
-        return (
-            False,
+        return False, (
             "Resend cannot send from a gmail.com address. "
             f"Current RESEND_FROM value is: '{resend_from}'. "
-            "Use your verified domain, e.g. 'InvoicePro <billing@mikeinvoices.com>'.",
+            "Use your verified domain, e.g. 'InvoicePro <billing@mikeinvoices.com>'."
         )
 
     encoded_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
@@ -2760,10 +2591,9 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     smtp_from = os.environ.get("SMTP_FROM") or smtp_user
 
     if not smtp_host or not smtp_from:
-        return (
-            False,
+        return False, (
             "No email provider available. Configure Resend (RESEND_API_KEY & RESEND_FROM) "
-            "or SMTP (SMTP_HOST & SMTP_FROM).",
+            "or SMTP (SMTP_HOST & SMTP_FROM)."
         )
 
     msg = EmailMessage()
@@ -2803,10 +2633,6 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
 
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
 def send_email_view(invoice_id):
-    """
-    Email invoice with attached PDF + public link.
-    GATED: requires Pro plan or above.
-    """
     if not plan_allows("pro"):
         return render_template(
             "upgrade_gate.html",
@@ -2897,9 +2723,7 @@ def send_email_view(invoice_id):
             feedback_message = "Recipient email is required."
             feedback_type = "error"
         else:
-            success, err = send_invoice_email(
-                invoice_id_db, to_email, subject, message_body
-            )
+            success, err = send_invoice_email(invoice_id_db, to_email, subject, message_body)
             if success:
                 feedback_message = f"Invoice {inv_label} was emailed to {to_email}."
                 feedback_type = "success"
@@ -2930,13 +2754,9 @@ def send_email_view(invoice_id):
 
 
 # -------------------------
-# AI HELPER SUPPORTING KPI SNAPSHOT
+# AI HELPERS
 # -------------------------
 def get_ai_kpi_summary_for_user(user_id: int) -> str:
-    """
-    Lightweight invoice KPIs for the AI helper so it can reason
-    about your business without pulling full raw tables.
-    """
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -2978,10 +2798,7 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
         elif status == "Sent":
             sent_count += 1
 
-    if total_revenue <= 0:
-        growth_pct = 0.0
-    else:
-        growth_pct = round((monthly_revenue / total_revenue) * 100, 1)
+    growth_pct = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
 
     return (
         f"Total invoices: {total_invoices}, "
@@ -2992,24 +2809,8 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
     )
 
 
-# -------------------------
-# AI HELPER ENDPOINT
-# -------------------------
 @app.route("/ai-helper", methods=["POST"])
 def ai_helper():
-    """
-    JSON API that powers the BillBeam assistant.
-
-    Request body: { "question": "...", "page": "/invoices" }
-    Response: { "answer": "..." } or { "error": "..." }
-
-    Behavior is plan-aware:
-      - free: shorter, simpler responses + gentle upgrade nudges
-      - pro / enterprise: deeper, more strategic guidance
-
-    The helper also gets a small KPI snapshot of the current user's invoices
-    so it can reason about revenue, paid vs overdue, etc.
-    """
     if not ai_client or not OPENAI_API_KEY:
         return {"error": "AI helper is not configured on the server."}, 500
 
@@ -3017,8 +2818,6 @@ def ai_helper():
     question = (data.get("question") or "").strip()
     page = (data.get("page") or "").strip()
 
-    # Figure out the language for this AI request
-    # Priority: JSON "lang" -> query param "lang" -> default "en"
     user_lang = (data.get("lang") or request.args.get("lang") or "en").lower()
     if user_lang not in ("en", "es"):
         user_lang = "en"
@@ -3026,22 +2825,18 @@ def ai_helper():
     if not question:
         return {"error": "Missing question."}, 400
 
-    # Current user + plan
     user = get_current_user()
     user_plan = user.get("plan") or "free"
     user_id = user.get("id")
     is_pro = PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get("pro", 0)
 
-    # KPI snapshot for this user (if we have a concrete user_id)
     kpi_summary = ""
     if user_id:
         try:
             kpi_summary = get_ai_kpi_summary_for_user(user_id)
         except Exception:
-            # Don't break AI helper if KPI query fails
             kpi_summary = ""
 
-    # Very small context string so the model knows the app shape
     app_context = f"""
 You are the in-app assistant for an invoicing web app called BillBeam.
 
@@ -3083,7 +2878,6 @@ Never:
 - Claim you can change subscription plans or charge cards directly.
 """
 
-    # Choose model + length by plan
     model_name = AI_MODEL_PRO if is_pro else AI_MODEL_FREE
     max_output_tokens = 600 if is_pro else 220
 
@@ -3092,10 +2886,7 @@ Never:
             model=model_name,
             messages=[
                 {"role": "system", "content": app_context},
-                {
-                    "role": "user",
-                    "content": question,
-                },
+                {"role": "user", "content": question},
             ],
             temperature=0.4,
             max_tokens=max_output_tokens,
@@ -3103,7 +2894,6 @@ Never:
         answer = resp.choices[0].message.content.strip()
         return {"answer": answer}
     except Exception as e:
-        # Don't blow up the app on AI issues
         return {"error": f"AI error: {e}"}, 500
 
 
@@ -3118,8 +2908,6 @@ def api_ai_assistant():
     if not user_message:
         return jsonify({"error": "No message provided."}), 400
 
-    # You can enrich this with actual data later (totals, top clients, etc.)
-    # For now we give the model context about what BillBeam is.
     if lang == "es":
         system_prompt = (
             "Eres InvoicePro Assistant, un asistente amable y claro dentro de BillBeam, "
@@ -3148,7 +2936,6 @@ def api_ai_assistant():
             "Never make up details about specific clients or actual payments."
         )
 
-    # Optional: include some context hints
     context_hint_parts = []
     if page:
         context_hint_parts.append(f"User is currently on the page: {page}.")
@@ -3156,10 +2943,12 @@ def api_ai_assistant():
         context_hint_parts.append(f"Extra context: {extra}")
 
     context_hint = "\n".join(context_hint_parts)
-
     user_content = user_message
     if context_hint:
         user_content = context_hint + "\n\nUser question:\n" + user_message
+
+    if not client:
+        return jsonify({"error": "AI client is not configured."}), 500
 
     try:
         completion = client.chat.completions.create(
@@ -3173,21 +2962,20 @@ def api_ai_assistant():
         reply = completion.choices[0].message.content
         return jsonify({"reply": reply})
     except Exception as e:
-        # You can log this properly if you like
         print("AI error:", e)
-        if lang == "es":
-            msg = "Lo siento, el asistente tuvo un problema. Intenta de nuevo en un momento."
-        else:
-            msg = "Sorry, the assistant ran into a problem. Try again in a moment."
+        msg = (
+            "Lo siento, el asistente tuvo un problema. Intenta de nuevo en un momento."
+            if lang == "es"
+            else "Sorry, the assistant ran into a problem. Try again in a moment."
+        )
         return jsonify({"error": msg}), 500
 
 
+# -------------------------
+# STRIPE WEBHOOK HELPERS
+# -------------------------
 def _record_invoice_payment_from_checkout_session(session_obj):
-    """
-    Record a Stripe invoice payment safely and mark invoice Paid when balance is covered.
-    """
     metadata = session_obj.get("metadata") or {}
-
     invoice_id_str = metadata.get("invoice_id")
     token = metadata.get("token") or metadata.get("public_token")
 
@@ -3195,7 +2983,7 @@ def _record_invoice_payment_from_checkout_session(session_obj):
     payment_intent_id = session_obj.get("payment_intent")
 
     amount_total = session_obj.get("amount_total") or 0
-    amount_paid = float(amount_total) / 100.0  # cents -> dollars
+    amount_paid = float(amount_total) / 100.0
 
     print(
         f"[Stripe] invoice payment checkout.session.completed "
@@ -3218,7 +3006,6 @@ def _record_invoice_payment_from_checkout_session(session_obj):
     cur = conn.cursor()
 
     try:
-        # Strong idempotency: Stripe Checkout Session ID
         if checkout_session_id:
             cur.execute(
                 "SELECT id FROM payments WHERE stripe_checkout_session_id = %s LIMIT 1",
@@ -3228,11 +3015,8 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             if existing:
                 print(f"[Stripe] Payment already recorded for checkout session {checkout_session_id}", flush=True)
                 conn.commit()
-                cur.close()
-                conn.close()
                 return
 
-        # Secondary idempotency: payment intent
         if payment_intent_id:
             cur.execute(
                 "SELECT id FROM payments WHERE stripe_payment_intent_id = %s LIMIT 1",
@@ -3242,11 +3026,8 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             if existing:
                 print(f"[Stripe] Payment already recorded for payment intent {payment_intent_id}", flush=True)
                 conn.commit()
-                cur.close()
-                conn.close()
                 return
 
-        # Insert payment
         cur.execute(
             """
             INSERT INTO payments (
@@ -3269,14 +3050,12 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             ),
         )
 
-        # Optional debug field on invoice
         if payment_intent_id:
             cur.execute(
                 "UPDATE invoices SET stripe_last_payment_intent_id = %s WHERE id = %s",
                 (payment_intent_id, invoice_id),
             )
 
-        # Recompute total paid and flip to Paid if fully covered
         cur.execute("SELECT amount FROM invoices WHERE id = %s", (invoice_id,))
         inv = cur.fetchone()
 
@@ -3290,10 +3069,7 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             total_paid = float(cur.fetchone()[0] or 0)
 
             if inv_total > 0 and total_paid >= inv_total:
-                cur.execute(
-                    "UPDATE invoices SET status = 'Paid' WHERE id = %s",
-                    (invoice_id,),
-                )
+                cur.execute("UPDATE invoices SET status = 'Paid' WHERE id = %s", (invoice_id,))
                 print(
                     f"[Stripe] Invoice {invoice_id} marked Paid (paid={total_paid} total={inv_total})",
                     flush=True,
@@ -3315,9 +3091,6 @@ def _record_invoice_payment_from_checkout_session(session_obj):
 
 
 def _handle_subscription_checkout_completed(session_obj):
-    """
-    Upgrade a user to Pro after successful Stripe subscription checkout.
-    """
     metadata = session_obj.get("metadata") or {}
     user_id_str = metadata.get("user_id") or session_obj.get("client_reference_id")
 
@@ -3393,184 +3166,18 @@ def stripe_webhook():
         session_obj = event["data"]["object"]
         mode = (session_obj.get("mode") or "").lower()
 
-        # -------------------------
-        # PAY NOW invoice flow
-        # -------------------------
         if mode == "payment":
-            metadata = session_obj.get("metadata") or {}
-            invoice_id_str = metadata.get("invoice_id")
-            payment_intent_id = session_obj.get("payment_intent")
-            session_id = session_obj.get("id")
-            amount_total = session_obj.get("amount_total") or 0
-            amount_paid = amount_total / 100.0
-
-            print(
-                f"[Stripe] payment checkout.session.completed invoice_id={invoice_id_str} "
-                f"pi={payment_intent_id} session={session_id} amount_paid={amount_paid}",
-                flush=True,
-            )
-
-            if not invoice_id_str:
-                print("[Stripe] Missing invoice_id in metadata for payment checkout", flush=True)
-                return "OK", 200
-
-            try:
-                invoice_id = int(invoice_id_str)
-            except ValueError:
-                print(f"[Stripe] Bad invoice_id in metadata: {invoice_id_str}", flush=True)
-                return "OK", 200
-
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-
-                if payment_intent_id:
-                    cur.execute(
-                        "SELECT id FROM payments WHERE stripe_payment_intent_id = %s LIMIT 1",
-                        (payment_intent_id,),
-                    )
-                    existing = cur.fetchone()
-
-                    if existing:
-                        print(f"[Stripe] Payment already recorded for pi={payment_intent_id}", flush=True)
-                    else:
-                        cur.execute(
-                            """
-                            INSERT INTO payments (
-                                invoice_id,
-                                amount,
-                                method,
-                                note,
-                                stripe_payment_intent_id,
-                                stripe_checkout_session_id
-                            )
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                            """,
-                            (
-                                invoice_id,
-                                amount_paid,
-                                "Stripe",
-                                "Stripe Checkout",
-                                payment_intent_id,
-                                session_id,
-                            ),
-                        )
-                else:
-                    cur.execute(
-                        """
-                        INSERT INTO payments (
-                            invoice_id,
-                            amount,
-                            method,
-                            note,
-                            stripe_checkout_session_id
-                        )
-                        VALUES (%s, %s, %s, %s, %s)
-                        """,
-                        (
-                            invoice_id,
-                            amount_paid,
-                            "Stripe",
-                            "Stripe Checkout",
-                            session_id,
-                        ),
-                    )
-
-                cur.execute("SELECT amount FROM invoices WHERE id = %s", (invoice_id,))
-                inv = cur.fetchone()
-
-                if inv:
-                    inv_total = float(inv[0] or 0)
-
-                    cur.execute(
-                        "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
-                        (invoice_id,),
-                    )
-                    total_paid = float(cur.fetchone()[0] or 0)
-
-                    if payment_intent_id:
-                        cur.execute(
-                            "UPDATE invoices SET stripe_last_payment_intent_id = %s WHERE id = %s",
-                            (payment_intent_id, invoice_id),
-                        )
-
-                    if inv_total > 0 and total_paid >= inv_total:
-                        cur.execute(
-                            "UPDATE invoices SET status = 'Paid' WHERE id = %s",
-                            (invoice_id,),
-                        )
-                        print(
-                            f"[Stripe] Invoice {invoice_id} marked Paid (paid={total_paid} total={inv_total})",
-                            flush=True,
-                        )
-                    else:
-                        print(
-                            f"[Stripe] Partial payment invoice {invoice_id} paid={total_paid} total={inv_total}",
-                            flush=True,
-                        )
-
-                conn.commit()
-                cur.close()
-                conn.close()
-
-            except Exception as e:
-                print(f"[Stripe] Error recording Stripe payment: {e}", flush=True)
-
+            _record_invoice_payment_from_checkout_session(session_obj)
             return "OK", 200
 
-        # -------------------------
-        # SUBSCRIPTION UPGRADE flow
-        # -------------------------
         if mode == "subscription":
-            metadata = session_obj.get("metadata") or {}
-            user_id_str = metadata.get("user_id") or session_obj.get("client_reference_id")
-            stripe_customer_id = session_obj.get("customer")
-            stripe_subscription_id = session_obj.get("subscription")
-
-            print(
-                f"[Stripe] subscription checkout.session.completed user_id_str={user_id_str} "
-                f"customer={stripe_customer_id} sub={stripe_subscription_id}",
-                flush=True,
-            )
-
-            if not user_id_str:
-                print("[Stripe] Missing user_id for subscription checkout", flush=True)
-                return "OK", 200
-
-            try:
-                user_id = int(user_id_str)
-            except ValueError:
-                print(f"[Stripe] Bad user_id in metadata: {user_id_str}", flush=True)
-                return "OK", 200
-
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute(
-                    """
-                    UPDATE users
-                    SET plan = %s,
-                        stripe_customer_id = COALESCE(%s, stripe_customer_id),
-                        stripe_subscription_id = COALESCE(%s, stripe_subscription_id)
-                    WHERE id = %s
-                    """,
-                    ("pro", stripe_customer_id, stripe_subscription_id, user_id),
-                )
-                conn.commit()
-                updated = cur.rowcount
-                cur.close()
-                conn.close()
-
-                print(f"[Stripe] Upgraded user {user_id} to Pro (rows_updated={updated})", flush=True)
-            except Exception as e:
-                print(f"[Stripe] DB error upgrading user {user_id}: {e}", flush=True)
-
+            _handle_subscription_checkout_completed(session_obj)
             return "OK", 200
 
         print(f"[Stripe] checkout.session.completed with unsupported mode={mode}", flush=True)
         return "OK", 200
 
-    elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+    if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         sub = event["data"]["object"]
         customer_id = sub.get("customer")
         status = (sub.get("status") or "").lower()
@@ -3622,7 +3229,7 @@ def favicon():
     return send_from_directory(
         os.path.join(app.root_path, "static"),
         "favicon.ico",
-        mimetype="image/vnd.microsoft.icon"
+        mimetype="image/vnd.microsoft.icon",
     )
 
 
