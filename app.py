@@ -10,16 +10,21 @@ from email.message import EmailMessage
 import base64
 import requests
 import secrets
-import logging
-
+import stripe
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
-
 from werkzeug.security import generate_password_hash, check_password_hash
-
-import stripe
+from werkzeug.utils import secure_filename
 from openai import OpenAI
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY"))
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 # -------------------------
