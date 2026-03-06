@@ -22,9 +22,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-
 client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY"))
 DATABASE_URL = os.environ.get("DATABASE_URL")
+DB_PATH = PATH("invoices.db")
 
 
 # -------------------------
@@ -1023,10 +1023,6 @@ def create_checkout_session():
 
 @app.route("/public/<string:token>/create-pay-session", methods=["POST"])
 def create_public_invoice_pay_session(token):
-    """
-    Creates a Stripe Checkout Session (mode=payment) for the invoice BALANCE due.
-    Called from the public invoice page "Pay Now" button.
-    """
     base_url = os.getenv("APP_BASE_URL", "").rstrip("/") or request.host_url.rstrip("/")
     currency = (os.getenv("STRIPE_CURRENCY") or "usd").lower()
 
@@ -1034,7 +1030,6 @@ def create_public_invoice_pay_session(token):
     if not inv:
         return jsonify({"error": "Invoice not found."}), 404
 
-    # Only allow Pay Now if the invoice owner is Pro+
     owner_plan = get_user_plan_by_user_id(inv["user_id"])
     if PLAN_LEVELS.get(owner_plan, 0) < PLAN_LEVELS.get("pro", 0):
         return jsonify({"error": "Pay Now is not enabled for this invoice."}), 403
@@ -1042,7 +1037,6 @@ def create_public_invoice_pay_session(token):
     if inv["status"] == "Paid" or inv["balance"] <= 0:
         return jsonify({"error": "This invoice is already paid."}), 400
 
-    # Stripe expects cents (integer)
     amount_cents = int(round(inv["balance"] * 100))
     if amount_cents < 50:
         return jsonify({"error": "Balance too small to charge via Stripe."}), 400
@@ -3370,37 +3364,190 @@ def stripe_webhook():
     event_type = event.get("type")
     print(f"[Stripe] Received event: {event_type}", flush=True)
 
-    # -------------------------------------------------------
-    # 1) Checkout completed => subscription OR invoice payment
-    # -------------------------------------------------------
     if event_type == "checkout.session.completed":
         session_obj = event["data"]["object"]
         mode = (session_obj.get("mode") or "").lower()
 
+        # PAY NOW invoice flow
         if mode == "payment":
-            _record_invoice_payment_from_checkout_session(session_obj)
+            metadata = session_obj.get("metadata") or {}
+            invoice_id_str = metadata.get("invoice_id")
+            payment_intent_id = session_obj.get("payment_intent")
+            session_id = session_obj.get("id")
+            amount_total = session_obj.get("amount_total") or 0
+            amount_paid = amount_total / 100.0
+
+            print(
+                f"[Stripe] payment checkout.session.completed invoice_id={invoice_id_str} "
+                f"pi={payment_intent_id} session={session_id} amount_paid={amount_paid}",
+                flush=True,
+            )
+
+            if not invoice_id_str:
+                print("[Stripe] Missing invoice_id in metadata for payment checkout", flush=True)
+                return "OK", 200
+
+            try:
+                invoice_id = int(invoice_id_str)
+            except ValueError:
+                print(f"[Stripe] Bad invoice_id in metadata: {invoice_id_str}", flush=True)
+                return "OK", 200
+
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+
+                if payment_intent_id:
+                    cur.execute(
+                        "SELECT id FROM payments WHERE stripe_payment_intent_id = %s LIMIT 1",
+                        (payment_intent_id,),
+                    )
+                    existing = cur.fetchone()
+                    if existing:
+                        print(f"[Stripe] Payment already recorded for pi={payment_intent_id}", flush=True)
+                    else:
+                        cur.execute(
+                            """
+                            INSERT INTO payments (
+                                invoice_id,
+                                amount,
+                                method,
+                                note,
+                                stripe_payment_intent_id,
+                                stripe_checkout_session_id
+                            )
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            """,
+                            (
+                                invoice_id,
+                                amount_paid,
+                                "Stripe",
+                                "Stripe Checkout",
+                                payment_intent_id,
+                                session_id,
+                            ),
+                        )
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO payments (
+                            invoice_id,
+                            amount,
+                            method,
+                            note,
+                            stripe_checkout_session_id
+                        )
+                        VALUES (%s, %s, %s, %s, %s)
+                        """,
+                        (
+                            invoice_id,
+                            amount_paid,
+                            "Stripe",
+                            "Stripe Checkout",
+                            session_id,
+                        ),
+                    )
+
+                cur.execute("SELECT amount FROM invoices WHERE id = %s", (invoice_id,))
+                inv = cur.fetchone()
+
+                if inv:
+                    inv_total = float(inv[0] or 0)
+
+                    cur.execute(
+                        "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
+                        (invoice_id,),
+                    )
+                    total_paid = float(cur.fetchone()[0] or 0)
+
+                    if payment_intent_id:
+                        cur.execute(
+                            "UPDATE invoices SET stripe_last_payment_intent_id = %s WHERE id = %s",
+                            (payment_intent_id, invoice_id),
+                        )
+
+                    if inv_total > 0 and total_paid >= inv_total:
+                        cur.execute(
+                            "UPDATE invoices SET status = 'Paid' WHERE id = %s",
+                            (invoice_id,),
+                        )
+                        print(
+                            f"[Stripe] Invoice {invoice_id} marked Paid (paid={total_paid} total={inv_total})",
+                            flush=True,
+                        )
+                    else:
+                        print(
+                            f"[Stripe] Partial payment invoice {invoice_id} paid={total_paid} total={inv_total}",
+                            flush=True,
+                        )
+
+                conn.commit()
+                cur.close()
+                conn.close()
+
+            except Exception as e:
+                print(f"[Stripe] Error recording Stripe payment: {e}", flush=True)
+
             return "OK", 200
 
+        # SUBSCRIPTION UPGRADE flow
         if mode == "subscription":
-            _handle_subscription_checkout_completed(session_obj)
+            metadata = session_obj.get("metadata") or {}
+            user_id_str = metadata.get("user_id") or session_obj.get("client_reference_id")
+            stripe_customer_id = session_obj.get("customer")
+            stripe_subscription_id = session_obj.get("subscription")
+
+            print(
+                f"[Stripe] subscription checkout.session.completed user_id_str={user_id_str} "
+                f"customer={stripe_customer_id} sub={stripe_subscription_id}",
+                flush=True,
+            )
+
+            if not user_id_str:
+                print("[Stripe] Missing user_id for subscription checkout", flush=True)
+                return "OK", 200
+
+            try:
+                user_id = int(user_id_str)
+            except ValueError:
+                print(f"[Stripe] Bad user_id in metadata: {user_id_str}", flush=True)
+                return "OK", 200
+
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET plan = %s,
+                        stripe_customer_id = COALESCE(%s, stripe_customer_id),
+                        stripe_subscription_id = COALESCE(%s, stripe_subscription_id)
+                    WHERE id = %s
+                    """,
+                    ("pro", stripe_customer_id, stripe_subscription_id, user_id),
+                )
+                conn.commit()
+                updated = cur.rowcount
+                cur.close()
+                conn.close()
+
+                print(f"[Stripe] Upgraded user {user_id} to Pro (rows_updated={updated})", flush=True)
+            except Exception as e:
+                print(f"[Stripe] DB error upgrading user {user_id}: {e}", flush=True)
+
             return "OK", 200
 
         print(f"[Stripe] checkout.session.completed with unsupported mode={mode}", flush=True)
         return "OK", 200
 
-    # -------------------------------------------------------
-    # 2) Subscription changes => sync plan by stripe_customer_id
-    # -------------------------------------------------------
-    if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+    elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         sub = event["data"]["object"]
         customer_id = sub.get("customer")
         status = (sub.get("status") or "").lower()
-
         new_plan = "pro" if status in ("active", "trialing") else "free"
 
         print(
-            f"[Stripe] Subscription sync customer={customer_id} sub={sub.get('id')} "
-            f"status={status} => plan={new_plan}",
+            f"[Stripe] Subscription sync customer={customer_id} sub={sub.get('id')} status={status} => plan={new_plan}",
             flush=True,
         )
 
@@ -3421,16 +3568,13 @@ def stripe_webhook():
                 (new_plan, sub.get("id"), customer_id),
             )
             conn.commit()
-            print(
-                f"[Stripe] Subscription sync rows_updated={cursor.rowcount} for customer_id={customer_id}",
-                flush=True,
-            )
+            updated = cursor.rowcount
             cursor.close()
             conn.close()
+
+            print(f"[Stripe] Subscription sync rows_updated={updated} for customer_id={customer_id}", flush=True)
         except Exception as e:
             print(f"[Stripe] subscription sync error: {e}", flush=True)
-
-        return "OK", 200
 
     return "OK", 200
 
