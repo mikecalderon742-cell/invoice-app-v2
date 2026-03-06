@@ -4,7 +4,6 @@
 
 <div class="public-portal">
 
-  {# --- Payment alerts --- #}
   {% if request.args.get('paid') %}
     <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:16px;">
       {% if lang == 'es' %}
@@ -30,7 +29,6 @@
     </div>
   {% endif %}
 
-  <!-- HERO -->
   <div class="public-hero">
     <div class="public-hero-left">
       <div class="public-brand">
@@ -38,7 +36,7 @@
           <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Logo">
         {% endif %}
         <div>
-          <div class="public-title">{{ business_profile.business_name or "InvoicePro" }}</div>
+          <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
           <div class="public-subtitle">
             {% if lang == 'es' %}Portal de facturas{% else %}Invoice Portal{% endif %}
           </div>
@@ -110,13 +108,12 @@
         </div>
 
         <div class="summary-actions">
-          {# Pay Now button states #}
-          {% set can_pay = (status != "Paid") and (balance and balance > 0) %}
+          {% set can_pay = (status != "Paid") and (balance and balance > 0) and public_token %}
           <button
             class="btn btn-brand btn-pay"
             id="payNowBtn"
             {% if not can_pay %}disabled{% endif %}
-            data-token="{{ public_token }}"
+            data-token="{{ public_token or '' }}"
             title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
           >
             {% if status == "Paid" %}
@@ -146,7 +143,6 @@
     </div>
   </div>
 
-  <!-- CLIENT CARD -->
   <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
@@ -207,7 +203,6 @@
     </div>
   </div>
 
-  <!-- LINE ITEMS -->
   <div class="public-card public-card-wide">
     <div class="card-title">
       {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
@@ -257,7 +252,6 @@
     </div>
   </div>
 
-  <!-- PAYMENTS + NOTES -->
   <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
@@ -382,9 +376,9 @@
 
   <div class="powered-by">
     {% if lang == 'es' %}
-      Desarrollado por <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+      Desarrollado por <strong>{{ business_profile.business_name or "BillBeam" }}</strong>
     {% else %}
-      Powered by <strong>{{ business_profile.business_name or "InvoicePro" }}</strong>
+      Powered by <strong>{{ business_profile.business_name or "BillBeam" }}</strong>
     {% endif %}
   </div>
 
@@ -393,41 +387,41 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("payNowBtn");
-
-  // ✅ Prevent infinite refresh loops:
-  // only do the "post-payment refresh" once per tab using sessionStorage.
   const params = new URLSearchParams(window.location.search);
+
   if (params.get("paid") === "1") {
     const alreadyRefreshed = sessionStorage.getItem("bb_paid_refresh_done");
+
     if (!alreadyRefreshed) {
       sessionStorage.setItem("bb_paid_refresh_done", "1");
+
       setTimeout(() => {
         const url = new URL(window.location.href);
         url.searchParams.delete("session_id");
-        url.searchParams.delete("paid");   // ✅ remove paid too so it doesn't repeat
+        url.searchParams.delete("paid");
         window.location.replace(url.toString());
       }, 1200);
     } else {
-      // Clean URL now that we've already done our one refresh
       const url = new URL(window.location.href);
       url.searchParams.delete("session_id");
       url.searchParams.delete("paid");
       window.history.replaceState({}, "", url.toString());
     }
   } else {
-    // Reset flag when not in paid flow
     sessionStorage.removeItem("bb_paid_refresh_done");
   }
 
   if (!btn || btn.disabled) return;
 
   btn.addEventListener("click", async function () {
+    const token = btn.getAttribute("data-token");
+    if (!token) return;
+
     const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "{{ 'Redirigiendo…' if lang == 'es' else 'Redirecting…' }}";
+    btn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
 
     try {
-      const token = btn.getAttribute("data-token");
       const resp = await fetch(`/public/${token}/create-pay-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -435,15 +429,17 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       const data = await resp.json();
+
       if (data.url) {
         window.location.href = data.url;
-      } else {
-        alert(data.error || "Could not start payment.");
-        btn.disabled = false;
-        btn.textContent = oldText;
+        return;
       }
+
+      alert(data.error || "{{ 'No se pudo iniciar el pago.' if lang == 'es' else 'Could not start payment.' }}");
+      btn.disabled = false;
+      btn.textContent = oldText;
     } catch (e) {
-      alert("Network error starting payment.");
+      alert("{{ 'Error de red al iniciar el pago.' if lang == 'es' else 'Network error starting payment.' }}");
       btn.disabled = false;
       btn.textContent = oldText;
     }
