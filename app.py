@@ -1,38 +1,34 @@
 from flask import Flask, render_template, request, send_file, redirect, session, url_for, send_from_directory, jsonify
 from datetime import datetime, timedelta
 from pathlib import Path
-import psycopg2
 from urllib.parse import urlparse
-import os
-import io
-import smtplib
 from email.message import EmailMessage
+
 import base64
+import io
+import logging
+import os
 import requests
 import secrets
+import smtplib
+
+import psycopg2
 import stripe
+from openai import OpenAI
 from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from openai import OpenAI
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
-
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY"))
-DATABASE_URL = os.environ.get("DATABASE_URL")
-DB_PATH = PATH("invoices.db")
-
 
 # -------------------------
 # LOGGING
 # -------------------------
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger("billbeam")
-
 
 # -------------------------
 # ENV / CONFIG
@@ -49,10 +45,13 @@ STRIPE_CURRENCY = (os.environ.get("STRIPE_CURRENCY") or "usd").lower()
 APP_BASE_URL = (os.environ.get("APP_BASE_URL") or "").rstrip("/")
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_AI_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_AI_KEY")) if os.getenv("OPENAI_AI_KEY") else None
 ai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 AI_MODEL_FREE = "gpt-4o-mini"
 AI_MODEL_PRO = "gpt-4.1-mini"
+
+DB_PATH = Path("invoices.db")
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -258,13 +257,35 @@ def init_db():
         """
     )
 
-    # Foreign keys added safely (if you want strict FK constraints)
-    cursor.execute("ALTER TABLE invoices ADD CONSTRAINT IF NOT EXISTS invoices_user_fk FOREIGN KEY (user_id) REFERENCES users(id);")
-    cursor.execute("ALTER TABLE invoices ADD CONSTRAINT IF NOT EXISTS invoices_client_fk FOREIGN KEY (client_id) REFERENCES clients(id);")
-    cursor.execute("ALTER TABLE clients ADD CONSTRAINT IF NOT EXISTS clients_user_fk FOREIGN KEY (user_id) REFERENCES users(id);")
-    cursor.execute("ALTER TABLE business_profile ADD CONSTRAINT IF NOT EXISTS business_user_fk FOREIGN KEY (user_id) REFERENCES users(id);")
+    # -------------------------
+    # SCHEMA EVOLUTION SAFETY
+    # Ensures older databases get new columns too
+    # -------------------------
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
 
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS notes TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS terms TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_to TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS public_token TEXT UNIQUE;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS signature_data TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS template_style TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id INTEGER;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS user_id INTEGER;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS stripe_last_payment_intent_id TEXT;")
+
+    cursor.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INTEGER;")
+    cursor.execute("ALTER TABLE business_profile ADD COLUMN IF NOT EXISTS user_id INTEGER;")
+
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_checkout_session_id TEXT;")
+
+    # -------------------------
     # Idempotency indexes
+    # -------------------------
     cursor.execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS payments_stripe_pi_unique
@@ -1023,6 +1044,10 @@ def create_checkout_session():
 
 @app.route("/public/<string:token>/create-pay-session", methods=["POST"])
 def create_public_invoice_pay_session(token):
+    """
+    Creates a Stripe Checkout Session (mode=payment) for the invoice BALANCE due.
+    Called from the public invoice page "Pay Now" button.
+    """
     base_url = os.getenv("APP_BASE_URL", "").rstrip("/") or request.host_url.rstrip("/")
     currency = (os.getenv("STRIPE_CURRENCY") or "usd").lower()
 
@@ -3368,7 +3393,9 @@ def stripe_webhook():
         session_obj = event["data"]["object"]
         mode = (session_obj.get("mode") or "").lower()
 
+        # -------------------------
         # PAY NOW invoice flow
+        # -------------------------
         if mode == "payment":
             metadata = session_obj.get("metadata") or {}
             invoice_id_str = metadata.get("invoice_id")
@@ -3403,6 +3430,7 @@ def stripe_webhook():
                         (payment_intent_id,),
                     )
                     existing = cur.fetchone()
+
                     if existing:
                         print(f"[Stripe] Payment already recorded for pi={payment_intent_id}", flush=True)
                     else:
@@ -3490,7 +3518,9 @@ def stripe_webhook():
 
             return "OK", 200
 
+        # -------------------------
         # SUBSCRIPTION UPGRADE flow
+        # -------------------------
         if mode == "subscription":
             metadata = session_obj.get("metadata") or {}
             user_id_str = metadata.get("user_id") or session_obj.get("client_reference_id")
