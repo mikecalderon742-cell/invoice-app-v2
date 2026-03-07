@@ -1247,7 +1247,7 @@ def save():
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
-    created_at = now_;ocal()
+    created_at = now_local()
     status = "Sent"
     due_date = created_at + timedelta(days=30)
 
