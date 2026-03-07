@@ -4,20 +4,30 @@
 
 <div class="public-portal">
 
+  {% set is_paid = (status == "Paid") or (balance <= 0 and amount > 0) %}
+
   {% if request.args.get('paid') %}
     <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:16px;">
-      {% if lang == 'es' %}
-        ✅ Pago recibido. Gracias — esta factura se está actualizando.
-      {% else %}
-        ✅ Payment received. Thank you — this invoice is updating.
-      {% endif %}
-      <div style="opacity:.85;font-size:.9rem;margin-top:6px;">
+      {% if is_paid %}
         {% if lang == 'es' %}
-          Si aún aparece “Pendiente”, recarga en unos segundos.
+          ✅ Pago recibido correctamente. Esta factura ya figura como pagada.
         {% else %}
-          If it still shows “Due”, refresh in a few seconds.
+          ✅ Payment received successfully. This invoice is now marked as paid.
         {% endif %}
-      </div>
+      {% else %}
+        {% if lang == 'es' %}
+          ✅ Pago recibido. Gracias — esta factura se está actualizando.
+        {% else %}
+          ✅ Payment received. Thank you — this invoice is updating.
+        {% endif %}
+        <div style="opacity:.85;font-size:.9rem;margin-top:6px;">
+          {% if lang == 'es' %}
+            Si aún aparece “Pendiente”, recarga en unos segundos.
+          {% else %}
+            If it still shows “Due”, refresh in a few seconds.
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
   {% elif request.args.get('canceled') %}
     <div class="alert-overdue" style="border-color:#f97316;background:#451a03;color:#fed7aa;margin-bottom:16px;">
@@ -62,7 +72,7 @@
       </div>
 
       <div class="public-status-row">
-        {% if status == "Paid" %}
+        {% if is_paid %}
           <span class="status-pill paid">
             {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
           </span>
@@ -75,11 +85,20 @@
             {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
           </span>
         {% endif %}
+
         <span class="status-note">
-          {% if lang == 'es' %}
-            Este es un enlace seguro. No lo compartas públicamente.
+          {% if is_paid %}
+            {% if lang == 'es' %}
+              Pago completo recibido.
+            {% else %}
+              Payment received in full.
+            {% endif %}
           {% else %}
-            This is a secure link. Keep it private.
+            {% if lang == 'es' %}
+              Este es un enlace seguro. No lo compartas públicamente.
+            {% else %}
+              This is a secure link. Keep it private.
+            {% endif %}
           {% endif %}
         </span>
       </div>
@@ -89,10 +108,18 @@
       <div class="summary-card">
         <div class="summary-top">
           <div class="summary-label">
-            {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
+            {% if is_paid %}
+              {% if lang == 'es' %}Factura pagada{% else %}Invoice Paid{% endif %}
+            {% else %}
+              {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
+            {% endif %}
           </div>
           <div class="summary-amount">
-            ${{ "{:,.2f}".format(balance) }}
+            {% if is_paid %}
+              ${{ "{:,.2f}".format(total_paid) }}
+            {% else %}
+              ${{ "{:,.2f}".format(balance) }}
+            {% endif %}
           </div>
         </div>
 
@@ -105,10 +132,16 @@
             <span>{% if lang == 'es' %}Pagado{% else %}Paid{% endif %}</span>
             <strong>${{ "{:,.2f}".format(total_paid) }}</strong>
           </div>
+          {% if not is_paid %}
+            <div class="row">
+              <span>{% if lang == 'es' %}Pendiente{% else %}Due{% endif %}</span>
+              <strong>${{ "{:,.2f}".format(balance) }}</strong>
+            </div>
+          {% endif %}
         </div>
 
         <div class="summary-actions">
-          {% set can_pay = (status != "Paid") and (balance and balance > 0) and public_token %}
+          {% set can_pay = (not is_paid) and (balance and balance > 0) and public_token %}
           <button
             class="btn btn-brand btn-pay"
             id="payNowBtn"
@@ -116,7 +149,7 @@
             data-token="{{ public_token or '' }}"
             title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
           >
-            {% if status == "Paid" %}
+            {% if is_paid %}
               {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
             {% elif balance <= 0 %}
               {% if lang == 'es' %}Sin saldo{% else %}No balance{% endif %}
@@ -133,10 +166,18 @@
         </div>
 
         <div class="summary-foot">
-          {% if lang == 'es' %}
-            ¿Dudas? Escribe a <strong>{{ business_profile.email or "tu negocio" }}</strong>
+          {% if is_paid %}
+            {% if lang == 'es' %}
+              Gracias. Este comprobante ya quedó liquidado.
+            {% else %}
+              Thank you. This invoice has been fully settled.
+            {% endif %}
           {% else %}
-            Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>
+            {% if lang == 'es' %}
+              ¿Dudas? Escribe a <strong>{{ business_profile.email or "tu negocio" }}</strong>
+            {% else %}
+              Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>
+            {% endif %}
           {% endif %}
         </div>
       </div>
@@ -179,7 +220,13 @@
           <div class="snap-label">
             {% if lang == 'es' %}Estado{% else %}Status{% endif %}
           </div>
-          <div class="snap-value">{{ status }}</div>
+          <div class="snap-value">
+            {% if is_paid %}
+              {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+            {% else %}
+              {{ status }}
+            {% endif %}
+          </div>
         </div>
         <div class="snap-item">
           <div class="snap-label">

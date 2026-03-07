@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_file, redirect, session, url_for, send_from_directory, jsonify
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import urlparse
 from email.message import EmailMessage
@@ -50,6 +51,15 @@ ai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 AI_MODEL_FREE = "gpt-4o-mini"
 AI_MODEL_PRO = "gpt-4.1-mini"
+
+APP_TIMEZONE = ZoneInfo(os.environ.get("APP_TIMEZONE", "America/Los_Angeles"))
+
+def now_local():
+    """
+    Returns the app's local current time as a naive datetime so it plays nicely
+    with the existing PostgreSQL timestamp columns.
+    """
+    return datetime.now(APP_TIMEZONE).replace(tzinfo=None)
 
 DB_PATH = Path("invoices.db")
 
@@ -547,7 +557,7 @@ def check_invoice_quota_or_reason():
     if plan != "free":
         return True, None
 
-    now = datetime.now()
+    now = now_local()
     month_start = datetime(now.year, now.month, 1)
     next_month = (month_start + timedelta(days=32)).replace(day=1)
 
@@ -652,7 +662,7 @@ def upsert_business_profile(data: dict):
         (user_id,),
     )
     row = cursor.fetchone()
-    now = datetime.now()
+    now = now_local()
 
     if row:
         bp_id = row[0]
@@ -729,7 +739,7 @@ init_db()
 # -------------------------
 @app.context_processor
 def inject_now():
-    return {"now": datetime.now}
+    return {"now": now_local}
 
 
 @app.context_processor
@@ -1120,7 +1130,7 @@ def preview_invoice():
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
-    created_at = datetime.now()
+    created_at = now_local()
     due_date = created_at + timedelta(days=30)
 
     items = []
@@ -1237,7 +1247,7 @@ def save():
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
-    created_at = datetime.now()
+    created_at = now_;ocal()
     status = "Sent"
     due_date = created_at + timedelta(days=30)
 
@@ -1402,7 +1412,7 @@ def invoices_page():
     total_invoices = len(all_invoices)
     total_revenue = sum(inv[2] for inv in all_invoices)
 
-    now = datetime.now()
+    now = now_local()
     current_month = now.month
     current_year = now.year
 
@@ -2630,7 +2640,7 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             cur = conn.cursor()
             cur.execute(
                 "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
-                (datetime.now(), to_email, invoice_id),
+                (now_local(), to_email, invoice_id),
             )
             conn.commit()
             cur.close()
@@ -2677,7 +2687,7 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
     cur = conn.cursor()
     cur.execute(
         "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
-        (datetime.now(), to_email, invoice_id),
+        (now_local(), to_email, invoice_id),
     )
     conn.commit()
     cur.close()
@@ -2834,7 +2844,7 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
     overdue_count = 0
     sent_count = 0
 
-    now = datetime.now()
+    now = now_local()
     this_month = now.month
     this_year = now.year
 
