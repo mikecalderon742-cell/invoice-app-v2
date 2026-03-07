@@ -2272,6 +2272,48 @@ def history_pdf(invoice_id):
 # -------------------------
 @app.route("/public/<string:token>")
 def public_invoice(token):
+    paid_flag = request.args.get("paid")
+    session_id = request.args.get("session_id")
+
+    # --------------------------------------------------
+    # Success-page verification fallback
+    # If user returned from Stripe and webhook is delayed,
+    # verify the Checkout Session directly and record payment.
+    # --------------------------------------------------
+    if paid_flag and session_id:
+        try:
+            session_obj = stripe.checkout.Session.retrieve(session_id)
+
+            session_mode = (session_obj.get("mode") or "").lower()
+            payment_status = (session_obj.get("payment_status") or "").lower()
+            metadata = session_obj.get("metadata") or {}
+
+            metadata_token = metadata.get("token") or metadata.get("public_token")
+            invoice_id_str = metadata.get("invoice_id")
+
+            print(
+                f"[PublicInvoiceFallback] session_id={session_id} "
+                f"mode={session_mode} payment_status={payment_status} "
+                f"metadata={metadata}",
+                flush=True,
+            )
+
+            if (
+                session_mode == "payment"
+                and payment_status == "paid"
+                and metadata_token == token
+                and invoice_id_str
+            ):
+                _record_invoice_payment_from_checkout_session(session_obj)
+            else:
+                print(
+                    "[PublicInvoiceFallback] Session did not qualify for invoice payment sync",
+                    flush=True,
+                )
+
+        except Exception as e:
+            print(f"[PublicInvoiceFallback] error verifying Stripe session: {e}", flush=True)
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -2349,7 +2391,20 @@ def public_invoice(token):
     payments = cursor.fetchall()
 
     total_paid = sum(float(p[0]) for p in payments)
-    balance = amount_float - total_paid
+    balance = max(amount_float - total_paid, 0.0)
+
+    # Safety sync for display in case status lagged behind actual payments
+    if amount_float > 0 and total_paid >= amount_float and status != "Paid":
+        try:
+            cursor.execute(
+                "UPDATE invoices SET status = 'Paid' WHERE id = %s",
+                (invoice_id,),
+            )
+            conn.commit()
+            status = "Paid"
+            print(f"[PublicInvoice] Safety-synced invoice {invoice_id} to Paid", flush=True)
+        except Exception as e:
+            print(f"[PublicInvoice] Failed safety sync for invoice {invoice_id}: {e}", flush=True)
 
     cursor.close()
     conn.close()
