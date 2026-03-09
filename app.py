@@ -1595,10 +1595,11 @@ def save():
         visibility="both",
     )
 
-     return render_template(
+    return render_template(
         "saved.html",
         invoice_id=invoice_id,
         inv_label=invoice_number,
+        client=client_name_for_invoice,
         client_name=client_name_for_invoice,
         amount=total,
         lang=normalize_lang(request.args.get("lang", "en")),
