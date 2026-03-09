@@ -1125,6 +1125,32 @@ def uploaded_file(filename):
 
 
 # -------------------------
+# LEGAL / SUPPORT PAGES
+# -------------------------
+
+@app.route("/legal")
+def legal_hub():
+    return render_template(
+        "legal_hub.html",
+        lang=normalize_lang(request.args.get("lang", "en"))
+    )
+
+@app.route("/data-security")
+def data_security():
+    return render_template(
+        "data_security.html",
+        lang=normalize_lang(request.args.get("lang", "en"))
+    )
+
+@app.route("/app-store-privacy")
+def app_store_privacy():
+    return render_template(
+        "app_store_privacy_note.html",
+        lang=normalize_lang(request.args.get("lang", "en"))
+    )
+
+
+# -------------------------
 # DEV / DEBUG
 # -------------------------
 @app.route("/debug-plan")
@@ -1335,8 +1361,12 @@ def billing_cancel():
 # -------------------------
 # PREVIEW
 # -------------------------
-@app.route("/preview", methods=["POST"])
+@app.route("/preview", methods=["GET", "POST"])
 def preview_invoice():
+    lang = normalize_lang(request.args.get("lang", "en"))
+
+    if request.method == "GET":
+        return redirect(url_for("index", lang=lang))
     selected_client_id = request.form.get("client_id")
     new_client_name = (request.form.get("new_client_name") or "").strip()
     new_client_email = (request.form.get("new_client_email") or "").strip()
