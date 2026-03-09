@@ -1595,7 +1595,7 @@ def save():
         visibility="both",
     )
 
-        return render_template(
+     return render_template(
         "saved.html",
         invoice_id=invoice_id,
         inv_label=invoice_number,
