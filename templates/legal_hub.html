@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if lang == 'es' %}Centro legal | BillBeam{% else %}Legal Center | BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Consulta las políticas legales de BillBeam, incluyendo privacidad, términos de servicio, facturación, seguridad de datos y uso de IA.
+{% else %}
+Review BillBeam legal policies including privacy, terms of service, billing, data security, and AI usage disclosures.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <h1>
+        {% if lang == 'es' %}
+            Centro legal
+        {% else %}
+            Legal Center
+        {% endif %}
+    </h1>
+
+    <p style="max-width:720px; font-size:14px; opacity:.85; margin-top:6px;">
+        {% if lang == 'es' %}
+        Aquí puedes consultar todas las políticas legales y documentos regulatorios relacionados con el uso de BillBeam. Estas páginas describen cómo protegemos datos, cómo funciona la facturación y qué condiciones aplican al uso del servicio.
+        {% else %}
+        This page provides access to all legal and regulatory documents related to the use of BillBeam. These policies explain how data is handled, how billing works, and the conditions that apply to use of the service.
+        {% endif %}
+    </p>
+</div>
+
+
+<div class="form-wrapper fade-in-up" style="max-width:980px; margin:auto;">
+
+    <div class="dashboard-cards">
+
+        <!-- Privacy Policy -->
+        <div class="card kpi teal">
+            <h2>
+                {% if lang == 'es' %}Política de privacidad{% else %}Privacy Policy{% endif %}
+            </h2>
+            <p style="font-size:13px; opacity:.85;">
+                {% if lang == 'es' %}
+                Explica cómo recopilamos, usamos y protegemos datos personales.
+                {% else %}
+                Explains how we collect, use, and protect personal data.
+                {% endif %}
+            </p>
+
+            <div style="margin-top:10px;">
+                <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Leer política{% else %}Read policy{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="card kpi blue">
+            <h2>
+                {% if lang == 'es' %}Términos de servicio{% else %}Terms of Service{% endif %}
+            </h2>
+            <p style="font-size:13px; opacity:.85;">
+                {% if lang == 'es' %}
+                Las condiciones legales para usar BillBeam.
+                {% else %}
+                The legal conditions governing use of BillBeam.
+                {% endif %}
+            </p>
+
+            <div style="margin-top:10px;">
+                <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Leer términos{% else %}Read terms{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Billing -->
+        <div class="card kpi teal">
+            <h2>
+                {% if lang == 'es' %}Facturación y suscripciones{% else %}Billing Policy{% endif %}
+            </h2>
+            <p style="font-size:13px; opacity:.85;">
+                {% if lang == 'es' %}
+                Describe planes, renovaciones, cancelaciones y reembolsos.
+                {% else %}
+                Describes plans, renewals, cancellations, and refunds.
+                {% endif %}
+            </p>
+
+            <div style="margin-top:10px;">
+                <a href="/billing-policy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Ver política{% else %}View policy{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Data Security -->
+        <div class="card kpi blue">
+            <h2>
+                {% if lang == 'es' %}Seguridad de datos{% else %}Data Security{% endif %}
+            </h2>
+            <p style="font-size:13px; opacity:.85;">
+                {% if lang == 'es' %}
+                Cómo protegemos información y manejamos seguridad de la plataforma.
+                {% else %}
+                How we protect information and manage platform security.
+                {% endif %}
+            </p>
+
+            <div style="margin-top:10px;">
+                <a href="/data-security{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Ver detalles{% else %}View details{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- AI Policy -->
+        <div class="card kpi teal">
+            <h2>
+                {% if lang == 'es' %}Aviso de IA{% else %}AI Notice{% endif %}
+            </h2>
+            <p style="font-size:13px; opacity:.85;">
+                {% if lang == 'es' %}
+                Información sobre el uso de funciones impulsadas por inteligencia artificial.
+                {% else %}
+                Information about the use of AI-powered features in the product.
+                {% endif %}
+            </p>
+
+            <div style="margin-top:10px;">
+                <a href="/ai-notice{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Ver aviso{% else %}View notice{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="card kpi blue">
+            <h2>
+                {% if lang == 'es' %}Contacto legal{% else %}Legal Contact{% endif %}
+            </h2>
+            <p style="font-size:13px; opacity:.85;">
+                {% if lang == 'es' %}
+                Para consultas legales o regulatorias.
+                {% else %}
+                For legal or regulatory inquiries.
+                {% endif %}
+            </p>
+
+            <div style="margin-top:10px;">
+                <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Contactar{% else %}Contact{% endif %}
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div style="margin-top:18px; font-size:12px; opacity:.7;">
+        {% if lang == 'es' %}
+        Estos documentos pueden actualizarse ocasionalmente para reflejar cambios regulatorios, mejoras de producto o requisitos de cumplimiento.
+        {% else %}
+        These documents may be updated periodically to reflect regulatory changes, product improvements, or compliance requirements.
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

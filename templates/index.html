@@ -1,434 +1,1081 @@
 {% extends "base.html" %}
-{% block content %}
 
-{# Language handling for copy (no visible switcher here) #}
+{% block title %}
+  {% if lang == 'es' %}
+    Crear factura · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Create Invoice · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Crea una nueva factura en BillBeam, añade clientes, conceptos, firma y genera una vista previa antes de guardar.
+  {% else %}
+    Create a new invoice in BillBeam, add clients, line items, signature, and preview everything before saving.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="hero reveal"
-     style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
-    <div class="hero-left"
-         style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
-        <h1>
-            {% if lang == 'es' %}
-                Crear una nueva factura con BillBeam
-            {% else %}
-                Create a New Invoice with BillBeam
-            {% endif %}
-        </h1>
-        <p>
-            {% if lang == 'es' %}
-                Elige un cliente, añade tus servicios y sigue tus ingresos con un panel limpio.
-            {% else %}
-                Pick a client, add your services, and track your revenue with a clean dashboard.
-            {% endif %}
-        </p>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}"
-           class="btn hero-cta"
-           style="align-self:flex-start;">
-           {% if lang == 'es' %}
-               Ver historial de facturas
-           {% else %}
-               View Invoice History
-           {% endif %}
+<style>
+  .create-shell {
+    display: grid;
+    gap: 22px;
+  }
+
+  .create-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .create-hero-panel,
+  .create-side-panel,
+  .create-form-shell {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .create-hero-panel,
+  body.dark .create-side-panel,
+  body.dark .create-form-shell {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 58px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .create-hero-panel {
+    padding: 26px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .create-hero-panel::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    bottom: -80px;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.2);
+    margin-bottom: 14px;
+  }
+
+  body.dark .hero-kicker {
+    background: rgba(15,23,42,0.55);
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .create-hero-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+
+  .create-hero-copy {
+    margin-top: 14px;
+    max-width: 720px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: #64748b;
+  }
+
+  body.dark .create-hero-copy {
+    color: #94a3b8;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .hero-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .hero-mini-card {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.16);
+  }
+
+  body.dark .hero-mini-card {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .hero-mini-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .hero-mini-label {
+    color: #94a3b8;
+  }
+
+  .hero-mini-value {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .create-side-panel {
+    padding: 22px;
+    display: grid;
+    gap: 18px;
+  }
+
+  .side-card-title {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .side-card-copy {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .side-card-copy {
+    color: #94a3b8;
+  }
+
+  .side-checklist {
+    display: grid;
+    gap: 10px;
+  }
+
+  .side-check {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .side-check {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .side-check-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 8px 18px rgba(58,139,255,0.22);
+  }
+
+  .create-form-shell {
+    padding: 22px;
+  }
+
+  .invoice-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .invoice-form-col {
+    min-width: 0;
+  }
+
+  .form-main-title {
+    margin: 0 0 4px;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .form-main-subcopy {
+    margin-bottom: 18px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .form-main-subcopy {
+    color: #94a3b8;
+  }
+
+  .form-section {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: 22px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .form-section {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .form-section:first-of-type {
+    margin-top: 0;
+  }
+
+  .form-section-header {
+    margin-bottom: 14px;
+  }
+
+  .form-section-header h3 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .form-section-sub {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .form-section-sub {
+    color: #94a3b8;
+  }
+
+  .field-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .field-row-2 {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 12px;
+  }
+
+  .field-row-even {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field-group {
+    display: grid;
+    gap: 6px;
+  }
+
+  .field-group label {
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .field-help {
+    font-size: 12px;
+    line-height: 1.55;
+    color: #64748b;
+  }
+
+  body.dark .field-help {
+    color: #94a3b8;
+  }
+
+  .line-items-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .line-items-hint {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .line-items-hint {
+    color: #94a3b8;
+  }
+
+  .signature-shell {
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.5);
+  }
+
+  body.dark .signature-shell {
+    background: rgba(2,6,23,0.55);
+    border-color: rgba(148,163,184,0.2);
+  }
+
+  .signature-toolbar {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .template-note {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #64748b;
+  }
+
+  body.dark .template-note {
+    color: #94a3b8;
+  }
+
+  .create-summary-side {
+    display: grid;
+    gap: 16px;
+    position: sticky;
+    top: 88px;
+  }
+
+  .summary-side-card {
+    border-radius: 22px;
+    padding: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .summary-side-card {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .summary-side-card h4 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .summary-side-list {
+    display: grid;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #475569;
+  }
+
+  body.dark .summary-side-list {
+    color: #cbd5e1;
+  }
+
+  .summary-side-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(58,139,255,0.12);
+    border: 1px solid rgba(58,139,255,0.18);
+  }
+
+  .summary-tip {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .summary-tip {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 1100px) {
+    .invoice-layout-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .create-summary-side {
+      position: static;
+      top: auto;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .create-hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .field-row-2,
+    .field-row-even,
+    .hero-mini-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .create-hero-panel,
+    .create-side-panel,
+    .create-form-shell,
+    .form-section {
+      padding: 18px;
+    }
+  }
+</style>
+
+<div class="create-shell">
+
+  <div class="create-hero reveal">
+    <div class="create-hero-panel">
+      <div class="hero-kicker">
+        {% if lang == 'es' %}
+          Facturación rápida • BillBeam
+        {% else %}
+          Fast Invoicing • BillBeam
+        {% endif %}
+      </div>
+
+      <h1 class="create-hero-title">
+        {% if lang == 'es' %}
+          Crear una nueva factura con BillBeam
+        {% else %}
+          Create a New Invoice with BillBeam
+        {% endif %}
+      </h1>
+
+      <div class="create-hero-copy">
+        {% if lang == 'es' %}
+          Elige un cliente, añade tus servicios, ajusta el estilo de la factura y guarda una versión lista para enviar, descargar o cobrar en línea.
+        {% else %}
+          Pick a client, add your services, choose an invoice style, and save a version that is ready to send, download, or collect online.
+        {% endif %}
+      </div>
+
+      <div class="hero-actions">
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn hero-cta">
+          {% if lang == 'es' %}
+            Ver historial de facturas
+          {% else %}
+            View Invoice History
+          {% endif %}
         </a>
-    </div>
-    <div class="hero-right"
-         style="flex:1 1 260px;min-width:0;display:flex;justify-content:center;">
-        <div class="mock-card">
-            <h3>
-                {% if lang == 'es' %}
-                    Resumen de BillBeam
-                {% else %}
-                    BillBeam Snapshot
-                {% endif %}
-            </h3>
-            <p style="margin: 10px 0;">
-                {% if lang == 'es' %}
-                    Rápido, moderno y creado para desarrolladores independientes y pequeños equipos.
-                {% else %}
-                    Fast, modern, and built for solo devs and small teams.
-                {% endif %}
-            </p>
-            <p>
-                <strong>{% if lang == 'es' %}Consejo:{% else %}Tip:{% endif %}</strong>
-                {% if lang == 'es' %}
-                    Añade tus clientes frecuentes una vez y luego selecciónalos con un clic.
-                {% else %}
-                    Add your frequent clients once, then select them in a click.
-                {% endif %}
-            </p>
+      </div>
+
+      <div class="hero-mini-grid">
+        <div class="hero-mini-card">
+          <div class="hero-mini-label">
+            {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+          </div>
+          <div class="hero-mini-value">
+            {% if lang == 'es' %}Nuevo o existente{% else %}New or existing{% endif %}
+          </div>
         </div>
+
+        <div class="hero-mini-card">
+          <div class="hero-mini-label">
+            {% if lang == 'es' %}Vista previa{% else %}Preview{% endif %}
+          </div>
+          <div class="hero-mini-value">
+            {% if lang == 'es' %}Antes de guardar{% else %}Before saving{% endif %}
+          </div>
+        </div>
+
+        <div class="hero-mini-card">
+          <div class="hero-mini-label">
+            {% if lang == 'es' %}Portal{% else %}Portal{% endif %}
+          </div>
+          <div class="hero-mini-value">
+            {% if lang == 'es' %}Listo para cliente{% else %}Client-ready{% endif %}
+          </div>
+        </div>
+      </div>
     </div>
-</div>
 
-<div class="form-wrapper fade-in-up">
+    <div class="create-side-panel">
+      <h3 class="side-card-title">
+        {% if lang == 'es' %}
+          Flujo recomendado
+        {% else %}
+          Recommended flow
+        {% endif %}
+      </h3>
 
-    <div class="invoice-layout-grid"
-         style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
-        <!-- LEFT: main invoice form ONLY (assistant sidebar removed) -->
-        <div class="invoice-form-col" style="flex:1 1 520px;min-width:0;">
-            <h2 style="margin-top:0;">
+      <div class="side-card-copy">
+        {% if lang == 'es' %}
+          Mantén cada factura clara, simple y fácil de pagar. Un buen flujo aquí mejora la percepción de marca y reduce retrasos.
+        {% else %}
+          Keep each invoice clear, simple, and easy to pay. A strong flow here improves brand perception and reduces payment delays.
+        {% endif %}
+      </div>
+
+      <div class="side-checklist">
+        <div class="side-check">
+          <div class="side-check-mark">1</div>
+          <div>
+            {% if lang == 'es' %}
+              Elige un cliente existente o crea uno nuevo con correo correcto.
+            {% else %}
+              Choose an existing client or create a new one with the right email.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="side-check">
+          <div class="side-check-mark">2</div>
+          <div>
+            {% if lang == 'es' %}
+              Añade conceptos con descripciones claras y montos exactos.
+            {% else %}
+              Add line items with clear descriptions and exact amounts.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="side-check">
+          <div class="side-check-mark">3</div>
+          <div>
+            {% if lang == 'es' %}
+              Usa vista previa antes de guardar para revisar cómo lo verá tu cliente.
+            {% else %}
+              Use preview before saving to review how your client will see it.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="create-form-shell fade-in-up">
+    <div class="invoice-layout-grid">
+      <div class="invoice-form-col">
+        <h2 class="form-main-title">
+          {% if lang == 'es' %}
+            Nueva factura
+          {% else %}
+            New Invoice
+          {% endif %}
+        </h2>
+        <div class="form-main-subcopy">
+          {% if lang == 'es' %}
+            Completa los datos principales, revisa los conceptos y genera una factura profesional en minutos.
+          {% else %}
+            Fill in the key details, review your line items, and generate a polished invoice in minutes.
+          {% endif %}
+        </div>
+
+        <form id="invoiceForm"
+              method="POST"
+              action="/save{% if lang %}?lang={{ lang }}{% endif %}"
+              enctype="multipart/form-data">
+
+          <div class="form-section">
+            <div class="form-section-header">
+              <h3>{% if lang == 'es' %}Cliente{% else %}Client{% endif %}</h3>
+              <div class="form-section-sub">
                 {% if lang == 'es' %}
-                    Nueva factura
+                  Selecciona un cliente existente o agrega uno nuevo para esta factura.
                 {% else %}
-                    New Invoice
+                  Select an existing client or add a new one for this invoice.
                 {% endif %}
-            </h2>
+              </div>
+            </div>
 
-            <!-- ✅ enctype added so photos + signature can be uploaded -->
-            <form id="invoiceForm"
-                  method="POST"
-                  action="/save{% if lang %}?lang={{ lang }}{% endif %}"
-                  enctype="multipart/form-data">
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="client_id">
+                  {% if lang == 'es' %}
+                    Cliente existente (opcional)
+                  {% else %}
+                    Existing Client (optional)
+                  {% endif %}
+                </label>
+                <select name="client_id" id="client_id" style="padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+                  <option value="">
+                    {% if lang == 'es' %}
+                      -- Seleccionar cliente existente --
+                    {% else %}
+                      -- Select existing client --
+                    {% endif %}
+                  </option>
+                  {% for client in clients %}
+                    <option value="{{ client[0] }}">
+                      {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="field-help">
+                  {% if lang == 'es' %}
+                    Elige un cliente guardado o crea uno nuevo justo debajo.
+                  {% else %}
+                    Choose a saved client or create a new one just below.
+                  {% endif %}
+                </div>
+              </div>
 
-                <!-- CLIENT SECTION -->
-                <h3>
-                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-                </h3>
-                <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px;">
-
-                    <!-- Existing client dropdown -->
-                    <div>
-                        <label for="client_id" style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}
-                                Cliente existente (opcional)
-                            {% else %}
-                                Existing Client (optional)
-                            {% endif %}
-                        </label>
-                        <select name="client_id" id="client_id" style="margin-top:6px; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
-                            <option value="">
-                                {% if lang == 'es' %}
-                                    -- Seleccionar cliente existente --
-                                {% else %}
-                                    -- Select existing client --
-                                {% endif %}
-                            </option>
-                            {% for client in clients %}
-                                <option value="{{ client[0] }}">
-                                    {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <small style="font-size:12px; opacity:0.7;">
-                            {% if lang == 'es' %}
-                                Elige un cliente con el que ya hayas trabajado o añade uno nuevo abajo.
-                            {% else %}
-                                Choose a client you've already worked with, or add a new one below.
-                            {% endif %}
-                        </small>
-                    </div>
-
-                    <!-- New client fields -->
-                    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px;">
-                        <div>
-                            <label for="new_client_name" style="font-weight:600; font-size:14px;">
-                                {% if lang == 'es' %}
-                                    Nombre del nuevo cliente
-                                {% else %}
-                                    New Client Name
-                                {% endif %}
-                            </label>
-                            <input type="text" id="new_client_name" name="new_client_name"
-                                   placeholder="{% if lang == 'es' %}p.ej. Acme Corp o Jane Doe{% else %}e.g. Acme Corp or Jane Doe{% endif %}">
-                        </div>
-                        <div>
-                            <label for="new_client_email" style="font-weight:600; font-size:14px;">
-                                {% if lang == 'es' %}
-                                    Correo del cliente
-                                {% else %}
-                                    Client Email
-                                {% endif %}
-                            </label>
-                            <input type="email" id="new_client_email" name="new_client_email"
-                                   placeholder="client@example.com">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="new_client_company" style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}
-                                Empresa (opcional)
-                            {% else %}
-                                Company (optional)
-                            {% endif %}
-                        </label>
-                        <input type="text" id="new_client_company" name="new_client_company"
-                               placeholder="{% if lang == 'es' %}Nombre de la empresa{% else %}Company name{% endif %}">
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div>
-                            <label for="new_client_phone" style="font-weight:600; font-size:14px;">
-                                {% if lang == 'es' %}
-                                    Teléfono (opcional)
-                                {% else %}
-                                    Phone (optional)
-                                {% endif %}
-                            </label>
-                            <input type="text" id="new_client_phone" name="new_client_phone"
-                                   placeholder="+1 (555) 123-4567">
-                        </div>
-                        <div>
-                            <label for="new_client_address" style="font-weight:600; font-size:14px;">
-                                {% if lang == 'es' %}
-                                    Dirección (opcional)
-                                {% else %}
-                                    Address (optional)
-                                {% endif %}
-                            </label>
-                            <input type="text" id="new_client_address" name="new_client_address"
-                                   placeholder="{% if lang == 'es' %}Ciudad, País{% else %}City, Country{% endif %}">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="new_client_notes" style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}
-                                Notas del cliente (opcional)
-                            {% else %}
-                                Client Notes (optional)
-                            {% endif %}
-                        </label>
-                        <input type="text" id="new_client_notes" name="new_client_notes"
-                               placeholder="{% if lang == 'es' %}p.ej. Prefiere transferencia bancaria, pagar en 7 días{% else %}e.g. Prefers bank transfer, pay within 7 days{% endif %}">
-                    </div>
-
+              <div class="field-row-2">
+                <div class="field-group">
+                  <label for="new_client_name">
+                    {% if lang == 'es' %}
+                      Nombre del nuevo cliente
+                    {% else %}
+                      New Client Name
+                    {% endif %}
+                  </label>
+                  <input type="text" id="new_client_name" name="new_client_name"
+                         placeholder="{% if lang == 'es' %}p.ej. Acme Corp o Jane Doe{% else %}e.g. Acme Corp or Jane Doe{% endif %}">
                 </div>
 
-                <!-- INVOICE META -->
-                <h3>
+                <div class="field-group">
+                  <label for="new_client_email">
                     {% if lang == 'es' %}
-                        Detalles de la factura
+                      Correo del cliente
                     {% else %}
-                        Invoice Details
+                      Client Email
                     {% endif %}
-                </h3>
-                <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
-                    <div>
-                        <label for="invoice_notes" style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}
-                                Notas de la factura (opcional)
-                            {% else %}
-                                Invoice Notes (optional)
-                            {% endif %}
-                        </label>
-                        <input type="text" id="invoice_notes" name="invoice_notes"
-                               placeholder="{% if lang == 'es' %}p.ej. ¡Gracias por su negocio!{% else %}e.g. Thanks for your business!{% endif %}">
-                    </div>
-                    <div>
-                        <label for="invoice_terms" style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}
-                                Condiciones de pago
-                            {% else %}
-                                Payment Terms
-                            {% endif %}
-                        </label>
-                        <input type="text" id="invoice_terms" name="invoice_terms"
-                               value="{% if lang == 'es' %}Pago debido dentro de 30 días.{% else %}Payment due within 30 days.{% endif %}">
-                    </div>
+                  </label>
+                  <input type="email" id="new_client_email" name="new_client_email"
+                         placeholder="client@example.com">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="new_client_company">
+                  {% if lang == 'es' %}
+                    Empresa (opcional)
+                  {% else %}
+                    Company (optional)
+                  {% endif %}
+                </label>
+                <input type="text" id="new_client_company" name="new_client_company"
+                       placeholder="{% if lang == 'es' %}Nombre de la empresa{% else %}Company name{% endif %}">
+              </div>
+
+              <div class="field-row-even">
+                <div class="field-group">
+                  <label for="new_client_phone">
+                    {% if lang == 'es' %}
+                      Teléfono (opcional)
+                    {% else %}
+                      Phone (optional)
+                    {% endif %}
+                  </label>
+                  <input type="text" id="new_client_phone" name="new_client_phone"
+                         placeholder="+1 (555) 123-4567">
                 </div>
 
-                <!-- ATTACHMENTS (PHOTOS) -->
-                <h3>
+                <div class="field-group">
+                  <label for="new_client_address">
                     {% if lang == 'es' %}
-                        Adjuntos (opcional)
+                      Dirección (opcional)
                     {% else %}
-                        Attachments (optional)
+                      Address (optional)
                     {% endif %}
-                </h3>
-                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    {% if lang == 'es' %}
-                        Añade fotos o capturas relacionadas con esta factura (p.ej. órdenes de trabajo firmadas, fotos de antes y después).
-                    {% else %}
-                        Add photos or screenshots related to this invoice (e.g. signed work orders, before/after shots).
-                    {% endif %}
-                </p>
-
-                <div style="margin-bottom:20px;">
-                    <label for="attachments" style="font-weight:600; font-size:14px;">
-                        {% if lang == 'es' %}Fotos{% else %}Photos{% endif %}
-                    </label>
-                    <input
-                        type="file"
-                        id="attachments"
-                        name="attachments"
-                        accept="image/*"
-                        multiple
-                        style="display:block; margin-top:6px;"
-                        capture="environment"
-                    >
-                    <small style="font-size:12px; opacity:0.7;">
-                        {% if lang == 'es' %}
-                            En el móvil puedes usar la cámara o elegir desde tu galería.
-                        {% else %}
-                            On mobile you can use your camera or pick from your photo library.
-                        {% endif %}
-                    </small>
+                  </label>
+                  <input type="text" id="new_client_address" name="new_client_address"
+                         placeholder="{% if lang == 'es' %}Ciudad, País{% else %}City, Country{% endif %}">
                 </div>
+              </div>
 
-                <!-- LINE ITEMS -->
-                <h3>
-                    {% if lang == 'es' %}
-                        Conceptos
-                    {% else %}
-                        Line Items
-                    {% endif %}
-                </h3>
-                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    {% if lang == 'es' %}
-                        Añade al menos un servicio o producto. Puedes añadir o eliminar filas según lo necesites.
-                    {% else %}
-                        Add at least one service or product. You can add or remove rows as needed.
-                    {% endif %}
-                </p>
+              <div class="field-group">
+                <label for="new_client_notes">
+                  {% if lang == 'es' %}
+                    Notas del cliente (opcional)
+                  {% else %}
+                    Client Notes (optional)
+                  {% endif %}
+                </label>
+                <input type="text" id="new_client_notes" name="new_client_notes"
+                       placeholder="{% if lang == 'es' %}p.ej. Prefiere transferencia bancaria, pagar en 7 días{% else %}e.g. Prefers bank transfer, pay within 7 days{% endif %}">
+              </div>
+            </div>
+          </div>
 
-                <div class="table-wrapper" style="margin-top:12px;">
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>
-                                    {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
-                                </th>
-                                <th style="width:180px;">
-                                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="lineItemsBody">
-                            <!-- Rows are injected via JavaScript so you can add/remove line items -->
-                        </tbody>
-                    </table>
-                </div>
-                <button
-                    type="button"
-                    id="addLineItemBtn"
-                    class="btn btn-secondary"
-                    style="margin-top:10px;"
+          <div class="form-section">
+            <div class="form-section-header">
+              <h3>
+                {% if lang == 'es' %}
+                  Detalles de la factura
+                {% else %}
+                  Invoice Details
+                {% endif %}
+              </h3>
+              <div class="form-section-sub">
+                {% if lang == 'es' %}
+                  Añade contexto útil y condiciones claras de pago.
+                {% else %}
+                  Add useful context and clear payment expectations.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="invoice_notes">
+                  {% if lang == 'es' %}
+                    Notas de la factura (opcional)
+                  {% else %}
+                    Invoice Notes (optional)
+                  {% endif %}
+                </label>
+                <input type="text" id="invoice_notes" name="invoice_notes"
+                       value="{{ business_profile.default_notes or '' }}"
+                       placeholder="{% if lang == 'es' %}p.ej. ¡Gracias por su negocio!{% else %}e.g. Thanks for your business!{% endif %}">
+              </div>
+
+              <div class="field-group">
+                <label for="invoice_terms">
+                  {% if lang == 'es' %}
+                    Condiciones de pago
+                  {% else %}
+                    Payment Terms
+                  {% endif %}
+                </label>
+                <input type="text" id="invoice_terms" name="invoice_terms"
+                       value="{{ business_profile.default_terms or (lang == 'es' and 'Pago debido dentro de 30 días.' or 'Payment due within 30 days.') }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-header">
+              <h3>
+                {% if lang == 'es' %}
+                  Adjuntos (opcional)
+                {% else %}
+                  Attachments (optional)
+                {% endif %}
+              </h3>
+              <div class="form-section-sub">
+                {% if lang == 'es' %}
+                  Añade fotos o capturas relacionadas con el trabajo, orden o aprobación.
+                {% else %}
+                  Add photos or screenshots related to the work, order, or approval.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="attachments">
+                  {% if lang == 'es' %}Fotos{% else %}Photos{% endif %}
+                </label>
+                <input
+                  type="file"
+                  id="attachments"
+                  name="attachments"
+                  accept="image/*"
+                  multiple
+                  style="display:block; margin-top:6px;"
+                  capture="environment"
                 >
-                    {% if lang == 'es' %}
-                        + Añadir concepto
-                    {% else %}
-                        + Add line item
-                    {% endif %}
+                <div class="field-help">
+                  {% if lang == 'es' %}
+                    En móvil puedes usar la cámara o elegir imágenes desde tu galería.
+                  {% else %}
+                    On mobile you can use your camera or choose images from your photo library.
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-header">
+              <h3>
+                {% if lang == 'es' %}
+                  Conceptos
+                {% else %}
+                  Line Items
+                {% endif %}
+              </h3>
+              <div class="form-section-sub">
+                {% if lang == 'es' %}
+                  Añade al menos un servicio o producto. Mantén las descripciones claras para evitar preguntas.
+                {% else %}
+                  Add at least one service or product. Keep descriptions clear to avoid unnecessary questions.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="line-items-toolbar">
+              <div class="line-items-hint">
+                {% if lang == 'es' %}
+                  Puedes añadir o quitar filas según sea necesario.
+                {% else %}
+                  You can add or remove rows as needed.
+                {% endif %}
+              </div>
+
+              <button
+                type="button"
+                id="addLineItemBtn"
+                class="btn btn-secondary"
+              >
+                {% if lang == 'es' %}
+                  + Añadir concepto
+                {% else %}
+                  + Add line item
+                {% endif %}
+              </button>
+            </div>
+
+            <div class="table-wrapper" style="margin-top:12px;">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>
+                      {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                    </th>
+                    <th style="width:180px;">
+                      {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="lineItemsBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-header">
+              <h3>
+                {% if lang == 'es' %}
+                  Firma del cliente (opcional)
+                {% else %}
+                  Client Signature (optional)
+                {% endif %}
+              </h3>
+              <div class="form-section-sub">
+                {% if lang == 'es' %}
+                  Úsala para aprobaciones rápidas en sitio o como respaldo visual del trabajo realizado.
+                {% else %}
+                  Use it for quick on-site approvals or as a visual backup for completed work.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="signature-shell">
+              <canvas
+                id="signature-pad"
+                width="600"
+                height="200"
+                style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
+              ></canvas>
+
+              <div class="signature-toolbar">
+                <small style="font-size:12px; opacity:0.7; align-self:center;">
+                  {% if lang == 'es' %}
+                    Firma con tu dedo o mouse.
+                  {% else %}
+                    Sign with your finger or mouse.
+                  {% endif %}
+                </small>
+
+                <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
+                  {% if lang == 'es' %}Limpiar{% else %}Clear{% endif %}
                 </button>
+              </div>
+            </div>
 
-                <!-- SIGNATURE -->
-                <h3>
+            <input type="hidden" name="signature_data" id="signature_data">
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-header">
+              <h3>
+                {% if lang == 'es' %}
+                  Estilo de factura
+                {% else %}
+                  Invoice style
+                {% endif %}
+              </h3>
+              <div class="form-section-sub">
+                {% if lang == 'es' %}
+                  Esto afecta el estilo visual del PDF y de la vista pública del cliente.
+                {% else %}
+                  This affects the visual style of the PDF and the client-facing invoice view.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="template_style">
+                  {% if lang == 'es' %}
+                    Elige un estilo
+                  {% else %}
+                    Choose a style
+                  {% endif %}
+                </label>
+                <select name="template_style" id="template_style" class="template-select">
+                  <option value="modern" selected>
                     {% if lang == 'es' %}
-                        Firma del cliente (opcional)
+                      Moderno limpio (por defecto)
                     {% else %}
-                        Client Signature (optional)
+                      Modern Clean (default)
                     {% endif %}
-                </h3>
-                <p style="font-size:13px; opacity:0.8; margin-top:4px;">
-                    {% if lang == 'es' %}
-                        Captura una firma rápida para aprobaciones en sitio.
-                    {% else %}
-                        Capture a quick signature for on-site approvals.
-                    {% endif %}
-                </p>
-
-                <div style="margin-bottom:20px;">
-                    <div
-                        style="
-                            border:1px solid #e5e7eb;
-                            border-radius:10px;
-                            padding:10px;
-                            background:#F0F0F0;
-                        "
-                    >
-                        <canvas
-                            id="signature-pad"
-                            width="600"
-                            height="200"
-                            style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
-                        ></canvas>
-                        <div style="margin-top:8px; display:flex; justify-content:space-between; gap:10px;">
-                            <small style="font-size:12px; opacity:0.7; align-self:center;">
-                                {% if lang == 'es' %}
-                                    Firma con tu dedo o mouse.
-                                {% else %}
-                                    Sign with your finger or mouse.
-                                {% endif %}
-                            </small>
-                            <button type="button" id="clear-signature" class="btn btn-secondary btn-compact">
-                                {% if lang == 'es' %}Limpiar{% else %}Clear{% endif %}
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Hidden field we populate with base64 PNG -->
-                    <input type="hidden" name="signature_data" id="signature_data">
+                  </option>
+                  <option value="minimal">
+                    {% if lang == 'es' %}Gris minimalista{% else %}Minimal Grey{% endif %}
+                  </option>
+                  <option value="bold">
+                    {% if lang == 'es' %}Acento atrevido{% else %}Bold Accent{% endif %}
+                  </option>
+                  <option value="doodle">
+                    {% if lang == 'es' %}Divertido / doodle{% else %}Playful / Doodle{% endif %}
+                  </option>
+                </select>
+                <div class="template-note">
+                  {% if lang == 'es' %}
+                    Elige un estilo que encaje con tu marca y el tipo de cliente al que le facturas.
+                  {% else %}
+                    Pick a style that fits your brand and the type of client you invoice most often.
+                  {% endif %}
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <!-- TEMPLATE STYLE -->
-                <div class="form-row" style="margin-top:24px;">
-                    <label for="template_style" style="font-weight:600; font-size:14px; margin-bottom:4px; display:block;">
-                        {% if lang == 'es' %}
-                            Estilo de factura
-                        {% else %}
-                            Invoice style
-                        {% endif %}
-                    </label>
-                    <select name="template_style" id="template_style" class="template-select">
-                        <option value="modern" selected>
-                            {% if lang == 'es' %}
-                                Moderno limpio (por defecto)
-                            {% else %}
-                                Modern Clean (default)
-                            {% endif %}
-                        </option>
-                        <option value="minimal">
-                            {% if lang == 'es' %}Gris minimalista{% else %}Minimal Grey{% endif %}
-                        </option>
-                        <option value="bold">
-                            {% if lang == 'es' %}Acento atrevido{% else %}Bold Accent{% endif %}
-                        </option>
-                        <option value="doodle">
-                            {% if lang == 'es' %}Divertido / doodle{% else %}Playful / Doodle{% endif %}
-                        </option>
-                    </select>
-                    <small style="font-size:12px; opacity:0.7;">
-                        {% if lang == 'es' %}
-                            Esto controla el diseño y estilo del PDF y la vista del cliente.
-                        {% else %}
-                            This controls the layout and feel of the PDF and client view.
-                        {% endif %}
-                    </small>
-                </div>
+          <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap;">
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+              {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            </a>
+            <button type="button" id="previewButton" class="btn btn-secondary">
+              {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
+            </button>
+            <button type="submit" class="btn btn-brand">
+              {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
 
-                <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                        {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-                    </a>
-                    <button type="button" id="previewButton" class="btn btn-secondary">
-                        {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
-                    </button>
-                    <button type="submit" class="btn btn-brand">
-                        {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
-                    </button>
-                </div>
-
-            </form>
+      <div class="create-summary-side">
+        <div class="summary-side-card">
+          <span class="summary-side-badge">
+            {% if lang == 'es' %}BillBeam{% else %}BillBeam{% endif %}
+          </span>
+          <h4 style="margin-top:10px;">
+            {% if lang == 'es' %}
+              Lo que hace una gran factura
+            {% else %}
+              What makes a great invoice
+            {% endif %}
+          </h4>
+          <div class="summary-side-list">
+            <div>
+              {% if lang == 'es' %}
+                Un cliente correcto y una descripción clara aceleran pagos.
+              {% else %}
+                The right client and a clear description speed up payment.
+              {% endif %}
+            </div>
+            <div>
+              {% if lang == 'es' %}
+                Notas cortas y condiciones simples reducen fricción.
+              {% else %}
+                Short notes and simple terms reduce friction.
+              {% endif %}
+            </div>
+            <div>
+              {% if lang == 'es' %}
+                La vista previa te ayuda a detectar errores antes de enviar.
+              {% else %}
+                Preview helps you catch mistakes before sending.
+              {% endif %}
+            </div>
+          </div>
         </div>
-        <!-- ✅ No assistant sidebar here anymore; floating AI bubble is the single assistant -->
+
+        <div class="summary-side-card">
+          <h4>
+            {% if lang == 'es' %}
+              Tu configuración actual
+            {% else %}
+              Your current setup
+            {% endif %}
+          </h4>
+          <div class="summary-side-list">
+            <div>
+              <strong>{% if lang == 'es' %}Negocio:{% else %}Business:{% endif %}</strong>
+              {{ business_profile.business_name or "BillBeam" }}
+            </div>
+            <div>
+              <strong>{% if lang == 'es' %}Correo:{% else %}Email:{% endif %}</strong>
+              {{ business_profile.email or (lang == 'es' and 'No configurado' or 'Not set') }}
+            </div>
+            <div>
+              <strong>{% if lang == 'es' %}Estilo sugerido:{% else %}Suggested style:{% endif %}</strong>
+              {% if lang == 'es' %}Moderno limpio{% else %}Modern Clean{% endif %}
+            </div>
+          </div>
+          <div class="summary-tip" style="margin-top:12px;">
+            {% if lang == 'es' %}
+              Ajusta estos valores en Configuración para que tus facturas salgan listas con menos trabajo manual.
+            {% else %}
+              Update these values in Settings so your invoices come out ready with less manual work.
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
 </div>
 
-<!-- Preview + Signature + Line Items JS -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("invoiceForm");
     const previewBtn = document.getElementById("previewButton");
 
-    // ---------- LINE ITEMS: add / remove ----------
     const lineItemsBody = document.getElementById("lineItemsBody");
     const addLineItemBtn = document.getElementById("addLineItemBtn");
 
     function createLineItemRow() {
         const tr = document.createElement("tr");
 
-        // Description cell
         const descTd = document.createElement("td");
         const descInput = document.createElement("input");
         descInput.type = "text";
@@ -440,7 +1087,6 @@ document.addEventListener("DOMContentLoaded", function () {
         {% endif %};
         descTd.appendChild(descInput);
 
-        // Amount + remove button in second cell
         const amtTd = document.createElement("td");
         const amtWrapper = document.createElement("div");
         amtWrapper.style.display = "flex";
@@ -465,7 +1111,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (lineItemsBody.children.length > 1) {
                 tr.remove();
             } else {
-                // If it's the only row, just clear it instead of removing
                 descInput.value = "";
                 amtInput.value = "";
             }
@@ -490,7 +1135,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function ensureInitialLineItems() {
         if (!lineItemsBody) return;
         if (lineItemsBody.children.length === 0) {
-            // Start with 3 rows like before
             for (let i = 0; i < 3; i++) {
                 addLineItemRow();
             }
@@ -505,7 +1149,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ---- Signature pad setup ----
     const canvas = document.getElementById("signature-pad");
     const clearBtn = document.getElementById("clear-signature");
     const sigInput = document.getElementById("signature_data");
@@ -514,12 +1157,11 @@ document.addEventListener("DOMContentLoaded", function () {
     let drawing = false;
     let lastX = 0;
     let lastY = 0;
-    let hasDrawn = false; // track if user actually signed
+    let hasDrawn = false;
 
     if (canvas && sigInput) {
         ctx = canvas.getContext("2d");
 
-        // Keep canvas scaled to CSS size + device pixel ratio
         function resizeCanvas() {
             const rect = canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
@@ -527,13 +1169,10 @@ document.addEventListener("DOMContentLoaded", function () {
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
 
-            // Reset transform, then scale so 1 unit in code = 1 CSS pixel
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
             clearCanvas();
         }
 
-        // Start with a clean dark background
         function clearCanvas() {
             ctx.fillStyle = "#020617";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -564,7 +1203,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!drawing) return;
             evt.preventDefault();
             const pos = getCanvasPos(evt);
-            ctx.strokeStyle = "#facc15"; // yellow-ish ink
+            ctx.strokeStyle = "#facc15";
             ctx.lineWidth = 2;
             ctx.lineCap = "round";
 
@@ -582,13 +1221,11 @@ document.addEventListener("DOMContentLoaded", function () {
             drawing = false;
         }
 
-        // Mouse events
         canvas.addEventListener("mousedown", startDrawing);
         canvas.addEventListener("mousemove", draw);
         canvas.addEventListener("mouseup", stopDrawing);
         canvas.addEventListener("mouseleave", stopDrawing);
 
-        // Touch events
         canvas.addEventListener("touchstart", function (e) {
             e.preventDefault();
             startDrawing(e);
@@ -602,7 +1239,6 @@ document.addEventListener("DOMContentLoaded", function () {
             stopDrawing();
         });
 
-        // Clear button
         if (clearBtn) {
             clearBtn.addEventListener("click", function () {
                 clearCanvas();
@@ -611,11 +1247,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Helper to capture base64 into the hidden field
     function captureSignatureToHiddenField() {
         if (!canvas || !ctx || !sigInput) return;
 
-        // If user never drew anything, don't send a signature
         if (!hasDrawn) {
             sigInput.value = "";
             return;
@@ -625,10 +1259,8 @@ document.addEventListener("DOMContentLoaded", function () {
         sigInput.value = dataUrl;
     }
 
-    // Make it available for debugging if needed
     window.captureSignatureToHiddenField = captureSignatureToHiddenField;
 
-    // Preview button → send to /preview in new tab (preserve lang)
     if (form && previewBtn) {
         previewBtn.addEventListener("click", function (e) {
             e.preventDefault();
@@ -648,7 +1280,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Normal save submit → capture signature too
     if (form) {
         form.addEventListener("submit", function () {
             captureSignatureToHiddenField();

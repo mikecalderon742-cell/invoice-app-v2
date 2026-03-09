@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if lang == 'es' %}Error del servidor | BillBeam{% else %}Server Error | BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Ocurrió un error inesperado en BillBeam. Intenta de nuevo en unos momentos o vuelve al panel principal.
+{% else %}
+An unexpected error occurred in BillBeam. Please try again in a moment or return to your main dashboard.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="form-wrapper fade-in-up" style="max-width:840px; margin:28px auto;">
+    <div style="display:grid; gap:18px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+            <div>
+                <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:rgba(220,38,38,0.10); border:1px solid rgba(220,38,38,0.22); font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;">
+                    500 • BillBeam
+                </div>
+
+                <h1 style="margin:14px 0 8px; font-size:clamp(2rem, 4vw, 3rem); line-height:1.04;">
+                    {% if lang == 'es' %}
+                        Algo salió mal en nuestro lado
+                    {% else %}
+                        Something went wrong on our side
+                    {% endif %}
+                </h1>
+
+                <p style="margin:0; max-width:690px; font-size:15px; line-height:1.7; opacity:0.86;">
+                    {% if lang == 'es' %}
+                        BillBeam encontró un error inesperado mientras intentaba cargar esta página. Es posible que el problema sea temporal. Tus datos no deberían haberse perdido por este error.
+                    {% else %}
+                        BillBeam hit an unexpected error while trying to load this page. The issue may be temporary. Your data should not have been lost because of this error.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div style="min-width:120px; text-align:right;">
+                <div style="font-family:'Space Grotesk', sans-serif; font-size:72px; font-weight:700; line-height:0.9; opacity:0.12;">
+                    500
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-top:4px;">
+            <div style="border-radius:16px; padding:16px; background:rgba(255,255,255,0.56); border:1px solid rgba(15,23,42,0.06);">
+                <div style="font-size:13px; font-weight:700; margin-bottom:6px;">
+                    {% if lang == 'es' %}Qué hacer ahora{% else %}What to do now{% endif %}
+                </div>
+                <p style="font-size:13px; line-height:1.65; margin:0; opacity:0.82;">
+                    {% if lang == 'es' %}
+                        Intenta recargar la página. Si estabas editando algo importante, vuelve al historial de facturas o al panel principal antes de repetir la acción.
+                    {% else %}
+                        Try refreshing the page. If you were editing something important, head back to invoice history or the main dashboard before repeating the action.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div style="border-radius:16px; padding:16px; background:rgba(255,255,255,0.56); border:1px solid rgba(15,23,42,0.06);">
+                <div style="font-size:13px; font-weight:700; margin-bottom:6px;">
+                    {% if lang == 'es' %}Si el problema continúa{% else %}If the problem continues{% endif %}
+                </div>
+                <p style="font-size:13px; line-height:1.65; margin:0; opacity:0.82;">
+                    {% if lang == 'es' %}
+                        Ponte en contacto con soporte e incluye lo que intentabas hacer, la hora aproximada y cualquier mensaje que hayas visto.
+                    {% else %}
+                        Contact support and include what you were trying to do, the approximate time, and any message you saw.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:2px;">
+            <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+            </a>
+
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Ver facturas{% else %}View Invoices{% endif %}
+            </a>
+
+            <a href="/support{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Contactar soporte{% else %}Contact Support{% endif %}
+            </a>
+        </div>
+
+        <div style="font-size:12px; opacity:0.7;">
+            {% if lang == 'es' %}
+                Consejo: si este error ocurrió después de enviar un formulario, evita reenviarlo varias veces seguidas hasta volver a una pantalla estable.
+            {% else %}
+                Tip: if this happened right after submitting a form, avoid resubmitting it repeatedly until you’re back on a stable screen.
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

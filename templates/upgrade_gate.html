@@ -1,111 +1,228 @@
 {% extends "base.html" %}
 
+{% block title %}
+    {% if lang == 'es' %}Se requiere actualización · BillBeam{% else %}Upgrade Required · BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Algunas funciones de BillBeam requieren un plan superior. Compara planes y desbloquea más potencia cuando lo necesites.
+    {% else %}
+        Some BillBeam features require a higher BillBeam plan. Compare plans and unlock more power when you need it.
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="form-wrapper" style="max-width: 720px; margin: 40px auto;">
-    <div class="dashboard-header" style="margin-bottom: 16px;">
-        <h1>
-            {% if lang == 'es' %}
-                {{ title or "Se requiere actualización" }}
-            {% else %}
-                {{ title or "Upgrade required" }}
-            {% endif %}
-        </h1>
-    </div>
+<div class="page-shell" style="max-width: 1100px;">
+    <section class="page-card fade-in-up" style="padding: 30px 28px 26px;">
+        <div class="page-eyebrow">
+            {% if lang == 'es' %}Acceso por plan{% else %}Plan access{% endif %}
+        </div>
 
-    <p style="font-size: 0.95rem; margin-bottom: 20px;">
-        {% if lang == 'es' %}
-            {{ reason or "Esta función no está disponible en tu plan actual." }}
-        {% else %}
-            {{ reason or "This feature is not available on your current plan." }}
-        {% endif %}
-    </p>
+        <div class="table-section-header" style="margin-bottom:14px; align-items:flex-start;">
+            <div>
+                <h1 style="margin:0 0 8px 0;">
+                    {% if lang == 'es' %}
+                        {{ title or "Se requiere actualización" }}
+                    {% else %}
+                        {{ title or "Upgrade required" }}
+                    {% endif %}
+                </h1>
+                <p style="max-width:760px; font-size:15px; line-height:1.6;">
+                    {% if lang == 'es' %}
+                        {{ reason or "Esta función no está disponible en tu plan actual." }}
+                    {% else %}
+                        {{ reason or "This feature is not available on your current plan." }}
+                    {% endif %}
+                </p>
+            </div>
 
-    <div class="status-summary" style="margin-bottom: 24px;">
-        <span class="status-item sent">
-            {% if lang == 'es' %}
-                Plan actual: <strong>{{ user_plan|capitalize }}</strong>
-            {% else %}
-                Current plan: <strong>{{ user_plan|capitalize }}</strong>
-            {% endif %}
-        </span>
-        <span class="status-item paid">
-            {% if lang == 'es' %}
-                Plan requerido: <strong>{{ required_plan|capitalize }}</strong> o superior
-            {% else %}
-                Required plan: <strong>{{ required_plan|capitalize }}</strong> or higher
-            {% endif %}
-        </span>
-    </div>
-
-    <div class="dashboard-cards">
-        {% for key, plan in plans.items() %}
-            <div class="card kpi {% if key == 'pro' %}blue{% else %}teal{% endif %}">
-                <h2>
-                    {% if lang == 'es' %}
-                        {% if key == 'free' %}Starter{% elif key == 'pro' %}Pro{% else %}Studio{% endif %}
-                    {% else %}
-                        {{ plan.name }}
-                    {% endif %}
-                </h2>
-                <p>{{ plan.price_label }}</p>
-                <small>
-                    {% if lang == 'es' %}
-                        {% if key == 'free' %}
-                            Para freelancers que están empezando.
-                        {% elif key == 'pro' %}
-                            Para negocios en crecimiento que facturan con frecuencia.
-                        {% else %}
-                            Para agencias y equipos que necesitan más.
-                        {% endif %}
-                    {% else %}
-                        {{ plan.tagline }}
-                    {% endif %}
-                </small>
-                <ul style="margin-top: 12px; padding-left: 18px; font-size: 0.85rem;">
-                    {% if lang == 'es' %}
-                        {% if key == 'free' %}
-                            <li>Hasta 10 facturas al mes</li>
-                            <li>Una sola plantilla de factura</li>
-                            <li>Panel básico</li>
-                        {% elif key == 'pro' %}
-                            <li>Facturas ilimitadas</li>
-                            <li>Múltiples plantillas de factura</li>
-                            <li>Envío por correo + PDFs</li>
-                            <li>Enlaces públicos y botón “Pagar ahora”</li>
-                            <li>Facturas recurrentes</li>
-                        {% else %}
-                            <li>Todas las funciones Pro</li>
-                            <li>Branding y dominios personalizados</li>
-                            <li>Soporte prioritario</li>
-                            <li>Acceso por equipo (próximamente)</li>
-                        {% endif %}
-                    {% else %}
-                        {% for f in plan.features %}
-                            <li>{{ f }}</li>
-                        {% endfor %}
-                    {% endif %}
-                </ul>
-                <div style="margin-top: 16px;">
-                    <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                        {% if lang == 'es' %}
-                            Ver detalles de {{ key == 'free' and 'Starter' or key == 'pro' and 'Pro' or 'Studio' }}
-                        {% else %}
-                            View {{ plan.name }} details
-                        {% endif %}
-                    </a>
+            <div class="trust-row" style="justify-content:flex-end;">
+                <div class="trust-pill">
+                    {% if lang == 'es' %}Sin cambios forzados{% else %}No forced changes{% endif %}
+                </div>
+                <div class="trust-pill">
+                    {% if lang == 'es' %}Tu plan actual sigue funcionando{% else %}Your current plan still works{% endif %}
                 </div>
             </div>
-        {% endfor %}
-    </div>
+        </div>
 
-    <div style="text-align:center; margin-top: 20px; font-size: 0.85rem; opacity: 0.8;">
-        {% if lang == 'es' %}
-            Puedes seguir usando todas las funciones disponibles en tu plan actual.
-        {% else %}
-            You can continue using all existing features on your current plan.
-        {% endif %}
-    </div>
+        <div class="public-grid" style="margin-bottom:22px;">
+            <div class="public-card" style="padding:16px 18px;">
+                <div class="snap-label">
+                    {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                </div>
+                <div class="snap-value" style="margin-top:6px;">
+                    {{ user_plan|capitalize }}
+                </div>
+                <div class="mini-hint" style="margin-top:8px;">
+                    {% if lang == 'es' %}
+                        Puedes seguir usando todas las funciones incluidas en este plan.
+                    {% else %}
+                        You can continue using all features included in this plan.
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="public-card" style="padding:16px 18px;">
+                <div class="snap-label">
+                    {% if lang == 'es' %}Plan requerido{% else %}Required plan{% endif %}
+                </div>
+                <div class="snap-value" style="margin-top:6px;">
+                    {{ required_plan|capitalize }}
+                    {% if lang == 'es' %} o superior{% else %} or higher{% endif %}
+                </div>
+                <div class="mini-hint" style="margin-top:8px;">
+                    {% if lang == 'es' %}
+                        Esta función se desbloquea cuando tu espacio tiene acceso al nivel requerido.
+                    {% else %}
+                        This feature unlocks when your workspace has access to the required tier.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="pricing-grid">
+            {% for key, plan in plans.items() %}
+                {% set is_current = (key == user_plan) %}
+                {% set is_required = (key == required_plan) %}
+                {% set plan_name = plan.name if plan.name is defined else (key|capitalize) %}
+
+                <article class="pricing-card {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %} {% if is_current %}pricing-current{% endif %}"
+                         style="position:relative;">
+
+                    <div class="pricing-card-header">
+                        <div class="pricing-title-row">
+                            <div>
+                                <div class="pricing-name">
+                                    {% if lang == 'es' %}
+                                        {% if key == 'free' %}Starter{% elif key == 'pro' %}Pro{% else %}Studio{% endif %}
+                                    {% else %}
+                                        {{ plan_name }}
+                                    {% endif %}
+                                </div>
+                                <p class="pricing-tagline">
+                                    {% if lang == 'es' %}
+                                        {% if key == 'free' %}
+                                            Para freelancers que están empezando.
+                                        {% elif key == 'pro' %}
+                                            Para negocios en crecimiento que facturan con frecuencia.
+                                        {% else %}
+                                            Para agencias y equipos que necesitan más.
+                                        {% endif %}
+                                    {% else %}
+                                        {{ plan.tagline }}
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="pricing-price" style="text-align:right;">
+                                <span class="amount">{{ plan.price_label }}</span><br>
+
+                                {% if is_current %}
+                                    <span class="pricing-pill current">
+                                        {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                                    </span>
+                                {% elif is_required %}
+                                    <span class="pricing-pill recommended">
+                                        {% if lang == 'es' %}Necesario para esta función{% else %}Needed for this feature{% endif %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="pricing-features">
+                        {% if lang == 'es' %}
+                            {% if key == 'free' %}
+                                <li><span class="feature-bullet">•</span><span>Hasta 10 facturas al mes</span></li>
+                                <li><span class="feature-bullet">•</span><span>Una sola plantilla de factura</span></li>
+                                <li><span class="feature-bullet">•</span><span>Panel básico</span></li>
+                            {% elif key == 'pro' %}
+                                <li><span class="feature-bullet">•</span><span>Facturas ilimitadas</span></li>
+                                <li><span class="feature-bullet">•</span><span>Múltiples plantillas de factura</span></li>
+                                <li><span class="feature-bullet">•</span><span>Envío por correo + PDFs</span></li>
+                                <li><span class="feature-bullet">•</span><span>Enlaces públicos y botón “Pagar ahora”</span></li>
+                                <li><span class="feature-bullet">•</span><span>Facturas recurrentes</span></li>
+                            {% else %}
+                                <li><span class="feature-bullet">•</span><span>Todas las funciones Pro</span></li>
+                                <li><span class="feature-bullet">•</span><span>Branding y dominios personalizados</span></li>
+                                <li><span class="feature-bullet">•</span><span>Soporte prioritario</span></li>
+                                <li><span class="feature-bullet">•</span><span>Acceso por equipo (próximamente)</span></li>
+                            {% endif %}
+                        {% else %}
+                            {% for f in plan.features %}
+                                <li>
+                                    <span class="feature-bullet">•</span>
+                                    <span>{{ f }}</span>
+                                </li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+
+                    <div class="pricing-cta">
+                        {% if is_current %}
+                            <span class="badge paid">
+                                {% if lang == 'es' %}Ya activo{% else %}Already active{% endif %}
+                            </span>
+                            <span class="pricing-note">
+                                {% if lang == 'es' %}
+                                    Este es el plan que estás usando actualmente.
+                                {% else %}
+                                    This is the plan you are currently using.
+                                {% endif %}
+                            </span>
+
+                        {% elif key == 'pro' %}
+                            <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand btn-compact">
+                                {% if lang == 'es' %}Ver Pro{% else %}View Pro{% endif %}
+                            </a>
+                            <span class="pricing-note">
+                                {% if lang == 'es' %}
+                                    Ideal si quieres desbloquear más automatización y funciones de facturación.
+                                {% else %}
+                                    Best if you want to unlock more automation and billing features.
+                                {% endif %}
+                            </span>
+
+                        {% elif key == 'enterprise' %}
+                            <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
+                                {% if lang == 'es' %}Ver Studio{% else %}View Studio{% endif %}
+                            </a>
+                            <span class="pricing-note">
+                                {% if lang == 'es' %}
+                                    Pensado para operaciones con necesidades más avanzadas.
+                                {% else %}
+                                    Built for operations with more advanced needs.
+                                {% endif %}
+                            </span>
+
+                        {% else %}
+                            <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
+                                {% if lang == 'es' %}Ver Starter{% else %}View Starter{% endif %}
+                            </a>
+                            <span class="pricing-note">
+                                {% if lang == 'es' %}
+                                    Una buena base para empezar antes de crecer.
+                                {% else %}
+                                    A strong starting point before you grow.
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        <div style="text-align:center; margin-top:24px; font-size:13px; opacity:0.82; line-height:1.6;">
+            {% if lang == 'es' %}
+                No perderás acceso a lo que ya funciona en tu cuenta actual. Esta pantalla solo aparece cuando intentas usar una función reservada para un plan superior.
+            {% else %}
+                You will not lose access to what already works in your current account. This screen only appears when you try to use a feature reserved for a higher plan.
+            {% endif %}
+        </div>
+    </section>
 </div>
 {% endblock %}

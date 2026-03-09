@@ -1,165 +1,274 @@
 {% extends "base.html" %}
+
+{% block title %}
+    {% if lang == 'es' %}Registrar pago · BillBeam{% else %}Record Payment · BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Registra pagos manuales en BillBeam y mantén el saldo de tus facturas actualizado con claridad.
+    {% else %}
+        Record manual payments in BillBeam and keep invoice balances accurate and up to date.
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}Registrar pago{% else %}Record Payment{% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
-        </a>
-    </div>
-</div>
+<div class="page-shell" style="max-width:1120px;">
+    <section class="page-card fade-in-up" style="padding:30px 28px 24px; margin-bottom:24px;">
+        <div class="table-section-header" style="align-items:flex-start; margin-bottom:18px;">
+            <div>
+                <div class="page-eyebrow">
+                    {% if lang == 'es' %}Pagos y conciliación{% else %}Payments & reconciliation{% endif %}
+                </div>
+                <h1 style="margin:0 0 8px 0;">
+                    {% if lang == 'es' %}Registrar pago{% else %}Record Payment{% endif %}
+                </h1>
+                <p style="margin:0; max-width:760px; font-size:15px; line-height:1.6;">
+                    {% if lang == 'es' %}
+                        Añade un pago manual para mantener esta factura al día. BillBeam actualizará el total pagado,
+                        el saldo pendiente y, cuando corresponda, el estado de la factura.
+                    {% else %}
+                        Add a manual payment to keep this invoice current. BillBeam will update the total paid,
+                        remaining balance, and invoice status when appropriate.
+                    {% endif %}
+                </p>
+            </div>
 
-<div class="form-wrapper fade-in-up">
+            <div class="quick-actions">
+                <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Ver factura{% else %}View Invoice{% endif %}
+                </a>
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <div class="status-summary" style="margin-bottom:0;">
+            <div class="status-item sent">
+                {% if lang == 'es' %}
+                    Factura <strong>{{ inv_label }}</strong>
+                {% else %}
+                    Invoice <strong>{{ inv_label }}</strong>
+                {% endif %}
+            </div>
+            <div class="status-item paid">
+                {% if lang == 'es' %}
+                    Cliente: <strong>{{ client_name }}</strong>
+                {% else %}
+                    Client: <strong>{{ client_name }}</strong>
+                {% endif %}
+            </div>
+            <div class="status-item draft">
+                {% if lang == 'es' %}
+                    Estado: <strong>{{ status }}</strong>
+                {% else %}
+                    Status: <strong>{{ status }}</strong>
+                {% endif %}
+            </div>
+        </div>
+    </section>
 
     {% if feedback_message %}
-        <div style="
-            margin-bottom:16px;
-            padding:12px 14px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:500;
-            {% if feedback_type == 'success' %}
-                background:#dcfce7;
-                color:#166534;
-                border:1px solid #16a34a;
-            {% else %}
-                background:#fee2e2;
-                color:#b91c1c;
-                border:1px solid #dc2626;
-            {% endif %}
-        ">
-            {{ feedback_message }}
+        <div class="fade-in-up" style="margin-bottom:20px;">
+            <div style="
+                padding:12px 14px;
+                border-radius:12px;
+                font-size:14px;
+                font-weight:500;
+                {% if feedback_type == 'success' %}
+                    background:#dcfce7;
+                    color:#166534;
+                    border:1px solid #16a34a;
+                {% else %}
+                    background:#fee2e2;
+                    color:#b91c1c;
+                    border:1px solid #dc2626;
+                {% endif %}
+            ">
+                {{ feedback_message }}
+            </div>
         </div>
     {% endif %}
 
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}
-            Factura {{ inv_label }}
-        {% else %}
-            Invoice {{ inv_label }}
-        {% endif %}
-    </h2>
-
-    <p style="font-size:14px; opacity:.85; margin-bottom:18px;">
-        {% if lang == 'es' %}
-            Cliente: <strong>{{ client_name }}</strong><br>
-            Importe: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-            Pagado: <strong>${{ "{:,.2f}".format(total_paid) }}</strong><br>
-            Saldo pendiente: <strong>${{ "{:,.2f}".format(balance) }}</strong><br>
-            Estado: <strong>{{ status }}</strong>
-        {% else %}
-            Client: <strong>{{ client_name }}</strong><br>
-            Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-            Total Paid: <strong>${{ "{:,.2f}".format(total_paid) }}</strong><br>
-            Balance Due: <strong>${{ "{:,.2f}".format(balance) }}</strong><br>
-            Status: <strong>{{ status }}</strong>
-        {% endif %}
-    </p>
-
-    <form method="POST" action="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
-
-            <div>
-                <label for="amount" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Importe del pago{% else %}Payment Amount{% endif %}
-                </label>
-                <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    id="amount"
-                    name="amount"
-                    placeholder="{% if lang == 'es' %}Ej. 250.00{% else %}e.g. 250.00{% endif %}"
-                    required
-                >
+    <div style="display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(0, 0.9fr); gap:24px;">
+        <section class="page-card fade-in-up" style="padding:28px 26px;">
+            <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin:0 0 6px 0;">
+                        {% if lang == 'es' %}Nuevo pago{% else %}New Payment{% endif %}
+                    </h2>
+                    <p style="margin:0; font-size:14px; opacity:0.82; line-height:1.6;">
+                        {% if lang == 'es' %}
+                            Usa este formulario para registrar efectivo, transferencia bancaria, tarjeta u otro pago manual.
+                        {% else %}
+                            Use this form to record cash, bank transfer, card, or any other manual payment.
+                        {% endif %}
+                    </p>
+                </div>
             </div>
 
-            <div>
-                <label for="method" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Método (opcional){% else %}Method (optional){% endif %}
-                </label>
-                <input
-                    type="text"
-                    id="method"
-                    name="method"
-                    placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
-                >
-            </div>
+            <form method="POST" action="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
 
-            <div>
-                <label for="note" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Nota (opcional){% else %}Note (optional){% endif %}
-                </label>
-                <textarea
-                    id="note"
-                    name="note"
-                    rows="3"
-                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
-                    placeholder="{% if lang == 'es' %}Número de referencia, detalles de pago parcial, etc.{% else %}Reference number, partial payment details, etc.{% endif %}"
-                ></textarea>
-            </div>
+                    <div>
+                        <label for="amount" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                            {% if lang == 'es' %}Importe del pago *{% else %}Payment Amount *{% endif %}
+                        </label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            id="amount"
+                            name="amount"
+                            placeholder="{% if lang == 'es' %}Ej. 250.00{% else %}e.g. 250.00{% endif %}"
+                            required
+                        >
+                    </div>
 
-        </div>
+                    <div>
+                        <label for="method" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                            {% if lang == 'es' %}Método de pago{% else %}Payment Method{% endif %}
+                        </label>
+                        <input
+                            type="text"
+                            id="method"
+                            name="method"
+                            placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia bancaria{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
+                        >
+                    </div>
 
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-            </a>
-            <button type="submit" class="btn btn-success">
-                {% if lang == 'es' %}Guardar pago{% else %}Save Payment{% endif %}
-            </button>
-        </div>
-    </form>
+                    <div>
+                        <label for="note" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                            {% if lang == 'es' %}Nota interna{% else %}Internal Note{% endif %}
+                        </label>
+                        <textarea
+                            id="note"
+                            name="note"
+                            rows="4"
+                            placeholder="{% if lang == 'es' %}Número de referencia, pago parcial, detalles de conciliación, etc.{% else %}Reference number, partial payment details, reconciliation notes, etc.{% endif %}"
+                        ></textarea>
+                    </div>
+                </div>
 
-</div>
-
-{% if payments and payments|length > 0 %}
-<div class="table-wrapper" style="margin-top:30px;">
-    <table class="modern-table">
-        <thead>
-            <tr>
-                <th>
-                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-                </th>
-                <th>
-                    {% if lang == 'es' %}Método{% else %}Method{% endif %}
-                </th>
-                <th>
-                    {% if lang == 'es' %}Nota{% else %}Note{% endif %}
-                </th>
-                <th>
-                    {% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for p in payments %}
-            <tr>
-                <td data-label="{% if lang == 'es' %}Importe{% else %}Amount{% endif %}">
-                    ${{ "{:,.2f}".format(p[0]) }}
-                </td>
-                <td data-label="{% if lang == 'es' %}Método{% else %}Method{% endif %}">
-                    {{ p[1] or "—" }}
-                </td>
-                <td data-label="{% if lang == 'es' %}Nota{% else %}Note{% endif %}">
-                    {{ p[2] or "—" }}
-                </td>
-                <td data-label="{% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}">
-                    {% if p[3] %}
-                        {{ p[3].strftime('%Y-%m-%d %H:%M') }}
+                <div style="font-size:12px; opacity:0.74; line-height:1.55; margin-top:8px;">
+                    {% if lang == 'es' %}
+                        Consejo: añade una nota breve si este pago fue parcial, si tiene número de referencia o si necesitas contexto para revisarlo después.
                     {% else %}
-                        —
+                        Tip: add a short note if this was a partial payment, includes a reference number, or needs context for later review.
                     {% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                </div>
+
+                <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+                    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                        {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        {% if lang == 'es' %}Guardar pago{% else %}Save Payment{% endif %}
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <aside class="page-card fade-in-up" style="padding:28px 24px;">
+            <h2 style="margin:0 0 14px 0;">
+                {% if lang == 'es' %}Resumen de factura{% else %}Invoice Snapshot{% endif %}
+            </h2>
+
+            <div class="snapshot" style="grid-template-columns:1fr; gap:10px;">
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Importe total{% else %}Invoice Total{% endif %}
+                    </div>
+                    <div class="snap-value">${{ "{:,.2f}".format(amount) }}</div>
+                </div>
+
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Pagado hasta ahora{% else %}Paid So Far{% endif %}
+                    </div>
+                    <div class="snap-value">${{ "{:,.2f}".format(total_paid) }}</div>
+                </div>
+
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
+                    </div>
+                    <div class="snap-value">${{ "{:,.2f}".format(balance) }}</div>
+                </div>
+
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Estado actual{% else %}Current Status{% endif %}
+                    </div>
+                    <div class="snap-value">{{ status }}</div>
+                </div>
+            </div>
+
+            <div style="margin-top:16px; font-size:13px; line-height:1.65; opacity:0.82;">
+                {% if lang == 'es' %}
+                    Cuando el total pagado alcance o supere el importe de la factura, BillBeam marcará la factura como pagada automáticamente.
+                {% else %}
+                    When the total paid reaches or exceeds the invoice amount, BillBeam will automatically mark the invoice as paid.
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+
+    {% if payments and payments|length > 0 %}
+        <section class="table-wrapper fade-in-up" style="margin-top:24px;">
+            <div class="table-section-header">
+                <div>
+                    <h2>
+                        {% if lang == 'es' %}Historial de pagos{% else %}Payment History{% endif %}
+                    </h2>
+                    <p>
+                        {% if lang == 'es' %}
+                            Revisa todos los pagos registrados para esta factura en orden descendente.
+                        {% else %}
+                            Review every recorded payment for this invoice in reverse chronological order.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="table-meta">
+                    {% if lang == 'es' %}
+                        {{ payments|length }} pago{{ '' if payments|length == 1 else 's' }}
+                    {% else %}
+                        {{ payments|length }} payment{{ '' if payments|length == 1 else 's' }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>{% if lang == 'es' %}Importe{% else %}Amount{% endif %}</th>
+                        <th>{% if lang == 'es' %}Método{% else %}Method{% endif %}</th>
+                        <th>{% if lang == 'es' %}Nota{% else %}Note{% endif %}</th>
+                        <th>{% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                        <tr>
+                            <td>${{ "{:,.2f}".format(p[0]) }}</td>
+                            <td>{{ p[1] or "—" }}</td>
+                            <td>{{ p[2] or "—" }}</td>
+                            <td>
+                                {% if p[3] %}
+                                    {{ p[3].strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    {% endif %}
 </div>
-{% endif %}
 
 {% endblock %}

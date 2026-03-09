@@ -1,162 +1,671 @@
 {% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Enviar factura {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Send Invoice {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Envía la factura {{ inv_label }} por correo con PDF adjunto y enlace público desde BillBeam.
+  {% else %}
+    Send invoice {{ inv_label }} by email with a PDF attachment and public invoice link from BillBeam.
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
+<style>
+  .send-page {
+    display: grid;
+    gap: 20px;
+  }
+
+  .send-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .send-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .send-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .send-subcopy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .send-subcopy {
+    color: #94a3b8;
+  }
+
+  .send-feedback {
+    margin-bottom: 2px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    border: 1px solid transparent;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
+  }
+
+  .send-feedback.success {
+    background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border-color: #16a34a;
+  }
+
+  .send-feedback.error {
+    background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+    color: #b91c1c;
+    border-color: #dc2626;
+  }
+
+  body.dark .send-feedback.success {
+    background: linear-gradient(180deg, rgba(6, 78, 59, 0.95), rgba(22, 101, 52, 0.86));
+    color: #dcfce7;
+  }
+
+  body.dark .send-feedback.error {
+    background: linear-gradient(180deg, rgba(127, 29, 29, 0.96), rgba(153, 27, 27, 0.86));
+    color: #fee2e2;
+  }
+
+  .send-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) 340px;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .send-main-shell,
+  .send-side-shell {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .send-main-shell,
+  body.dark .send-side-shell {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .send-main-shell {
+    padding: 22px;
+  }
+
+  .send-side-shell {
+    padding: 20px;
+    display: grid;
+    gap: 18px;
+    position: sticky;
+    top: 88px;
+  }
+
+  .invoice-send-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .invoice-send-title {
+    display: grid;
+    gap: 6px;
+  }
+
+  .invoice-send-title h2 {
+    margin: 0;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .invoice-send-meta {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .invoice-send-meta {
+    color: #94a3b8;
+  }
+
+  .invoice-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .invoice-kpi {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .invoice-kpi {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .invoice-kpi-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .invoice-kpi-label {
+    color: #94a3b8;
+  }
+
+  .invoice-kpi-value {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .public-link-card {
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    border-radius: 20px;
+    border: 1px dashed rgba(37,99,235,0.42);
+    background: linear-gradient(180deg, rgba(219,234,254,0.7), rgba(239,246,255,0.8));
+  }
+
+  body.dark .public-link-card {
+    border-color: rgba(96,165,250,0.36);
+    background: linear-gradient(180deg, rgba(30,58,138,0.22), rgba(2,6,23,0.35));
+  }
+
+  .public-link-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .public-link-url {
+    font-size: 13px;
+    line-height: 1.6;
+    word-break: break-all;
+    margin-bottom: 8px;
+  }
+
+  .public-link-copy {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #475569;
+  }
+
+  body.dark .public-link-copy {
+    color: #cbd5e1;
+  }
+
+  .send-form-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .field-group {
+    display: grid;
+    gap: 6px;
+  }
+
+  .field-group label {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .field-help {
+    font-size: 12px;
+    line-height: 1.55;
+    color: #64748b;
+  }
+
+  body.dark .field-help {
+    color: #94a3b8;
+  }
+
+  .send-form-grid input,
+  .send-form-grid textarea {
+    width: 100%;
+  }
+
+  .message-box {
+    border-radius: 18px;
+    padding: 12px;
+    background: rgba(15,23,42,0.025);
+    border: 1px solid rgba(148,163,184,0.12);
+  }
+
+  body.dark .message-box {
+    background: rgba(15,23,42,0.34);
+    border-color: rgba(148,163,184,0.14);
+  }
+
+  .message-box textarea {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    min-height: 220px;
+    resize: vertical;
+  }
+
+  body.dark .message-box textarea {
+    background: transparent;
+  }
+
+  .form-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:18px;
+    flex-wrap: wrap;
+  }
+
+  .side-card h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .side-copy {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .side-copy {
+    color: #94a3b8;
+  }
+
+  .send-checklist {
+    display: grid;
+    gap: 10px;
+  }
+
+  .send-check {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .send-check {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .send-check-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 8px 18px rgba(58,139,255,0.22);
+  }
+
+  .side-highlight {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .side-highlight {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .side-highlight strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .side-highlight p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .side-highlight p {
+    color: #cbd5e1;
+  }
+
+  @media (max-width: 1080px) {
+    .send-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .send-side-shell {
+      position: static;
+      top: auto;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .invoice-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .send-main-shell,
+    .send-side-shell {
+      padding: 18px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .invoice-kpis {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="send-page">
+
+  <div class="send-topbar">
+    <div class="send-title-wrap">
+      <h1>
         {% if lang == 'es' %}Enviar factura{% else %}Send Invoice{% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
-        </a>
+      </h1>
+      <div class="send-subcopy">
+        {% if lang == 'es' %}
+          Envía una factura profesional con PDF adjunto y enlace público para que tu cliente pueda verla y pagarla más fácilmente.
+        {% else %}
+          Send a polished invoice with a PDF attachment and public invoice link so your client can review and pay more easily.
+        {% endif %}
+      </div>
     </div>
-</div>
 
-<div class="form-wrapper fade-in-up">
+    <div class="quick-actions">
+      <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
+      </a>
+    </div>
+  </div>
 
-    {% if feedback_message %}
-        <div style="
-            margin-bottom:16px;
-            padding:12px 14px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:500;
-            {% if feedback_type == 'success' %}
-                background:#dcfce7;
-                color:#166534;
-                border:1px solid #16a34a;
+  {% if feedback_message %}
+    <div class="send-feedback {% if feedback_type == 'success' %}success{% else %}error{% endif %}">
+      {{ feedback_message }}
+    </div>
+  {% endif %}
+
+  <div class="send-layout">
+
+    <div class="send-main-shell">
+      <div class="invoice-send-header">
+        <div class="invoice-send-title">
+          <h2>
+            {% if lang == 'es' %}
+              Factura {{ inv_label }}
             {% else %}
-                background:#fee2e2;
-                color:#b91c1c;
-                border:1px solid #dc2626;
+              Invoice {{ inv_label }}
             {% endif %}
-        ">
-            {{ feedback_message }}
+          </h2>
+          <div class="invoice-send-meta">
+            {% if lang == 'es' %}
+              Revisa el destinatario, el asunto y el mensaje antes de enviar.
+            {% else %}
+              Review the recipient, subject, and message before sending.
+            {% endif %}
+          </div>
         </div>
-    {% endif %}
+      </div>
 
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}
-            Factura {{ inv_label }}
-        {% else %}
-            Invoice {{ inv_label }}
-        {% endif %}
-    </h2>
-
-    <p style="font-size:14px; opacity:.85; margin-bottom:18px;">
-        {% if lang == 'es' %}
-            Cliente: <strong>{{ client_name }}</strong><br>
-            Importe: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-            Estado: <strong>{{ status }}</strong><br>
-            {% if due_date %}
-                Vence: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
-            {% endif %}
-            {% if last_emailed_at %}
-                Último envío: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
-                {% if last_emailed_to %}
-                    a <strong>{{ last_emailed_to }}</strong>
-                {% endif %}
-            {% endif %}
-        {% else %}
-            Client: <strong>{{ client_name }}</strong><br>
-            Amount: <strong>${{ "{:,.2f}".format(amount) }}</strong><br>
-            Status: <strong>{{ status }}</strong><br>
-            {% if due_date %}
-                Due date: <strong>{{ due_date.strftime('%Y-%m-%d') }}</strong><br>
-            {% endif %}
-            {% if last_emailed_at %}
-                Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
-                {% if last_emailed_to %}
-                    to <strong>{{ last_emailed_to }}</strong>
-                {% endif %}
-            {% endif %}
-        {% endif %}
-    </p>
-
-    {% if public_url %}
-        <div style="
-            margin-bottom:16px;
-            padding:10px 12px;
-            border-radius:10px;
-            border:1px dashed rgba(37,99,235,0.5);
-            background: rgba(219,234,254,0.6);
-            font-size:13px;
-        ">
-            <strong>
-                {% if lang == 'es' %}Enlace público de factura{% else %}Public Invoice Link{% endif %}
-            </strong><br>
-            <span style="word-break:break-all;">{{ public_url }}</span><br>
-            <span style="opacity:0.8;">
-                {% if lang == 'es' %}
-                    Este enlace se incluye en el cuerpo del correo por defecto. También puedes copiarlo y enviarlo manualmente si lo prefieres.
-                {% else %}
-                    This link is included in the default email body. You can also copy it and send manually if needed.
-                {% endif %}
-            </span>
+      <div class="invoice-kpis">
+        <div class="invoice-kpi">
+          <div class="invoice-kpi-label">
+            {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+          </div>
+          <div class="invoice-kpi-value">{{ client_name }}</div>
         </div>
-    {% endif %}
 
-    <form method="POST" action="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
+        <div class="invoice-kpi">
+          <div class="invoice-kpi-label">
+            {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+          </div>
+          <div class="invoice-kpi-value">${{ "{:,.2f}".format(amount) }}</div>
+        </div>
 
-            <div>
-                <label for="to_email" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Para{% else %}To{% endif %}
-                </label>
-                <input
-                    type="email"
-                    id="to_email"
-                    name="to_email"
-                    placeholder="client@example.com"
-                    value="{{ default_to_email }}"
-                    required
-                >
+        <div class="invoice-kpi">
+          <div class="invoice-kpi-label">
+            {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+          </div>
+          <div class="invoice-kpi-value">{{ status }}</div>
+        </div>
+
+        <div class="invoice-kpi">
+          <div class="invoice-kpi-label">
+            {% if lang == 'es' %}Vence{% else %}Due{% endif %}
+          </div>
+          <div class="invoice-kpi-value">
+            {{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}
+          </div>
+        </div>
+      </div>
+
+      {% if last_emailed_at %}
+        <div class="field-help" style="margin-bottom: 16px;">
+          {% if lang == 'es' %}
+            Último envío: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+            {% if last_emailed_to %}
+              a <strong>{{ last_emailed_to }}</strong>
+            {% endif %}
+          {% else %}
+            Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+            {% if last_emailed_to %}
+              to <strong>{{ last_emailed_to }}</strong>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if public_url %}
+        <div class="public-link-card">
+          <div class="public-link-title">
+            {% if lang == 'es' %}Enlace público de factura{% else %}Public Invoice Link{% endif %}
+          </div>
+          <div class="public-link-url">{{ public_url }}</div>
+          <div class="public-link-copy">
+            {% if lang == 'es' %}
+              Este enlace ya está incluido en el mensaje por defecto. También puedes copiarlo y enviarlo manualmente si lo necesitas.
+            {% else %}
+              This link is already included in the default message. You can also copy and send it manually if needed.
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <form method="POST" action="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+        <div class="send-form-grid">
+
+          <div class="field-group">
+            <label for="to_email">
+              {% if lang == 'es' %}Para{% else %}To{% endif %}
+            </label>
+            <input
+              type="email"
+              id="to_email"
+              name="to_email"
+              placeholder="client@example.com"
+              value="{{ default_to_email }}"
+              required
+            >
+          </div>
+
+          <div class="field-group">
+            <label for="subject">
+              {% if lang == 'es' %}Asunto{% else %}Subject{% endif %}
+            </label>
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value="{{ default_subject }}"
+              required
+            >
+          </div>
+
+          <div class="field-group">
+            <label for="message">
+              {% if lang == 'es' %}Mensaje{% else %}Message{% endif %}
+            </label>
+            <div class="message-box">
+              <textarea
+                id="message"
+                name="message"
+                rows="8"
+                style="font-size:14px; font-family:inherit;"
+              >{{ default_message }}</textarea>
             </div>
-
-            <div>
-                <label for="subject" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Asunto{% else %}Subject{% endif %}
-                </label>
-                <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    value="{{ default_subject }}"
-                    required
-                >
+            <div class="field-help">
+              {% if lang == 'es' %}
+                El PDF de la factura se adjuntará automáticamente al correo.
+              {% else %}
+                The invoice PDF will be attached automatically to the email.
+              {% endif %}
             </div>
-
-            <div>
-                <label for="message" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Mensaje{% else %}Message{% endif %}
-                </label>
-                <textarea
-                    id="message"
-                    name="message"
-                    rows="8"
-                    style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e5e7eb; font-size:14px; font-family:inherit;"
-                >{{ default_message }}</textarea>
-                <small style="font-size:12px; opacity:.7;">
-                    {% if lang == 'es' %}
-                        El PDF de la factura se adjuntará automáticamente.
-                    {% else %}
-                        The invoice PDF will be attached automatically.
-                    {% endif %}
-                </small>
-            </div>
+          </div>
 
         </div>
 
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-            </a>
-            <button type="submit" class="btn btn-brand">
-                {% if lang == 'es' %}Enviar correo{% else %}Send Email{% endif %}
-            </button>
+        <div class="form-actions">
+          <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+          </a>
+          <button type="submit" class="btn btn-brand">
+            {% if lang == 'es' %}Enviar correo{% else %}Send Email{% endif %}
+          </button>
         </div>
-    </form>
+      </form>
+    </div>
+
+    <aside class="send-side-shell">
+      <div class="side-card">
+        <h3>
+          {% if lang == 'es' %}Antes de enviar{% else %}Before sending{% endif %}
+        </h3>
+        <div class="side-copy">
+          {% if lang == 'es' %}
+            Un correo claro y profesional mejora la confianza y aumenta la probabilidad de pago rápido.
+          {% else %}
+            A clear, professional email builds trust and improves the chance of fast payment.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="send-checklist">
+        <div class="send-check">
+          <div class="send-check-mark">1</div>
+          <div>
+            {% if lang == 'es' %}
+              Confirma que el correo del cliente esté correcto.
+            {% else %}
+              Confirm the client’s email address is correct.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="send-check">
+          <div class="send-check-mark">2</div>
+          <div>
+            {% if lang == 'es' %}
+              Revisa que el asunto deje claro qué factura se está enviando.
+            {% else %}
+              Make sure the subject clearly identifies which invoice is being sent.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="send-check">
+          <div class="send-check-mark">3</div>
+          <div>
+            {% if lang == 'es' %}
+              Mantén el mensaje breve, amable y fácil de seguir.
+            {% else %}
+              Keep the message short, friendly, and easy to follow.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="side-highlight">
+        <strong>
+          {% if lang == 'es' %}Consejo de cobro{% else %}Payment tip{% endif %}
+        </strong>
+        <p>
+          {% if lang == 'es' %}
+            Los mensajes con monto, fecha de vencimiento y enlace directo suelen reducir idas y vueltas innecesarias.
+          {% else %}
+            Messages that include the amount, due date, and direct invoice link usually reduce unnecessary back-and-forth.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="side-highlight">
+        <strong>
+          {% if lang == 'es' %}Adjunto automático{% else %}Automatic attachment{% endif %}
+        </strong>
+        <p>
+          {% if lang == 'es' %}
+            BillBeam adjunta automáticamente el PDF de la factura al correo que estás enviando.
+          {% else %}
+            BillBeam automatically attaches the invoice PDF to the email you are sending.
+          {% endif %}
+        </p>
+      </div>
+    </aside>
+
+  </div>
 
 </div>
 

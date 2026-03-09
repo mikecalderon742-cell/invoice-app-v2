@@ -1,215 +1,541 @@
 {% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Preguntas frecuentes · BillBeam
+  {% else %}
+    Frequently Asked Questions · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Respuestas rápidas sobre planes, límites, facturas, datos y funcionamiento general de BillBeam.
+  {% else %}
+    Quick answers about plans, limits, invoices, data, and how BillBeam works.
+  {% endif %}
+{% endblock %}
 
 {% block content %}
-<div style="max-width: 900px; margin: 0 auto 28px;">
-    <header style="margin-bottom: 20px;">
-        <p style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.75;">
-            {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
+
+<style>
+  .faq-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .faq-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .faq-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .faq-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(32px, 4vw, 46px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .faq-subcopy {
+    max-width: 780px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .faq-subcopy {
+    color: #94a3b8;
+  }
+
+  .faq-hero-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .faq-hero-card,
+  .faq-main-card,
+  .faq-side-card,
+  .faq-item {
+    border-radius: 22px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .faq-hero-card,
+  body.dark .faq-main-card,
+  body.dark .faq-side-card,
+  body.dark .faq-item {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .faq-hero-card {
+    padding: 16px;
+  }
+
+  .faq-hero-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .faq-hero-label {
+    color: #94a3b8;
+  }
+
+  .faq-hero-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .faq-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.9fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  .faq-main-card {
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .faq-item {
+    padding: 18px;
+  }
+
+  .faq-item h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .faq-item p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #475569;
+  }
+
+  body.dark .faq-item p {
+    color: #cbd5e1;
+  }
+
+  .faq-item p + p {
+    margin-top: 10px;
+  }
+
+  .faq-item ul {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .faq-item li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .faq-item li {
+    color: #cbd5e1;
+  }
+
+  .faq-side-stack {
+    display: grid;
+    gap: 14px;
+    position: sticky;
+    top: 88px;
+  }
+
+  .faq-side-card {
+    padding: 18px;
+  }
+
+  .faq-side-card h3,
+  .faq-side-card h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .faq-side-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .faq-side-card p {
+    color: #94a3b8;
+  }
+
+  .faq-side-card ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .faq-side-card li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .faq-side-card li {
+    color: #cbd5e1;
+  }
+
+  .faq-side-kicker {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  body.dark .faq-side-kicker {
+    color: #94a3b8;
+  }
+
+  .faq-cta-row {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  .faq-cta-primary,
+  .faq-cta-secondary {
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .faq-cta-primary {
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .faq-cta-secondary {
+    border: 1px solid rgba(148,163,184,0.6);
+    color: inherit;
+  }
+
+  .faq-highlight {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .faq-highlight {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .faq-highlight strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .faq-highlight p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .faq-highlight p {
+    color: #cbd5e1;
+  }
+
+  @media (max-width: 1020px) {
+    .faq-layout,
+    .faq-hero-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .faq-side-stack {
+      position: static;
+      top: auto;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .faq-hero-card,
+    .faq-main-card,
+    .faq-side-card,
+    .faq-item {
+      padding: 16px;
+    }
+  }
+</style>
+
+<div class="faq-page">
+
+  <div class="faq-topbar">
+    <div class="faq-title-wrap">
+      <h1>
+        {% if lang == 'es' %}
+          Preguntas frecuentes sobre BillBeam
+        {% else %}
+          Frequently Asked Questions about BillBeam
+        {% endif %}
+      </h1>
+      <div class="faq-subcopy">
+        {% if lang == 'es' %}
+          Respuestas rápidas sobre planes, límites, facturas, datos y cómo encaja BillBeam dentro de tu flujo de trabajo.
+        {% else %}
+          Quick answers about plans, limits, invoices, data, and how BillBeam fits into your workflow.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="/help{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Ir a ayuda{% else %}Go to Help{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="faq-hero-strip">
+    <div class="faq-hero-card">
+      <div class="faq-hero-label">
+        {% if lang == 'es' %}Starter{% else %}Starter{% endif %}
+      </div>
+      <div class="faq-hero-value">
+        {% if lang == 'es' %}Hasta 10 facturas/mes{% else %}Up to 10 invoices/month{% endif %}
+      </div>
+    </div>
+
+    <div class="faq-hero-card">
+      <div class="faq-hero-label">
+        {% if lang == 'es' %}Pro{% else %}Pro{% endif %}
+      </div>
+      <div class="faq-hero-value">
+        {% if lang == 'es' %}Más envío y automatización{% else %}More sending and automation{% endif %}
+      </div>
+    </div>
+
+    <div class="faq-hero-card">
+      <div class="faq-hero-label">
+        {% if lang == 'es' %}Tus datos{% else %}Your data{% endif %}
+      </div>
+      <div class="faq-hero-value">
+        {% if lang == 'es' %}Siguen siendo tuyos{% else %}Stays yours{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-layout">
+
+    <div class="faq-main-card">
+
+      <article class="faq-item">
+        <h2>
+          {% if lang == 'es' %}
+            ¿Necesito tarjeta para empezar?
+          {% else %}
+            Do I need a credit card to get started?
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            No. El plan Starter de BillBeam te permite crear hasta 10 facturas al mes sin introducir tarjeta. Cuando veas que realmente te está ahorrando tiempo y trabajo, puedes pasar al plan Pro.
+          {% else %}
+            No. BillBeam’s Starter plan lets you create up to 10 invoices per month without a card on file. Once it is clearly saving you time and effort, you can upgrade to Pro.
+          {% endif %}
         </p>
-        <h1 style="font-size: 26px; margin: 0 0 6px;">
-            {% if lang == 'es' %}
-                Preguntas frecuentes sobre BillBeam
-            {% else %}
-                Frequently Asked Questions about BillBeam
-            {% endif %}
-        </h1>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 560px;">
-            {% if lang == 'es' %}
-                Respuestas rápidas sobre planes, límites, facturas y qué pasa con tus datos.
-            {% else %}
-                Quick answers about plans, limits, invoices, and what happens to your data.
-            {% endif %}
+      </article>
+
+      <article class="faq-item">
+        <h2>
+          {% if lang == 'es' %}
+            ¿Cuál es la diferencia entre Starter y Pro?
+          {% else %}
+            What’s the difference between Starter and Pro?
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            Starter está pensado para freelancers y negocios pequeños que emiten pocas facturas al mes. Pro está pensado para cuando facturar se vuelve una parte constante de tu semana.
+          {% else %}
+            Starter is designed for freelancers and small businesses who send only a few invoices each month. Pro is for when billing becomes a regular part of your week.
+          {% endif %}
         </p>
-    </header>
+        <ul>
+          {% if lang == 'es' %}
+            <li>Starter: hasta 10 facturas al mes y panel básico.</li>
+            <li>Pro: facturas ilimitadas, plantillas adicionales, envío por email, enlaces públicos y más automatización.</li>
+          {% else %}
+            <li>Starter: up to 10 invoices per month and a basic dashboard.</li>
+            <li>Pro: unlimited invoices, extra templates, built-in email sending, public links, and more automation.</li>
+          {% endif %}
+        </ul>
+      </article>
 
-    <section style="display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: 26px;">
-        <!-- LEFT COLUMN: MAIN FAQ -->
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-            <!-- Q1 -->
-            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 16px; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        ¿Necesito tarjeta para empezar?
-                    {% else %}
-                        Do I need a credit card to get started?
-                    {% endif %}
-                </h2>
-                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
-                    {% if lang == 'es' %}
-                        No. El plan Starter de BillBeam te deja crear hasta 10 facturas al mes sin
-                        introducir tarjeta. Cuando de verdad te esté ahorrando tiempo y dolores de cabeza,
-                        puedes pasar al plan Pro.
-                    {% else %}
-                        No. BillBeam’s Starter plan lets you create up to 10 invoices per month with no
-                        card on file. Once it’s clearly saving you time and stress, you can upgrade to Pro.
-                    {% endif %}
-                </p>
-            </article>
+      <article class="faq-item">
+        <h2>
+          {% if lang == 'es' %}
+            ¿Puedo enviar facturas por correo desde BillBeam?
+          {% else %}
+            Can I send invoices by email directly from BillBeam?
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            Sí. En el plan Pro puedes enviar facturas por correo con el PDF adjunto y un enlace público para tu cliente. En Starter siempre puedes descargar el PDF y enviarlo manualmente desde tu correo.
+          {% else %}
+            Yes. On the Pro plan you can send invoices by email with the PDF attached and a public link for your client. On Starter, you can always download the PDF and send it manually from your own email.
+          {% endif %}
+        </p>
+      </article>
 
-            <!-- Q2 -->
-            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 16px; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        ¿Cuál es la diferencia entre Starter y Pro?
-                    {% else %}
-                        What’s the difference between Starter and Pro?
-                    {% endif %}
-                </h2>
-                <p style="font-size: 14px; opacity: 0.85; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        Starter está pensado para freelancers y negocios pequeños que emiten pocas
-                        facturas al mes. Pro está pensado para cuando ya facturas de forma constante.
-                    {% else %}
-                        Starter is designed for solo freelancers and small businesses who send a few
-                        invoices each month. Pro is for when billing becomes a regular part of your week.
-                    {% endif %}
-                </p>
-                <ul style="padding-left: 18px; margin: 0; font-size: 13px; opacity: 0.9;">
-                    {% if lang == 'es' %}
-                        <li>Starter: hasta 10 facturas/mes, panel básico.</li>
-                        <li>Pro: facturas ilimitadas, plantillas adicionales, envíos por email,
-                            enlaces públicos y más automatización.</li>
-                    {% else %}
-                        <li>Starter: up to 10 invoices / month, basic dashboard.</li>
-                        <li>Pro: unlimited invoices, extra templates, email sending,
-                            public links, and more automation.</li>
-                    {% endif %}
-                </ul>
-            </article>
+      <article class="faq-item">
+        <h2>
+          {% if lang == 'es' %}
+            ¿Qué pasa con mis datos si dejo de usar BillBeam?
+          {% else %}
+            What happens to my data if I stop using BillBeam?
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            Tus facturas y datos de clientes siguen siendo tuyos. Puedes exportar PDFs y volver a tu sistema anterior si lo necesitas. Si en algún momento quieres eliminar tus datos, puedes escribirnos y los eliminaremos de forma segura.
+          {% else %}
+            Your invoices and client data remain yours. You can export PDFs and move back to your previous system if needed. If you ever want your data removed, you can contact us and we will delete it safely.
+          {% endif %}
+        </p>
+      </article>
 
-            <!-- Q3 -->
-            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 16px; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        ¿Puedo enviar facturas por correo electrónico desde BillBeam?
-                    {% else %}
-                        Can I send invoices by email directly from BillBeam?
-                    {% endif %}
-                </h2>
-                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
-                    {% if lang == 'es' %}
-                        Sí, en el plan Pro puedes enviar facturas por email con el PDF adjunto y un
-                        enlace público para tu cliente. Desde Starter siempre puedes descargar el PDF y
-                        enviarlo manualmente desde tu correo.
-                    {% else %}
-                        Yes. On the Pro plan you can send invoices by email with the PDF attached and a
-                        public link for your client. On Starter, you can always download the PDF and send
-                        it manually from your own email.
-                    {% endif %}
-                </p>
-            </article>
+      <article class="faq-item">
+        <h2>
+          {% if lang == 'es' %}
+            ¿BillBeam funciona con clientes en otros países e idiomas?
+          {% else %}
+            Does BillBeam work with clients in other countries and languages?
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            Sí. La interfaz está disponible en inglés y español, y puedes escribir tus descripciones de servicios en el idioma que necesites. También puedes ajustar moneda, impuestos y notas según tu flujo.
+          {% else %}
+            Yes. The interface is available in English and Spanish, and you can write service descriptions in whatever language you need. You can also adjust currency, tax details, and notes to match your workflow.
+          {% endif %}
+        </p>
+      </article>
 
-            <!-- Q4 -->
-            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 16px; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        ¿Qué pasa con mis datos si dejo de usar BillBeam?
-                    {% else %}
-                        What happens to my data if I stop using BillBeam?
-                    {% endif %}
-                </h2>
-                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
-                    {% if lang == 'es' %}
-                        Tus facturas y clientes siguen siendo tuyos. Puedes exportar PDFs y usar tu
-                        propio sistema (Excel, CRM, etc.). Si en el futuro quieres borrar tus datos,
-                        puedes escribirnos y los eliminaremos de forma segura.
-                    {% else %}
-                        Your invoices and client data are yours. You can export PDFs and move back to
-                        your old system (Excel, CRM, etc.). If you ever want your account wiped, you can
-                        reach out and we’ll delete your data safely.
-                    {% endif %}
-                </p>
-            </article>
+      <article class="faq-item">
+        <h2>
+          {% if lang == 'es' %}
+            ¿BillBeam reemplaza a mi contable?
+          {% else %}
+            Does BillBeam replace my accountant?
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            No. BillBeam te ayuda con el día a día de crear, enviar y organizar facturas, pero no da asesoría legal, fiscal o contable. Para impuestos, cumplimiento o temas regulatorios siempre conviene hablar con un profesional.
+          {% else %}
+            No. BillBeam helps with the day-to-day work of creating, sending, and organizing invoices, but it does not provide legal, tax, or accounting advice. For taxes, compliance, or regulatory questions, it is always best to speak with a professional.
+          {% endif %}
+        </p>
+      </article>
 
-            <!-- Q5 -->
-            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 16px; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        ¿BillBeam es compatible con clientes en otros países e idiomas?
-                    {% else %}
-                        Does BillBeam work with clients in other countries and languages?
-                    {% endif %}
-                </h2>
-                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
-                    {% if lang == 'es' %}
-                        Sí. La interfaz está disponible en inglés y español, y puedes escribir la
-                        descripción de tus servicios en el idioma que necesites. También puedes ajustar
-                        moneda, impuestos y notas en tus plantillas.
-                    {% else %}
-                        Yes. The interface is available in English and Spanish, and you can write invoice
-                        descriptions in whatever language you need. You can also adjust currency, tax
-                        details, and notes in your templates.
-                    {% endif %}
-                </p>
-            </article>
+    </div>
 
-            <!-- Q6 -->
-            <article style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 16px; margin: 0 0 6px;">
-                    {% if lang == 'es' %}
-                        ¿BillBeam reemplaza a mi contable?
-                    {% else %}
-                        Does BillBeam replace my accountant?
-                    {% endif %}
-                </h2>
-                <p style="font-size: 14px; opacity: 0.85; margin: 0;">
-                    {% if lang == 'es' %}
-                        No. BillBeam te ayuda con el día a día de emitir y organizar facturas, pero no
-                        da asesoría legal, fiscal o contable. Para temas de impuestos o normativa siempre
-                        es mejor hablar con un profesional.
-                    {% else %}
-                        No. BillBeam helps with the day-to-day of sending and organizing invoices, but it
-                        doesn’t give legal, tax, or accounting advice. For tax questions or compliance,
-                        it’s always best to talk to a professional.
-                    {% endif %}
-                </p>
-            </article>
+    <aside class="faq-side-stack">
+
+      <section class="faq-side-card">
+        <div class="faq-side-kicker">
+          {% if lang == 'es' %}Resumen rápido{% else %}At a glance{% endif %}
         </div>
+        <ul>
+          {% if lang == 'es' %}
+            <li>Starter: hasta 10 facturas al mes, sin tarjeta.</li>
+            <li>Pro: facturas ilimitadas, email integrado y más automatización.</li>
+            <li>Puedes exportar y llevarte tus datos cuando quieras.</li>
+          {% else %}
+            <li>Starter: up to 10 invoices per month, no card required.</li>
+            <li>Pro: unlimited invoices, built-in email, and more automation.</li>
+            <li>You can export and take your data with you any time.</li>
+          {% endif %}
+        </ul>
+      </section>
 
-        <!-- RIGHT COLUMN: QUICK INFO / CONTACT -->
-        <aside style="display: flex; flex-direction: column; gap: 14px;">
-            <section style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.8; margin:0 0 8px;">
-                    {% if lang == 'es' %}Resumen rápido{% else %}At a glance{% endif %}
-                </h2>
-                <ul style="margin: 0; padding-left: 16px; font-size: 13px; opacity: 0.9;">
-                    {% if lang == 'es' %}
-                        <li>Starter: hasta 10 facturas/mes, sin tarjeta.</li>
-                        <li>Pro: facturas ilimitadas, email integrado y más automatización.</li>
-                        <li>Puedes exportar y llevarte tus datos cuando quieras.</li>
-                    {% else %}
-                        <li>Starter: up to 10 invoices / month, no card required.</li>
-                        <li>Pro: unlimited invoices, built-in email, more automation.</li>
-                        <li>You can export and take your data with you any time.</li>
-                    {% endif %}
-                </ul>
-            </section>
+      <section class="faq-side-card">
+        <h3>
+          {% if lang == 'es' %}¿Sigues con dudas?{% else %}Still have questions?{% endif %}
+        </h3>
+        <p>
+          {% if lang == 'es' %}
+            Abre BillBeam Assistant desde la esquina inferior derecha o crea una cuenta y pregúntale directamente desde tu panel.
+          {% else %}
+            Open BillBeam Assistant from the bottom-right corner, or create an account and ask directly from your dashboard.
+          {% endif %}
+        </p>
 
-            <section style="border-radius: 16px; border: 1px solid rgba(148,163,184,0.4); padding: 14px 16px;">
-                <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.8; margin:0 0 8px;">
-                    {% if lang == 'es' %}¿Sigues con dudas?{% else %}Still have questions?{% endif %}
-                </h2>
-                <p style="font-size: 13px; opacity: 0.9; margin: 0 0 8px;">
-                    {% if lang == 'es' %}
-                        Abre el asistente de BillBeam abajo a la derecha o crea una cuenta y pregúntale
-                        directamente dentro del panel.
-                    {% else %}
-                        Open the BillBeam assistant in the bottom-right corner, or create an account and
-                        ask it directly from your dashboard.
-                    {% endif %}
-                </p>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
-                    <a href="/register{% if lang %}?lang={{ lang }}{% endif %}"
-                       style="font-size: 13px; padding: 6px 10px; border-radius: 999px; border: none; background:#3b82f6; color:#fff; text-decoration:none;">
-                        {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
-                    </a>
-                    <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}"
-                       style="font-size: 13px; padding: 6px 10px; border-radius: 999px; border:1px solid rgba(148,163,184,0.6); text-decoration:none;">
-                        {% if lang == 'es' %}Ver planes{% else %}View plans{% endif %}
-                    </a>
-                </div>
-            </section>
-        </aside>
-    </section>
+        <div class="faq-cta-row">
+          <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="faq-cta-primary">
+            {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
+          </a>
+          <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="faq-cta-secondary">
+            {% if lang == 'es' %}Ver planes{% else %}View plans{% endif %}
+          </a>
+        </div>
+      </section>
+
+      <section class="faq-highlight">
+        <strong>
+          {% if lang == 'es' %}Bueno saber{% else %}Good to know{% endif %}
+        </strong>
+        <p>
+          {% if lang == 'es' %}
+            BillBeam está pensado para reducir fricción, mejorar claridad y ayudarte a presentar una experiencia de facturación más profesional frente a tus clientes.
+          {% else %}
+            BillBeam is designed to reduce friction, improve clarity, and help you present a more professional invoicing experience to your clients.
+          {% endif %}
+        </p>
+      </section>
+
+    </aside>
+
+  </div>
 </div>
+
 {% endblock %}

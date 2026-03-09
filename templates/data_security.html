@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+{% if lang == 'es' %}
+Prácticas de Seguridad · BillBeam
+{% else %}
+Security Practices · BillBeam
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Resumen general del enfoque de BillBeam para proteger información en su sitio web, aplicación móvil y servicios relacionados.
+{% else %}
+A general overview of BillBeam’s approach to protecting information across its website, mobile application, and related services.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-shell">
+
+    <header class="legal-header">
+        <h1>
+            {% if lang == 'es' %}
+                Prácticas de Seguridad
+            {% else %}
+                Security Practices
+            {% endif %}
+        </h1>
+        <p class="legal-updated">
+            {% if lang == 'es' %}
+                Última actualización: {{ now().strftime("%B %Y") }}
+            {% else %}
+                Last updated: {{ now().strftime("%B %Y") }}
+            {% endif %}
+        </p>
+    </header>
+
+    <section class="legal-section">
+        <p>
+            {% if lang == 'es' %}
+                BillBeam toma la seguridad de la información en serio. Esta página describe, en términos generales, cómo BillBeam aborda la protección de datos dentro de su sitio web, aplicación móvil y servicios relacionados.
+            {% else %}
+                BillBeam takes information security seriously. This page describes, in general terms, how BillBeam approaches data protection across its website, mobile application, and related services.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}1. Enfoque general{% else %}1. General Approach{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam busca aplicar medidas administrativas, técnicas y operativas razonables para ayudar a proteger información contra acceso no autorizado, alteración, divulgación o destrucción.
+            {% else %}
+                BillBeam seeks to apply reasonable administrative, technical, and operational measures to help protect information against unauthorized access, alteration, disclosure, or destruction.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Estas medidas pueden revisarse y mejorarse con el tiempo según cambian el producto, la infraestructura y los riesgos conocidos.
+            {% else %}
+                These measures may be reviewed and improved over time as the product, infrastructure, and known risks evolve.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}2. Acceso a cuentas{% else %}2. Account Access{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                El acceso a cuentas depende de credenciales de autenticación. Los usuarios son responsables de mantener sus credenciales confidenciales y evitar compartirlas con terceros no autorizados.
+            {% else %}
+                Account access depends on authentication credentials. Users are responsible for keeping their credentials confidential and avoiding sharing them with unauthorized third parties.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}3. Seguridad en tránsito y proveedores{% else %}3. Security in Transit and Through Providers{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede depender de proveedores externos de infraestructura, hosting, procesamiento de pagos, correo electrónico y servicios técnicos relacionados. Cuando corresponda, la información puede transmitirse mediante conexiones protegidas por tecnologías estándar del sector.
+            {% else %}
+                BillBeam may rely on third-party providers for infrastructure, hosting, payment processing, email delivery, and related technical services. Where appropriate, information may be transmitted using industry-standard protected connections.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}4. Pagos{% else %}4. Payments{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Los pagos pueden procesarse mediante proveedores externos como Stripe. BillBeam no está diseñado para almacenar números completos de tarjetas de pago en sus propios sistemas.
+            {% else %}
+                Payments may be processed through third-party providers such as Stripe. BillBeam is not designed to store full payment card numbers in its own systems.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}5. Acceso interno mínimo necesario{% else %}5. Internal Need-to-Know Access{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                El acceso interno a información debe limitarse, en la medida razonable, a personas, sistemas o proveedores que necesiten esa información para operar, mantener o dar soporte al Servicio.
+            {% else %}
+                Internal access to information should be limited, to the extent reasonable, to persons, systems, or providers who need that information to operate, maintain, or support the Service.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}6. Retención y eliminación{% else %}6. Retention and Deletion{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede conservar información mientras sea necesario para operar el Servicio, cumplir fines operativos razonables, resolver disputas, aplicar acuerdos o cumplir obligaciones legales.
+            {% else %}
+                BillBeam may retain information as necessary to operate the Service, fulfill reasonable operational purposes, resolve disputes, enforce agreements, or comply with legal obligations.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Cuando sea apropiado y posible, los datos podrán eliminarse o anonimizarse conforme a políticas internas o solicitudes válidas del usuario.
+            {% else %}
+                Where appropriate and feasible, data may be deleted or anonymized in accordance with internal policies or valid user requests.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}7. Respuesta ante incidentes{% else %}7. Incident Response{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Si BillBeam detecta un incidente de seguridad, podrá investigar, contener, corregir y tomar medidas razonables según la naturaleza del incidente y la información disponible.
+            {% else %}
+                If BillBeam becomes aware of a security incident, it may investigate, contain, remediate, and take reasonable steps based on the nature of the incident and the information available.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Cuando la ley aplicable lo exija, BillBeam podrá proporcionar avisos apropiados a usuarios o autoridades correspondientes.
+            {% else %}
+                Where required by applicable law, BillBeam may provide appropriate notice to affected users or relevant authorities.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}8. Limitaciones{% else %}8. Limitations{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Ningún método de transmisión o almacenamiento electrónico puede garantizar seguridad absoluta. Aunque BillBeam busca aplicar medidas razonables, no puede garantizar que el Servicio será completamente inmune a incidentes de seguridad.
+            {% else %}
+                No method of transmission or electronic storage can guarantee absolute security. Although BillBeam seeks to apply reasonable safeguards, it cannot guarantee that the Service will be completely immune from security incidents.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}9. Responsabilidades del usuario{% else %}9. User Responsibilities{% endif %}</h2>
+        <ul>
+            <li>{% if lang == 'es' %}usar contraseñas seguras y mantenerlas confidenciales{% else %}use strong passwords and keep them confidential{% endif %}</li>
+            <li>{% if lang == 'es' %}cerrar sesión en dispositivos compartidos cuando corresponda{% else %}sign out on shared devices where appropriate{% endif %}</li>
+            <li>{% if lang == 'es' %}evitar compartir datos sensibles innecesarios en campos no destinados a ello{% else %}avoid sharing unnecessary sensitive data in fields not intended for it{% endif %}</li>
+            <li>{% if lang == 'es' %}contactar soporte si detectas actividad sospechosa{% else %}contact support if you notice suspicious activity{% endif %}</li>
+        </ul>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}10. Cambios a esta página{% else %}10. Changes to This Page{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede actualizar esta página periódicamente para reflejar cambios razonables en el producto, infraestructura o enfoque de seguridad.
+            {% else %}
+                BillBeam may update this page periodically to reflect reasonable changes in the product, infrastructure, or security approach.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}11. Contacto{% else %}11. Contact{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Si tienes preguntas relacionadas con seguridad o deseas reportar una posible vulnerabilidad o incidente, puedes contactar a través de la sección de ayuda o soporte dentro del Servicio.
+            {% else %}
+                If you have security-related questions or wish to report a possible vulnerability or incident, you may contact us through the help or support section within the Service.
+            {% endif %}
+        </p>
+    </section>
+
+</div>
+
+<style>
+.legal-shell{max-width:900px;margin:30px auto;font-size:0.95rem;line-height:1.7}
+.legal-header{margin-bottom:28px}
+.legal-header h1{font-size:1.7rem;margin-bottom:4px}
+.legal-updated{font-size:0.85rem;opacity:0.7}
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-size:1.05rem;margin-bottom:8px}
+.legal-section ul{padding-left:18px;margin-top:6px}
+.legal-section li{margin-bottom:4px}
+</style>
+{% endblock %}

@@ -3,319 +3,195 @@
 <html lang="{{ lang or 'en' }}">
 <head>
     <meta charset="UTF-8">
-    <title>{{ business_profile.business_name or "BillBeam" }}</title>
+    <title>{% block title %}{{ business_profile.business_name or "BillBeam" }}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}BillBeam helps freelancers and small businesses create polished invoices, track payments, and manage clients with confidence.{% endblock %}">
+    <meta name="theme-color" content="{{ business_profile.brand_color or '#020617' }}">
 
-    <!-- Body font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Brand / logo / hero font for BillBeam -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
+    {% block extra_head %}{% endblock %}
+
     <style>
     :root {
-        {% if business_profile.brand_color %}
-        --accent: {{ business_profile.brand_color }};
-        {% else %}
-        --accent: #3A8BFF;  /* BillBeam blue */
-        {% endif %}
-        {% if business_profile.accent_color %}
-        --accent-light: {{ business_profile.accent_color }};
-        {% else %}
-        --accent-light: #FCDC2A; /* BillBeam yellow pop */
-        {% endif %}
-        --bg-light: #f3f4f6;
-        --bg-dark: #050816;
-        --card-light: #ffffff;
-        --card-dark: #0b1120;
-        --border-subtle-light: rgba(15, 23, 42, 0.06);
-        --border-subtle-dark: rgba(148, 163, 184, 0.3);
-        --text-light: #0f172a;
-        --text-dark: #e5e7eb;
+        --accent: {{ business_profile.brand_color or '#3A8BFF' }};
+        --accent-light: {{ business_profile.accent_color or '#FCDC2A' }};
     }
 
-    /* ---------- DARK MODE FORM FIXES ---------- */
-    body.dark input,
-    body.dark select,
-    body.dark textarea {
-        background-color: #020617;
-        color: var(--text-dark);
+    .logo {
+        font-family: "Space Grotesk", sans-serif;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .nav-right a {
+        position: relative;
+    }
+
+    .nav-right a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 0;
+        height: 2px;
+        background: currentColor;
+        transition: width 0.18s ease;
+        opacity: 0.7;
+    }
+
+    .nav-right a:hover::after {
+        width: 100%;
+    }
+
+    .nav-user-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.05);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        font-size: 13px;
+        opacity: 0.92;
+    }
+
+    body.dark .nav-user-pill {
+        background: rgba(15, 23, 42, 0.7);
+        border-color: rgba(148, 163, 184, 0.55);
+    }
+
+    .plan-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, rgba(58,139,255,0.18), rgba(252,220,42,0.18));
+        border: 1px solid rgba(58,139,255,0.2);
+    }
+
+    body.dark .plan-badge {
+        background: linear-gradient(135deg, rgba(58,139,255,0.22), rgba(252,220,42,0.22));
+        border-color: rgba(148,163,184,0.35);
+    }
+
+    .client-view-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        background: rgba(15, 23, 42, 0.05);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    body.dark .client-view-pill {
+        background: rgba(15, 23, 42, 0.72);
         border-color: rgba(148, 163, 184, 0.5);
     }
 
-    body.dark input::placeholder,
-    body.dark textarea::placeholder {
-        color: rgba(148, 163, 184, 0.9);
+    .public-top-banner {
+        max-width: 1100px;
+        margin: 8px auto 0;
+        padding: 0 18px;
     }
 
-    body.dark .form-group label,
-    body.dark label {
-        color: var(--text-dark);
-    }
-
-    /* ---------- CHART CARD + ANALYTICS STYLES ---------- */
-    .charts-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        margin-top: 18px;
-        align-items: stretch;
-    }
-
-    .chart-card {
-        position: relative;
-        border-radius: 18px;
-        padding: 16px 16px 12px;
-        background: var(--card-light);
-        border: 1px solid var(--border-subtle-light);
-        box-shadow:
-            0 18px 45px rgba(15, 23, 42, 0.05),
-            0 0 0 1px rgba(15, 23, 42, 0.01);
+    .public-top-banner-inner {
         display: flex;
-        flex-direction: column;
-        gap: 10px;
-        overflow: hidden;
-    }
-
-    body.dark .chart-card {
-        background: radial-gradient(circle at top left, #111827, #020617);
-        border-color: var(--border-subtle-dark);
-        box-shadow:
-            0 18px 45px rgba(15, 23, 42, 0.8),
-            0 0 0 1px rgba(30, 64, 175, 0.25);
-    }
-
-    .chart-card.brand-accent {
-        border: 1px solid rgba(59, 130, 246, 0.55);
-        box-shadow:
-            0 0 0 1px rgba(59, 130, 246, 0.07),
-            0 22px 45px rgba(37, 99, 235, 0.13);
-    }
-
-    body.dark .chart-card.brand-accent {
-        border-color: rgba(129, 140, 248, 0.9);
-        box-shadow:
-            0 0 0 1px rgba(129, 140, 248, 0.3),
-            0 24px 60px rgba(15, 23, 42, 0.95);
-    }
-
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 4px;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(15,23,42,0.07);
+        box-shadow: 0 14px 34px rgba(15,23,42,0.04);
+        backdrop-filter: blur(10px);
+        font-size: 13px;
     }
 
-    .chart-header h3 {
-        font-size: 14px;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        margin: 0;
-        color: #0f172a;
+    body.dark .public-top-banner-inner {
+        background: rgba(2,6,23,0.72);
+        border-color: rgba(148,163,184,0.18);
+        box-shadow: 0 18px 40px rgba(2,6,23,0.7);
     }
 
-    body.dark .chart-header h3 {
-        color: #e5e7eb;
+    .public-top-banner strong {
+        font-weight: 700;
     }
 
-    .chart-sub {
-        font-size: 11px;
-        color: #6b7280;
+    .public-top-banner span {
+        opacity: 0.88;
     }
 
-    body.dark .chart-sub {
-        color: #9ca3af;
-    }
+    @media (max-width: 760px) {
+        .nav-user-pill {
+            max-width: 100%;
+        }
 
-    .chart-canvas {
-        width: 100%;
-        min-height: 220px;
-        max-height: 320px;
-    }
+        .public-top-banner {
+            padding: 0 14px;
+        }
 
-    .chart-ai-hint {
-        font-size: 11px;
-        margin-top: 4px;
-        opacity: 0.8;
-        color: #6b7280;
-    }
-
-    body.dark .chart-ai-hint {
-        color: #9ca3af;
-    }
-
-    /* ---------- DAILY REVENUE SCROLL AREA ---------- */
-    .daily-scroll {
-        padding-bottom: 8px;
-    }
-
-    .chart-scroll-inner {
-        width: 100%;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-bottom: 6px;
-    }
-
-    .chart-scroll-inner::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .chart-scroll-inner::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .chart-scroll-inner::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.6);
-        border-radius: 999px;
-    }
-
-    body.dark .chart-scroll-inner::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.85);
-    }
-
-    .chart-canvas.wide {
-        width: 900px; /* enough width to be scrollable when many days */
-        min-height: 220px;
-    }
-
-    /* ---------- KPI LIVE LABEL ---------- */
-    .kpi-live-label {
-        font-size: 11px;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    body.dark .kpi-live-label {
-        color: #9ca3af;
-    }
-
-    /* ---------- LANGUAGE TOGGLE PILL ---------- */
-    .lang-toggle {
-        display:inline-flex;
-        align-items:center;
-        gap:4px;
-        padding:3px;
-        border-radius:999px;
-        background:rgba(15,23,42,0.06);
-        border:1px solid rgba(148,163,184,0.4);
-        margin-right:10px;
-    }
-
-    body.dark .lang-toggle {
-        background:rgba(15,23,42,0.8);
-        border-color:rgba(148,163,184,0.8);
-    }
-
-    .lang-toggle a {
-        font-size:11px;
-        padding:4px 9px;
-        border-radius:999px;
-        text-decoration:none;
-        color:inherit;
-        opacity:0.7;
-        transition:background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
-    }
-
-    .lang-toggle a:hover {
-        opacity:1;
-    }
-
-    .lang-toggle a.active {
-        background:var(--accent);
-        color:#ffffff;
-        opacity:1;
-    }
-
-    body.dark .lang-toggle a.active {
-        background:var(--accent-light);
-        color:#020617;
-    }
-
-    /* ---------- FOOTER LINKS ---------- */
-    .footer-links {
-        display:flex;
-        flex-wrap:wrap;
-        justify-content:center;
-        gap:16px;
-        font-size:13px;
-        margin-bottom:6px;
-        opacity:0.9;
-    }
-
-    .footer-links a {
-        color:inherit;
-        text-decoration:none;
-    }
-
-    .footer-links a:hover {
-        text-decoration:underline;
-    }
-
-    .footer-copy {
-        font-size:12px;
-        opacity:0.65;
-        text-align:center;
+        .public-top-banner-inner {
+            padding: 12px;
+        }
     }
     </style>
 </head>
 
 <body class="light fade-out">
 
-<!-- BACKGROUND DOODLES -->
 <div class="bg-doodles" aria-hidden="true">
-    <!-- Top right: invoice + chart -->
     <svg class="doodle doodle-top-right" viewBox="0 0 220 140">
-        <!-- Invoice sheet -->
         <rect x="10" y="10" width="90" height="110" rx="10" />
         <line x1="25" y1="35" x2="85" y2="35" />
         <line x1="25" y1="55" x2="80" y2="55" />
         <line x1="25" y1="75" x2="70" y2="75" />
         <line x1="25" y1="95" x2="60" y2="95" />
-
-        <!-- Dollar badge -->
         <circle cx="155" cy="40" r="22" />
         <path d="M155 28v24" />
         <path d="M147 34c2-3 5-4 8-4 4 0 7 2 7 5 0 8-15 5-15 12 0 3 3 5 7 5 3 0 6-1 8-3" />
-
-        <!-- Tiny bar chart -->
         <rect x="130" y="78" width="10" height="26" rx="2" />
         <rect x="146" y="70" width="10" height="34" rx="2" />
         <rect x="162" y="62" width="10" height="42" rx="2" />
         <polyline points="130,72 146,64 162,56 178,50" />
     </svg>
 
-    <!-- Bottom left: invoice sending / email -->
     <svg class="doodle doodle-bottom-left" viewBox="0 0 220 140">
-        <!-- Envelope -->
         <rect x="20" y="40" width="120" height="70" rx="10" />
         <polyline points="20,40 80,80 140,40" />
         <polyline points="20,110 80,70 140,110" />
-
-        <!-- Flying arrow -->
         <path d="M160 60 L200 45 L188 85 Z" />
         <path d="M165 80 Q180 95 200 100" />
-
-        <!-- Small invoice icon -->
         <rect x="30" y="10" width="50" height="60" rx="8" />
         <line x1="40" y1="28" x2="68" y2="28" />
         <line x1="40" y1="42" x2="63" y2="42" />
     </svg>
 
-    <!-- Mid-right: recurring / subscription style -->
     <svg class="doodle doodle-mid-right" viewBox="0 0 200 200">
-        <!-- Circular arrows -->
         <path d="M60 60 A50 50 0 0 1 140 60" />
         <polyline points="140,60 132,50 148,46" />
         <path d="M140 140 A50 50 0 0 1 60 140" />
         <polyline points="60,140 68,150 52,154" />
-
-        <!-- Tiny calendar -->
         <rect x="78" y="78" width="44" height="44" rx="8" />
         <line x1="78" y1="92" x2="122" y2="92" />
         <circle cx="92" cy="104" r="4" />
@@ -325,14 +201,12 @@
     </svg>
 </div>
 
-<!-- HAMBURGER -->
-<div id="hamburgerBtn" class="hamburger">
+<div id="hamburgerBtn" class="hamburger" aria-label="Open navigation" role="button" tabindex="0">
     <span></span>
     <span></span>
     <span></span>
 </div>
 
-<!-- SIDEBAR -->
 <div id="sidebar" class="sidebar" {% if is_public_view %}style="display:none;"{% endif %}>
     <div class="sidebar-header">
         <h3>{{ business_profile.business_name or "BillBeam" }}</h3>
@@ -344,18 +218,22 @@
     <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
         {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
     </a>
+    <a href="/clients{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+        {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
+    </a>
     <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
         {% if lang == 'es' %}Configuración{% else %}Settings{% endif %}
     </a>
     <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
         {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
     </a>
+    <a href="/search{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+        {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+    </a>
 </div>
 
-<!-- OVERLAY -->
 <div id="overlay" class="overlay" {% if is_public_view %}style="display:none;"{% endif %}></div>
 
-<!-- NAVBAR -->
 <nav class="navbar">
     <div class="nav-left">
         {% if business_profile.logo_url %}
@@ -370,8 +248,8 @@
 
     <div class="nav-right">
         {% if is_public_view %}
-            <span style="opacity:0.8; font-size:14px;">
-                {% if lang == 'es' %}Vista de cliente{% else %}Client View{% endif %}
+            <span class="client-view-pill">
+                <strong>{% if lang == 'es' %}Vista de cliente{% else %}Client View{% endif %}</strong>
             </span>
 
             <div class="lang-toggle">
@@ -379,17 +257,22 @@
                 <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
             </div>
 
-            <button id="themeToggle" class="theme-toggle">🌙</button>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
         {% else %}
             {% if is_authenticated %}
-                <span style="margin-right:10px; font-size:13px; opacity:.85;">
-                    {{ current_user.email }} · {{ user_plan|capitalize }}
+                <span class="nav-user-pill">
+                    <span>{{ current_user.email }}</span>
+                    <span class="plan-badge">{{ user_plan|capitalize }}</span>
                 </span>
+
                 <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
                 </a>
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Historial{% else %}Invoice History{% endif %}
+                </a>
+                <a href="/clients{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
                 </a>
                 <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
@@ -406,16 +289,16 @@
                     <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
                 </div>
 
-                <button id="themeToggle" class="theme-toggle">🌙</button>
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
             {% else %}
                 <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
                 </a>
-                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
-                    {% if lang == 'es' %}Historial{% else %}Invoice History{% endif %}
-                </a>
                 <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
+                </a>
+                <a href="/help{% if lang %}?lang={{ lang }}{% endif %}">
+                    {% if lang == 'es' %}Ayuda{% else %}Help{% endif %}
                 </a>
                 <a href="/login{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Iniciar sesión{% else %}Login{% endif %}
@@ -429,26 +312,34 @@
                     <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
                 </div>
 
-                <button id="themeToggle" class="theme-toggle">🌙</button>
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
             {% endif %}
         {% endif %}
     </div>
 </nav>
 
+{% if is_public_view %}
+<div class="public-top-banner">
+    <div class="public-top-banner-inner">
+        <span>
+            {% if lang == 'es' %}
+                <strong>Enlace seguro de factura.</strong> Esta vista está diseñada para revisar la factura, descargar el PDF y completar el pago si está disponible.
+            {% else %}
+                <strong>Secure invoice link.</strong> This view is designed for reviewing the invoice, downloading the PDF, and completing payment if available.
+            {% endif %}
+        </span>
+    </div>
+</div>
+{% endif %}
+
 <div class="container">
     {% if is_public_view %}
     <div class="public-stamp-doodle" aria-hidden="true">
         <svg viewBox="0 0 160 160" class="public-stamp-svg">
-            <!-- Outer circle -->
             <circle cx="80" cy="80" r="58" />
-            <!-- Inner circle -->
             <circle cx="80" cy="80" r="44" />
-
-            <!-- Horizontal lines (like ink lines) -->
             <line x1="40" y1="80" x2="120" y2="80" />
             <line x1="48" y1="96" x2="112" y2="96" />
-
-            <!-- Text “INVOICE” as simple path-like strokes -->
             <path d="M50 70 L50 60" />
             <path d="M62 70 L62 60" />
             <path d="M58 65 L66 65" />
@@ -464,29 +355,108 @@
 </div>
 
 <footer class="footer">
-    <div class="footer-links">
-        <a href="/about{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Acerca de{% else %}About{% endif %}
-        </a>
-        <a href="/help{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Ayuda{% else %}Help{% endif %}
-        </a>
-        <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}">
-            FAQ
-        </a>
-        <a href="/changelog{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Cambios{% else %}Changelog{% endif %}
-        </a>
-    </div>
-    <div class="footer-copy">
-        © • BillBeam v2.1 • Mike Calderon • {{ now().year }}
+    <div class="footer-shell">
+        <div class="footer-topline">
+            <div class="footer-brand">
+                <span class="footer-brand-mark"></span>
+                <span>{{ business_profile.business_name or "BillBeam" }}</span>
+            </div>
+
+            <div class="footer-trust">
+                <span class="footer-chip">
+                    {% if lang == 'es' %}Facturación moderna{% else %}Modern invoicing{% endif %}
+                </span>
+                <span class="footer-chip">
+                    {% if lang == 'es' %}Pagos más claros{% else %}Clearer payments{% endif %}
+                </span>
+                <span class="footer-chip">
+                    {% if lang == 'es' %}Flujo más rápido{% else %}Faster workflow{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="footer-divider"></div>
+
+        <div class="footer-links">
+            <a href="/about{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Acerca de{% else %}About{% endif %}
+            </a>
+            <a href="/help{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Ayuda{% else %}Help{% endif %}
+            </a>
+            <a href="/support{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Soporte{% else %}Support{% endif %}
+            </a>
+            <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+            </a>
+            <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}">
+                FAQ
+            </a>
+            <a href="/changelog{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Cambios{% else %}Changelog{% endif %}
+            </a>
+            <a href="/launch-checklist{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Checklist{% else %}Launch Checklist{% endif %}
+            </a>
+            <a href="/legal{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Centro legal{% else %}Legal Center{% endif %}
+            </a>
+            <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+            </a>
+            <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Términos{% else %}Terms{% endif %}
+            </a>
+            <a href="/billing-policy{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Facturación{% else %}Billing Policy{% endif %}
+            </a>
+            <a href="/data-security{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Seguridad de datos{% else %}Data Security{% endif %}
+            </a>
+            <a href="/ai-notice{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Aviso de IA{% else %}AI Notice{% endif %}
+            </a>
+            <a href="/app-store-privacy{% if lang %}?lang={{ lang }}{% endif %}">
+                {% if lang == 'es' %}Privacidad App Store{% else %}App Store Privacy{% endif %}
+            </a>
+        </div>
+
+        <div class="footer-meta">
+            {% if ai_notice_enabled %}
+            <div class="footer-note ai-footer-note">
+                {% if lang == 'es' %}
+                    <strong>Aviso de IA:</strong> Algunas funciones de BillBeam pueden usar asistencia de IA para ayudar con redacción, resúmenes y sugerencias. Revisa siempre el contenido antes de enviarlo, compartirlo o publicarlo.
+                {% else %}
+                    <strong>AI Notice:</strong> Some BillBeam features may use AI assistance for drafting, summaries, and suggestions. Always review content before sending, sharing, or publishing it.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="footer-note">
+                {% if lang == 'es' %}
+                    BillBeam proporciona software de facturación y herramientas administrativas. No ofrece asesoría legal, fiscal, financiera o contable.
+                {% else %}
+                    BillBeam provides invoicing software and administrative tools. It does not provide legal, tax, financial, or accounting advice.
+                {% endif %}
+            </div>
+
+            <div class="footer-copy">
+                © {{ now().year }} {{ business_profile.business_name or "BillBeam" }}.
+                {% if lang == 'es' %}
+                    Todos los derechos reservados.
+                {% else %}
+                    All rights reserved.
+                {% endif %}
+            </div>
+        </div>
     </div>
 </footer>
 
 <div id="loader" class="loader"></div>
 
 {% if not is_public_view %}
-<a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="floating-btn">+</a>
+<a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="floating-btn" aria-label="{% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}">+</a>
 {% endif %}
 
 <div id="welcomeModal" class="welcome-modal hidden">
@@ -508,9 +478,8 @@
 </div>
 
 {% if not is_public_view %}
-<!-- AI HELPER WIDGET (BillBeam Assistant) -->
 <div id="aiHelper" class="ai-helper">
-    <button id="aiHelperToggle" class="ai-helper-toggle" type="button">
+    <button id="aiHelperToggle" class="ai-helper-toggle" type="button" aria-label="{% if lang == 'es' %}Abrir asistente BillBeam{% else %}Open BillBeam Assistant{% endif %}">
         💬
     </button>
 
@@ -528,7 +497,7 @@
                     {% endif %}
                 </small>
             </div>
-            <button id="aiHelperClose" class="ai-helper-close" type="button">✕</button>
+            <button id="aiHelperClose" class="ai-helper-close" type="button" aria-label="{% if lang == 'es' %}Cerrar asistente{% else %}Close assistant{% endif %}">✕</button>
         </div>
 
         <div id="aiHelperMessages" class="ai-helper-messages">
@@ -561,10 +530,8 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* PAGE FADE IN */
     document.body.classList.remove("fade-out");
 
-    /* KPI ANIMATION */
     const counters = document.querySelectorAll(".kpi-number");
     counters.forEach(counter => {
         const target = parseFloat(counter.innerText.replace(/[^0-9.-]+/g,""));
@@ -590,7 +557,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    /* HERO PARALLAX */
     const hero = document.querySelector(".hero");
     window.addEventListener("scroll", () => {
         if (hero) {
@@ -598,7 +564,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    /* SCROLL REVEAL */
     const reveals = document.querySelectorAll(".reveal");
     function revealOnScroll() {
         reveals.forEach((el) => {
@@ -613,7 +578,6 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener("scroll", revealOnScroll);
     revealOnScroll();
 
-    /* DARK MODE */
     const toggleBtn = document.getElementById("themeToggle");
     function setTheme(theme) {
         document.body.classList.remove("light", "dark");
@@ -632,7 +596,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
 
-    /* SIDEBAR */
     const hamburger = document.getElementById("hamburgerBtn");
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("overlay");
@@ -660,10 +623,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 openSidebar();
             }
         });
+
+        hamburger.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                const isActive = sidebar.classList.contains("active");
+                if (isActive) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            }
+        });
+
         overlay.addEventListener("click", closeSidebar);
     }
 
-    /* REVENUE TICKER */
     const ticker = document.getElementById("revenueTicker");
     if (ticker) {
         let value = 12450;
@@ -673,7 +648,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 3000);
     }
 
-    /* ONBOARDING MODAL */
     const modal = document.getElementById("welcomeModal");
     const closeBtn = document.getElementById("closeWelcome");
 
@@ -688,7 +662,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* FLOATING ACTION BUTTON SHOW ON SCROLL */
     const fab = document.querySelector(".floating-btn");
     if (fab) {
         window.addEventListener("scroll", () => {
@@ -700,7 +673,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* SMOOTH PAGE EXIT */
     document.querySelectorAll("a").forEach(link => {
         if (link.hostname === window.location.hostname) {
             link.addEventListener("click", function (e) {
@@ -717,22 +689,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    /* CURSOR SPOTLIGHT */
     document.addEventListener("mousemove", e => {
         document.body.style.setProperty('--x', e.clientX + 'px');
         document.body.style.setProperty('--y', e.clientY + 'px');
     });
 
-    /* ============================
-       AI HELPER WIDGET (BillBeam)
-    ============================ */
     const aiHelper = document.getElementById("aiHelper");
-    const aiPanel = document.getElementById("aiHelperPanel");
+    const aiMessages = document.getElementById("aiHelperMessages");
     const aiToggle = document.getElementById("aiHelperToggle");
     const aiClose = document.getElementById("aiHelperClose");
     const aiForm = document.getElementById("aiHelperForm");
     const aiInput = document.getElementById("aiHelperInput");
-    const aiMessages = document.getElementById("aiHelperMessages");
 
     function appendMessage(text, role) {
         if (!aiMessages) return;
@@ -764,17 +731,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Optional: show a one-time system hint
     if (aiMessages && !aiMessages.dataset.initialized) {
         appendMessage(
             {% if lang == 'es' %}
-            "¡Hola! Puedo ayudarte a interpretar tus gráficos, sugerir mejores textos para tus facturas " +
-            "y darte ideas para manejar facturas vencidas.\n\n" +
-            "Prueba con: “¿Qué dice mi tendencia de ingresos sobre el impulso de mi negocio?”",
+            "¡Hola! Puedo ayudarte a interpretar tus gráficos, sugerir mejores textos para tus facturas y darte ideas para manejar facturas vencidas.\n\nPrueba con: “¿Qué dice mi tendencia de ingresos sobre el impulso de mi negocio?”",
             {% else %}
-            "Hi! I can help interpret your charts, suggest better invoice wording, " +
-            "and give ideas for handling overdue invoices.\n\n" +
-            "Try asking: “What does my revenue trend say about my business momentum?”",
+            "Hi! I can help interpret your charts, suggest better invoice wording, and give ideas for handling overdue invoices.\n\nTry asking: “What does my revenue trend say about my business momentum?”",
             {% endif %}
             "system"
         );
@@ -827,8 +789,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     appendMessage(data.answer, "assistant");
                 } else if (data.error) {
                     appendMessage(
-                        "{{ 'Sorry, I ran into a problem: ' if lang == 'en' else 'Lo siento, hubo un problema: ' }}" +
-                        data.error,
+                        "{{ 'Sorry, I ran into a problem: ' if lang == 'en' else 'Lo siento, hubo un problema: ' }}" + data.error,
                         "system"
                     );
                 } else {
@@ -851,5 +812,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

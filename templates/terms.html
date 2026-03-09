@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+{% if lang == 'es' %}
+Términos de Servicio · BillBeam
+{% else %}
+Terms of Service · BillBeam
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Términos que rigen el uso de BillBeam en su sitio web, aplicación móvil y servicios relacionados.
+{% else %}
+Terms governing the use of BillBeam across its website, mobile application, and related services.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-shell">
+
+    <header class="legal-header">
+        <h1>
+            {% if lang == 'es' %}
+                Términos de Servicio
+            {% else %}
+                Terms of Service
+            {% endif %}
+        </h1>
+        <p class="legal-updated">
+            {% if lang == 'es' %}
+                Última actualización: {{ now().strftime("%B %Y") }}
+            {% else %}
+                Last updated: {{ now().strftime("%B %Y") }}
+            {% endif %}
+        </p>
+    </header>
+
+    <section class="legal-section">
+        <p>
+            {% if lang == 'es' %}
+                Estos Términos de Servicio rigen tu acceso y uso del sitio web, aplicación móvil y servicios relacionados de BillBeam (colectivamente, el “Servicio”).
+                Al acceder o utilizar BillBeam, aceptas quedar vinculado por estos términos.
+            {% else %}
+                These Terms of Service govern your access to and use of BillBeam’s website, mobile application, and related services (collectively, the “Service”).
+                By accessing or using BillBeam, you agree to be bound by these terms.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}1. Elegibilidad y uso del servicio{% else %}1. Eligibility and Use of the Service{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam proporciona herramientas para crear, gestionar, compartir y dar seguimiento a facturas, clientes y flujos básicos de cobro.
+            {% else %}
+                BillBeam provides tools for creating, managing, sharing, and tracking invoices, clients, and basic billing workflows.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Solo puedes utilizar el Servicio si tienes capacidad legal para celebrar este acuerdo y si tu uso cumple la legislación aplicable.
+            {% else %}
+                You may only use the Service if you have the legal capacity to enter into this agreement and your use complies with applicable law.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}2. Cuentas{% else %}2. Accounts{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Algunas funciones requieren una cuenta. Eres responsable de mantener la confidencialidad de tus credenciales y de toda actividad realizada desde tu cuenta.
+            {% else %}
+                Certain features require an account. You are responsible for maintaining the confidentiality of your credentials and for all activity occurring under your account.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Debes proporcionar información razonablemente precisa y mantenerla actualizada cuando corresponda.
+            {% else %}
+                You must provide reasonably accurate information and keep it updated where appropriate.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}3. Responsabilidades del usuario{% else %}3. User Responsibilities{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Eres responsable del contenido, datos y materiales que introduzcas en BillBeam, incluyendo información de clientes, conceptos de facturación, montos, mensajes y documentos.
+            {% else %}
+                You are responsible for the content, data, and materials you input into BillBeam, including client information, invoice descriptions, amounts, messages, and documents.
+            {% endif %}
+        </p>
+        <ul>
+            <li>{% if lang == 'es' %}No usar el Servicio para fines ilegales, fraudulentos o engañosos{% else %}Not use the Service for unlawful, fraudulent, or deceptive purposes{% endif %}</li>
+            <li>{% if lang == 'es' %}No interferir con la seguridad, estabilidad o funcionamiento del Servicio{% else %}Not interfere with the security, stability, or operation of the Service{% endif %}</li>
+            <li>{% if lang == 'es' %}No intentar acceder a datos, cuentas o sistemas sin autorización{% else %}Not attempt to access data, accounts, or systems without authorization{% endif %}</li>
+            <li>{% if lang == 'es' %}No utilizar el Servicio para enviar spam, abuso o contenido dañino{% else %}Not use the Service to distribute spam, abuse, or harmful content{% endif %}</li>
+        </ul>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}4. Planes, suscripciones y pagos{% else %}4. Plans, Subscriptions, and Payments{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede ofrecer planes gratuitos y planes de pago. Las funciones, límites y precios pueden variar según el plan seleccionado.
+            {% else %}
+                BillBeam may offer free plans and paid plans. Features, limits, and pricing may vary depending on the selected plan.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Los pagos pueden procesarse mediante proveedores externos como Stripe. Las suscripciones de pago pueden renovarse automáticamente hasta que se cancelen conforme a la política de facturación aplicable.
+            {% else %}
+                Payments may be processed through third-party providers such as Stripe. Paid subscriptions may renew automatically until cancelled in accordance with the applicable billing policy.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}5. Funciones de IA{% else %}5. AI Features{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede incluir funciones de asistencia basadas en inteligencia artificial para ayudar con redacción, sugerencias, resúmenes y orientación general dentro del Servicio.
+            {% else %}
+                BillBeam may include AI-powered assistance features to help with drafting, suggestions, summaries, and general guidance within the Service.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Estas funciones se ofrecen únicamente con fines informativos y de productividad. No constituyen asesoramiento legal, financiero, fiscal o contable. Eres responsable de revisar cualquier contenido antes de utilizarlo, enviarlo o publicarlo.
+            {% else %}
+                These features are provided for informational and productivity purposes only. They do not constitute legal, financial, tax, or accounting advice. You are responsible for reviewing any content before using, sending, or publishing it.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}6. Propiedad intelectual{% else %}6. Intellectual Property{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam y sus elementos asociados, incluyendo software, diseño, marca, interfaces, texto original y estructura del Servicio, son propiedad de sus titulares y están protegidos por leyes aplicables de propiedad intelectual.
+            {% else %}
+                BillBeam and its associated elements, including software, design, branding, interfaces, original text, and Service structure, are owned by their respective rights holders and protected by applicable intellectual property laws.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}7. Disponibilidad del servicio{% else %}7. Service Availability{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede modificar, actualizar, suspender o discontinuar partes del Servicio en cualquier momento. No garantizamos que el Servicio esté disponible sin interrupciones o libre de errores.
+            {% else %}
+                BillBeam may modify, update, suspend, or discontinue parts of the Service at any time. We do not guarantee that the Service will be available without interruption or error-free.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}8. Terminación o suspensión{% else %}8. Termination or Suspension{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Podemos suspender o terminar el acceso al Servicio si consideramos razonablemente que existe incumplimiento de estos términos, riesgo para la seguridad, fraude, abuso o uso no autorizado.
+            {% else %}
+                We may suspend or terminate access to the Service if we reasonably believe there is a violation of these terms, a security risk, fraud, abuse, or unauthorized use.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}9. Exención de garantías{% else %}9. Disclaimer of Warranties{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                El Servicio se proporciona “tal cual” y “según disponibilidad”, en la medida permitida por la ley. BillBeam no ofrece garantías expresas o implícitas respecto a disponibilidad, exactitud, adecuación para un propósito particular o ausencia de errores.
+            {% else %}
+                The Service is provided “as is” and “as available,” to the extent permitted by law. BillBeam makes no express or implied warranties regarding availability, accuracy, fitness for a particular purpose, or error-free operation.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}10. Limitación de responsabilidad{% else %}10. Limitation of Liability{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                En la máxima medida permitida por la ley, BillBeam no será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos, ni por pérdida de beneficios, ingresos, datos, reputación comercial u oportunidades derivadas del uso o imposibilidad de uso del Servicio.
+            {% else %}
+                To the maximum extent permitted by law, BillBeam will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for loss of profits, revenue, data, goodwill, or business opportunities arising from or relating to the use of, or inability to use, the Service.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}11. Cambios a estos términos{% else %}11. Changes to These Terms{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Podemos actualizar estos Términos de Servicio periódicamente. Las versiones actualizadas se publicarán en esta página y el uso continuado del Servicio después de la actualización constituirá aceptación de los términos revisados.
+            {% else %}
+                We may update these Terms of Service from time to time. Updated versions will be posted on this page, and continued use of the Service after an update constitutes acceptance of the revised terms.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}12. Contacto{% else %}12. Contact{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Si tienes preguntas sobre estos términos, puedes contactarnos a través de la sección de ayuda o soporte dentro del Servicio.
+            {% else %}
+                If you have questions about these terms, you may contact us through the help or support section within the Service.
+            {% endif %}
+        </p>
+    </section>
+
+</div>
+
+<style>
+.legal-shell{max-width:900px;margin:30px auto;font-size:0.95rem;line-height:1.7}
+.legal-header{margin-bottom:28px}
+.legal-header h1{font-size:1.7rem;margin-bottom:4px}
+.legal-updated{font-size:0.85rem;opacity:0.7}
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-size:1.05rem;margin-bottom:8px}
+.legal-section ul{padding-left:18px;margin-top:6px}
+.legal-section li{margin-bottom:4px}
+</style>
+{% endblock %}

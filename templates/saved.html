@@ -1,43 +1,190 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>
-        {% set lang = request.args.get('lang', 'en') %}
-        {% if lang == 'es' %}Factura guardada{% else %}Invoice Saved{% endif %}
-    </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
-<div class="navbar">
+{% block title %}
+    {% if lang == 'es' %}Factura guardada{% else %}Invoice Saved{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Confirmación de factura guardada correctamente en BillBeam.
+    {% else %}
+        Confirmation that your invoice was successfully saved in BillBeam.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
     <div>
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}">InvoicePro</a>
+        <h1>
+            {% if lang == 'es' %}
+                Factura guardada con éxito
+            {% else %}
+                Invoice Saved Successfully
+            {% endif %}
+        </h1>
+        <p style="margin:6px 0 0 0; font-size:14px; opacity:.8;">
+            {% if lang == 'es' %}
+                Tu factura ya forma parte de tu historial y está lista para revisarse, descargarse o enviarse.
+            {% else %}
+                Your invoice is now part of your history and ready to review, download, or send.
+            {% endif %}
+        </p>
     </div>
-    <div>
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+
+    <div class="quick-actions">
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
         </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Ir al historial{% else %}Go to Invoices{% endif %}
         </a>
     </div>
 </div>
 
-<div class="container">
-    <h1>
-        {% if lang == 'es' %}Factura guardada con éxito{% else %}Invoice Saved Successfully{% endif %}
-    </h1>
+<div class="form-wrapper fade-in-up" style="max-width:820px; margin:0 auto;">
+    <div style="
+        padding:18px;
+        border-radius:16px;
+        background:rgba(22,163,74,0.08);
+        border:1px solid rgba(22,163,74,0.18);
+        margin-bottom:18px;
+    ">
+        <div style="
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:6px 10px;
+            border-radius:999px;
+            background:rgba(22,163,74,0.12);
+            color:#166534;
+            font-size:12px;
+            font-weight:800;
+            letter-spacing:.06em;
+            text-transform:uppercase;
+            margin-bottom:12px;
+        ">
+            {% if lang == 'es' %}Guardado correctamente{% else %}Saved successfully{% endif %}
+        </div>
 
-    <p><strong>{% if lang == 'es' %}ID de factura:{% else %}Invoice ID:{% endif %}</strong> {{ invoice_id }}</p>
-    <p><strong>{% if lang == 'es' %}Cliente:{% else %}Client:{% endif %}</strong> {{ client }}</p>
-    <p><strong>{% if lang == 'es' %}Importe:{% else %}Amount:{% endif %}</strong> ${{ amount }}</p>
+        <h2 style="margin:0 0 10px 0; font-size:22px;">
+            {% if lang == 'es' %}
+                Tu factura ya está lista en BillBeam
+            {% else %}
+                Your invoice is now live in BillBeam
+            {% endif %}
+        </h2>
 
-    <br>
+        <p style="margin:0; font-size:14px; line-height:1.65; opacity:.88;">
+            {% if lang == 'es' %}
+                Ya puedes volver al historial para verla, descargar el PDF, registrar pagos o enviarla al cliente cuando quieras.
+            {% else %}
+                You can now return to your invoice history to view it, download the PDF, record payments, or send it to your client whenever you’re ready.
+            {% endif %}
+        </p>
+    </div>
 
-    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Ver historial de facturas{% else %}View Invoice History{% endif %}
-    </a>
+    <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:14px;
+        margin-bottom:20px;
+    ">
+        <div style="
+            padding:14px 16px;
+            border-radius:14px;
+            background:rgba(15,23,42,0.04);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
+                {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+            </div>
+            <div style="font-size:16px; font-weight:800;">
+                {{ inv_label or ('#' ~ invoice_id) }}
+            </div>
+        </div>
+
+        <div style="
+            padding:14px 16px;
+            border-radius:14px;
+            background:rgba(15,23,42,0.04);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
+                {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+            </div>
+            <div style="font-size:16px; font-weight:800;">
+                {{ client_name or client or "—" }}
+            </div>
+        </div>
+
+        <div style="
+            padding:14px 16px;
+            border-radius:14px;
+            background:rgba(15,23,42,0.04);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
+                {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+            </div>
+            <div style="font-size:16px; font-weight:800;">
+                ${{ "{:,.2f}".format(amount|float) if amount is not none else "0.00" }}
+            </div>
+        </div>
+    </div>
+
+    <div style="
+        padding:16px;
+        border-radius:16px;
+        background:rgba(37,99,235,0.06);
+        border:1px solid rgba(37,99,235,0.14);
+        margin-bottom:20px;
+    ">
+        <div style="font-size:13px; font-weight:700; margin-bottom:8px;">
+            {% if lang == 'es' %}
+                Siguientes pasos recomendados
+            {% else %}
+                Recommended next steps
+            {% endif %}
+        </div>
+
+        <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.7;">
+            <li>
+                {% if lang == 'es' %}
+                    Revisa la factura en tu historial antes de enviarla.
+                {% else %}
+                    Review the invoice in your history before sending it.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Descarga el PDF si quieres archivarlo o compartirlo manualmente.
+                {% else %}
+                    Download the PDF if you want to archive or share it manually.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Si usas Pro, envíala por correo directamente desde BillBeam.
+                {% else %}
+                    If you’re on Pro, send it by email directly from BillBeam.
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+
+    <div class="form-actions" style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+        <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+            {% if lang == 'es' %}Abrir factura{% else %}Open Invoice{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Ver historial{% else %}View Invoice History{% endif %}
+        </a>
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Crear otra{% else %}Create Another{% endif %}
+        </a>
+    </div>
 </div>
 
-</body>
-</html>
+{% endblock %}

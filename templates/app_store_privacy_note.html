@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if lang == 'es' %}Privacidad de la App | BillBeam{% else %}App Privacy Notice | BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Resumen de privacidad de la aplicación BillBeam para usuarios de web y app móvil.
+{% else %}
+BillBeam application privacy summary for web and mobile app users.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <h1>
+        {% if lang == 'es' %}
+            Aviso de privacidad de la aplicación
+        {% else %}
+            App Privacy Notice
+        {% endif %}
+    </h1>
+
+    <p style="max-width:720px; font-size:14px; opacity:.85; margin-top:6px;">
+        {% if lang == 'es' %}
+        Este documento resume cómo la aplicación BillBeam recopila y utiliza información cuando utilizas el producto en la web o en aplicaciones móviles. Este resumen complementa la Política de Privacidad completa.
+        {% else %}
+        This document summarizes how the BillBeam application collects and uses information when you use the product on the web or through mobile applications. This summary complements the full Privacy Policy.
+        {% endif %}
+    </p>
+</div>
+
+<div class="form-wrapper fade-in-up" style="max-width:900px; margin:auto;">
+
+    <h2>
+        {% if lang == 'es' %}Información que recopilamos{% else %}Information We Collect{% endif %}
+    </h2>
+
+    <ul style="line-height:1.7; font-size:14px;">
+        <li>
+            {% if lang == 'es' %}
+            Información de cuenta como correo electrónico y credenciales de acceso.
+            {% else %}
+            Account information such as email address and login credentials.
+            {% endif %}
+        </li>
+
+        <li>
+            {% if lang == 'es' %}
+            Datos introducidos por el usuario como clientes, facturas y notas.
+            {% else %}
+            User-entered data such as clients, invoices, and notes.
+            {% endif %}
+        </li>
+
+        <li>
+            {% if lang == 'es' %}
+            Información técnica limitada necesaria para operar el servicio (navegador, dispositivo y registros del sistema).
+            {% else %}
+            Limited technical information necessary to operate the service (browser, device, and system logs).
+            {% endif %}
+        </li>
+    </ul>
+
+
+    <h2 style="margin-top:20px;">
+        {% if lang == 'es' %}Cómo utilizamos la información{% else %}How Information Is Used{% endif %}
+    </h2>
+
+    <ul style="line-height:1.7; font-size:14px;">
+        <li>
+            {% if lang == 'es' %}
+            Proporcionar funciones de creación y gestión de facturas.
+            {% else %}
+            Provide invoice creation and management features.
+            {% endif %}
+        </li>
+
+        <li>
+            {% if lang == 'es' %}
+            Mantener la seguridad y estabilidad de la plataforma.
+            {% else %}
+            Maintain platform security and reliability.
+            {% endif %}
+        </li>
+
+        <li>
+            {% if lang == 'es' %}
+            Mejorar el producto mediante análisis de uso agregados.
+            {% else %}
+            Improve the product through aggregated usage analytics.
+            {% endif %}
+        </li>
+    </ul>
+
+
+    <h2 style="margin-top:20px;">
+        {% if lang == 'es' %}Compartición de datos{% else %}Data Sharing{% endif %}
+    </h2>
+
+    <p style="font-size:14px; line-height:1.7;">
+        {% if lang == 'es' %}
+        BillBeam no vende datos personales. Los datos pueden compartirse únicamente con proveedores de infraestructura y servicios necesarios para operar la plataforma (por ejemplo, alojamiento, correo electrónico o procesamiento de pagos).
+        {% else %}
+        BillBeam does not sell personal data. Data may only be shared with infrastructure and service providers necessary to operate the platform (for example hosting, email delivery, or payment processing).
+        {% endif %}
+    </p>
+
+
+    <h2 style="margin-top:20px;">
+        {% if lang == 'es' %}Control del usuario{% else %}User Control{% endif %}
+    </h2>
+
+    <ul style="line-height:1.7; font-size:14px;">
+        <li>
+            {% if lang == 'es' %}
+            Los usuarios pueden actualizar o eliminar información de cuenta desde la aplicación.
+            {% else %}
+            Users can update or remove account information from within the application.
+            {% endif %}
+        </li>
+
+        <li>
+            {% if lang == 'es' %}
+            Los usuarios pueden solicitar la eliminación de su cuenta.
+            {% else %}
+            Users may request account deletion.
+            {% endif %}
+        </li>
+    </ul>
+
+
+    <h2 style="margin-top:20px;">
+        {% if lang == 'es' %}Más información{% else %}More Information{% endif %}
+    </h2>
+
+    <p style="font-size:14px;">
+        {% if lang == 'es' %}
+        Para información completa sobre privacidad, consulta la Política de Privacidad completa.
+        {% else %}
+        For full details about privacy practices, please review the full Privacy Policy.
+        {% endif %}
+    </p>
+
+    <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Ver Política de Privacidad{% else %}View Privacy Policy{% endif %}
+    </a>
+
+</div>
+
+{% endblock %}

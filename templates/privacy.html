@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+{% if lang == 'es' %}
+Política de Privacidad · BillBeam
+{% else %}
+Privacy Policy · BillBeam
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Cómo BillBeam recopila, utiliza, comparte y protege información en su sitio web, aplicación móvil y servicios relacionados.
+{% else %}
+How BillBeam collects, uses, shares, and protects information across its website, mobile application, and related services.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-shell">
+
+    <header class="legal-header">
+        <h1>
+            {% if lang == 'es' %}
+                Política de Privacidad
+            {% else %}
+                Privacy Policy
+            {% endif %}
+        </h1>
+        <p class="legal-updated">
+            {% if lang == 'es' %}
+                Última actualización: {{ now().strftime("%B %Y") }}
+            {% else %}
+                Last updated: {{ now().strftime("%B %Y") }}
+            {% endif %}
+        </p>
+    </header>
+
+    <section class="legal-section">
+        <p>
+            {% if lang == 'es' %}
+                Esta Política de Privacidad explica cómo BillBeam recopila, utiliza, comparte y protege información cuando utilizas nuestro sitio web, aplicación móvil y servicios relacionados (colectivamente, el “Servicio”).
+                Al acceder o utilizar BillBeam, aceptas las prácticas descritas en esta política.
+            {% else %}
+                This Privacy Policy explains how BillBeam collects, uses, shares, and protects information when you use our website, mobile application, and related services (collectively, the “Service”).
+                By accessing or using BillBeam, you agree to the practices described in this policy.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                1. Información que recopilamos
+            {% else %}
+                1. Information We Collect
+            {% endif %}
+        </h2>
+
+        <p>
+            {% if lang == 'es' %}
+                Podemos recopilar diferentes tipos de información dependiendo de cómo utilices BillBeam.
+            {% else %}
+                We may collect different types of information depending on how you use BillBeam.
+            {% endif %}
+        </p>
+
+        <ul>
+            <li>
+                <strong>{% if lang == 'es' %}Información de cuenta{% else %}Account information{% endif %}</strong>
+                {% if lang == 'es' %}
+                    Puede incluir nombre, dirección de correo electrónico, credenciales de acceso y otra información necesaria para crear o mantener una cuenta.
+                {% else %}
+                    This may include your name, email address, login credentials, and other information needed to create or maintain an account.
+                {% endif %}
+            </li>
+            <li>
+                <strong>{% if lang == 'es' %}Datos de facturación y clientes{% else %}Invoice and client data{% endif %}</strong>
+                {% if lang == 'es' %}
+                    Puede incluir nombres de clientes, direcciones de correo, datos de contacto, conceptos, montos, fechas de vencimiento, notas y otra información que introduzcas en facturas o perfiles.
+                {% else %}
+                    This may include client names, email addresses, contact details, descriptions, amounts, due dates, notes, and other information you enter into invoices or profiles.
+                {% endif %}
+            </li>
+            <li>
+                <strong>{% if lang == 'es' %}Información de pago{% else %}Payment information{% endif %}</strong>
+                {% if lang == 'es' %}
+                    Los pagos pueden procesarse mediante proveedores externos, como Stripe. BillBeam no está diseñado para almacenar números completos de tarjetas de pago en sus propios sistemas.
+                {% else %}
+                    Payments may be processed by third-party providers such as Stripe. BillBeam is not designed to store full payment card numbers in its own systems.
+                {% endif %}
+            </li>
+            <li>
+                <strong>{% if lang == 'es' %}Datos técnicos y de uso{% else %}Technical and usage data{% endif %}</strong>
+                {% if lang == 'es' %}
+                    Puede incluir dirección IP, tipo de navegador, tipo de dispositivo, sistema operativo, identificadores técnicos, rutas visitadas, eventos de sesión e información general de uso.
+                {% else %}
+                    This may include IP address, browser type, device type, operating system, technical identifiers, visited pages, session events, and general usage information.
+                {% endif %}
+            </li>
+        </ul>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                2. Cómo utilizamos la información
+            {% else %}
+                2. How We Use Information
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Podemos utilizar la información recopilada para:
+            {% else %}
+                We may use collected information to:
+            {% endif %}
+        </p>
+        <ul>
+            <li>{% if lang == 'es' %}proporcionar, operar y mantener el Servicio{% else %}provide, operate, and maintain the Service{% endif %}</li>
+            <li>{% if lang == 'es' %}crear, almacenar y gestionar facturas, clientes y preferencias{% else %}create, store, and manage invoices, clients, and preferences{% endif %}</li>
+            <li>{% if lang == 'es' %}procesar suscripciones, cobros y actividades relacionadas con pagos{% else %}process subscriptions, charges, and payment-related activity{% endif %}</li>
+            <li>{% if lang == 'es' %}mejorar estabilidad, rendimiento, seguridad y experiencia del usuario{% else %}improve stability, performance, security, and user experience{% endif %}</li>
+            <li>{% if lang == 'es' %}responder solicitudes de soporte y comunicaciones operativas{% else %}respond to support requests and operational communications{% endif %}</li>
+            <li>{% if lang == 'es' %}detectar, prevenir o investigar fraudes, abusos o uso no autorizado{% else %}detect, prevent, or investigate fraud, abuse, or unauthorized use{% endif %}</li>
+        </ul>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                3. Asistencia de IA
+            {% else %}
+                3. AI Assistance
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede incluir funciones de asistencia basadas en inteligencia artificial para ayudar con redacción, sugerencias, resúmenes o interpretación general de información dentro del Servicio.
+            {% else %}
+                BillBeam may include AI-powered assistance features to help with drafting, suggestions, summaries, or general interpretation of information within the Service.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Para generar respuestas, estas funciones pueden utilizar información contextual disponible dentro de la página, pantalla o flujo activo. Estas funciones se ofrecen únicamente como ayuda general y no constituyen asesoramiento legal, fiscal, contable o financiero.
+            {% else %}
+                To generate responses, these features may use contextual information available within the active page, screen, or workflow. These features are provided for general assistance only and do not constitute legal, tax, accounting, or financial advice.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                4. Cómo compartimos información
+            {% else %}
+                4. How We Share Information
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam no vende información personal. Podemos compartir información limitada con terceros cuando sea razonablemente necesario para operar el Servicio, por ejemplo con:
+            {% else %}
+                BillBeam does not sell personal information. We may share limited information with third parties where reasonably necessary to operate the Service, for example with:
+            {% endif %}
+        </p>
+        <ul>
+            <li>{% if lang == 'es' %}procesadores de pago{% else %}payment processors{% endif %}</li>
+            <li>{% if lang == 'es' %}proveedores de hosting e infraestructura{% else %}hosting and infrastructure providers{% endif %}</li>
+            <li>{% if lang == 'es' %}servicios de correo electrónico y comunicación{% else %}email and communication services{% endif %}</li>
+            <li>{% if lang == 'es' %}proveedores técnicos necesarios para funciones del producto{% else %}technical providers needed for product functionality{% endif %}</li>
+        </ul>
+        <p>
+            {% if lang == 'es' %}
+                También podremos divulgar información cuando sea necesario para cumplir una obligación legal, aplicar nuestros acuerdos o proteger derechos, seguridad o integridad del Servicio o de otros.
+            {% else %}
+                We may also disclose information where necessary to comply with legal obligations, enforce our agreements, or protect the rights, safety, or integrity of the Service or others.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                5. Retención de datos
+            {% else %}
+                5. Data Retention
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Podemos conservar información mientras sea necesaria para operar el Servicio, mantener tu cuenta, cumplir fines operativos razonables, resolver disputas, aplicar acuerdos o cumplir obligaciones legales.
+            {% else %}
+                We may retain information as necessary to operate the Service, maintain your account, fulfill reasonable operational purposes, resolve disputes, enforce agreements, or comply with legal obligations.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Cuando sea apropiado y posible, la información puede eliminarse o anonimizarse conforme a políticas internas o solicitudes válidas del usuario.
+            {% else %}
+                Where appropriate and feasible, information may be deleted or anonymized in accordance with internal policies or valid user requests.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                6. Seguridad
+            {% else %}
+                6. Security
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam busca aplicar medidas administrativas, técnicas y operativas razonables para ayudar a proteger la información. Sin embargo, ningún sistema de transmisión o almacenamiento electrónico puede garantizar seguridad absoluta.
+            {% else %}
+                BillBeam seeks to apply reasonable administrative, technical, and operational measures to help protect information. However, no system of transmission or electronic storage can guarantee absolute security.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                7. Cookies y tecnologías similares
+            {% else %}
+                7. Cookies and Similar Technologies
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede utilizar cookies o tecnologías similares para mantener sesiones, recordar preferencias, mejorar seguridad y apoyar la funcionalidad general del Servicio. Consulta nuestra Política de Cookies para más información.
+            {% else %}
+                BillBeam may use cookies or similar technologies to maintain sessions, remember preferences, improve security, and support general Service functionality. Please see our Cookie Policy for more information.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                8. Usuarios internacionales
+            {% else %}
+                8. International Users
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Si accedes al Servicio desde fuera del país donde opera BillBeam o sus proveedores, entiendes que tu información puede ser procesada o almacenada en jurisdicciones distintas a la tuya, sujeto a la ley aplicable.
+            {% else %}
+                If you access the Service from outside the country where BillBeam or its providers operate, you understand that your information may be processed or stored in jurisdictions different from your own, subject to applicable law.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                9. Cambios a esta política
+            {% else %}
+                9. Changes to This Policy
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Podemos actualizar esta Política de Privacidad ocasionalmente para reflejar cambios en el Servicio, prácticas operativas o requisitos legales. Las versiones actualizadas se publicarán en esta página.
+            {% else %}
+                We may update this Privacy Policy from time to time to reflect changes in the Service, operational practices, or legal requirements. Updated versions will be posted on this page.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>
+            {% if lang == 'es' %}
+                10. Contacto
+            {% else %}
+                10. Contact
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Si tienes preguntas sobre esta Política de Privacidad, puedes contactarnos a través de la sección de ayuda o soporte dentro del Servicio.
+            {% else %}
+                If you have questions about this Privacy Policy, you may contact us through the help or support section within the Service.
+            {% endif %}
+        </p>
+    </section>
+
+</div>
+
+<style>
+.legal-shell{max-width:900px;margin:30px auto;font-size:0.95rem;line-height:1.7}
+.legal-header{margin-bottom:28px}
+.legal-header h1{font-size:1.7rem;margin-bottom:4px}
+.legal-updated{font-size:0.85rem;opacity:0.7}
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-size:1.05rem;margin-bottom:8px}
+.legal-section ul{padding-left:18px;margin-top:6px}
+.legal-section li{margin-bottom:4px}
+</style>
+{% endblock %}

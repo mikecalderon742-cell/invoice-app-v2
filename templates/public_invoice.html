@@ -1,41 +1,719 @@
 {% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Factura {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Invoice {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Revisa la factura {{ inv_label }}, descarga el PDF y completa el pago de forma segura con {{ business_profile.business_name or "BillBeam" }}.
+  {% else %}
+    Review invoice {{ inv_label }}, download the PDF, and complete payment securely with {{ business_profile.business_name or "BillBeam" }}.
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% set is_paid = (status == "Paid") or (balance <= 0 and amount > 0) %}
+{% set is_overdue = (status == "Overdue") and not is_paid %}
+{% set can_pay = (not is_paid) and (balance and balance > 0) and public_token %}
+
+<style>
+  .public-portal {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 8px 0 24px;
+  }
+
+  .public-alert {
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    border: 1px solid transparent;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  }
+
+  .public-alert strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 15px;
+  }
+
+  .public-alert.success {
+    border-color: rgba(22, 163, 74, 0.45);
+    background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #14532d;
+  }
+
+  .public-alert.warn {
+    border-color: rgba(249, 115, 22, 0.45);
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+    color: #7c2d12;
+  }
+
+  body.dark .public-alert.success {
+    background: linear-gradient(180deg, rgba(2, 44, 34, 0.95), rgba(6, 78, 59, 0.88));
+    color: #bbf7d0;
+  }
+
+  body.dark .public-alert.warn {
+    background: linear-gradient(180deg, rgba(69, 26, 3, 0.96), rgba(124, 45, 18, 0.88));
+    color: #fed7aa;
+  }
+
+  .public-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 420px);
+    gap: 22px;
+    align-items: stretch;
+    margin-bottom: 22px;
+  }
+
+  .public-hero-left,
+  .public-card,
+  .summary-card {
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow:
+      0 20px 48px rgba(15, 23, 42, 0.055),
+      0 0 0 1px rgba(15, 23, 42, 0.01);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .public-hero-left,
+  body.dark .public-card,
+  body.dark .summary-card {
+    background: rgba(2, 6, 23, 0.76);
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow:
+      0 22px 54px rgba(2, 6, 23, 0.78),
+      0 0 0 1px rgba(59, 130, 246, 0.06);
+  }
+
+  .public-hero-left {
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .public-hero-left::after {
+    content: "";
+    position: absolute;
+    inset: auto -80px -80px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58, 139, 255, 0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .public-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .public-logo {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+  }
+
+  .public-title {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .public-subtitle {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .public-subtitle {
+    color: #94a3b8;
+  }
+
+  .public-inv-meta {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .inv-label {
+    font-size: 14px;
+    color: #475569;
+  }
+
+  .mono {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    background: rgba(15, 23, 42, 0.05);
+    color: #0f172a;
+  }
+
+  body.dark .mono {
+    background: rgba(148, 163, 184, 0.12);
+    color: #e5e7eb;
+  }
+
+  .inv-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    color: #475569;
+    font-size: 14px;
+  }
+
+  body.dark .inv-dates {
+    color: #cbd5e1;
+  }
+
+  .dot {
+    opacity: 0.5;
+  }
+
+  .public-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-bottom: 22px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 13px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+
+  .status-pill.paid {
+    color: #166534;
+    background: #dcfce7;
+    border-color: #86efac;
+  }
+
+  .status-pill.overdue {
+    color: #9a3412;
+    background: #ffedd5;
+    border-color: #fdba74;
+  }
+
+  .status-pill.sent {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border-color: #93c5fd;
+  }
+
+  body.dark .status-pill.paid {
+    color: #bbf7d0;
+    background: rgba(22, 101, 52, 0.35);
+    border-color: rgba(134, 239, 172, 0.3);
+  }
+
+  body.dark .status-pill.overdue {
+    color: #fed7aa;
+    background: rgba(154, 52, 18, 0.32);
+    border-color: rgba(253, 186, 116, 0.3);
+  }
+
+  body.dark .status-pill.sent {
+    color: #bfdbfe;
+    background: rgba(29, 78, 216, 0.28);
+    border-color: rgba(147, 197, 253, 0.26);
+  }
+
+  .status-note {
+    font-size: 14px;
+    color: #64748b;
+  }
+
+  body.dark .status-note {
+    color: #94a3b8;
+  }
+
+  .public-glance {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .glance-card {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.035);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  body.dark .glance-card {
+    background: rgba(15, 23, 42, 0.48);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .glance-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .glance-label {
+    color: #94a3b8;
+  }
+
+  .glance-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  body.dark .glance-value {
+    color: #f8fafc;
+  }
+
+  .summary-card {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+
+  .summary-top {
+    display: grid;
+    gap: 10px;
+  }
+
+  .summary-label {
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .summary-label {
+    color: #94a3b8;
+  }
+
+  .summary-amount {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(34px, 5vw, 48px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    font-weight: 700;
+  }
+
+  .summary-breakdown {
+    display: grid;
+    gap: 10px;
+  }
+
+  .summary-breakdown .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    font-size: 14px;
+  }
+
+  .summary-breakdown .row:last-child {
+    border-bottom: 0;
+  }
+
+  .summary-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .btn-pay[disabled] {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .btn-wide {
+    width: 100%;
+    text-align: center;
+  }
+
+  .summary-foot {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.55;
+  }
+
+  body.dark .summary-foot {
+    color: #94a3b8;
+  }
+
+  .public-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .public-card {
+    padding: 22px;
+  }
+
+  .public-card-wide {
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    color: #64748b;
+  }
+
+  body.dark .card-title {
+    color: #94a3b8;
+  }
+
+  .client-block {
+    display: grid;
+    gap: 5px;
+  }
+
+  .client-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .client-sub {
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  body.dark .client-sub {
+    color: #94a3b8;
+  }
+
+  .client-sub a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .client-sub a:hover {
+    text-decoration: underline;
+  }
+
+  .mini-hint,
+  .muted {
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  body.dark .mini-hint,
+  body.dark .muted {
+    color: #94a3b8;
+  }
+
+  .snapshot {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .snap-item {
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.035);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  body.dark .snap-item {
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .snap-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+
+  body.dark .snap-label {
+    color: #94a3b8;
+  }
+
+  .snap-value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .public-table-wrap {
+    overflow-x: auto;
+  }
+
+  .public-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .public-table th,
+  .public-table td {
+    padding: 14px 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    font-size: 14px;
+  }
+
+  .public-table th {
+    text-align: left;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  body.dark .public-table th {
+    color: #94a3b8;
+  }
+
+  .public-table .right {
+    text-align: right;
+  }
+
+  .timeline {
+    display: grid;
+    gap: 14px;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    margin-top: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 0 0 4px rgba(58, 139, 255, 0.12);
+  }
+
+  .timeline-body {
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.035);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  body.dark .timeline-body {
+    background: rgba(15, 23, 42, 0.44);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .timeline-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .timeline-sub {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+  }
+
+  body.dark .timeline-sub {
+    color: #cbd5e1;
+  }
+
+  .note-block + .note-block {
+    margin-top: 16px;
+  }
+
+  .note-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .note-label {
+    color: #94a3b8;
+  }
+
+  .note-text {
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  .trust-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .trust-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+  }
+
+  body.dark .trust-pill {
+    background: rgba(15, 23, 42, 0.58);
+    border-color: rgba(148, 163, 184, 0.24);
+  }
+
+  .portal-bottom-note {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #475569;
+    background: rgba(255,255,255,0.65);
+    border: 1px solid rgba(15,23,42,0.05);
+  }
+
+  body.dark .portal-bottom-note {
+    color: #cbd5e1;
+    background: rgba(2,6,23,0.68);
+    border-color: rgba(148,163,184,0.14);
+  }
+
+  .powered-by {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .powered-by {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 980px) {
+    .public-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .public-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .public-hero-left,
+    .summary-card,
+    .public-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .public-title {
+      font-size: 24px;
+    }
+
+    .public-glance,
+    .snapshot {
+      grid-template-columns: 1fr;
+    }
+
+    .timeline-top {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+</style>
 
 <div class="public-portal">
 
-  {% set is_paid = (status == "Paid") or (balance <= 0 and amount > 0) %}
-
   {% if request.args.get('paid') %}
-    <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:16px;">
-      {% if is_paid %}
+    <div class="public-alert success">
+      <strong>
         {% if lang == 'es' %}
-          ✅ Pago recibido correctamente. Esta factura ya figura como pagada.
+          ✅ Pago recibido correctamente.
         {% else %}
-          ✅ Payment received successfully. This invoice is now marked as paid.
+          ✅ Payment received successfully.
         {% endif %}
-      {% else %}
-        {% if lang == 'es' %}
-          ✅ Pago recibido. Gracias — esta factura se está actualizando.
-        {% else %}
-          ✅ Payment received. Thank you — this invoice is updating.
-        {% endif %}
-        <div style="opacity:.85;font-size:.9rem;margin-top:6px;">
+      </strong>
+      <div style="opacity:.9;">
+        {% if is_paid_in_full %}
           {% if lang == 'es' %}
-            Si aún aparece “Pendiente”, recarga en unos segundos.
+            Esta factura ya aparece como pagada y liquidada por completo.
           {% else %}
-            If it still shows “Due”, refresh in a few seconds.
+            This invoice now shows as paid and fully settled.
           {% endif %}
-        </div>
-      {% endif %}
+        {% else %}
+          {% if lang == 'es' %}
+            Estamos verificando el estado final del pago. Si esta pantalla no cambia de inmediato, vuelve a cargar en unos segundos.
+          {% else %}
+            We’re verifying the final payment status. If this page does not update right away, refresh again in a few seconds.
+          {% endif %}
+        {% endif %}
+      </div>
     </div>
   {% elif request.args.get('canceled') %}
-    <div class="alert-overdue" style="border-color:#f97316;background:#451a03;color:#fed7aa;margin-bottom:16px;">
-      {% if lang == 'es' %}
-        Pago cancelado. Puedes intentarlo nuevamente cuando quieras.
-      {% else %}
-        Payment canceled. You can try again any time.
-      {% endif %}
+    <div class="public-alert warn">
+      <strong>
+        {% if lang == 'es' %}
+          Pago cancelado.
+        {% else %}
+          Payment canceled.
+        {% endif %}
+      </strong>
+      <div style="opacity:.9;">
+        {% if lang == 'es' %}
+          No se realizó ningún cargo. Puedes intentarlo nuevamente cuando quieras.
+        {% else %}
+          No charge was made. You can try again any time.
+        {% endif %}
+      </div>
     </div>
   {% endif %}
 
@@ -72,7 +750,7 @@
       </div>
 
       <div class="public-status-row">
-        {% if is_paid %}
+        {% if status == "Paid" %}
           <span class="status-pill paid">
             {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
           </span>
@@ -86,21 +764,62 @@
           </span>
         {% endif %}
 
-        <span class="status-note">
-          {% if is_paid %}
+        {% if status == "Paid" and paid_at %}
+          <span class="status-note">
             {% if lang == 'es' %}
-              Pago completo recibido.
+              Pagada el <strong>{{ paid_at.strftime('%Y-%m-%d') }}</strong>
             {% else %}
-              Payment received in full.
+              Paid on <strong>{{ paid_at.strftime('%Y-%m-%d') }}</strong>
             {% endif %}
-          {% else %}
+          </span>
+        {% elif is_overdue %}
+          <span class="status-note">
             {% if lang == 'es' %}
-              Este es un enlace seguro. No lo compartas públicamente.
+              Esta factura tiene saldo pendiente después de su fecha de vencimiento.
+            {% else %}
+              This invoice still has an outstanding balance past its due date.
+            {% endif %}
+          </span>
+        {% else %}
+          <span class="status-note">
+            {% if lang == 'es' %}
+              Este es un enlace seguro. Guárdalo en privado.
             {% else %}
               This is a secure link. Keep it private.
             {% endif %}
-          {% endif %}
-        </span>
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="public-glance">
+        <div class="glance-card">
+          <div class="glance-label">
+            {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+          </div>
+          <div class="glance-value">{{ client_name or (lang == 'es' and "Cliente" or "Client") }}</div>
+        </div>
+
+        <div class="glance-card">
+          <div class="glance-label">
+            {% if lang == 'es' %}Conceptos{% else %}Items{% endif %}
+          </div>
+          <div class="glance-value">{{ items|length }}</div>
+        </div>
+
+        <div class="glance-card">
+          <div class="glance-label">
+            {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+          </div>
+          <div class="glance-value">
+            {% if is_paid %}
+              {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+            {% elif status == "Overdue" %}
+              {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+            {% else %}
+              {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
 
@@ -114,6 +833,7 @@
               {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
             {% endif %}
           </div>
+
           <div class="summary-amount">
             {% if is_paid %}
               ${{ "{:,.2f}".format(total_paid) }}
@@ -141,7 +861,6 @@
         </div>
 
         <div class="summary-actions">
-          {% set can_pay = (not is_paid) and (balance and balance > 0) and public_token %}
           <button
             class="btn btn-brand btn-pay"
             id="payNowBtn"
@@ -168,15 +887,15 @@
         <div class="summary-foot">
           {% if is_paid %}
             {% if lang == 'es' %}
-              Gracias. Este comprobante ya quedó liquidado.
+              Gracias. Esta factura ya quedó liquidada por completo.
             {% else %}
               Thank you. This invoice has been fully settled.
             {% endif %}
           {% else %}
             {% if lang == 'es' %}
-              ¿Dudas? Escribe a <strong>{{ business_profile.email or "tu negocio" }}</strong>
+              ¿Tienes dudas? Escríbenos a <strong>{{ business_profile.email or "tu negocio" }}</strong>.
             {% else %}
-              Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>
+              Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>.
             {% endif %}
           {% endif %}
         </div>
@@ -202,11 +921,11 @@
         {% endif %}
       </div>
 
-      <div class="mini-hint">
+      <div class="mini-hint" style="margin-top:14px;">
         {% if lang == 'es' %}
-          Consejo: descarga el PDF para tus registros.
+          Consejo: descarga el PDF para tus registros o usa este enlace para volver a revisar la factura más tarde.
         {% else %}
-          Tip: download the PDF for your records.
+          Tip: download the PDF for your records or keep this link to review the invoice again later.
         {% endif %}
       </div>
     </div>
@@ -215,6 +934,7 @@
       <div class="card-title">
         {% if lang == 'es' %}Resumen de factura{% else %}Invoice Snapshot{% endif %}
       </div>
+
       <div class="snapshot">
         <div class="snap-item">
           <div class="snap-label">
@@ -223,23 +943,28 @@
           <div class="snap-value">
             {% if is_paid %}
               {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+            {% elif status == "Overdue" %}
+              {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
             {% else %}
-              {{ status }}
+              {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
             {% endif %}
           </div>
         </div>
+
         <div class="snap-item">
           <div class="snap-label">
             {% if lang == 'es' %}Conceptos{% else %}Items{% endif %}
           </div>
           <div class="snap-value">{{ items|length }}</div>
         </div>
+
         <div class="snap-item">
           <div class="snap-label">
             {% if lang == 'es' %}Pagado{% else %}Paid{% endif %}
           </div>
           <div class="snap-value">${{ "{:,.2f}".format(total_paid) }}</div>
         </div>
+
         <div class="snap-item">
           <div class="snap-label">
             {% if lang == 'es' %}Pendiente{% else %}Due{% endif %}
@@ -302,6 +1027,41 @@
   <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
+        {% if lang == 'es' %}Actividad de la factura{% else %}Invoice Activity{% endif %}
+      </div>
+
+      {% if invoice_events and invoice_events|length > 0 %}
+        <div class="timeline">
+          {% for event in invoice_events %}
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-body">
+                <div class="timeline-top">
+                  <strong>{{ event.title }}</strong>
+                  <span class="muted">
+                    {{ event.created_at.strftime('%Y-%m-%d') if event.created_at else '' }}
+                  </span>
+                </div>
+                {% if event.details %}
+                  <div class="timeline-sub">{{ event.details }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted" style="margin-top:10px;">
+          {% if lang == 'es' %}
+            Todavía no hay actividad registrada para esta factura.
+          {% else %}
+            No activity has been recorded for this invoice yet.
+          {% endif %}
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="public-card">
+      <div class="card-title">
         {% if lang == 'es' %}Historial de pagos{% else %}Payment History{% endif %}
       </div>
 
@@ -335,7 +1095,9 @@
         </p>
       {% endif %}
     </div>
+  </div>
 
+  <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
         {% if lang == 'es' %}Notas y términos{% else %}Notes & Terms{% endif %}
@@ -368,46 +1130,14 @@
           {% endif %}
         </p>
       {% endif %}
+    </div>
 
-      {% if attachment_paths or signature_path %}
-        <section class="invoice-extras" style="margin-top:24px;">
-          {% if attachment_paths %}
-            <div class="invoice-attachments" style="margin-bottom:16px;">
-              <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
-                {% if lang == 'es' %}Archivos adjuntos{% else %}Attachments{% endif %}
-              </h3>
-              <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
-                {% for path in attachment_paths %}
-                  <a href="{{ url_for('uploaded_file', filename=path) }}" target="_blank"
-                     style="display:inline-block; border-radius:8px; overflow:hidden; border:1px solid rgba(148,163,184,0.4);">
-                    <img src="{{ url_for('uploaded_file', filename=path) }}"
-                         alt="Attachment"
-                         style="display:block; max-height:120px;">
-                  </a>
-                {% endfor %}
-              </div>
-            </div>
-          {% endif %}
+    <div class="public-card">
+      <div class="card-title">
+        {% if lang == 'es' %}Confianza y acceso{% else %}Trust & Access{% endif %}
+      </div>
 
-          {% if signature_path %}
-            <div class="invoice-signature">
-              <h3 style="font-size:0.9rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">
-                {% if lang == 'es' %}Firma{% else %}Signature{% endif %}
-              </h3>
-              <div style="margin-top:8px; padding:10px; border-radius:10px; background:#020617; border:1px solid rgba(148,163,184,0.5); max-width:320px;">
-                <img src="{{ url_for('uploaded_file', filename=signature_path) }}"
-                     alt="Signature"
-                     style="display:block; width:100%; max-width:100%;">
-                <div style="margin-top:6px; font-size:12px; opacity:0.7;">
-                  {% if lang == 'es' %}Firma en archivo{% else %}Signed on file{% endif %}
-                </div>
-              </div>
-            </div>
-          {% endif %}
-        </section>
-      {% endif %}
-
-      <div class="trust-row">
+      <div class="trust-row" style="margin-top:0;">
         <div class="trust-pill">
           {% if lang == 'es' %}Enlace seguro{% else %}Secure Link{% endif %}
         </div>
@@ -417,6 +1147,27 @@
         <div class="trust-pill">
           {% if lang == 'es' %}Portal de cliente{% else %}Client Portal{% endif %}
         </div>
+        {% if can_pay %}
+        <div class="trust-pill">
+          {% if lang == 'es' %}Pago en línea{% else %}Online Payment{% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="portal-bottom-note">
+        {% if is_paid %}
+          {% if lang == 'es' %}
+            Este portal conserva el resumen de la factura, el historial de actividad y el registro de pagos para tus archivos.
+          {% else %}
+            This portal keeps the invoice summary, activity history, and payment record available for your records.
+          {% endif %}
+        {% else %}
+          {% if lang == 'es' %}
+            Puedes revisar la factura, descargar el PDF y completar el pago aquí cuando esté disponible. Si tienes preguntas sobre esta factura, usa el correo de contacto mostrado arriba.
+          {% else %}
+            You can review the invoice, download the PDF, and complete payment here when available. If you have questions about this invoice, use the contact email shown above.
+          {% endif %}
+        {% endif %}
       </div>
     </div>
   </div>
@@ -493,5 +1244,4 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
-
 {% endblock %}

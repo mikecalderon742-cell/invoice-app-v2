@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+{% if lang == 'es' %}
+Política de Cookies · BillBeam
+{% else %}
+Cookie Policy · BillBeam
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Cómo BillBeam usa cookies y tecnologías similares en su sitio web, aplicación móvil y servicios relacionados.
+{% else %}
+How BillBeam uses cookies and similar technologies across its website, mobile application, and related services.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-shell">
+
+    <header class="legal-header">
+        <h1>
+            {% if lang == 'es' %}
+                Política de Cookies
+            {% else %}
+                Cookie Policy
+            {% endif %}
+        </h1>
+        <p class="legal-updated">
+            {% if lang == 'es' %}
+                Última actualización: {{ now().strftime("%B %Y") }}
+            {% else %}
+                Last updated: {{ now().strftime("%B %Y") }}
+            {% endif %}
+        </p>
+    </header>
+
+    <section class="legal-section">
+        <p>
+            {% if lang == 'es' %}
+                Esta Política de Cookies explica cómo BillBeam utiliza cookies y tecnologías similares cuando accedes a su sitio web, aplicación móvil y servicios relacionados.
+            {% else %}
+                This Cookie Policy explains how BillBeam uses cookies and similar technologies when you access its website, mobile application, and related services.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}1. Qué son las cookies{% else %}1. What Cookies Are{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Las cookies son pequeños archivos o identificadores almacenados en tu navegador, dispositivo o entorno de aplicación. Ayudan a recordar sesiones, preferencias y cierta información técnica necesaria para que el Servicio funcione correctamente.
+            {% else %}
+                Cookies are small files or identifiers stored in your browser, device, or application environment. They help remember sessions, preferences, and certain technical information needed for the Service to function properly.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}2. Cómo utiliza BillBeam las cookies{% else %}2. How BillBeam Uses Cookies{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede utilizar cookies o tecnologías similares para:
+            {% else %}
+                BillBeam may use cookies or similar technologies to:
+            {% endif %}
+        </p>
+        <ul>
+            <li>{% if lang == 'es' %}mantener sesiones activas y autenticación{% else %}maintain active sessions and authentication{% endif %}</li>
+            <li>{% if lang == 'es' %}recordar idioma, tema visual u otras preferencias razonables{% else %}remember language, visual theme, or other reasonable preferences{% endif %}</li>
+            <li>{% if lang == 'es' %}apoyar seguridad y detección de actividad anómala{% else %}support security and detection of unusual activity{% endif %}</li>
+            <li>{% if lang == 'es' %}mejorar rendimiento y estabilidad del Servicio{% else %}improve Service performance and stability{% endif %}</li>
+        </ul>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}3. Tipos de cookies o tecnologías similares{% else %}3. Types of Cookies or Similar Technologies{% endif %}</h2>
+        <ul>
+            <li>
+                <strong>{% if lang == 'es' %}Esenciales{% else %}Essential{% endif %}</strong>
+                {% if lang == 'es' %}
+                    necesarias para funciones principales como autenticación, seguridad, navegación o funcionalidad base del Servicio.
+                {% else %}
+                    needed for core functions such as authentication, security, navigation, or basic Service functionality.
+                {% endif %}
+            </li>
+            <li>
+                <strong>{% if lang == 'es' %}De preferencia{% else %}Preference{% endif %}</strong>
+                {% if lang == 'es' %}
+                    utilizadas para recordar configuraciones seleccionadas por el usuario.
+                {% else %}
+                    used to remember user-selected settings.
+                {% endif %}
+            </li>
+            <li>
+                <strong>{% if lang == 'es' %}De rendimiento o análisis{% else %}Performance or analytics{% endif %}</strong>
+                {% if lang == 'es' %}
+                    si se implementan herramientas de medición en el futuro, podrán utilizarse para comprender uso general, errores o rendimiento del Servicio.
+                {% else %}
+                    if measurement tools are implemented in the future, they may be used to understand general usage, errors, or Service performance.
+                {% endif %}
+            </li>
+        </ul>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}4. Tecnologías de terceros{% else %}4. Third-Party Technologies{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Algunas funciones de BillBeam pueden depender de proveedores externos, como procesadores de pago, servicios de correo, hosting o infraestructura. Esos terceros pueden utilizar sus propias cookies o tecnologías similares conforme a sus propias políticas.
+            {% else %}
+                Some BillBeam features may rely on third-party providers such as payment processors, email services, hosting, or infrastructure providers. Those third parties may use their own cookies or similar technologies according to their own policies.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}5. Gestión de cookies{% else %}5. Managing Cookies{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                La mayoría de los navegadores y algunos entornos móviles permiten bloquear, limitar o eliminar cookies desde la configuración correspondiente. Ten en cuenta que desactivar ciertas cookies o tecnologías similares puede afectar funcionalidades del Servicio.
+            {% else %}
+                Most browsers and some mobile environments allow you to block, limit, or delete cookies through the applicable settings. Please note that disabling certain cookies or similar technologies may affect Service functionality.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}6. Cambios a esta política{% else %}6. Changes to This Policy{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede actualizar esta Política de Cookies ocasionalmente para reflejar cambios en el Servicio, prácticas operativas o requisitos legales.
+            {% else %}
+                BillBeam may update this Cookie Policy from time to time to reflect changes in the Service, operational practices, or legal requirements.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}7. Contacto{% else %}7. Contact{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Si tienes preguntas sobre esta Política de Cookies, puedes contactar a través de la sección de ayuda o soporte dentro del Servicio.
+            {% else %}
+                If you have questions about this Cookie Policy, you may contact us through the help or support section within the Service.
+            {% endif %}
+        </p>
+    </section>
+
+</div>
+
+<style>
+.legal-shell{max-width:900px;margin:30px auto;font-size:0.95rem;line-height:1.7}
+.legal-header{margin-bottom:28px}
+.legal-header h1{font-size:1.7rem;margin-bottom:4px}
+.legal-updated{font-size:0.85rem;opacity:0.7}
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-size:1.05rem;margin-bottom:8px}
+.legal-section ul{padding-left:18px;margin-top:6px}
+.legal-section li{margin-bottom:4px}
+</style>
+{% endblock %}

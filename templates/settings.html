@@ -1,184 +1,673 @@
 {% extends "base.html" %}
-{% block content %}
 
+{% block title %}
+  {% if lang == 'es' %}
+    Perfil de negocio y marca · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Business Profile & Branding · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Configura el nombre, correo, marca, colores y notas por defecto de tu negocio en BillBeam.
+  {% else %}
+    Configure your business name, email, branding, colors, and default invoice notes inside BillBeam.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}Perfil de negocio y marca{% else %}Business Profile & Branding{% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Volver a crear{% else %}Back to Create{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
-        </a>
-    </div>
-</div>
+<style>
+  .settings-shell {
+    display: grid;
+    gap: 20px;
+  }
 
-<div class="form-wrapper fade-in-up">
+  .settings-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .settings-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .settings-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .settings-subcopy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .settings-subcopy {
+    color: #94a3b8;
+  }
+
+  .settings-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .settings-feedback {
+    margin-bottom: 4px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    border: 1px solid transparent;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
+  }
+
+  .settings-feedback.success {
+    background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border-color: #16a34a;
+  }
+
+  .settings-feedback.error {
+    background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+    color: #b91c1c;
+    border-color: #dc2626;
+  }
+
+  body.dark .settings-feedback.success {
+    background: linear-gradient(180deg, rgba(6, 78, 59, 0.95), rgba(22, 101, 52, 0.86));
+    color: #dcfce7;
+  }
+
+  body.dark .settings-feedback.error {
+    background: linear-gradient(180deg, rgba(127, 29, 29, 0.96), rgba(153, 27, 27, 0.86));
+    color: #fee2e2;
+  }
+
+  .settings-form-shell {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    padding: 22px;
+  }
+
+  body.dark .settings-form-shell {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  .settings-card {
+    border-radius: 22px;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  body.dark .settings-card {
+    background: rgba(15, 23, 42, 0.45);
+    border-color: rgba(148, 163, 184, 0.16);
+  }
+
+  .settings-card h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .settings-card-sub {
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .settings-card-sub {
+    color: #94a3b8;
+  }
+
+  .field-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .field-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .field-group {
+    display: grid;
+    gap: 6px;
+  }
+
+  .field-group label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  body.dark .field-group label {
+    color: #e5e7eb;
+  }
+
+  .field-help {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+  }
+
+  body.dark .field-help {
+    color: #94a3b8;
+  }
+
+  .settings-form-shell input,
+  .settings-form-shell textarea {
+    width: 100%;
+  }
+
+  .brand-preview {
+    display: grid;
+    gap: 16px;
+  }
+
+  .brand-preview-card {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,252,0.86));
+    box-shadow: 0 18px 44px rgba(15,23,42,0.06);
+  }
+
+  body.dark .brand-preview-card {
+    background: linear-gradient(180deg, rgba(2,6,23,0.9), rgba(15,23,42,0.88));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 20px 48px rgba(2,6,23,0.78);
+  }
+
+  .brand-preview-top {
+    padding: 18px;
+    background: linear-gradient(135deg, {{ profile.brand_color or '#020617' }}, {{ profile.accent_color or '#3A8BFF' }});
+    color: white;
+  }
+
+  .brand-preview-top-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-logo-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.16);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14);
+  }
+
+  .brand-logo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .brand-logo-fallback {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  .brand-preview-name {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .brand-preview-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+
+  .brand-preview-body {
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .brand-preview-stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .brand-preview-label {
+    color: #64748b;
+  }
+
+  body.dark .brand-preview-label {
+    color: #94a3b8;
+  }
+
+  .color-swatches {
+    display: grid;
+    gap: 10px;
+  }
+
+  .swatch-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .swatch-chip {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    flex: 0 0 auto;
+    box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+  }
+
+  .swatch-meta {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .swatch-title {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .swatch-code {
+    font-size: 12px;
+    color: #64748b;
+    word-break: break-word;
+  }
+
+  body.dark .swatch-code {
+    color: #94a3b8;
+  }
+
+  .settings-section-spacer {
+    height: 8px;
+  }
+
+  .defaults-card {
+    margin-top: 22px;
+  }
+
+  .defaults-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .settings-note {
+    margin-top: 4px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+    background: rgba(15,23,42,0.035);
+    border: 1px solid rgba(148,163,184,0.16);
+  }
+
+  body.dark .settings-note {
+    color: #cbd5e1;
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .form-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:20px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 980px) {
+    .settings-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .field-row-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-form-shell,
+    .settings-card {
+      padding: 18px;
+    }
+  }
+</style>
+
+<div class="settings-shell">
+    <div class="settings-topbar">
+        <div class="settings-title-wrap">
+            <h1>
+                {% if lang == 'es' %}Perfil de negocio y marca{% else %}Business Profile & Branding{% endif %}
+            </h1>
+            <div class="settings-subcopy">
+                {% if lang == 'es' %}
+                    Ajusta cómo se presenta tu negocio en facturas, correos, portales públicos y elementos visuales dentro de BillBeam.
+                {% else %}
+                    Shape how your business appears across invoices, emails, public portals, and visual details throughout BillBeam.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Volver a crear{% else %}Back to Create{% endif %}
+            </a>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+            </a>
+        </div>
+    </div>
 
     {% if feedback_message %}
-        <div style="
-            margin-bottom:16px;
-            padding:12px 14px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:500;
-            {% if feedback_type == 'success' %}
-                background:#dcfce7;
-                color:#166534;
-                border:1px solid #16a34a;
-            {% else %}
-                background:#fee2e2;
-                color:#b91c1c;
-                border:1px solid #dc2626;
-            {% endif %}
-        ">
+        <div class="settings-feedback {% if feedback_type == 'success' %}success{% else %}error{% endif %}">
             {{ feedback_message }}
         </div>
     {% endif %}
 
-    <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+    <div class="settings-form-shell fade-in-up">
+        <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+            <div class="settings-grid">
 
-            <!-- Business Info -->
-            <div>
-                <h2 style="margin-top:0; font-size:18px;">
-                    {% if lang == 'es' %}Información del negocio{% else %}Business Info{% endif %}
-                </h2>
-
-                <label style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Nombre del negocio{% else %}Business Name{% endif %}
-                </label>
-                <input type="text" name="business_name" value="{{ profile.business_name }}" required>
-
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">
-                    {% if lang == 'es' %}Correo del negocio{% else %}Business Email{% endif %}
-                </label>
-                <input type="email" name="email" value="{{ profile.email }}">
-
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">
-                    {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
-                </label>
-                <input type="text" name="phone" value="{{ profile.phone }}">
-
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">
-                    {% if lang == 'es' %}Sitio web{% else %}Website{% endif %}
-                </label>
-                <input type="text" name="website" value="{{ profile.website }}">
-
-                <label style="font-weight:600; font-size:14px; margin-top:10px;">
-                    {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
-                </label>
-                <textarea
-                    name="address"
-                    rows="3"
-                    style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
-                >{{ profile.address }}</textarea>
-            </div>
-
-            <!-- Branding -->
-            <div>
-                <h2 style="margin-top:0; font-size:18px;">
-                    {% if lang == 'es' %}Marca{% else %}Branding{% endif %}
-                </h2>
-
-                <label style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}URL del logo{% else %}Logo URL{% endif %}
-                </label>
-                <input type="text" name="logo_url" value="{{ profile.logo_url }}" placeholder="https://...">
-
-                {% if profile.logo_url %}
-                    <div style="margin-top:8px;">
-                        <span style="font-size:12px; opacity:.75;">
-                            {% if lang == 'es' %}Vista previa:{% else %}Preview:{% endif %}
-                        </span><br>
-                        <img src="{{ profile.logo_url }}" alt="Logo preview" style="max-width:160px; margin-top:4px; border-radius:8px;">
+                <div class="settings-card">
+                    <h2>
+                        {% if lang == 'es' %}Información del negocio{% else %}Business Information{% endif %}
+                    </h2>
+                    <div class="settings-card-sub">
+                        {% if lang == 'es' %}
+                            Estos detalles pueden aparecer en tus facturas, correos y vistas públicas.
+                        {% else %}
+                            These details may appear across your invoices, emails, and public-facing views.
+                        {% endif %}
                     </div>
-                {% endif %}
 
-                <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
-                    <div style="flex:1;">
-                        <label style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}Color de marca principal{% else %}Primary Brand Color{% endif %}
-                        </label>
-                        <input type="text" name="brand_color" value="{{ profile.brand_color }}">
-                        <small style="font-size:12px; opacity:.7;">
-                            {% if lang == 'es' %}
-                                Se usa para el acento principal (botones, tarjetas).
-                            {% else %}
-                                Used for primary accent (buttons, cards).
-                            {% endif %}
-                        </small>
-                    </div>
-                    <div>
-                        <label style="font-weight:600; font-size:14px;">&nbsp;</label><br>
-                        <div style="width:40px; height:40px; border-radius:999px; border:1px solid #e5e7eb; background: {{ profile.brand_color }};"></div>
+                    <div class="field-grid">
+                        <div class="field-group">
+                            <label for="business_name">
+                                {% if lang == 'es' %}Nombre del negocio{% else %}Business Name{% endif %}
+                            </label>
+                            <input id="business_name" type="text" name="business_name" value="{{ profile.business_name }}" required>
+                        </div>
+
+                        <div class="field-row-2">
+                            <div class="field-group">
+                                <label for="email">
+                                    {% if lang == 'es' %}Correo del negocio{% else %}Business Email{% endif %}
+                                </label>
+                                <input id="email" type="email" name="email" value="{{ profile.email }}">
+                            </div>
+
+                            <div class="field-group">
+                                <label for="phone">
+                                    {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
+                                </label>
+                                <input id="phone" type="text" name="phone" value="{{ profile.phone }}">
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="website">
+                                {% if lang == 'es' %}Sitio web{% else %}Website{% endif %}
+                            </label>
+                            <input id="website" type="text" name="website" value="{{ profile.website }}">
+                            <div class="field-help">
+                                {% if lang == 'es' %}
+                                    Ejemplo: https://tusitio.com
+                                {% else %}
+                                    Example: https://yourwebsite.com
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="address">
+                                {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
+                            </label>
+                            <textarea
+                                id="address"
+                                name="address"
+                                rows="4"
+                                style="padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                            >{{ profile.address }}</textarea>
+                        </div>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:12px; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
-                    <div style="flex:1;">
-                        <label style="font-weight:600; font-size:14px;">
-                            {% if lang == 'es' %}Color de acento secundario{% else %}Secondary Accent Color{% endif %}
+                <div class="settings-card">
+                    <h2>
+                        {% if lang == 'es' %}Marca y vista previa{% else %}Branding & Preview{% endif %}
+                    </h2>
+                    <div class="settings-card-sub">
+                        {% if lang == 'es' %}
+                            Ajusta cómo se ve BillBeam para tus clientes y para ti.
+                        {% else %}
+                            Tune how BillBeam looks for both your clients and your own workflow.
+                        {% endif %}
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="field-group">
+                            <label for="logo_url">
+                                {% if lang == 'es' %}URL del logo{% else %}Logo URL{% endif %}
+                            </label>
+                            <input id="logo_url" type="text" name="logo_url" value="{{ profile.logo_url }}" placeholder="https://...">
+                            <div class="field-help">
+                                {% if lang == 'es' %}
+                                    Usa una imagen clara y cuadrada para un mejor resultado visual.
+                                {% else %}
+                                    Use a clean, square image for the best visual result.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="field-row-2">
+                            <div class="field-group">
+                                <label for="brand_color">
+                                    {% if lang == 'es' %}Color de marca principal{% else %}Primary Brand Color{% endif %}
+                                </label>
+                                <input id="brand_color" type="text" name="brand_color" value="{{ profile.brand_color }}">
+                                <div class="field-help">
+                                    {% if lang == 'es' %}
+                                        Se usa en botones, acentos y elementos clave.
+                                    {% else %}
+                                        Used in buttons, accents, and key interface elements.
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="accent_color">
+                                    {% if lang == 'es' %}Color secundario{% else %}Secondary Accent Color{% endif %}
+                                </label>
+                                <input id="accent_color" type="text" name="accent_color" value="{{ profile.accent_color }}">
+                                <div class="field-help">
+                                    {% if lang == 'es' %}
+                                        Se usa para resaltados y contraste visual.
+                                    {% else %}
+                                        Used for highlights and visual contrast.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="brand-preview">
+                            <div class="brand-preview-card">
+                                <div class="brand-preview-top">
+                                    <div class="brand-preview-top-inner">
+                                        <div class="brand-logo-box">
+                                            {% if profile.logo_url %}
+                                                <img src="{{ profile.logo_url }}" alt="Logo preview">
+                                            {% else %}
+                                                <div class="brand-logo-fallback">B</div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="brand-preview-name">{{ profile.business_name or "BillBeam" }}</div>
+                                            <div class="brand-preview-sub">
+                                                {% if lang == 'es' %}Vista previa de marca{% else %}Brand preview{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="brand-preview-body">
+                                    <div class="brand-preview-stat">
+                                        <span class="brand-preview-label">
+                                            {% if lang == 'es' %}Correo{% else %}Email{% endif %}
+                                        </span>
+                                        <strong>{{ profile.email or "billing@yourbusiness.com" }}</strong>
+                                    </div>
+                                    <div class="brand-preview-stat">
+                                        <span class="brand-preview-label">
+                                            {% if lang == 'es' %}Sitio web{% else %}Website{% endif %}
+                                        </span>
+                                        <strong>{{ profile.website or "yourbusiness.com" }}</strong>
+                                    </div>
+                                    <div class="brand-preview-stat">
+                                        <span class="brand-preview-label">
+                                            {% if lang == 'es' %}Identidad visual{% else %}Visual identity{% endif %}
+                                        </span>
+                                        <strong>{% if lang == 'es' %}Lista para facturas{% else %}Invoice-ready{% endif %}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="color-swatches">
+                                <div class="swatch-row">
+                                    <div class="swatch-chip" style="background: {{ profile.brand_color }};"></div>
+                                    <div class="swatch-meta">
+                                        <div class="swatch-title">
+                                            {% if lang == 'es' %}Color principal{% else %}Primary color{% endif %}
+                                        </div>
+                                        <div class="swatch-code">{{ profile.brand_color }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="swatch-row">
+                                    <div class="swatch-chip" style="background: {{ profile.accent_color }};"></div>
+                                    <div class="swatch-meta">
+                                        <div class="swatch-title">
+                                            {% if lang == 'es' %}Color secundario{% else %}Secondary color{% endif %}
+                                        </div>
+                                        <div class="swatch-code">{{ profile.accent_color }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="settings-card defaults-card">
+                <h2>
+                    {% if lang == 'es' %}Notas y condiciones por defecto{% else %}Default Invoice Notes & Terms{% endif %}
+                </h2>
+                <div class="settings-card-sub">
+                    {% if lang == 'es' %}
+                        Estas opciones ayudan a mantener una voz consistente y profesional en cada factura.
+                    {% else %}
+                        These defaults help keep every invoice consistent, professional, and ready to send.
+                    {% endif %}
+                </div>
+
+                <div class="defaults-grid">
+                    <div class="field-group">
+                        <label for="default_notes">
+                            {% if lang == 'es' %}Notas por defecto{% else %}Default Notes{% endif %}
                         </label>
-                        <input type="text" name="accent_color" value="{{ profile.accent_color }}">
-                        <small style="font-size:12px; opacity:.7;">
-                            {% if lang == 'es' %}
-                                Se usa para acentos y resaltados secundarios.
-                            {% else %}
-                                Used for secondary accents / highlights.
-                            {% endif %}
-                        </small>
+                        <textarea
+                            id="default_notes"
+                            name="default_notes"
+                            rows="4"
+                            style="padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                            placeholder="{% if lang == 'es' %}Gracias por su negocio...{% else %}Thank you for your business...{% endif %}"
+                        >{{ profile.default_notes }}</textarea>
                     </div>
-                    <div>
-                        <label style="font-weight:600; font-size:14px;">&nbsp;</label><br>
-                        <div style="width:40px; height:40px; border-radius:999px; border:1px solid #e5e7eb; background: {{ profile.accent_color }};"></div>
+
+                    <div class="field-group">
+                        <label for="default_terms">
+                            {% if lang == 'es' %}Condiciones de pago por defecto{% else %}Default Payment Terms{% endif %}
+                        </label>
+                        <textarea
+                            id="default_terms"
+                            name="default_terms"
+                            rows="4"
+                            style="padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                            placeholder="{% if lang == 'es' %}El pago vence en 14 días...{% else %}Payment is due within 14 days...{% endif %}"
+                        >{{ profile.default_terms }}</textarea>
                     </div>
+                </div>
+
+                <div class="settings-note">
+                    {% if lang == 'es' %}
+                        Consejo: usa notas breves y condiciones claras. Una factura limpia y consistente mejora la percepción de marca y reduce preguntas antes del pago.
+                    {% else %}
+                        Tip: keep notes short and payment terms clear. A clean, consistent invoice improves brand perception and reduces payment-related questions.
+                    {% endif %}
                 </div>
             </div>
 
-        </div>
-
-        <!-- Defaults -->
-        <div style="margin-top:24px;">
-            <h2 style="margin-top:0; font-size:18px;">
-                {% if lang == 'es' %}Notas y condiciones por defecto{% else %}Default Invoice Notes & Terms{% endif %}
-            </h2>
-
-            <label style="font-weight:600; font-size:14px;">
-                {% if lang == 'es' %}Notas por defecto{% else %}Default Notes{% endif %}
-            </label>
-            <textarea
-                name="default_notes"
-                rows="3"
-                style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
-                placeholder="{% if lang == 'es' %}Gracias por su negocio...{% else %}Thank you for your business...{% endif %}"
-            >{{ profile.default_notes }}</textarea>
-
-            <label style="font-weight:600; font-size:14px; margin-top:10px;">
-                {% if lang == 'es' %}Condiciones de pago por defecto{% else %}Default Payment Terms{% endif %}
-            </label>
-            <textarea
-                name="default_terms"
-                rows="3"
-                style="width:100%; padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
-                placeholder="{% if lang == 'es' %}El pago vence en 14 días...{% else %}Payment is due within 14 days...{% endif %}"
-            >{{ profile.default_terms }}</textarea>
-        </div>
-
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-            </a>
-            <button type="submit" class="btn btn-brand">
-                {% if lang == 'es' %}Guardar configuración{% else %}Save Settings{% endif %}
-            </button>
-        </div>
-
-    </form>
+            <div class="form-actions">
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                </a>
+                <button type="submit" class="btn btn-brand">
+                    {% if lang == 'es' %}Guardar configuración{% else %}Save Settings{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 {% endblock %}

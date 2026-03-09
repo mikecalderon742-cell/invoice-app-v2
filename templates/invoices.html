@@ -1,17 +1,447 @@
 {% extends "base.html" %}
-{% block content %}
 
-{# Language handling, same pattern as index.html #}
+{% block title %}
+  {% if lang == 'es' %}
+    Panel de facturas · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Invoice Dashboard · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Revisa ingresos, estados, clientes principales y el historial completo de facturas en BillBeam.
+  {% else %}
+    Review revenue, statuses, top clients, and your full invoice history inside BillBeam.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}
-            Panel BillBeam
-        {% else %}
-            BillBeam Dashboard
-        {% endif %}
-    </h1>
+<style>
+  .dashboard-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .dashboard-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .dashboard-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .dashboard-subcopy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .dashboard-subcopy {
+    color: #94a3b8;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-filter-shell {
+    margin-bottom: 20px;
+    padding: 18px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.74);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .dashboard-filter-shell {
+    background: rgba(2,6,23,0.75);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 20px 48px rgba(2,6,23,0.78),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .filter-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .filter-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .filter-title {
+    color: #94a3b8;
+  }
+
+  .filter-meta {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .filter-meta {
+    color: #94a3b8;
+  }
+
+  .dashboard-filter-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) minmax(140px, 0.9fr) minmax(150px, 1fr) minmax(150px, 1fr) auto auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .filter-field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .filter-field label {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .filter-field label {
+    color: #94a3b8;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-filter-form input,
+  .dashboard-filter-form select {
+    width: 100%;
+  }
+
+  .dashboard-cards.enhanced {
+    margin-bottom: 18px;
+  }
+
+  .card.kpi {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card.kpi::after {
+    content: "";
+    position: absolute;
+    inset: auto -26px -26px auto;
+    width: 92px;
+    height: 92px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    pointer-events: none;
+  }
+
+  .card.kpi p {
+    margin-bottom: 0;
+  }
+
+  .status-summary {
+    margin-bottom: 22px;
+  }
+
+  .status-item {
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .table-wrapper {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  body.dark .table-wrapper {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .table-section-header {
+    padding: 20px 20px 0;
+  }
+
+  .table-section-header h2 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+  }
+
+  .table-section-header p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.55;
+  }
+
+  body.dark .table-section-header p {
+    color: #94a3b8;
+  }
+
+  .table-meta {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .table-meta {
+    color: #94a3b8;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    padding: 18px 20px 20px;
+  }
+
+  .modern-table {
+    width: 100%;
+    min-width: 1080px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .modern-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: rgba(248,250,252,0.96);
+    color: #64748b;
+    font-size: 12px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 14px 14px;
+    border-bottom: 1px solid rgba(148,163,184,0.18);
+    text-align: left;
+  }
+
+  body.dark .modern-table thead th {
+    background: rgba(15,23,42,0.96);
+    color: #94a3b8;
+    border-bottom-color: rgba(148,163,184,0.16);
+  }
+
+  .modern-table tbody td {
+    padding: 16px 14px;
+    border-bottom: 1px solid rgba(148,163,184,0.14);
+    vertical-align: top;
+  }
+
+  .modern-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .modern-table tbody tr:hover {
+    background: rgba(58,139,255,0.035);
+  }
+
+  body.dark .modern-table tbody tr:hover {
+    background: rgba(59,130,246,0.08);
+  }
+
+  .invoice-id-block {
+    display: grid;
+    gap: 5px;
+  }
+
+  .invoice-row-number {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  body.dark .invoice-row-number {
+    color: #f8fafc;
+  }
+
+  .invoice-public-meta {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .invoice-public-meta {
+    color: #94a3b8;
+  }
+
+  .client-cell {
+    display: grid;
+    gap: 4px;
+  }
+
+  .client-cell strong {
+    font-size: 14px;
+  }
+
+  .amount-cell {
+    display: grid;
+    gap: 4px;
+  }
+
+  .amount-main {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .amount-sub {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .amount-sub {
+    color: #94a3b8;
+  }
+
+  .date-cell {
+    display: grid;
+    gap: 4px;
+  }
+
+  .date-main {
+    font-weight: 600;
+  }
+
+  .date-sub {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .date-sub {
+    color: #94a3b8;
+  }
+
+  .balance-cell {
+    display: grid;
+    gap: 4px;
+  }
+
+  .balance-due {
+    font-weight: 700;
+  }
+
+  .balance-paid {
+    color: #16a34a;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .balance-overdue {
+    color: #ea580c;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .actions-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .actions-stack .btn {
+    white-space: nowrap;
+  }
+
+  .table-empty-inline {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .table-empty-inline {
+    color: #94a3b8;
+  }
+
+  .empty-state {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    padding: 34px 24px;
+  }
+
+  body.dark .empty-state {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  @media (max-width: 1100px) {
+    .dashboard-filter-form {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .filter-actions {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .dashboard-filter-form {
+      grid-template-columns: 1fr;
+    }
+
+    .table-section-header,
+    .table-scroll {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
+</style>
+
+<div class="dashboard-topbar">
+    <div class="dashboard-title-wrap">
+        <h1>
+            {% if lang == 'es' %}
+                Panel BillBeam
+            {% else %}
+                BillBeam Dashboard
+            {% endif %}
+        </h1>
+        <div class="dashboard-subcopy">
+            {% if lang == 'es' %}
+                Supervisa ingresos, pagos, facturas vencidas y el movimiento de tu negocio en un solo lugar.
+            {% else %}
+                Monitor revenue, payments, overdue invoices, and the flow of your business from one place.
+            {% endif %}
+        </div>
+    </div>
+
     <div class="quick-actions">
         <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn">
             {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
@@ -22,25 +452,90 @@
     </div>
 </div>
 
-<!-- SEARCH BAR -->
-<div class="search-bar modern">
-    <form method="get" action="/invoices">
-        <input
-            type="text"
-            name="q"
-            placeholder="{% if lang == 'es' %}Buscar cliente, factura #, notas, términos...{% else %}Search client, invoice #, notes, terms...{% endif %}"
-            value="{{ q }}">
-        <button type="submit" class="btn btn-secondary">
-            {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
-        </button>
-        {# Preserve lang when searching #}
+<div class="dashboard-filter-shell">
+    <div class="filter-top">
+        <div class="filter-title">
+            {% if lang == 'es' %}Buscar y filtrar{% else %}Search & Filter{% endif %}
+        </div>
+        <div class="filter-meta">
+            {% if q or status_filter or from_date_str or to_date_str %}
+                {% if lang == 'es' %}
+                    {{ filtered_count }} resultado{{ '' if filtered_count == 1 else 's' }} filtrado{{ '' if filtered_count == 1 else 's' }}
+                {% else %}
+                    {{ filtered_count }} filtered result{{ '' if filtered_count == 1 else 's' }}
+                {% endif %}
+            {% else %}
+                {% if lang == 'es' %}
+                    Mostrando {{ invoices|length }} factura{{ '' if invoices|length == 1 else 's' }}
+                {% else %}
+                    Showing {{ invoices|length }} invoice{{ '' if invoices|length == 1 else 's' }}
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" action="/invoices" class="dashboard-filter-form">
+        <div class="filter-field">
+            <label for="q">
+                {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+            </label>
+            <input
+                id="q"
+                type="text"
+                name="q"
+                placeholder="{% if lang == 'es' %}Cliente, factura #, notas o términos...{% else %}Client, invoice #, notes, or terms...{% endif %}"
+                value="{{ q }}"
+            >
+        </div>
+
+        <div class="filter-field">
+            <label for="status">
+                {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+            </label>
+            <select id="status" name="status">
+                <option value="">{% if lang == 'es' %}Todos{% else %}All{% endif %}</option>
+                <option value="Paid" {% if status_filter == 'Paid' %}selected{% endif %}>
+                    {% if lang == 'es' %}Pagadas{% else %}Paid{% endif %}
+                </option>
+                <option value="Sent" {% if status_filter == 'Sent' %}selected{% endif %}>
+                    {% if lang == 'es' %}Enviadas{% else %}Sent{% endif %}
+                </option>
+                <option value="Overdue" {% if status_filter == 'Overdue' %}selected{% endif %}>
+                    {% if lang == 'es' %}Vencidas{% else %}Overdue{% endif %}
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="from_date">
+                {% if lang == 'es' %}Desde{% else %}From{% endif %}
+            </label>
+            <input id="from_date" type="date" name="from_date" value="{{ from_date_str }}">
+        </div>
+
+        <div class="filter-field">
+            <label for="to_date">
+                {% if lang == 'es' %}Hasta{% else %}To{% endif %}
+            </label>
+            <input id="to_date" type="date" name="to_date" value="{{ to_date_str }}">
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-secondary">
+                {% if lang == 'es' %}Aplicar{% else %}Apply{% endif %}
+            </button>
+
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Limpiar{% else %}Clear{% endif %}
+            </a>
+        </div>
+
         <input type="hidden" name="lang" value="{{ lang }}">
     </form>
 </div>
 
 {% if invoices %}
 
-    <!-- KPI STRIP -->
     <div class="dashboard-cards enhanced">
 
         <div class="card kpi orange">
@@ -99,7 +594,6 @@
 
     </div>
 
-    <!-- STATUS SUMMARY STRIP -->
     <div class="status-summary">
         <div class="status-item paid">
             {% if lang == 'es' %}
@@ -124,10 +618,8 @@
         </div>
     </div>
 
-    <!-- ANALYTICS ROW: CHARTS + TOP CLIENTS + ITEMS -->
     <div class="charts-row">
 
-        <!-- Revenue over time (monthly) -->
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
@@ -151,7 +643,6 @@
             </p>
         </div>
 
-        <!-- Daily revenue (single-day viewer instead of scrollable chart) -->
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
@@ -197,7 +688,6 @@
                     class="chart-sub"
                     style="margin-top:10px;font-size:13px;opacity:0.8;"
                 >
-                    <!-- Filled by JS -->
                 </div>
             </div>
             <p class="chart-ai-hint">
@@ -209,7 +699,6 @@
             </p>
         </div>
 
-        <!-- Status breakdown -->
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
@@ -233,7 +722,6 @@
             </p>
         </div>
 
-        <!-- Top clients -->
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
@@ -249,7 +737,6 @@
             {% if top_clients and top_clients|length > 0 %}
                 <ul class="leaderboard">
                     {% for client in top_clients %}
-                        {# expect: client = (name, total_amount, invoice_count, pct) #}
                         <li class="leader-item">
                             <div class="leader-left">
                                 <div class="leader-main">
@@ -277,7 +764,7 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p style="font-size: 13px; opacity: 0.7; margin-top: 10px;">
+                <p class="table-empty-inline">
                     {% if lang == 'es' %}
                         Tus mejores clientes aparecerán aquí a medida que envíes más facturas.
                     {% else %}
@@ -294,7 +781,6 @@
             </p>
         </div>
 
-        <!-- Top items / services -->
         <div class="chart-card brand-accent">
             <div class="chart-header">
                 <div>
@@ -320,7 +806,6 @@
 
     </div>
 
-    <!-- TABLE -->
     <div class="table-wrapper">
         <div class="table-section-header">
             <div>
@@ -344,104 +829,152 @@
             </div>
         </div>
 
-        <table class="modern-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>
-                        {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Creada{% else %}Created{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Estado{% else %}Status{% endif %}
-                    </th>
-                    <th>
-                        {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
-                    </th>
-                </tr>
-            </thead>
+        <div class="table-scroll">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>
+                            {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                        </th>
+                        <th>
+                            {% if lang == 'es' %}Total{% else %}Total{% endif %}
+                        </th>
+                        <th>
+                            {% if lang == 'es' %}Creada / vence{% else %}Created / due{% endif %}
+                        </th>
+                        <th>
+                            {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+                        </th>
+                        <th>
+                            {% if lang == 'es' %}Saldo{% else %}Balance{% endif %}
+                        </th>
+                        <th>
+                            {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
+                        </th>
+                    </tr>
+                </thead>
 
-            <tbody>
-                {% for invoice in invoices %}
-                <tr class="
-                    {% if invoice[4] == 'Paid' %}row-paid
-                    {% elif invoice[4] == 'Overdue' %}row-overdue
-                    {% elif invoice[4] == 'Sent' %}row-sent
-                    {% endif %}
-                ">
-                    <td>#{{ invoice[0] }}</td>
-                    <td>{{ invoice[1] }}</td>
-                    <td>${{ "{:,.2f}".format(invoice[2]) }}</td>
-                    <td>{{ invoice[3].strftime('%Y-%m-%d %I:%M %p') }}</td>
-
-                    <td>
-                        {% if invoice[4] == "Paid" %}
-                            <span class="badge paid">
-                                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-                            </span>
-                        {% elif invoice[4] == "Overdue" %}
-                            <span class="badge overdue">
-                                {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
-                            </span>
-                        {% elif invoice[4] == "Sent" %}
-                            <span class="badge sent">
-                                {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
-                            </span>
-                        {% else %}
-                            {{ invoice[4] }}
+                <tbody>
+                    {% for invoice in invoices %}
+                    {% set invoice_amount = invoice[2] %}
+                    {% set invoice_total_paid = invoice[7] %}
+                    {% set invoice_balance = invoice_amount - invoice_total_paid %}
+                    <tr class="
+                        {% if invoice[4] == 'Paid' %}row-paid
+                        {% elif invoice[4] == 'Overdue' %}row-overdue
+                        {% elif invoice[4] == 'Sent' %}row-sent
                         {% endif %}
-                    </td>
+                    ">
+                        <td>
+                            <div class="invoice-id-block">
+                                <div class="invoice-row-number">{{ invoice[5] or ('#' ~ invoice[0]) }}</div>
+                                <div class="invoice-public-meta">ID {{ invoice[0] }}</div>
+                            </div>
+                        </td>
 
-                    <td class="action-buttons">
-                        <!-- View / Preview -->
-                        <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Ver{% else %}View{% endif %}
-                        </a>
+                        <td>
+                            <div class="client-cell">
+                                <strong>{{ invoice[1] }}</strong>
+                            </div>
+                        </td>
 
-                        <!-- Download PDF -->
-                        <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}PDF{% else %}PDF{% endif %}
-                        </a>
+                        <td>
+                            <div class="amount-cell">
+                                <div class="amount-main">${{ "{:,.2f}".format(invoice_amount) }}</div>
+                                <div class="amount-sub">
+                                    {% if lang == 'es' %}Importe total{% else %}Invoice total{% endif %}
+                                </div>
+                            </div>
+                        </td>
 
-                        <!-- Edit -->
-                        <a class="btn btn-edit" href="/edit/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
-                        </a>
+                        <td>
+                            <div class="date-cell">
+                                <div class="date-main">{{ invoice[3].strftime('%Y-%m-%d') if invoice[3] else '—' }}</div>
+                                <div class="date-sub">
+                                    {% if lang == 'es' %}Vence:{% else %}Due:{% endif %}
+                                    {{ invoice[6].strftime('%Y-%m-%d') if invoice[6] else '—' }}
+                                </div>
+                            </div>
+                        </td>
 
-                        <!-- Mark Paid (if not already) -->
-                        {% if invoice[4] != "Paid" %}
-                            <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
-                                {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
-                            </a>
-                        {% endif %}
+                        <td>
+                            {% if invoice[4] == "Paid" %}
+                                <span class="badge paid">
+                                    {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+                                </span>
+                            {% elif invoice[4] == "Overdue" %}
+                                <span class="badge overdue">
+                                    {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+                                </span>
+                            {% elif invoice[4] == "Sent" %}
+                                <span class="badge sent">
+                                    {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+                                </span>
+                            {% else %}
+                                {{ invoice[4] }}
+                            {% endif %}
+                        </td>
 
-                        <!-- Mark Sent (if Draft ever used) -->
-                        {% if invoice[4] == "Draft" %}
-                            <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent{% if lang %}?lang={{ lang }}{% endif %}">
-                                {% if lang == 'es' %}Marcar enviada{% else %}Mark Sent{% endif %}
-                            </a>
-                        {% endif %}
+                        <td>
+                            <div class="balance-cell">
+                                <div class="balance-due">${{ "{:,.2f}".format(invoice_balance if invoice_balance > 0 else 0) }}</div>
+                                {% if invoice[4] == "Paid" %}
+                                    <div class="balance-paid">
+                                        {% if lang == 'es' %}Liquidada{% else %}Settled{% endif %}
+                                    </div>
+                                {% elif invoice[4] == "Overdue" and invoice_balance > 0 %}
+                                    <div class="balance-overdue">
+                                        {% if lang == 'es' %}Requiere seguimiento{% else %}Needs follow-up{% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="amount-sub">
+                                        {% if lang == 'es' %}Pendiente{% else %}Outstanding{% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
 
-                        <!-- SEND INVOICE VIA EMAIL -->
-                        <a class="btn btn-info" href="/send-email/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
-                        </a>
+                        <td>
+                            <div class="actions-stack">
+                                <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Ver{% else %}View{% endif %}
+                                </a>
 
-                        <!-- DELETE -->
-                        <a class="btn btn-danger" href="/delete/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                            {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+                                <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    PDF
+                                </a>
 
-        </table>
+                                <a class="btn btn-edit" href="/edit/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
+                                </a>
+
+                                {% if invoice[4] != "Paid" %}
+                                    <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
+                                        {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
+                                    </a>
+                                {% endif %}
+
+                                {% if invoice[4] == "Draft" %}
+                                    <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent{% if lang %}?lang={{ lang }}{% endif %}">
+                                        {% if lang == 'es' %}Marcar enviada{% else %}Mark Sent{% endif %}
+                                    </a>
+                                {% endif %}
+
+                                <a class="btn btn-info" href="/send-email/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
+                                </a>
+
+                                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
 {% else %}
@@ -464,12 +997,10 @@
 
 {% endif %}
 
-<!-- CHART.JS SCRIPT (data from Flask + live revenue counter + daily single-day viewer) -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     {% if invoices %}
 
-    // ---------- GLOBAL CHART DEFAULTS (BOLDER GRID, KEEP COLORS) ----------
     if (window.Chart && Chart.defaults && Chart.defaults.scale) {
         if (Chart.defaults.scale.grid) {
             Chart.defaults.scale.grid.color = "rgba(148, 163, 184, 0.35)";
@@ -477,7 +1008,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Data from Flask
     const revenueLabels = {{ monthly_chart_labels|tojson }};
     const revenueValues = {{ monthly_chart_totals|tojson }};
     const statusLabels  = {{ status_chart_labels|tojson }};
@@ -485,12 +1015,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const dailyLabels   = {{ daily_chart_labels|tojson }};
     const dailyValues   = {{ daily_chart_totals|tojson }};
 
-    // Top items data
     const itemLabels = {{ item_labels|default([], true)|tojson }};
     const itemTotals = {{ item_totals|default([], true)|tojson }};
     const itemCounts = {{ item_counts|default([], true)|tojson }};
 
-    // ---------- Revenue chart (monthly, line) ----------
     const revCtx = document.getElementById("revenueChart");
     if (revCtx && revenueLabels.length > 0) {
         new Chart(revCtx, {
@@ -548,7 +1076,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // ---------- Daily revenue single-day viewer ----------
     const dailySelect = document.getElementById("dailyDateSelect");
     const dailySummary = document.getElementById("dailyRevenueSummary");
 
@@ -591,7 +1118,6 @@ document.addEventListener("DOMContentLoaded", function() {
         updateDailySummary();
     }
 
-    // ---------- Status chart (doughnut) ----------
     const statusCtx = document.getElementById("statusChart");
     if (statusCtx && statusLabels.length > 0) {
         new Chart(statusCtx, {
@@ -601,9 +1127,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     data: statusValues,
                     backgroundColor: [
-                        "#22c55e", // Paid - green
-                        "#3b82f6", // Sent - blue
-                        "#ef4444"  // Overdue - red
+                        "#22c55e",
+                        "#3b82f6",
+                        "#ef4444"
                     ],
                     borderColor: "#020617",
                     borderWidth: 1
@@ -625,7 +1151,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // ---------- Top items (bar chart by total billed) ----------
     const itemCtx = document.getElementById("itemChart");
     if (itemCtx && itemLabels.length > 0) {
         new Chart(itemCtx, {
@@ -690,11 +1215,10 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // ---------- Live animated counter for Total Revenue ----------
     const totalRevenue = {{ total_revenue|tojson }};
     const totalRevenueEl = document.getElementById("totalRevenueKpi");
     if (totalRevenueEl && !isNaN(totalRevenue)) {
-        const duration = 800; // ms
+        const duration = 800;
         const start = performance.now();
         const startValue = 0;
 
@@ -719,14 +1243,5 @@ document.addEventListener("DOMContentLoaded", function() {
     {% endif %}
 });
 </script>
-
-<style>
-.dashboard-header h1 {
-    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
-    -webkit-background-clip: text;
-    color: transparent;
-    letter-spacing: 0.02em;
-}
-</style>
 
 {% endblock %}

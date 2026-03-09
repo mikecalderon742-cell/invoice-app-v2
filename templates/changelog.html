@@ -1,153 +1,588 @@
 {% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Registro de cambios · BillBeam
+  {% else %}
+    Changelog · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Sigue la evolución de BillBeam con un resumen de mejoras recientes en facturación, paneles y experiencia del producto.
+  {% else %}
+    Follow BillBeam’s evolution with a running summary of recent improvements to invoicing, dashboards, and product experience.
+  {% endif %}
+{% endblock %}
 
 {% block content %}
-<div style="max-width: 900px; margin: 0 auto 28px;">
-    <header style="margin-bottom: 20px;">
-        <p style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.75;">
-            {% if lang == 'es' %}Registro de cambios{% else %}Changelog{% endif %}
-        </p>
-        <h1 style="font-size: 26px; margin: 0 0 6px;">
-            {% if lang == 'es' %}
-                Cómo ha ido evolucionando BillBeam
-            {% else %}
-                How BillBeam is evolving over time
-            {% endif %}
-        </h1>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 560px;">
-            {% if lang == 'es' %}
-                Un resumen de las mejoras recientes en el creador de facturas, el panel y el asistente de IA.
-            {% else %}
-                A running log of improvements to the invoice editor, dashboard, and in-app AI assistant.
-            {% endif %}
-        </p>
-    </header>
 
-    <section style="display:flex; flex-direction:column; gap:16px;">
-        <!-- v2.1 – AI assistant + landing -->
-        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
-            <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
-                <div>
-                    <h2 style="font-size:16px; margin:0 0 4px;">
-                        {% if lang == 'es' %}
-                            v2.1 — Asistente BillBeam y nueva landing
-                        {% else %}
-                            v2.1 — BillBeam Assistant & new landing
-                        {% endif %}
-                    </h2>
-                    <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
-                        {% if lang == 'es' %}
-                            Lanzado en 2026
-                        {% else %}
-                            Shipped in 2026
-                        {% endif %}
-                    </p>
-                </div>
-                <span style="font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid rgba(56,189,248,0.7); opacity:0.9;">
-                    {% if lang == 'es' %}Actual{% else %}Current{% endif %}
-                </span>
-            </div>
-            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
-                {% if lang == 'es' %}
-                    <li>Nuevo asistente de IA dentro del panel, accesible desde la parte inferior derecha.</li>
-                    <li>Responde en inglés o español según el idioma de la interfaz.</li>
-                    <li>Plantilla pública de landing / marketing con mensajes claros para freelancers.</li>
-                    <li>Mejoras visuales en el modo oscuro y el tema de marca por defecto.</li>
-                {% else %}
-                    <li>New in-app AI assistant, accessible from the bottom-right of your dashboard.</li>
-                    <li>Answers in English or Spanish based on the interface language.</li>
-                    <li>Public marketing landing page tuned for freelancers and small studios.</li>
-                    <li>Visual polish to dark mode and default brand theme.</li>
-                {% endif %}
-            </ul>
-        </article>
+<style>
+  .changelog-page {
+    display: grid;
+    gap: 22px;
+  }
 
-        <!-- v2.0 – Analytics & client portal -->
-        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
-            <h2 style="font-size:16px; margin:0 0 4px;">
-                {% if lang == 'es' %}
-                    v2.0 — Panel de métricas y vista pública de facturas
-                {% else %}
-                    v2.0 — Analytics dashboard & public invoice view
-                {% endif %}
-            </h2>
-            <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
-                {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
-            </p>
-            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
-                {% if lang == 'es' %}
-                    <li>KPIs clave en la parte superior del historial de facturas:
-                        ingresos, facturas pagadas y vencidas, ticket promedio.</li>
-                    <li>Gráficas de ingresos mensuales y diarios para ver tendencias.</li>
-                    <li>Enlaces públicos para que tus clientes vean la factura y descarguen el PDF.</li>
-                    <li>Detección automática de facturas vencidas según la fecha de vencimiento.</li>
-                {% else %}
-                    <li>Key KPIs above invoice history: revenue, paid vs overdue, and average invoice size.</li>
-                    <li>Monthly and daily revenue charts to spot trends at a glance.</li>
-                    <li>Public invoice links so clients can view and download PDFs in a browser.</li>
-                    <li>Automatic “Overdue” status once invoices pass their due date.</li>
-                {% endif %}
-            </ul>
-        </article>
+  .changelog-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
 
-        <!-- v1.5 – Clients & payments -->
-        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
-            <h2 style="font-size:16px; margin:0 0 4px;">
-                {% if lang == 'es' %}
-                    v1.5 — Gestión de clientes y pagos parciales
-                {% else %}
-                    v1.5 — Clients & partial payments
-                {% endif %}
-            </h2>
-            <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
-                {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
-            </p>
-            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
-                {% if lang == 'es' %}
-                    <li>Sección de clientes para ver y reutilizar datos de contacto.</li>
-                    <li>Registro de pagos parciales con método y notas por factura.</li>
-                    <li>Cálculo automático del saldo pendiente de cada factura.</li>
-                {% else %}
-                    <li>Clients section to store and reuse contact details.</li>
-                    <li>Partial payments with method and notes per invoice.</li>
-                    <li>Automatic remaining balance calculation for each invoice.</li>
-                {% endif %}
-            </ul>
-        </article>
+  .changelog-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
 
-        <!-- v1.0 – First release -->
-        <article style="border-radius: 18px; border:1px solid rgba(148,163,184,0.45); padding:14px 16px;">
-            <h2 style="font-size:16px; margin:0 0 4px;">
-                {% if lang == 'es' %}
-                    v1.0 — Creador de facturas minimalista
-                {% else %}
-                    v1.0 — Minimalist invoice creator
-                {% endif %}
-            </h2>
-            <p style="font-size:12px; opacity:0.7; margin:0 0 6px;">
-                {% if lang == 'es' %}Lanzado en 2024{% else %}Shipped in 2024{% endif %}
-            </p>
-            <ul style="font-size:13px; margin:4px 0 0; padding-left:18px; opacity:0.9;">
-                {% if lang == 'es' %}
-                    <li>Formulario sencillo de creación de facturas con concepto + importe.</li>
-                    <li>Descarga de PDF lista para enviar a clientes.</li>
-                    <li>Historial básico de facturas en una sola vista.</li>
-                {% else %}
-                    <li>Simple invoice creation flow with client + line items + totals.</li>
-                    <li>PDF download ready to send to clients.</li>
-                    <li>Basic invoice history in a single list view.</li>
-                {% endif %}
-            </ul>
-        </article>
-    </section>
+  .changelog-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(32px, 4vw, 46px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
 
-    <footer style="margin-top: 28px; font-size: 13px; opacity: 0.85;">
+  .changelog-subcopy {
+    max-width: 780px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .changelog-subcopy {
+    color: #94a3b8;
+  }
+
+  .changelog-hero-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .changelog-hero-card,
+  .changelog-main-card,
+  .changelog-side-card,
+  .changelog-item {
+    border-radius: 22px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .changelog-hero-card,
+  body.dark .changelog-main-card,
+  body.dark .changelog-side-card,
+  body.dark .changelog-item {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .changelog-hero-card {
+    padding: 16px;
+  }
+
+  .changelog-hero-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .changelog-hero-label {
+    color: #94a3b8;
+  }
+
+  .changelog-hero-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .changelog-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.9fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  .changelog-main-card {
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .changelog-item {
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .changelog-item.current {
+    border-color: rgba(59,130,246,0.24);
+    box-shadow:
+      0 24px 58px rgba(37,99,235,0.10),
+      0 0 0 1px rgba(59,130,246,0.08);
+  }
+
+  body.dark .changelog-item.current {
+    border-color: rgba(96,165,250,0.30);
+  }
+
+  .changelog-item::after {
+    content: "";
+    position: absolute;
+    inset: auto -50px -50px auto;
+    width: 150px;
+    height: 150px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .changelog-item-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .changelog-item h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .changelog-date {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  body.dark .changelog-date {
+    color: #94a3b8;
+  }
+
+  .changelog-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .changelog-pill.current {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+  }
+
+  body.dark .changelog-pill.current {
+    color: #bfdbfe;
+    background: rgba(29, 78, 216, 0.28);
+    border-color: rgba(147, 197, 253, 0.26);
+  }
+
+  .changelog-item ul {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .changelog-item li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .changelog-item li {
+    color: #cbd5e1;
+  }
+
+  .changelog-side-stack {
+    display: grid;
+    gap: 14px;
+    position: sticky;
+    top: 88px;
+  }
+
+  .changelog-side-card {
+    padding: 18px;
+  }
+
+  .changelog-side-kicker {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  body.dark .changelog-side-kicker {
+    color: #94a3b8;
+  }
+
+  .changelog-side-card h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .changelog-side-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .changelog-side-card p {
+    color: #94a3b8;
+  }
+
+  .changelog-side-card ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .changelog-side-card li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .changelog-side-card li {
+    color: #cbd5e1;
+  }
+
+  .changelog-highlight {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .changelog-highlight {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .changelog-highlight strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .changelog-highlight p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .changelog-highlight p {
+    color: #cbd5e1;
+  }
+
+  .changelog-footer {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .changelog-footer {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 1020px) {
+    .changelog-layout,
+    .changelog-hero-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .changelog-side-stack {
+      position: static;
+      top: auto;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .changelog-hero-card,
+    .changelog-main-card,
+    .changelog-side-card,
+    .changelog-item {
+      padding: 16px;
+    }
+  }
+</style>
+
+<div class="changelog-page">
+
+  <div class="changelog-topbar">
+    <div class="changelog-title-wrap">
+      <h1>
         {% if lang == 'es' %}
-            ¿Quieres ver qué viene después? Las próximas ideas suelen empezar como notas aquí
-            antes de llegar al producto.
+          Cómo ha ido evolucionando BillBeam
         {% else %}
-            Want to see what comes next? Future ideas usually start as notes here
-            before they ship into the product.
+          How BillBeam is evolving over time
         {% endif %}
-    </footer>
+      </h1>
+      <div class="changelog-subcopy">
+        {% if lang == 'es' %}
+          Un resumen continuo de mejoras recientes en el creador de facturas, el panel, la experiencia del cliente y el asistente dentro de la app.
+        {% else %}
+          A running summary of recent improvements to the invoice creator, dashboard, client experience, and in-app assistant.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="changelog-hero-strip">
+    <div class="changelog-hero-card">
+      <div class="changelog-hero-label">
+        {% if lang == 'es' %}Dirección{% else %}Direction{% endif %}
+      </div>
+      <div class="changelog-hero-value">
+        {% if lang == 'es' %}Más claridad y velocidad{% else %}More clarity and speed{% endif %}
+      </div>
+    </div>
+
+    <div class="changelog-hero-card">
+      <div class="changelog-hero-label">
+        {% if lang == 'es' %}Producto{% else %}Product{% endif %}
+      </div>
+      <div class="changelog-hero-value">
+        {% if lang == 'es' %}Facturación moderna{% else %}Modern invoicing{% endif %}
+      </div>
+    </div>
+
+    <div class="changelog-hero-card">
+      <div class="changelog-hero-label">
+        {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+      </div>
+      <div class="changelog-hero-value">
+        {% if lang == 'es' %}Mejorando constantemente{% else %}Actively improving{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-layout">
+
+    <div class="changelog-main-card">
+
+      <article class="changelog-item current">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v2.1 — BillBeam Assistant y nueva landing
+              {% else %}
+                v2.1 — BillBeam Assistant and new landing
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}
+                Lanzado en 2026
+              {% else %}
+                Shipped in 2026
+              {% endif %}
+            </p>
+          </div>
+          <span class="changelog-pill current">
+            {% if lang == 'es' %}Actual{% else %}Current{% endif %}
+          </span>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Nuevo asistente de IA dentro del panel, accesible desde la parte inferior derecha.</li>
+            <li>Respuestas en inglés o español según el idioma de la interfaz.</li>
+            <li>Landing pública y marketing más claros para freelancers y pequeños estudios.</li>
+            <li>Mejoras visuales en modo oscuro y en el tema de marca por defecto.</li>
+          {% else %}
+            <li>New in-app AI assistant accessible from the bottom-right of the dashboard.</li>
+            <li>Answers in English or Spanish based on the interface language.</li>
+            <li>Clearer public landing and marketing for freelancers and small studios.</li>
+            <li>Visual polish to dark mode and the default brand theme.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v2.0 — Panel de métricas y vista pública de facturas
+              {% else %}
+                v2.0 — Analytics dashboard and public invoice view
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>KPIs clave en el historial de facturas: ingresos, pagadas, vencidas y ticket promedio.</li>
+            <li>Gráficas de ingresos mensuales y diarios para detectar tendencias rápidamente.</li>
+            <li>Enlaces públicos para que tus clientes vean la factura y descarguen el PDF.</li>
+            <li>Estado “Vencida” automático según la fecha límite de pago.</li>
+          {% else %}
+            <li>Key KPIs in invoice history: revenue, paid vs overdue, and average invoice size.</li>
+            <li>Monthly and daily revenue charts to spot trends quickly.</li>
+            <li>Public invoice links so clients can view and download PDFs in the browser.</li>
+            <li>Automatic overdue status once invoices pass their due date.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v1.5 — Gestión de clientes y pagos parciales
+              {% else %}
+                v1.5 — Clients and partial payments
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Sección de clientes para guardar y reutilizar datos de contacto.</li>
+            <li>Registro de pagos parciales con método y notas por factura.</li>
+            <li>Cálculo automático del saldo pendiente en cada factura.</li>
+          {% else %}
+            <li>Clients section to store and reuse contact details.</li>
+            <li>Partial payment tracking with method and notes per invoice.</li>
+            <li>Automatic remaining balance calculation on each invoice.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v1.0 — Creador de facturas minimalista
+              {% else %}
+                v1.0 — Minimalist invoice creator
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado en 2024{% else %}Shipped in 2024{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Flujo simple para crear facturas con cliente, conceptos e importe total.</li>
+            <li>Descarga de PDF lista para enviar a clientes.</li>
+            <li>Historial básico de facturas en una sola vista.</li>
+          {% else %}
+            <li>Simple invoice creation flow with client, line items, and totals.</li>
+            <li>PDF download ready to send to clients.</li>
+            <li>Basic invoice history in a single view.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+    </div>
+
+    <aside class="changelog-side-stack">
+
+      <section class="changelog-side-card">
+        <div class="changelog-side-kicker">
+          {% if lang == 'es' %}Resumen{% else %}At a glance{% endif %}
+        </div>
+        <ul>
+          {% if lang == 'es' %}
+            <li>Más claridad en el panel y el flujo de facturas.</li>
+            <li>Más profesionalismo en la experiencia del cliente.</li>
+            <li>Más ayuda dentro de la app con BillBeam Assistant.</li>
+          {% else %}
+            <li>More clarity in the dashboard and invoice flow.</li>
+            <li>More professionalism in the client experience.</li>
+            <li>More in-app help through BillBeam Assistant.</li>
+          {% endif %}
+        </ul>
+      </section>
+
+      <section class="changelog-side-card">
+        <h3>
+          {% if lang == 'es' %}Qué suele venir después{% else %}What usually comes next{% endif %}
+        </h3>
+        <p>
+          {% if lang == 'es' %}
+            Las ideas futuras suelen empezar como mejoras pequeñas de claridad, automatización o experiencia visual antes de convertirse en funciones completas.
+          {% else %}
+            Future ideas often begin as smaller improvements to clarity, automation, or visual polish before becoming full product features.
+          {% endif %}
+        </p>
+      </section>
+
+      <section class="changelog-highlight">
+        <strong>
+          {% if lang == 'es' %}Nota de producto{% else %}Product note{% endif %}
+        </strong>
+        <p>
+          {% if lang == 'es' %}
+            BillBeam está evolucionando para sentirse más rápido, más limpio y más útil para freelancers, pequeños equipos y estudios que quieren cobrar con menos fricción.
+          {% else %}
+            BillBeam is evolving to feel faster, cleaner, and more useful for freelancers, lean teams, and studios who want to get paid with less friction.
+          {% endif %}
+        </p>
+      </section>
+
+    </aside>
+
+  </div>
+
+  <div class="changelog-footer">
+    {% if lang == 'es' %}
+      ¿Quieres ver qué viene después? Las próximas ideas suelen empezar como notas aquí antes de llegar al producto.
+    {% else %}
+      Want to see what comes next? Future ideas usually start as notes here before they ship into the product.
+    {% endif %}
+  </div>
+
 </div>
+
 {% endblock %}

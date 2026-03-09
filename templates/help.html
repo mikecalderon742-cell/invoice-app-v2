@@ -1,140 +1,672 @@
 {% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Centro de ayuda · BillBeam
+  {% else %}
+    Help Center · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Aprende a usar BillBeam, enviar facturas, compartir enlaces públicos y recibir ayuda dentro de la app.
+  {% else %}
+    Learn how to use BillBeam, send invoices, share public invoice links, and get help inside the app.
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 
-<div class="dashboard-header">
-    <h1>
+<style>
+  .help-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .help-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .help-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .help-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(32px, 4vw, 46px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .help-subcopy {
+    max-width: 800px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .help-subcopy {
+    color: #94a3b8;
+  }
+
+  .help-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) 320px;
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .help-hero-panel,
+  .help-side-panel,
+  .help-section-card,
+  .help-value-card {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .help-hero-panel,
+  body.dark .help-side-panel,
+  body.dark .help-section-card,
+  body.dark .help-value-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .help-hero-panel {
+    padding: 26px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .help-hero-panel::after {
+    content: "";
+    position: absolute;
+    inset: auto -70px -70px auto;
+    width: 210px;
+    height: 210px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .help-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.2);
+    margin-bottom: 14px;
+  }
+
+  body.dark .help-kicker {
+    background: rgba(15,23,42,0.55);
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .help-hero-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+
+  .help-hero-copy {
+    margin-top: 14px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .help-hero-copy {
+    color: #cbd5e1;
+  }
+
+  .help-hero-points {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .help-point {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .help-point {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .help-point-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .help-point-label {
+    color: #94a3b8;
+  }
+
+  .help-point-value {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .help-side-panel {
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+  }
+
+  .help-side-panel h3 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .help-side-copy {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .help-side-copy {
+    color: #94a3b8;
+  }
+
+  .help-side-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .help-side-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .help-side-item {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .help-side-bullet {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 8px 18px rgba(58,139,255,0.22);
+  }
+
+  .help-grid {
+    display: grid;
+    gap: 20px;
+  }
+
+  .help-section-card {
+    padding: 22px;
+  }
+
+  .help-section-card h2,
+  .help-section-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .help-section-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #475569;
+  }
+
+  body.dark .help-section-card p {
+    color: #cbd5e1;
+  }
+
+  .help-steps {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .help-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .help-step {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .help-step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 8px 18px rgba(58,139,255,0.22);
+  }
+
+  .help-step-copy {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .help-step-copy {
+    color: #cbd5e1;
+  }
+
+  .help-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .help-value-card {
+    padding: 18px;
+  }
+
+  .help-value-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .help-value-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .help-value-copy {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 1020px) {
+    .help-hero,
+    .help-values {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .help-hero-points {
+      grid-template-columns: 1fr;
+    }
+
+    .help-hero-panel,
+    .help-side-panel,
+    .help-section-card,
+    .help-value-card {
+      padding: 18px;
+    }
+  }
+</style>
+
+<div class="help-page">
+
+  <div class="help-topbar">
+    <div class="help-title-wrap">
+      <h1>
         {% if lang == 'es' %}
-            Centro de ayuda
+          Centro de ayuda
         {% else %}
-            Help Center
+          Help Center
         {% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Ver preguntas frecuentes{% else %}View FAQs{% endif %}
-        </a>
+      </h1>
+      <div class="help-subcopy">
+        {% if lang == 'es' %}
+          Aprende a configurar BillBeam, crear facturas, compartir enlaces públicos y sacar más provecho del asistente dentro de la app.
+        {% else %}
+          Learn how to set up BillBeam, create invoices, share public links, and get more value from the in-app assistant.
+        {% endif %}
+      </div>
     </div>
-</div>
 
-<div class="form-wrapper fade-in-up" style="max-width:900px;">
-    <section class="reveal" style="margin-bottom:24px;">
-        <h2 style="margin-top:0;">
+    <div class="quick-actions">
+      <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Ver preguntas frecuentes{% else %}View FAQs{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="help-hero">
+    <div class="help-hero-panel reveal">
+      <div class="help-kicker">
+        {% if lang == 'es' %}
+          Soporte y guía • BillBeam
+        {% else %}
+          Support and guidance • BillBeam
+        {% endif %}
+      </div>
+
+      <h2 class="help-hero-title">
+        {% if lang == 'es' %}
+          Empezar con BillBeam
+        {% else %}
+          Getting started with BillBeam
+        {% endif %}
+      </h2>
+
+      <div class="help-hero-copy">
+        {% if lang == 'es' %}
+          BillBeam está diseñado para que puedas pasar de configurar tu negocio a crear y enviar facturas con muy pocos pasos. Aquí tienes el camino más rápido para empezar bien.
+        {% else %}
+          BillBeam is designed to take you from setup to sending invoices in just a few steps. Here is the fastest path to getting started the right way.
+        {% endif %}
+      </div>
+
+      <div class="help-hero-points">
+        <div class="help-point">
+          <div class="help-point-label">
+            {% if lang == 'es' %}Primer paso{% else %}First step{% endif %}
+          </div>
+          <div class="help-point-value">
+            {% if lang == 'es' %}Configura tu perfil{% else %}Set up your profile{% endif %}
+          </div>
+        </div>
+
+        <div class="help-point">
+          <div class="help-point-label">
+            {% if lang == 'es' %}Después{% else %}Then{% endif %}
+          </div>
+          <div class="help-point-value">
+            {% if lang == 'es' %}Crea tu factura{% else %}Create your invoice{% endif %}
+          </div>
+        </div>
+
+        <div class="help-point">
+          <div class="help-point-label">
+            {% if lang == 'es' %}Resultado{% else %}Outcome{% endif %}
+          </div>
+          <div class="help-point-value">
+            {% if lang == 'es' %}Cobra más fácil{% else %}Get paid easier{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="help-side-panel reveal">
+      <h3>
+        {% if lang == 'es' %}Ruta recomendada{% else %}Recommended path{% endif %}
+      </h3>
+
+      <div class="help-side-copy">
+        {% if lang == 'es' %}
+          Si eres nuevo en BillBeam, esta secuencia te ayudará a evitar errores y a dejar todo listo más rápido.
+        {% else %}
+          If you are new to BillBeam, this sequence helps you avoid mistakes and get set up faster.
+        {% endif %}
+      </div>
+
+      <div class="help-side-list">
+        <div class="help-side-item">
+          <div class="help-side-bullet">1</div>
+          <div>
             {% if lang == 'es' %}
-                Empezar con BillBeam
+              Configura tu negocio en Ajustes.
             {% else %}
-                Getting started with BillBeam
+              Set up your business in Settings.
             {% endif %}
-        </h2>
-        <ol style="font-size:0.95rem; padding-left:1.4rem; margin-top:10px;">
-            <li>
-                {% if lang == 'es' %}
-                    Crea una cuenta o inicia sesión con tu correo.
-                {% else %}
-                    Create an account or sign in with your email.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Configura tu perfil de negocio en la sección de Configuración (logo, nombre,
-                    datos de contacto).
-                {% else %}
-                    Set up your business profile in Settings (logo, name, contact details).
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Usa “Crear factura” para capturar a tu cliente, agregar conceptos y revisar
-                    el total.
-                {% else %}
-                    Use “Create Invoice” to add your client, line items, and review the total.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Guarda la factura y, si quieres, envíala por correo directamente desde
-                    BillBeam.
-                {% else %}
-                    Save the invoice and optionally send it by email directly from BillBeam.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Registra pagos desde el historial de facturas para mantener tu balance al día.
-                {% else %}
-                    Record payments from the invoice history to keep your balances up to date.
-                {% endif %}
-            </li>
-        </ol>
+          </div>
+        </div>
+
+        <div class="help-side-item">
+          <div class="help-side-bullet">2</div>
+          <div>
+            {% if lang == 'es' %}
+              Crea tu primera factura y revisa la vista previa.
+            {% else %}
+              Create your first invoice and review the preview.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="help-side-item">
+          <div class="help-side-bullet">3</div>
+          <div>
+            {% if lang == 'es' %}
+              Guárdala y envíala por correo o comparte el enlace.
+            {% else %}
+              Save it and send it by email or share the invoice link.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="help-grid">
+
+    <section class="help-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}
+          Primeros pasos dentro de BillBeam
+        {% else %}
+          First steps inside BillBeam
+        {% endif %}
+      </h3>
+
+      <div class="help-steps">
+        <div class="help-step">
+          <div class="help-step-number">1</div>
+          <div class="help-step-copy">
+            {% if lang == 'es' %}
+              Crea una cuenta o inicia sesión con tu correo.
+            {% else %}
+              Create an account or sign in with your email.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-number">2</div>
+          <div class="help-step-copy">
+            {% if lang == 'es' %}
+              Configura tu perfil de negocio en Configuración con tu logo, nombre y datos de contacto.
+            {% else %}
+              Set up your business profile in Settings with your logo, name, and contact details.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-number">3</div>
+          <div class="help-step-copy">
+            {% if lang == 'es' %}
+              Usa “Crear factura” para capturar a tu cliente, añadir conceptos y revisar el total.
+            {% else %}
+              Use “Create Invoice” to add your client, line items, and review the total.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-number">4</div>
+          <div class="help-step-copy">
+            {% if lang == 'es' %}
+              Guarda la factura y, si quieres, envíala por correo directamente desde BillBeam.
+            {% else %}
+              Save the invoice and optionally send it by email directly from BillBeam.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-number">5</div>
+          <div class="help-step-copy">
+            {% if lang == 'es' %}
+              Registra pagos desde el historial de facturas para mantener tus balances al día.
+            {% else %}
+              Record payments from invoice history to keep your balances up to date.
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="reveal" style="margin-bottom:24px;">
-        <h3>
-            {% if lang == 'es' %}¿Cómo uso la vista pública de factura?{% else %}How do public invoice links work?{% endif %}
-        </h3>
-        <p style="font-size:0.95rem; opacity:0.9;">
-            {% if lang == 'es' %}
-                Cuando guardas una factura, BillBeam puede generar un enlace público seguro
-                para tu cliente. Desde ese enlace, tu cliente puede ver un resumen moderno de
-                la factura, el historial de pagos y descargar el PDF.
-            {% else %}
-                When you save an invoice, BillBeam can generate a secure public link for your
-                client. From that link, they can see a modern invoice summary, payment history,
-                and download the PDF.
-            {% endif %}
-        </p>
-        <p style="font-size:0.9rem; opacity:0.85;">
-            {% if lang == 'es' %}
-                El enlace está pensado para compartirse por correo o mensajería. No lo publiques
-                en páginas abiertas si incluye información sensible.
-            {% else %}
-                The link is meant to be shared via email or messaging. Avoid posting it on fully
-                public pages if it contains sensitive information.
-            {% endif %}
-        </p>
+    <section class="help-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}
+          ¿Cómo funcionan los enlaces públicos de factura?
+        {% else %}
+          How do public invoice links work?
+        {% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Cuando guardas una factura, BillBeam puede generar un enlace público seguro para tu cliente. Desde ese enlace, tu cliente puede ver un resumen moderno de la factura, revisar el historial de pagos y descargar el PDF.
+        {% else %}
+          When you save an invoice, BillBeam can generate a secure public link for your client. From that link, they can view a modern invoice summary, review payment history, and download the PDF.
+        {% endif %}
+      </p>
+      <p style="margin-top:12px;">
+        {% if lang == 'es' %}
+          El enlace está pensado para compartirse por correo o mensajería. Evita publicarlo en páginas totalmente abiertas si contiene información sensible.
+        {% else %}
+          The link is meant to be shared by email or messaging. Avoid posting it on fully public pages if it contains sensitive information.
+        {% endif %}
+      </p>
     </section>
 
-    <section class="reveal" style="margin-bottom:24px;">
-        <h3>
-            {% if lang == 'es' %}Asistente BillBeam{% else %}BillBeam Assistant{% endif %}
-        </h3>
-        <p style="font-size:0.95rem; opacity:0.9;">
-            {% if lang == 'es' %}
-                En la esquina de la app verás un botón de chat. Ahí puedes hacer preguntas sobre
-                tus facturas, términos sugeridos, recordatorios de cobro y más. El asistente usa
-                el contexto de la página donde estás para darte mejores respuestas.
-            {% else %}
-                In the corner of the app you’ll see a chat bubble. You can ask questions about
-                your invoices, suggested wording, follow-up ideas for overdue payments, and more.
-                The assistant uses page context to give more relevant answers.
-            {% endif %}
-        </p>
+    <section class="help-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}BillBeam Assistant{% else %}BillBeam Assistant{% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          En una esquina de la app verás un botón de chat. Desde ahí puedes hacer preguntas sobre tus facturas, textos sugeridos, recordatorios de cobro y más. El asistente usa el contexto de la página donde estás para darte respuestas más útiles.
+        {% else %}
+          In a corner of the app you will see a chat button. From there you can ask questions about your invoices, suggested wording, follow-up reminders, and more. The assistant uses the context of the page you are on to provide more useful answers.
+        {% endif %}
+      </p>
     </section>
 
-    <section class="reveal">
-        <h3>
-            {% if lang == 'es' %}Soporte y contacto{% else %}Support & contact{% endif %}
-        </h3>
-        <p style="font-size:0.95rem; opacity:0.9;">
-            {% if lang == 'es' %}
-                Si algo no funciona como esperas, o necesitas ayuda con un caso específico,
-                comparte una descripción clara del problema, el navegador que usas y, si es
-                posible, capturas de pantalla.
-            {% else %}
-                If something isn’t working as expected or you need help with a specific case,
-                please include a clear description of the issue, which browser you’re using,
-                and screenshots if possible.
-            {% endif %}
-        </p>
-        <p style="font-size:0.9rem; opacity:0.85;">
-            {% if lang == 'es' %}
-                Puedes enviar tu mensaje desde esta página de ayuda o respondiendo a cualquier
-                correo de BillBeam.
-            {% else %}
-                You can reach out from this Help section or by replying to any BillBeam email
-                you receive.
-            {% endif %}
-        </p>
+    <div class="help-values reveal">
+      <div class="help-value-card">
+        <div class="help-value-title">
+          {% if lang == 'es' %}Configuración{% else %}Setup{% endif %}
+        </div>
+        <div class="help-value-copy">
+          {% if lang == 'es' %}
+            Una buena configuración inicial te ahorra trabajo manual en cada factura futura.
+          {% else %}
+            A strong initial setup saves manual work on every future invoice.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="help-value-card">
+        <div class="help-value-title">
+          {% if lang == 'es' %}Claridad{% else %}Clarity{% endif %}
+        </div>
+        <div class="help-value-copy">
+          {% if lang == 'es' %}
+            Cuanto más clara sea la factura, menos preguntas tendrá tu cliente antes de pagar.
+          {% else %}
+            The clearer the invoice, the fewer questions your client will have before paying.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="help-value-card">
+        <div class="help-value-title">
+          {% if lang == 'es' %}Seguimiento{% else %}Follow-up{% endif %}
+        </div>
+        <div class="help-value-copy">
+          {% if lang == 'es' %}
+            Registrar pagos y revisar estados te ayuda a mantener tu flujo financiero bajo control.
+          {% else %}
+            Recording payments and reviewing statuses helps keep your cash flow under control.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <section class="help-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}Soporte y contacto{% else %}Support & contact{% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Si algo no funciona como esperas, o necesitas ayuda con un caso específico, comparte una descripción clara del problema, el navegador que usas y, si es posible, algunas capturas de pantalla.
+        {% else %}
+          If something is not working as expected, or you need help with a specific case, include a clear description of the problem, which browser you are using, and screenshots if possible.
+        {% endif %}
+      </p>
+      <p style="margin-top:12px;">
+        {% if lang == 'es' %}
+          Puedes escribir desde esta sección de ayuda o responder a cualquier correo de BillBeam que hayas recibido.
+        {% else %}
+          You can reach out from this Help section or by replying to any BillBeam email you receive.
+        {% endif %}
+      </p>
     </section>
+
+  </div>
+
 </div>
 
 {% endblock %}

@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if lang == 'es' %}Contacto{% else %}Contact{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Ponte en contacto con BillBeam para soporte general, preguntas comerciales, comentarios del producto o asuntos legales.
+    {% else %}
+        Contact BillBeam for general support, business inquiries, product feedback, or legal matters.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <div>
+        <h1>
+            {% if lang == 'es' %}
+                Contacto
+            {% else %}
+                Contact
+            {% endif %}
+        </h1>
+        <p style="margin:6px 0 0 0; font-size:14px; opacity:.82; max-width:760px;">
+            {% if lang == 'es' %}
+                Si necesitas ayuda, quieres compartir comentarios o tienes una consulta relacionada con tu cuenta, BillBeam o temas legales, este es el mejor punto de partida.
+            {% else %}
+                If you need help, want to share feedback, or have a question related to your account, BillBeam, or legal matters, this is the best place to start.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up" style="max-width:980px; margin:0 auto;">
+    <div style="display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,0.8fr); gap:20px; align-items:start;">
+
+        <section>
+            <div style="
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                padding:6px 10px;
+                border-radius:999px;
+                background:rgba(37,99,235,0.08);
+                border:1px solid rgba(37,99,235,0.14);
+                font-size:12px;
+                font-weight:800;
+                letter-spacing:.06em;
+                text-transform:uppercase;
+                margin-bottom:14px;
+            ">
+                {% if lang == 'es' %}BillBeam{% else %}BillBeam{% endif %}
+            </div>
+
+            <h2 style="margin:0 0 10px 0; font-size:22px;">
+                {% if lang == 'es' %}
+                    ¿Cómo podemos ayudarte?
+                {% else %}
+                    How can we help?
+                {% endif %}
+            </h2>
+
+            <p style="font-size:14px; line-height:1.75; opacity:.9; margin:0 0 18px 0;">
+                {% if lang == 'es' %}
+                    Para recibir ayuda más rápido, incluye una breve descripción de tu consulta, la dirección de correo asociada a tu cuenta y, si corresponde, capturas de pantalla, el número de factura o el mensaje de error que viste.
+                {% else %}
+                    To get help faster, include a short description of your request, the email address tied to your account, and, when relevant, screenshots, the invoice number, or the error message you saw.
+                {% endif %}
+            </p>
+
+            <div style="display:grid; gap:14px;">
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            Soporte general
+                        {% else %}
+                            General support
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.7; opacity:.88;">
+                        {% if lang == 'es' %}
+                            Para preguntas sobre cuentas, facturas, pagos, enlaces públicos, errores del producto y ayuda de uso.
+                        {% else %}
+                            For questions about accounts, invoices, payments, public links, product errors, and usage help.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            Comentarios del producto
+                        {% else %}
+                            Product feedback
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.7; opacity:.88;">
+                        {% if lang == 'es' %}
+                            Para ideas, solicitudes de funciones, mejoras del flujo de trabajo y comentarios sobre la experiencia general.
+                        {% else %}
+                            For ideas, feature requests, workflow improvements, and feedback on the overall experience.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            Asuntos legales o de privacidad
+                        {% else %}
+                            Legal or privacy matters
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.7; opacity:.88;">
+                        {% if lang == 'es' %}
+                            Para solicitudes relacionadas con privacidad, términos, uso aceptable, eliminación de cuenta o consultas formales.
+                        {% else %}
+                            For requests related to privacy, terms, acceptable use, account deletion, or formal inquiries.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <aside style="
+            padding:18px;
+            border-radius:18px;
+            background:rgba(15,23,42,0.05);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <h2 style="margin:0 0 12px 0; font-size:18px;">
+                {% if lang == 'es' %}
+                    Detalles de contacto
+                {% else %}
+                    Contact details
+                {% endif %}
+            </h2>
+
+            <div style="display:grid; gap:14px; font-size:14px; line-height:1.7;">
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Correo de soporte{% else %}Support email{% endif %}
+                    </div>
+                    <div style="margin-top:4px;">
+                        <a href="mailto:support@billbeam.com" style="font-weight:600;">support@billbeam.com</a>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Correo legal{% else %}Legal email{% endif %}
+                    </div>
+                    <div style="margin-top:4px;">
+                        <a href="mailto:legal@billbeam.com" style="font-weight:600;">legal@billbeam.com</a>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
+                    </div>
+                    <div style="margin-top:4px;">
+                        <a href="mailto:billing@billbeam.com" style="font-weight:600;">billing@billbeam.com</a>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Tiempo de respuesta{% else %}Response time{% endif %}
+                    </div>
+                    <div style="margin-top:4px; opacity:.9;">
+                        {% if lang == 'es' %}
+                            Normalmente respondemos dentro de 1 a 3 días hábiles.
+                        {% else %}
+                            We typically respond within 1 to 3 business days.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="
+                margin-top:16px;
+                padding:12px;
+                border-radius:12px;
+                background:rgba(37,99,235,0.08);
+                border:1px solid rgba(37,99,235,0.14);
+                font-size:12px;
+                line-height:1.65;
+                opacity:.95;
+            ">
+                {% if lang == 'es' %}
+                    Para evitar retrasos, usa la dirección más cercana a tu solicitud y envía tu mensaje desde el correo asociado a tu cuenta cuando sea posible.
+                {% else %}
+                    To avoid delays, use the address closest to your request and send your message from the email associated with your account whenever possible.
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+
+    <div style="
+        margin-top:22px;
+        padding:16px;
+        border-radius:16px;
+        background:rgba(15,23,42,0.04);
+        border:1px solid rgba(148,163,184,0.22);
+    ">
+        <h3 style="margin:0 0 8px 0; font-size:16px;">
+            {% if lang == 'es' %}
+                Antes de escribirnos
+            {% else %}
+                Before you contact us
+            {% endif %}
+        </h3>
+        <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.75; opacity:.9;">
+            <li>
+                {% if lang == 'es' %}
+                    Revisa primero la página de <a href="/help?lang={{ lang }}">Ayuda</a> y las <a href="/faq?lang={{ lang }}">Preguntas frecuentes</a>.
+                {% else %}
+                    Check the <a href="/help?lang={{ lang }}">Help</a> page and <a href="/faq?lang={{ lang }}">FAQ</a> first.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Si tu consulta es sobre una factura, incluye el número de factura o una captura de pantalla.
+                {% else %}
+                    If your request is about an invoice, include the invoice number or a screenshot.
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    Si reportas un error, indica el navegador y el dispositivo que estabas usando.
+                {% else %}
+                    If you are reporting a bug, mention the browser and device you were using.
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

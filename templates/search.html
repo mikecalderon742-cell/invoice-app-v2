@@ -1,196 +1,283 @@
 {% extends "base.html" %}
-{% block content %}
 
+{% block title %}
+    {% if lang == 'es' %}Buscar · BillBeam{% else %}Search · BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Busca facturas y clientes en BillBeam por nombre, número de factura, correo, notas o términos.
+    {% else %}
+        Search invoices and clients in BillBeam by name, invoice number, email, notes, or terms.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<!-- LANGUAGE SWITCHER -->
-<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-    <div style="font-size:13px;opacity:0.85;">
-        {% if lang == 'es' %}
-            Idioma:
-        {% else %}
-            Language:
+<div class="page-shell" style="max-width:1100px;">
+    <section class="page-card fade-in-up" style="padding:30px 28px 24px;">
+        <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px;">
+            <div>
+                <div class="page-eyebrow">
+                    {% if lang == 'es' %}Búsqueda global{% else %}Global search{% endif %}
+                </div>
+                <h1 style="margin:0 0 8px 0;">
+                    {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+                </h1>
+                <p style="margin:0; max-width:760px; font-size:15px; line-height:1.6;">
+                    {% if lang == 'es' %}
+                        Encuentra clientes y facturas por nombre, correo, empresa, número de factura, notas o términos de pago.
+                    {% else %}
+                        Find clients and invoices by name, email, company, invoice number, notes, or payment terms.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="quick-actions">
+                <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                </a>
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                    {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <form method="get"
+              action="{{ url_for('global_search') }}"
+              style="display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; margin-top:8px;">
+            <div>
+                <label for="searchQuery" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                    {% if lang == 'es' %}Consulta{% else %}Query{% endif %}
+                </label>
+                <input
+                    id="searchQuery"
+                    type="text"
+                    name="q"
+                    placeholder="{% if lang == 'es' %}Buscar por cliente, factura #, notas, términos, correo o empresa...{% else %}Search by client, invoice #, notes, terms, email, or company...{% endif %}"
+                    value="{{ q or '' }}"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:end;">
+                <button type="submit" class="btn btn-brand">
+                    {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+                </button>
+            </div>
+
+            <input type="hidden" name="lang" value="{{ lang }}">
+        </form>
+
+        {% if not q %}
+            <div class="public-grid" style="margin-top:18px; margin-bottom:0;">
+                <div class="public-card">
+                    <div class="card-title">
+                        {% if lang == 'es' %}Ideas rápidas{% else %}Quick ideas{% endif %}
+                    </div>
+                    <div class="mini-hint" style="margin-top:0; font-size:13px; line-height:1.7; opacity:0.85;">
+                        {% if lang == 'es' %}
+                            Prueba buscar por <strong>nombre del cliente</strong>, <strong>correo</strong>,
+                            <strong>empresa</strong>, <strong>número de factura</strong> o palabras dentro de
+                            <strong>notas</strong> y <strong>términos</strong>.
+                        {% else %}
+                            Try searching by <strong>client name</strong>, <strong>email</strong>,
+                            <strong>company</strong>, <strong>invoice number</strong>, or words inside
+                            <strong>notes</strong> and <strong>terms</strong>.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="public-card">
+                    <div class="card-title">
+                        {% if lang == 'es' %}Ejemplos{% else %}Examples{% endif %}
+                    </div>
+                    <div class="mini-hint" style="margin-top:0; font-size:13px; line-height:1.8; opacity:0.85;">
+                        {% if lang == 'es' %}
+                            “Acme” · “INV-00012” · “net 30” · “@gmail.com” · “diseño”
+                        {% else %}
+                            “Acme” · “INV-00012” · “net 30” · “@gmail.com” · “design”
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         {% endif %}
-        <a href="?lang=en"
-           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
-            EN
-        </a>
-        <span style="opacity:0.6;">|</span>
-        <a href="?lang=es"
-           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
-            ES
-        </a>
-    </div>
-</div>
+    </section>
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn">
-            {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
-        </a>
-    </div>
-</div>
+    {% if q %}
+        {% set invoice_count = invoice_results|length if invoice_results else 0 %}
+        {% set client_count = client_results|length if client_results else 0 %}
+        {% set total_count = invoice_count + client_count %}
 
-<div class="form-wrapper fade-in-up">
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}Buscar facturas o clientes{% else %}Find invoices or clients{% endif %}
-    </h2>
-    <form method="get" action="{{ url_for('global_search') }}" style="display:flex; gap:10px; margin-top:10px;">
-        <input
-            type="text"
-            name="q"
-            placeholder="{% if lang == 'es' %}Buscar por nombre de cliente, factura #, notas, términos, correo o empresa...{% else %}Search by client name, invoice #, notes, terms, email, or company...{% endif %}"
-            value="{{ q or '' }}"
-        >
-        <button type="submit" class="btn btn-brand">
-            {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
-        </button>
-        <input type="hidden" name="lang" value="{{ lang }}">
-    </form>
+        <div class="status-summary" style="margin-top:18px; margin-bottom:18px;">
+            <div class="status-item sent">
+                {% if lang == 'es' %}
+                    Resultados para: <strong>{{ q }}</strong>
+                {% else %}
+                    Results for: <strong>{{ q }}</strong>
+                {% endif %}
+            </div>
+            <div class="status-item paid">
+                {% if lang == 'es' %}
+                    {{ total_count }} resultado{{ '' if total_count == 1 else 's' }}
+                {% else %}
+                    {{ total_count }} result{{ '' if total_count == 1 else 's' }}
+                {% endif %}
+            </div>
+            <div class="status-item draft">
+                {% if lang == 'es' %}
+                    {{ invoice_count }} factura{{ '' if invoice_count == 1 else 's' }} · {{ client_count }} cliente{{ '' if client_count == 1 else 's' }}
+                {% else %}
+                    {{ invoice_count }} invoice{{ '' if invoice_count == 1 else 's' }} · {{ client_count }} client{{ '' if client_count == 1 else 's' }}
+                {% endif %}
+            </div>
+        </div>
 
-    {% if not q %}
-        <p style="margin-top:14px; font-size:13px; opacity:.8;">
-            {% if lang == 'es' %}
-                Escribe algo relacionado con un cliente o factura y pulsa Buscar.
-            {% else %}
-                Type anything related to a client or invoice and hit Search.
-            {% endif %}
-        </p>
+        {% if not invoice_results and not client_results %}
+            <section class="page-card fade-in-up" style="padding:28px 26px; text-align:center;">
+                <h2 style="margin:0 0 10px 0;">
+                    {% if lang == 'es' %}No encontramos coincidencias{% else %}No matches found{% endif %}
+                </h2>
+                <p style="margin:0 auto; max-width:700px; font-size:14px; opacity:0.82; line-height:1.7;">
+                    {% if lang == 'es' %}
+                        No encontramos facturas ni clientes que coincidan con <strong>{{ q }}</strong>.
+                        Intenta con otra ortografía, una parte del nombre, un correo, un número de factura
+                        o una palabra de las notas o términos.
+                    {% else %}
+                        We could not find invoices or clients matching <strong>{{ q }}</strong>.
+                        Try a different spelling, part of the name, an email, an invoice number,
+                        or a word from the notes or terms.
+                    {% endif %}
+                </p>
+            </section>
+        {% endif %}
+
+        {% if invoice_results %}
+            <section class="table-wrapper fade-in-up">
+                <div class="table-section-header">
+                    <div>
+                        <h2>
+                            {% if lang == 'es' %}Facturas coincidentes{% else %}Matching Invoices{% endif %}
+                        </h2>
+                        <p>
+                            {% if lang == 'es' %}
+                                Abre una factura para verla, descargar su PDF o continuar trabajando en ella.
+                            {% else %}
+                                Open an invoice to review it, download its PDF, or continue working on it.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="table-meta">
+                        {% if lang == 'es' %}
+                            {{ invoice_count }} factura{{ '' if invoice_count == 1 else 's' }}
+                        {% else %}
+                            {{ invoice_count }} invoice{{ '' if invoice_count == 1 else 's' }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>{% if lang == 'es' %}Cliente{% else %}Client{% endif %}</th>
+                            <th>{% if lang == 'es' %}Importe{% else %}Amount{% endif %}</th>
+                            <th>{% if lang == 'es' %}Creada{% else %}Created{% endif %}</th>
+                            <th>{% if lang == 'es' %}Estado{% else %}Status{% endif %}</th>
+                            <th>{% if lang == 'es' %}Acciones{% else %}Actions{% endif %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in invoice_results %}
+                            <tr class="
+                                {% if inv[4] == 'Paid' %}row-paid
+                                {% elif inv[4] == 'Overdue' %}row-overdue
+                                {% elif inv[4] == 'Sent' %}row-sent
+                                {% endif %}
+                            ">
+                                <td>#{{ inv[5] or inv[0] }}</td>
+                                <td>{{ inv[1] }}</td>
+                                <td>${{ "{:,.2f}".format(inv[2]) }}</td>
+                                <td>{{ inv[3].strftime('%Y-%m-%d %I:%M %p') if inv[3] }}</td>
+                                <td>
+                                    {% if inv[4] == "Paid" %}
+                                        <span class="badge paid">
+                                            {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+                                        </span>
+                                    {% elif inv[4] == "Overdue" %}
+                                        <span class="badge overdue">
+                                            {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+                                        </span>
+                                    {% elif inv[4] == "Sent" %}
+                                        <span class="badge sent">
+                                            {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+                                        </span>
+                                    {% else %}
+                                        {{ inv[4] }}
+                                    {% endif %}
+                                </td>
+                                <td class="action-buttons">
+                                    <a href="/invoice/{{ inv[0] }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                                        {% if lang == 'es' %}Abrir{% else %}Open{% endif %}
+                                    </a>
+                                    <a href="/history-pdf/{{ inv[0] }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-pdf">
+                                        PDF
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        {% endif %}
+
+        {% if client_results %}
+            <section class="table-wrapper fade-in-up">
+                <div class="table-section-header">
+                    <div>
+                        <h2>
+                            {% if lang == 'es' %}Clientes coincidentes{% else %}Matching Clients{% endif %}
+                        </h2>
+                        <p>
+                            {% if lang == 'es' %}
+                                Revisa datos guardados del cliente para continuar facturando más rápido.
+                            {% else %}
+                                Review saved client details so you can invoice faster.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="table-meta">
+                        {% if lang == 'es' %}
+                            {{ client_count }} cliente{{ '' if client_count == 1 else 's' }}
+                        {% else %}
+                            {{ client_count }} client{{ '' if client_count == 1 else 's' }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>{% if lang == 'es' %}Nombre{% else %}Name{% endif %}</th>
+                            <th>Email</th>
+                            <th>{% if lang == 'es' %}Empresa{% else %}Company{% endif %}</th>
+                            <th>{% if lang == 'es' %}Creado{% else %}Created{% endif %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in client_results %}
+                            <tr>
+                                <td>{{ c[1] }}</td>
+                                <td>{{ c[2] or "—" }}</td>
+                                <td>{{ c[3] or "—" }}</td>
+                                <td>{{ c[4].strftime('%Y-%m-%d %I:%M %p') if c[4] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        {% endif %}
     {% endif %}
 </div>
-
-{% if q %}
-    <div class="status-summary">
-        <div class="status-item sent">
-            {% if lang == 'es' %}
-                Resultados para: <strong>{{ q }}</strong>
-            {% else %}
-                Results for: <strong>{{ q }}</strong>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Invoice results -->
-    <div class="table-wrapper">
-        <h3 style="margin-top:0; margin-bottom:10px;">
-            {% if lang == 'es' %}Facturas coincidentes{% else %}Matching Invoices{% endif %}
-        </h3>
-        {% if invoice_results %}
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>
-                            {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-                        </th>
-                        <th>
-                            {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-                        </th>
-                        <th>
-                            {% if lang == 'es' %}Creada{% else %}Created{% endif %}
-                        </th>
-                        <th>
-                            {% if lang == 'es' %}Estado{% else %}Status{% endif %}
-                        </th>
-                        <th>
-                            {% if lang == 'es' %}Ver{% else %}View{% endif %}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for inv in invoice_results %}
-                        <tr>
-                            <td>#{{ inv[5] or inv[0] }}</td>
-                            <td>{{ inv[1] }}</td>
-                            <td>${{ "{:,.2f}".format(inv[2]) }}</td>
-                            <td>{{ inv[3].strftime('%Y-%m-%d %I:%M %p') if inv[3] }}</td>
-                            <td>
-                                {% if inv[4] == "Paid" %}
-                                    <span class="badge paid">
-                                        {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-                                    </span>
-                                {% elif inv[4] == "Overdue" %}
-                                    <span class="badge overdue">
-                                        {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
-                                    </span>
-                                {% elif inv[4] == "Sent" %}
-                                    <span class="badge sent">
-                                        {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
-                                    </span>
-                                {% else %}
-                                    {{ inv[4] }}
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="/invoice/{{ inv[0] }}{% if lang %}?lang={{ lang }}{% endif %}"
-                                   class="btn btn-secondary"
-                                   style="padding:4px 10px; font-size:12px;">
-                                    {% if lang == 'es' %}Abrir{% else %}Open{% endif %}
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p style="font-size:13px; opacity:.8;">
-                {% if lang == 'es' %}
-                    Ninguna factura coincide con <strong>{{ q }}</strong>.
-                {% else %}
-                    No invoices match <strong>{{ q }}</strong>.
-                {% endif %}
-            </p>
-        {% endif %}
-    </div>
-
-    <!-- Client results -->
-    <div class="table-wrapper">
-        <h3 style="margin-top:0; margin-bottom:10px;">
-            {% if lang == 'es' %}Clientes coincidentes{% else %}Matching Clients{% endif %}
-        </h3>
-        {% if client_results %}
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>
-                            {% if lang == 'es' %}Nombre{% else %}Name{% endif %}
-                        </th>
-                        <th>Email</th>
-                        <th>
-                            {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
-                        </th>
-                        <th>
-                            {% if lang == 'es' %}Creado{% else %}Created{% endif %}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in client_results %}
-                        <tr>
-                            <td>{{ c[1] }}</td>
-                            <td>{{ c[2] or "—" }}</td>
-                            <td>{{ c[3] or "—" }}</td>
-                            <td>{{ c[4].strftime('%Y-%m-%d %I:%M %p') if c[4] }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p style="font-size:13px; opacity:.8;">
-                {% if lang == 'es' %}
-                    Ningún cliente coincide con <strong>{{ q }}</strong>.
-                {% else %}
-                    No clients match <strong>{{ q }}</strong>.
-                {% endif %}
-            </p>
-        {% endif %}
-    </div>
-{% endif %}
-
 {% endblock %}

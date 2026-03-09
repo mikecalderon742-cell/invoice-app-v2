@@ -1,61 +1,339 @@
 {% extends "base.html" %}
 
+{% block title %}
+    {% if lang == 'es' %}Editar factura{% else %}Edit Invoice{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Edita una factura existente en BillBeam y actualiza el cliente, los conceptos y los importes antes de reenviarla o descargarla.
+    {% else %}
+        Edit an existing invoice in BillBeam and update the client, line items, and amounts before resending or downloading it.
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
 <div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}
-            Editar factura #{{ invoice_id }}
-        {% else %}
-            Edit Invoice #{{ invoice_id }}
-        {% endif %}
-    </h1>
+    <div>
+        <h1>
+            {% if lang == 'es' %}
+                Editar factura #{{ invoice_id }}
+            {% else %}
+                Edit Invoice #{{ invoice_id }}
+            {% endif %}
+        </h1>
+        <p style="margin:6px 0 0 0; font-size:14px; opacity:.8;">
+            {% if lang == 'es' %}
+                Actualiza el nombre del cliente y los conceptos antes de guardar los cambios.
+            {% else %}
+                Update the client name and line items before saving your changes.
+            {% endif %}
+        </p>
+    </div>
+
     <div class="quick-actions">
+        <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Ver factura{% else %}View Invoice{% endif %}
+        </a>
         <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
             {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
         </a>
     </div>
 </div>
 
-<div class="form-wrapper fade-in-up">
-    <form method="POST" action="/update/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-
-        <label style="font-weight:600; font-size:14px;">
-            {% if lang == 'es' %}Nombre del cliente:{% else %}Client Name:{% endif %}
-        </label><br>
-        <input type="text" name="client" value="{{ client }}" required><br><br>
-
-        <h3>
-            {% if lang == 'es' %}Conceptos{% else %}Items{% endif %}
-        </h3>
-
-        {% for item in items %}
-        <div class="item-row">
-            <input type="text"
-                   name="description"
-                   value="{{ item[0] }}"
-                   placeholder="{% if lang == 'es' %}Descripción{% else %}Description{% endif %}"
-                   required>
-            <input type="number"
-                   step="0.01"
-                   name="amount"
-                   value="{{ item[1] }}"
-                   placeholder="{% if lang == 'es' %}Importe{% else %}Amount{% endif %}"
-                   required>
+<div class="form-wrapper fade-in-up" style="max-width:980px;">
+    <div style="
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        flex-wrap:wrap;
+        margin-bottom:18px;
+        padding:14px 16px;
+        border-radius:14px;
+        background:rgba(59,130,246,0.07);
+        border:1px solid rgba(59,130,246,0.18);
+    ">
+        <div>
+            <div style="font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.72;">
+                {% if lang == 'es' %}Edición en curso{% else %}Editing in progress{% endif %}
+            </div>
+            <div style="margin-top:4px; font-size:14px; opacity:.88;">
+                {% if lang == 'es' %}
+                    Factura <strong>#{{ invoice_id }}</strong>. Revisa cuidadosamente los importes antes de guardar.
+                {% else %}
+                    Invoice <strong>#{{ invoice_id }}</strong>. Review all amounts carefully before saving.
+                {% endif %}
+            </div>
         </div>
-        <br>
-        {% endfor %}
+        <div style="font-size:13px; opacity:.75;">
+            {% if lang == 'es' %}
+                Los cambios reemplazarán los conceptos actuales.
+            {% else %}
+                Saving will replace the current line items.
+            {% endif %}
+        </div>
+    </div>
 
-        <button type="submit" class="btn btn-brand">
-            {% if lang == 'es' %}Actualizar factura{% else %}Update Invoice{% endif %}
-        </button>
+    <form method="POST" action="/update/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" id="editInvoiceForm">
+        <section style="margin-bottom:24px;">
+            <h2 style="margin:0 0 12px 0; font-size:18px;">
+                {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+            </h2>
+
+            <label for="client" style="font-weight:600; font-size:14px; display:block; margin-bottom:6px;">
+                {% if lang == 'es' %}Nombre del cliente{% else %}Client Name{% endif %}
+            </label>
+            <input
+                id="client"
+                type="text"
+                name="client"
+                value="{{ client }}"
+                required
+                placeholder="{% if lang == 'es' %}Ej. Acme Studio{% else %}e.g. Acme Studio{% endif %}"
+            >
+        </section>
+
+        <section>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+                <div>
+                    <h2 style="margin:0; font-size:18px;">
+                        {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
+                    </h2>
+                    <p style="margin:4px 0 0 0; font-size:13px; opacity:.78;">
+                        {% if lang == 'es' %}
+                            Ajusta descripciones e importes. Puedes añadir o quitar filas según sea necesario.
+                        {% else %}
+                            Update descriptions and amounts. You can add or remove rows as needed.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <button type="button" id="addLineItemBtn" class="btn btn-secondary">
+                    {% if lang == 'es' %}+ Añadir concepto{% else %}+ Add line item{% endif %}
+                </button>
+            </div>
+
+            <div class="table-wrapper" style="margin-top:0;">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                            </th>
+                            <th style="width:190px;">
+                                {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                            </th>
+                            <th style="width:72px; text-align:center;">
+                                {% if lang == 'es' %}Quitar{% else %}Remove{% endif %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="lineItemsBody">
+                        {% if items and items|length > 0 %}
+                            {% for item in items %}
+                            <tr class="line-item-row">
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        value="{{ item[0] }}"
+                                        placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                                        required
+                                    >
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        name="amount"
+                                        value="{{ item[1] }}"
+                                        placeholder="0.00"
+                                        required
+                                    >
+                                </td>
+                                <td style="text-align:center;">
+                                    <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                                        ✕
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="line-item-row">
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                                        required
+                                    >
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        name="amount"
+                                        placeholder="0.00"
+                                        required
+                                    >
+                                </td>
+                                <td style="text-align:center;">
+                                    <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                                        ✕
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:12px;
+                flex-wrap:wrap;
+                margin-top:12px;
+            ">
+                <div style="font-size:12px; opacity:.72;">
+                    {% if lang == 'es' %}
+                        Consejo: deja al menos un concepto válido con importe mayor que cero.
+                    {% else %}
+                        Tip: keep at least one valid line item with an amount greater than zero.
+                    {% endif %}
+                </div>
+
+                <div style="
+                    display:inline-flex;
+                    align-items:center;
+                    gap:10px;
+                    padding:10px 14px;
+                    border-radius:12px;
+                    background:rgba(15,23,42,0.05);
+                    border:1px solid rgba(148,163,184,0.22);
+                    font-size:14px;
+                    font-weight:700;
+                ">
+                    <span style="opacity:.72;">
+                        {% if lang == 'es' %}Total actualizado{% else %}Updated Total{% endif %}
+                    </span>
+                    <span id="invoiceTotalPreview">$0.00</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px; flex-wrap:wrap;">
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            </a>
+            <button type="submit" class="btn btn-brand">
+                {% if lang == 'es' %}Guardar cambios{% else %}Save Changes{% endif %}
+            </button>
+        </div>
     </form>
-
-    <br>
-    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Volver al historial de facturas{% else %}Back to Invoice History{% endif %}
-    </a>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const lineItemsBody = document.getElementById("lineItemsBody");
+    const addLineItemBtn = document.getElementById("addLineItemBtn");
+    const totalPreview = document.getElementById("invoiceTotalPreview");
+
+    function createRow() {
+        const tr = document.createElement("tr");
+        tr.className = "line-item-row";
+        tr.innerHTML = `
+            <td>
+                <input
+                    type="text"
+                    name="description"
+                    placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                    required
+                >
+            </td>
+            <td>
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="amount"
+                    placeholder="0.00"
+                    required
+                >
+            </td>
+            <td style="text-align:center;">
+                <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                    ✕
+                </button>
+            </td>
+        `;
+        return tr;
+    }
+
+    function updateTotal() {
+        if (!totalPreview) return;
+        const amountInputs = lineItemsBody.querySelectorAll('input[name="amount"]');
+        let total = 0;
+
+        amountInputs.forEach((input) => {
+            const value = parseFloat(input.value);
+            if (!isNaN(value) && value > 0) {
+                total += value;
+            }
+        });
+
+        totalPreview.textContent = "$" + total.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function bindRowActions(scope) {
+        const removeButtons = scope.querySelectorAll(".btn-remove-row");
+        removeButtons.forEach((btn) => {
+            btn.addEventListener("click", function () {
+                const rows = lineItemsBody.querySelectorAll(".line-item-row");
+                const row = btn.closest(".line-item-row");
+
+                if (!row) return;
+
+                if (rows.length > 1) {
+                    row.remove();
+                } else {
+                    const desc = row.querySelector('input[name="description"]');
+                    const amt = row.querySelector('input[name="amount"]');
+                    if (desc) desc.value = "";
+                    if (amt) amt.value = "";
+                }
+
+                updateTotal();
+            });
+        });
+
+        const amountInputs = scope.querySelectorAll('input[name="amount"]');
+        amountInputs.forEach((input) => {
+            input.addEventListener("input", updateTotal);
+        });
+    }
+
+    if (addLineItemBtn && lineItemsBody) {
+        addLineItemBtn.addEventListener("click", function () {
+            const row = createRow();
+            lineItemsBody.appendChild(row);
+            bindRowActions(row);
+            updateTotal();
+        });
+    }
+
+    bindRowActions(document);
+    updateTotal();
+});
+</script>
 
 {% endblock %}

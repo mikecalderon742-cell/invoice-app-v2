@@ -1,49 +1,198 @@
 {% extends "base.html" %}
+
+{% block title %}
+    {% if lang == 'es' %}Iniciar sesión · BillBeam{% else %}Login · BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Inicia sesión en BillBeam para crear facturas, gestionar clientes y dar seguimiento a pagos desde un solo lugar.
+    {% else %}
+        Log in to BillBeam to create invoices, manage clients, and track payments from one place.
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}Iniciar sesión{% else %}Login{% endif %}
-    </h1>
-</div>
+<div class="page-shell" style="max-width: 980px;">
+    <div class="invoice-preview-shell" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 22px; align-items: stretch;">
 
-<div class="form-wrapper fade-in-up">
-    {% if error %}
-        <div style="
-            margin-bottom:16px;
-            padding:12px 14px;
-            border-radius:10px;
-            font-size:14px;
-            font-weight:500;
-            background:#fee2e2;
-            color:#b91c1c;
-            border:1px solid #dc2626;
-        ">
-            {{ error }}
-        </div>
-    {% endif %}
+        <!-- Left: login form -->
+        <section class="page-card fade-in-up" style="padding: 32px 30px;">
+            <div class="page-eyebrow">
+                {% if lang == 'es' %}Acceso seguro{% else %}Secure access{% endif %}
+            </div>
 
-    <form method="POST" action="/login{% if lang %}?lang={{ lang }}{% endif %}">
-        <label style="font-weight:600; font-size:14px;">
-            {% if lang == 'es' %}Correo electrónico{% else %}Email{% endif %}
-        </label>
-        <input type="email" name="email" required placeholder="you@example.com">
+            <h1 style="margin-bottom:10px;">
+                {% if lang == 'es' %}
+                    Inicia sesión en BillBeam
+                {% else %}
+                    Log in to BillBeam
+                {% endif %}
+            </h1>
 
-        <label style="font-weight:600; font-size:14px; margin-top:10px;">
-            {% if lang == 'es' %}Contraseña{% else %}Password{% endif %}
-        </label>
-        <input type="password" name="password" required>
+            <p class="page-lead" style="margin-bottom:22px;">
+                {% if lang == 'es' %}
+                    Entra para crear facturas, revisar tu panel, enviar cobros y mantener tu flujo de caja bajo control.
+                {% else %}
+                    Sign in to create invoices, review your dashboard, send billing emails, and keep cash flow under control.
+                {% endif %}
+            </p>
 
-        <div class="form-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:18px;">
-            <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" style="font-size:13px; opacity:.8;">
-                {% if lang == 'es' %}¿Necesitas una cuenta? Regístrate{% else %}Need an account? Sign up{% endif %}
-            </a>
-            <button type="submit" class="btn btn-brand">
-                {% if lang == 'es' %}Iniciar sesión{% else %}Login{% endif %}
-            </button>
-        </div>
-    </form>
+            {% if error %}
+                <div style="
+                    margin-bottom:18px;
+                    padding:12px 14px;
+                    border-radius:12px;
+                    font-size:14px;
+                    font-weight:600;
+                    background:#fee2e2;
+                    color:#b91c1c;
+                    border:1px solid #dc2626;
+                ">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="/login{% if lang %}?lang={{ lang }}{% endif %}" novalidate>
+                <div style="display:grid; gap:16px;">
+                    <div>
+                        <label for="email">
+                            {% if lang == 'es' %}Correo electrónico{% else %}Email address{% endif %}
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            required
+                            autocomplete="email"
+                            inputmode="email"
+                            placeholder="you@example.com"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password">
+                            {% if lang == 'es' %}Contraseña{% else %}Password{% endif %}
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            required
+                            autocomplete="current-password"
+                            placeholder="{% if lang == 'es' %}Tu contraseña{% else %}Your password{% endif %}"
+                        >
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px;">
+                    <a href="/password-reset-request{% if lang %}?lang={{ lang }}{% endif %}" style="font-size:13px; opacity:.82; text-decoration:underline;">
+                        {% if lang == 'es' %}¿Olvidaste tu contraseña?{% else %}Forgot your password?{% endif %}
+                    </a>
+
+                    <span style="font-size:12px; opacity:.7;">
+                        {% if lang == 'es' %}Acceso cifrado{% else %}Encrypted access{% endif %}
+                    </span>
+                </div>
+
+                <div class="form-actions" style="justify-content:space-between; align-items:center; margin-top:22px;">
+                    <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                        {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
+                    </a>
+
+                    <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}Iniciar sesión{% else %}Log in{% endif %}
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Right: trust / helper panel -->
+        <aside class="preview-sidebar fade-in-up" style="padding: 26px 22px;">
+            <h2 style="font-size:18px; margin-bottom:10px;">
+                {% if lang == 'es' %}
+                    Bienvenido de nuevo
+                {% else %}
+                    Welcome back
+                {% endif %}
+            </h2>
+
+            <p class="preview-tip" style="margin-bottom:16px;">
+                {% if lang == 'es' %}
+                    Una vez dentro, podrás revisar facturas, registrar pagos, enviar PDFs y ver el estado de tu negocio desde un solo panel.
+                {% else %}
+                    Once inside, you can review invoices, record payments, send PDFs, and see the health of your business from one dashboard.
+                {% endif %}
+            </p>
+
+            <div style="display:grid; gap:12px; margin-bottom:18px;">
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
+                    </div>
+                    <div class="snap-value">
+                        {% if lang == 'es' %}Rápida y clara{% else %}Fast and clean{% endif %}
+                    </div>
+                </div>
+
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Seguimiento{% else %}Tracking{% endif %}
+                    </div>
+                    <div class="snap-value">
+                        {% if lang == 'es' %}Pagadas, enviadas y vencidas{% else %}Paid, sent, and overdue{% endif %}
+                    </div>
+                </div>
+
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Acceso{% else %}Access{% endif %}
+                    </div>
+                    <div class="snap-value">
+                        {% if lang == 'es' %}Cuenta segura{% else %}Secure account{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <ul class="preview-checklist" style="margin-bottom:16px;">
+                <li>
+                    {% if lang == 'es' %}
+                        Usa el mismo correo con el que registraste tu cuenta.
+                    {% else %}
+                        Use the same email address you registered with.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Si no recuerdas tu contraseña, usa el enlace de recuperación.
+                    {% else %}
+                        If you do not remember your password, use the reset link.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        ¿Nuevo en BillBeam? Crea tu cuenta y empieza gratis.
+                    {% else %}
+                        New to BillBeam? Create your account and start free.
+                    {% endif %}
+                </li>
+            </ul>
+
+            <div class="trust-row">
+                <div class="trust-pill">
+                    {% if lang == 'es' %}Inicio de sesión seguro{% else %}Secure sign-in{% endif %}
+                </div>
+                <div class="trust-pill">
+                    {% if lang == 'es' %}Panel en tiempo real{% else %}Live dashboard{% endif %}
+                </div>
+                <div class="trust-pill">
+                    {% if lang == 'es' %}Facturas profesionales{% else %}Professional invoices{% endif %}
+                </div>
+            </div>
+        </aside>
+    </div>
 </div>
 
 {% endblock %}

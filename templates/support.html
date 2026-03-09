@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if lang == 'es' %}Soporte{% else %}Support{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Obtén ayuda con cuentas, facturas, pagos, enlaces públicos, correo, restablecimiento de contraseña y problemas técnicos en BillBeam.
+    {% else %}
+        Get help with accounts, invoices, payments, public links, email, password resets, and technical issues in BillBeam.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <div>
+        <h1>
+            {% if lang == 'es' %}
+                Soporte
+            {% else %}
+                Support
+            {% endif %}
+        </h1>
+        <p style="margin:6px 0 0 0; font-size:14px; opacity:.82; max-width:760px;">
+            {% if lang == 'es' %}
+                Encuentra ayuda rápida para los flujos más comunes de BillBeam, entiende qué información incluir cuando reportes un problema y conoce la mejor forma de contactarnos.
+            {% else %}
+                Find quick help for the most common BillBeam workflows, understand what information to include when reporting an issue, and see the best way to contact us.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="form-wrapper fade-in-up" style="max-width:1040px; margin:0 auto;">
+    <div style="display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,0.9fr); gap:20px; align-items:start;">
+
+        <section>
+            <div style="
+                display:inline-flex;
+                align-items:center;
+                gap:8px;
+                padding:6px 10px;
+                border-radius:999px;
+                background:rgba(21,27,84,0.08);
+                border:1px solid rgba(21,27,84,0.14);
+                font-size:12px;
+                font-weight:800;
+                letter-spacing:.06em;
+                text-transform:uppercase;
+                margin-bottom:14px;
+            ">
+                {% if lang == 'es' %}Centro de soporte{% else %}Support center{% endif %}
+            </div>
+
+            <h2 style="margin:0 0 10px 0; font-size:22px;">
+                {% if lang == 'es' %}
+                    Ayuda con los casos más comunes
+                {% else %}
+                    Help with the most common cases
+                {% endif %}
+            </h2>
+
+            <div style="display:grid; gap:14px;">
+
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            No puedo iniciar sesión
+                        {% else %}
+                            I cannot log in
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.72; opacity:.9;">
+                        {% if lang == 'es' %}
+                            Verifica que estás usando la dirección correcta, revisa errores de escritura y prueba el flujo de restablecimiento de contraseña. Si sigues sin poder acceder, escríbenos desde el correo asociado a tu cuenta.
+                        {% else %}
+                            Confirm that you are using the correct email address, check for typing mistakes, and try the password reset flow. If you still cannot access your account, contact us from the email associated with it.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            Mi factura o PDF no se ve bien
+                        {% else %}
+                            My invoice or PDF does not look right
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.72; opacity:.9;">
+                        {% if lang == 'es' %}
+                            Incluye el número de factura, una captura de pantalla del problema y una breve explicación de lo que esperabas ver. También ayuda indicar si el problema ocurre en la vista pública, en la vista interna o en ambos lugares.
+                        {% else %}
+                            Include the invoice number, a screenshot of the issue, and a short explanation of what you expected to see. It also helps to mention whether the issue appears in the public view, the internal view, or both.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            El correo de factura no se envió
+                        {% else %}
+                            The invoice email did not send
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.72; opacity:.9;">
+                        {% if lang == 'es' %}
+                            Comparte el número de factura, la dirección de destino y cualquier mensaje de error visible. Si el PDF se descargó correctamente pero el correo falló, indícanos eso también.
+                        {% else %}
+                            Share the invoice number, the destination email address, and any visible error message. If the PDF downloaded correctly but the email failed, mention that too.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="
+                    padding:16px;
+                    border-radius:16px;
+                    background:rgba(15,23,42,0.04);
+                    border:1px solid rgba(148,163,184,0.22);
+                ">
+                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                        {% if lang == 'es' %}
+                            El enlace público o el pago no funciona
+                        {% else %}
+                            The public link or payment flow is not working
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:14px; line-height:1.72; opacity:.9;">
+                        {% if lang == 'es' %}
+                            Envía el número de factura, el enlace si lo tienes, la hora aproximada en que ocurrió el problema y el comportamiento observado. Si el pago fue intentado, incluye cualquier mensaje mostrado por la pasarela.
+                        {% else %}
+                            Send the invoice number, the link if you have it, the approximate time the issue occurred, and what behavior you observed. If a payment was attempted, include any message shown by the payment flow.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div style="
+                margin-top:18px;
+                padding:16px;
+                border-radius:16px;
+                background:rgba(37,99,235,0.07);
+                border:1px solid rgba(37,99,235,0.14);
+            ">
+                <h3 style="margin:0 0 8px 0; font-size:16px;">
+                    {% if lang == 'es' %}
+                        Qué incluir en tu mensaje
+                    {% else %}
+                        What to include in your message
+                    {% endif %}
+                </h3>
+                <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.75; opacity:.92;">
+                    <li>
+                        {% if lang == 'es' %}
+                            El correo asociado a tu cuenta.
+                        {% else %}
+                            The email associated with your account.
+                        {% endif %}
+                    </li>
+                    <li>
+                        {% if lang == 'es' %}
+                            El número de factura, si aplica.
+                        {% else %}
+                            The invoice number, if applicable.
+                        {% endif %}
+                    </li>
+                    <li>
+                        {% if lang == 'es' %}
+                            El navegador y dispositivo que estabas usando.
+                        {% else %}
+                            The browser and device you were using.
+                        {% endif %}
+                    </li>
+                    <li>
+                        {% if lang == 'es' %}
+                            Capturas de pantalla o el texto exacto del error.
+                        {% else %}
+                            Screenshots or the exact error text.
+                        {% endif %}
+                    </li>
+                    <li>
+                        {% if lang == 'es' %}
+                            Una explicación breve de lo que pasó y lo que esperabas que pasara.
+                        {% else %}
+                            A brief explanation of what happened and what you expected to happen.
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <aside style="
+            padding:18px;
+            border-radius:18px;
+            background:rgba(15,23,42,0.05);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <h2 style="margin:0 0 12px 0; font-size:18px;">
+                {% if lang == 'es' %}
+                    Opciones de ayuda
+                {% else %}
+                    Help options
+                {% endif %}
+            </h2>
+
+            <div style="display:grid; gap:14px; font-size:14px; line-height:1.7;">
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Ayuda general{% else %}General help{% endif %}
+                    </div>
+                    <div style="margin-top:4px;">
+                        <a href="mailto:support@billbeam.com" style="font-weight:600;">support@billbeam.com</a>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
+                    </div>
+                    <div style="margin-top:4px;">
+                        <a href="mailto:billing@billbeam.com" style="font-weight:600;">billing@billbeam.com</a>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Documentos útiles{% else %}Helpful pages{% endif %}
+                    </div>
+                    <div style="margin-top:4px; display:grid; gap:6px;">
+                        <a href="/help?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
+                        </a>
+                        <a href="/faq?lang={{ lang }}" style="font-weight:600;">FAQ</a>
+                        <a href="/contact?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Tiempo de respuesta{% else %}Response time{% endif %}
+                    </div>
+                    <div style="margin-top:4px; opacity:.92;">
+                        {% if lang == 'es' %}
+                            Normalmente de 1 a 3 días hábiles.
+                        {% else %}
+                            Typically 1 to 3 business days.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="
+                margin-top:16px;
+                padding:12px;
+                border-radius:12px;
+                background:rgba(15,23,42,0.05);
+                border:1px solid rgba(148,163,184,0.2);
+                font-size:12px;
+                line-height:1.65;
+                opacity:.95;
+            ">
+                {% if lang == 'es' %}
+                    No envíes números completos de tarjetas, contraseñas ni información sensible no solicitada por correo.
+                {% else %}
+                    Do not send full card numbers, passwords, or other sensitive information by email unless specifically requested through a secure channel.
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+</div>
+
+{% endblock %}

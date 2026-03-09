@@ -5,20 +5,19 @@
     <meta charset="UTF-8">
     <title>
         {% if lang == 'es' %}
-            BillBeam – Facturación moderna para freelancers
+            BillBeam – Facturación moderna para freelancers y pequeños equipos
         {% else %}
-            BillBeam – Modern invoicing for freelancers
+            BillBeam – Modern invoicing for freelancers and small teams
         {% endif %}
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% if lang == 'es' %}
-        <meta name="description" content="BillBeam es tu panel minimalista para crear, enviar y hacer seguimiento de facturas sin pelearte con hojas de cálculo o software complicado.">
+        <meta name="description" content="BillBeam es una app moderna de facturación para crear, enviar y hacer seguimiento de facturas con una experiencia clara, rápida y profesional.">
     {% else %}
-        <meta name="description" content="BillBeam is your minimalist control center for creating, sending, and tracking invoices without spreadsheets or heavyweight software.">
+        <meta name="description" content="BillBeam is a modern invoicing app for creating, sending, and tracking invoices with a clear, fast, professional workflow.">
     {% endif %}
 
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -39,10 +38,15 @@
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             margin: 0;
             font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #020617 0, #020617 40%, #000 100%);
+            background:
+                radial-gradient(circle at top, #0b1120 0, #020617 36%, #000 100%);
             color: var(--fg);
             min-height: 100vh;
         }
@@ -58,14 +62,13 @@
             padding: 20px 16px 64px;
         }
 
-        /* NAVBAR */
         .landing-nav {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 18px;
-            padding: 6px 10px;
-            margin-bottom: 24px;
+            padding: 8px 10px;
+            margin-bottom: 28px;
         }
 
         .nav-left {
@@ -75,8 +78,8 @@
         }
 
         .nav-logo-mark {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 10px;
             background: radial-gradient(circle at 30% 0%, #FCDC2A, #3A8BFF);
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.7);
@@ -93,8 +96,8 @@
 
         .nav-logo-text {
             font-family: "Space Grotesk", system-ui, sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.08rem;
+            font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
         }
@@ -104,13 +107,16 @@
             align-items: center;
             gap: 12px;
             font-size: 0.85rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .nav-link {
-            padding: 4px 8px;
+            padding: 5px 9px;
             border-radius: 999px;
             color: var(--muted);
             border: 1px solid transparent;
+            transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
         }
 
         .nav-link:hover {
@@ -122,11 +128,11 @@
         }
 
         .nav-link-cta {
-            padding: 6px 14px;
+            padding: 7px 15px;
             background: #fff;
             color: #020617;
             border-radius: 999px;
-            font-weight: 600;
+            font-weight: 700;
             box-shadow:
                 0 10px 30px rgba(15, 23, 42, 0.8),
                 0 0 0 1px rgba(148, 163, 184, 0.5);
@@ -139,7 +145,6 @@
                 0 0 0 1px rgba(148, 163, 184, 0.9);
         }
 
-        /* Lang toggle (matches app vibe) */
         .lang-toggle {
             display: inline-flex;
             align-items: center;
@@ -152,7 +157,7 @@
             border-radius: var(--pill-radius);
             border: 1px solid rgba(148, 163, 184, 0.7);
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--muted);
@@ -165,7 +170,6 @@
             color: #020617;
         }
 
-        /* HERO */
         .landing-main {
             display: grid;
             grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
@@ -173,17 +177,11 @@
             align-items: center;
         }
 
-        @media (max-width: 900px) {
-            .landing-main {
-                grid-template-columns: minmax(0, 1fr);
-            }
-        }
-
         .hero-kicker {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 3px 10px;
+            padding: 4px 10px;
             border-radius: 999px;
             font-size: 0.7rem;
             text-transform: uppercase;
@@ -204,9 +202,10 @@
         .hero-title {
             font-family: "Space Grotesk", system-ui, sans-serif;
             font-weight: 700;
-            font-size: clamp(2.1rem, 3vw, 2.7rem);
-            line-height: 1.1;
+            font-size: clamp(2.1rem, 3vw, 2.8rem);
+            line-height: 1.08;
             margin: 0 0 14px;
+            letter-spacing: -0.04em;
         }
 
         .hero-highlight {
@@ -216,10 +215,11 @@
         }
 
         .hero-subtitle {
-            font-size: 0.95rem;
+            font-size: 0.97rem;
             color: var(--muted);
-            max-width: 460px;
+            max-width: 500px;
             margin-bottom: 18px;
+            line-height: 1.7;
         }
 
         .hero-cta-row {
@@ -227,7 +227,7 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 10px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .hero-primary {
@@ -235,13 +235,14 @@
             border-radius: 999px;
             border: none;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.95rem;
             background: linear-gradient(135deg, #3A8BFF, #2563eb);
             color: #f9fafb;
             box-shadow:
                 0 14px 40px rgba(37, 99, 235, 0.7),
                 0 0 0 1px rgba(148, 163, 184, 0.6);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
         }
 
         .hero-primary:hover {
@@ -258,6 +259,7 @@
             font-size: 0.9rem;
             color: var(--muted);
             background: transparent;
+            transition: border-color 0.18s ease, color 0.18s ease;
         }
 
         .hero-secondary:hover {
@@ -266,11 +268,28 @@
         }
 
         .hero-footnote {
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             color: var(--muted);
+            line-height: 1.6;
+            max-width: 560px;
         }
 
-        /* FEATURE GRID */
+        .trust-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .trust-pill {
+            font-size: 0.73rem;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            color: #cbd5e1;
+        }
+
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -294,17 +313,17 @@
         }
 
         .feature-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 4px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            margin-bottom: 6px;
         }
 
         .feature-body {
             font-size: 0.85rem;
             color: var(--muted);
+            line-height: 1.65;
         }
 
-        /* RIGHT: VISUAL CARD */
         .hero-card {
             border-radius: 22px;
             background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.38), rgba(15, 23, 42, 0.98));
@@ -320,6 +339,7 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 10px;
+            gap: 10px;
         }
 
         .hero-card-title {
@@ -333,6 +353,7 @@
             border-radius: 999px;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(148, 163, 184, 0.6);
+            white-space: nowrap;
         }
 
         .hero-metrics {
@@ -357,30 +378,85 @@
 
         .metric-value {
             font-family: "Space Grotesk", system-ui, sans-serif;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .metric-sub {
+            font-size: 0.7rem;
+            margin-top: 2px;
+            color: var(--muted);
+        }
+
+        .metric-sub.warn {
+            color: #fca5a5;
         }
 
         .hero-mini-list {
             margin: 0;
             padding-left: 18px;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             color: var(--muted);
+            line-height: 1.65;
         }
 
         .hero-mini-list li {
-            margin-bottom: 4px;
+            margin-bottom: 5px;
         }
 
-        /* FOOTER */
+        .landing-section {
+            margin-top: 46px;
+        }
+
+        .section-heading {
+            font-family: "Space Grotesk", system-ui, sans-serif;
+            font-size: 1.2rem;
+            margin: 0 0 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .section-subcopy {
+            font-size: 0.92rem;
+            color: var(--muted);
+            max-width: 700px;
+            line-height: 1.7;
+        }
+
+        .mini-faq {
+            margin-top: 16px;
+            display: grid;
+            gap: 12px;
+            max-width: 700px;
+        }
+
+        .mini-faq-item {
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.35);
+            background: rgba(15, 23, 42, 0.45);
+        }
+
+        .mini-faq-item strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #f8fafc;
+        }
+
+        .mini-faq-item div {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
         .landing-footer {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-top: 42px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(15, 23, 42, 0.85);
+            margin-top: 46px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(148, 163, 184, 0.16);
             font-size: 0.8rem;
             color: var(--muted);
         }
@@ -388,7 +464,7 @@
         .footer-links {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 10px 14px;
         }
 
         .footer-link {
@@ -398,12 +474,37 @@
         .footer-link:hover {
             color: #e5e7eb;
         }
+
+        @media (max-width: 900px) {
+            .landing-main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .landing-nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .hero-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .landing-shell {
+                padding-bottom: 42px;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="landing-shell">
-    <!-- NAVBAR -->
     <header class="landing-nav">
         <div class="nav-left">
             <div class="nav-logo-mark" aria-hidden="true"></div>
@@ -422,12 +523,8 @@
             </a>
 
             <div class="lang-toggle" aria-label="Language toggle">
-                <a href="{{ request.path }}?lang=en" class="lang-pill {% if lang != 'es' %}active{% endif %}">
-                    EN
-                </a>
-                <a href="{{ request.path }}?lang=es" class="lang-pill {% if lang == 'es' %}active{% endif %}">
-                    ES
-                </a>
+                <a href="{{ request.path }}?lang=en" class="lang-pill {% if lang != 'es' %}active{% endif %}">EN</a>
+                <a href="{{ request.path }}?lang=es" class="lang-pill {% if lang == 'es' %}active{% endif %}">ES</a>
             </div>
 
             <a href="/login{% if lang %}?lang={{ lang }}{% endif %}" class="nav-link">
@@ -439,11 +536,10 @@
         </nav>
     </header>
 
-    <!-- MAIN HERO -->
     <main class="landing-main" id="product">
         <section>
             <div class="hero-kicker">
-                <span>INVOICING • SAAS MINI</span>
+                <span>INVOICING • BILLBEAM</span>
                 <span class="tag">
                     {% if lang == 'es' %}Hasta 10 facturas gratis{% else %}Up to 10 invoices free{% endif %}
                 </span>
@@ -451,19 +547,17 @@
 
             <h1 class="hero-title">
                 {% if lang == 'es' %}
-                    Envía <span class="hero-highlight">facturas limpias</span> en segundos.
+                    Crea y comparte <span class="hero-highlight">facturas claras</span> con una experiencia moderna.
                 {% else %}
-                    Send <span class="hero-highlight">clean invoices</span> in seconds.
+                    Create and share <span class="hero-highlight">clear invoices</span> with a modern workflow.
                 {% endif %}
             </h1>
 
             <p class="hero-subtitle">
                 {% if lang == 'es' %}
-                    BillBeam es tu panel minimalista para crear, enviar y hacer seguimiento de facturas
-                    sin pelearte con hojas de cálculo o software monstruoso.
+                    BillBeam te ayuda a crear, enviar y seguir facturas desde un solo lugar, con una interfaz pensada para freelancers, estudios pequeños y equipos ágiles.
                 {% else %}
-                    BillBeam is your minimalist control center for creating, sending, and tracking invoices
-                    without wrestling spreadsheets or heavyweight software.
+                    BillBeam helps you create, send, and track invoices from one place, with an interface designed for freelancers, small studios, and lean teams.
                 {% endif %}
             </p>
 
@@ -472,93 +566,96 @@
                     {% if lang == 'es' %}Crear cuenta en 30 segundos{% else %}Start in 30 seconds{% endif %}
                 </a>
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="hero-secondary">
-                    {% if lang == 'es' %}Ver demo en vivo{% else %}See live dashboard demo{% endif %}
+                    {% if lang == 'es' %}Ver panel{% else %}See dashboard{% endif %}
                 </a>
             </div>
 
             <div class="hero-footnote">
                 {% if lang == 'es' %}
-                    Sin tarjeta para el plan Starter. Actualiza a Pro solo si te ahorra tiempo de verdad.
+                    El plan Starter no requiere tarjeta. Puedes actualizar a Pro cuando necesites más volumen, envíos por correo y funciones adicionales.
                 {% else %}
-                    No card required for Starter. Upgrade to Pro only if it genuinely saves you time.
+                    Starter does not require a card. You can upgrade to Pro when you need more volume, built-in email sending, and additional features.
                 {% endif %}
+            </div>
+
+            <div class="trust-row">
+                <div class="trust-pill">
+                    {% if lang == 'es' %}Sin tarjeta en Starter{% else %}No card on Starter{% endif %}
+                </div>
+                <div class="trust-pill">
+                    {% if lang == 'es' %}PDFs listos para compartir{% else %}Share-ready PDFs{% endif %}
+                </div>
+                <div class="trust-pill">
+                    {% if lang == 'es' %}En inglés y español{% else %}English and Spanish{% endif %}
+                </div>
             </div>
 
             <div class="feature-grid">
                 <article class="feature-card">
                     <div class="feature-label">
-                        {% if lang == 'es' %}Flujo rápido{% else %}Fast flow{% endif %}
+                        {% if lang == 'es' %}Flujo rápido{% else %}Fast workflow{% endif %}
                     </div>
                     <div class="feature-title">
                         {% if lang == 'es' %}
-                            Facturas en menos de un minuto
+                            Facturas en menos pasos
                         {% else %}
-                            Invoices in under a minute
+                            Invoices in fewer steps
                         {% endif %}
                     </div>
                     <p class="feature-body">
                         {% if lang == 'es' %}
-                            Cliente + concepto + importe. BillBeam calcula totales, fechas de vencimiento
-                            y te da un PDF bonito automáticamente.
+                            Añade tu cliente, tus conceptos y tus condiciones de pago desde una experiencia clara y directa.
                         {% else %}
-                            Client + line items + amount. BillBeam handles totals, due dates, and a clean PDF
-                            so you can send and move on.
+                            Add your client, line items, and payment terms from a clean, direct creation flow.
+                        {% endif %}
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-label">AI</div>
+                    <div class="feature-title">
+                        {% if lang == 'es' %}
+                            Ayuda con texto y seguimiento
+                        {% else %}
+                            Help with wording and follow-up
+                        {% endif %}
+                    </div>
+                    <p class="feature-body">
+                        {% if lang == 'es' %}
+                            BillBeam Assistant puede ayudarte a mejorar textos, redactar recordatorios y entender mejor tu panel.
+                        {% else %}
+                            BillBeam Assistant can help improve wording, draft reminders, and explain your dashboard more clearly.
                         {% endif %}
                     </p>
                 </article>
 
                 <article class="feature-card">
                     <div class="feature-label">
-                        AI
+                        {% if lang == 'es' %}Visibilidad{% else %}Visibility{% endif %}
                     </div>
                     <div class="feature-title">
                         {% if lang == 'es' %}
-                            Asistente para texto y seguimiento
+                            Historial y estados claros
                         {% else %}
-                            Assistant for wording & follow-up
+                            Clear history and statuses
                         {% endif %}
                     </div>
                     <p class="feature-body">
                         {% if lang == 'es' %}
-                            Pídele que mejore el texto de tus facturas, redacte recordatorios amables
-                            o resuma lo que está pasando en tu panel.
+                            Revisa ingresos, pagos, facturas vencidas y actividad reciente desde un solo panel.
                         {% else %}
-                            Ask it to improve invoice wording, draft friendly reminders,
-                            or explain what your dashboard is saying in plain language.
-                        {% endif %}
-                    </p>
-                </article>
-
-                <article class="feature-card">
-                    <div class="feature-label">
-                        {% if lang == 'es' %}Control{% else %}Control{% endif %}
-                    </div>
-                    <div class="feature-title">
-                        {% if lang == 'es' %}
-                            Historial claro, sin ruido
-                        {% else %}
-                            Clear history, zero clutter
-                        {% endif %}
-                    </div>
-                    <p class="feature-body">
-                        {% if lang == 'es' %}
-                            Ve qué está pagado, qué está vencido y quién es tu mejor cliente
-                            sin tener que exportar nada.
-                        {% else %}
-                            See what’s paid, what’s overdue, and who your best clients are
-                            without exporting anything.
+                            Review revenue, payments, overdue invoices, and recent activity from one dashboard.
                         {% endif %}
                     </p>
                 </article>
             </div>
         </section>
 
-        <!-- Right visual card -->
         <aside>
             <div class="hero-card">
                 <div class="hero-card-header">
                     <div class="hero-card-title">
-                        {% if lang == 'es' %}Muestra de panel BillBeam{% else %}BillBeam dashboard snapshot{% endif %}
+                        {% if lang == 'es' %}Vista previa del panel{% else %}Dashboard preview{% endif %}
                     </div>
                     <div class="hero-card-pill">
                         {% if lang == 'es' %}Modo oscuro{% else %}Dark mode{% endif %}
@@ -571,28 +668,31 @@
                             {% if lang == 'es' %}Ingresos este mes{% else %}Revenue this month{% endif %}
                         </div>
                         <div class="metric-value">$7,480</div>
-                        <div style="font-size:0.7rem; color:var(--muted);">
+                        <div class="metric-sub">
                             +18% {% if lang == 'es' %}vs mes pasado{% else %}vs last month{% endif %}
                         </div>
                     </div>
+
                     <div class="metric">
                         <div class="metric-label">
                             {% if lang == 'es' %}Facturas vencidas{% else %}Overdue invoices{% endif %}
                         </div>
                         <div class="metric-value">3</div>
-                        <div style="font-size:0.7rem; color:#fca5a5;">
-                            {% if lang == 'es' %}Revisión recomendada{% else %}Needs follow-up{% endif %}
+                        <div class="metric-sub warn">
+                            {% if lang == 'es' %}Requieren seguimiento{% else %}Need follow-up{% endif %}
                         </div>
                     </div>
+
                     <div class="metric">
                         <div class="metric-label">
                             {% if lang == 'es' %}Clientes activos{% else %}Active clients{% endif %}
                         </div>
                         <div class="metric-value">17</div>
                     </div>
+
                     <div class="metric">
                         <div class="metric-label">
-                            {% if lang == 'es' %}Ticket promedio{% else %}Avg. invoice{% endif %}
+                            {% if lang == 'es' %}Factura promedio{% else %}Avg. invoice{% endif %}
                         </div>
                         <div class="metric-value">$440</div>
                     </div>
@@ -601,23 +701,23 @@
                 <ul class="hero-mini-list">
                     <li>
                         {% if lang == 'es' %}
-                            Ve tu pipeline de cobros sin salirte del navegador.
+                            Visualiza tu actividad de facturación sin depender de hojas de cálculo.
                         {% else %}
-                            See your entire billing pipeline at a glance, right in the browser.
+                            Review billing activity without depending on spreadsheets.
                         {% endif %}
                     </li>
                     <li>
                         {% if lang == 'es' %}
-                            Diseñado para freelancers, estudios creativos y solopreneurs.
+                            Diseñado para freelancers, estudios creativos y pequeños equipos.
                         {% else %}
-                            Designed for freelancers, studios, and solo founders.
+                            Designed for freelancers, creative studios, and small teams.
                         {% endif %}
                     </li>
                     <li>
                         {% if lang == 'es' %}
-                            Cuando necesites más, el plan Pro añade envíos por email y más automatización.
+                            Pro añade más volumen, envío por email y funciones avanzadas cuando las necesites.
                         {% else %}
-                            When you outgrow Starter, Pro adds email sending and more automation.
+                            Pro adds more volume, built-in email sending, and advanced features when you need them.
                         {% endif %}
                     </li>
                 </ul>
@@ -625,58 +725,75 @@
         </aside>
     </main>
 
-    <!-- Tiny FAQ teaser anchor -->
-    <section id="faq" style="margin-top:42px; max-width:640px;">
-        <h2 style="font-size:1.1rem; margin-bottom:12px;">
+    <section id="faq" class="landing-section">
+        <h2 class="section-heading">
             {% if lang == 'es' %}Preguntas rápidas{% else %}Quick questions{% endif %}
         </h2>
-        <div style="font-size:0.9rem; color:var(--muted); display:flex; flex-direction:column; gap:10px;">
-            <div>
+        <div class="section-subcopy">
+            {% if lang == 'es' %}
+                Algunas respuestas rápidas sobre el plan Starter, los datos y cómo empezar.
+            {% else %}
+                A few quick answers about Starter, your data, and how to get started.
+            {% endif %}
+        </div>
+
+        <div class="mini-faq">
+            <div class="mini-faq-item">
                 <strong>
                     {% if lang == 'es' %}
                         ¿Necesito tarjeta para empezar?
                     {% else %}
                         Do I need a card to start?
                     {% endif %}
-                </strong><br>
-                {% if lang == 'es' %}
-                    No. El plan Starter incluye hasta 10 facturas al mes sin tarjeta. Solo actualizas a Pro si
-                    te está ahorrando tiempo de verdad.
-                {% else %}
-                    Nope. Starter includes up to 10 invoices per month without a card. You only upgrade to Pro
-                    if it’s genuinely saving you time.
-                {% endif %}
+                </strong>
+                <div>
+                    {% if lang == 'es' %}
+                        No. Starter incluye hasta 10 facturas al mes sin tarjeta. Puedes actualizar más adelante si necesitas más capacidad.
+                    {% else %}
+                        No. Starter includes up to 10 invoices per month without a card. You can upgrade later if you need more capacity.
+                    {% endif %}
+                </div>
             </div>
-            <div>
+
+            <div class="mini-faq-item">
                 <strong>
                     {% if lang == 'es' %}
-                        ¿Puedo volver a Excel si no me gusta?
+                        ¿Puedo volver a mi sistema anterior si quiero?
                     {% else %}
-                        Can I go back to Excel if I don’t like it?
+                        Can I go back to my old system if I want to?
                     {% endif %}
-                </strong><br>
-                {% if lang == 'es' %}
-                    Siempre. Tus datos son tuyos. Puedes exportar y seguir como antes si no encaja contigo.
-                {% else %}
-                    Always. Your data is yours. Export and go back to your old system any time if it’s not a fit.
-                {% endif %}
+                </strong>
+                <div>
+                    {% if lang == 'es' %}
+                        Sí. Tus datos siguen siendo tuyos y puedes descargar tus PDFs y continuar con tu flujo anterior si lo prefieres.
+                    {% else %}
+                        Yes. Your data remains yours, and you can download your PDFs and continue with your previous workflow if you prefer.
+                    {% endif %}
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- FOOTER -->
     <footer class="landing-footer">
         <div>
             © {{ now().year }} BillBeam ·
             {% if lang == 'es' %}
-                Facturación rápida para gente ocupada.
+                Facturación moderna para gente ocupada.
             {% else %}
-                Fast invoicing for busy humans.
+                Modern invoicing for busy people.
             {% endif %}
         </div>
+
         <div class="footer-links">
             <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
-                {% if lang == 'es' %}Ver planes{% else %}View plans{% endif %}
+                {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
+            </a>
+            <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">FAQ</a>
+            <a href="/about{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
+                {% if lang == 'es' %}Acerca de{% else %}About{% endif %}
+            </a>
+            <a href="/help{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
+                {% if lang == 'es' %}Ayuda{% else %}Help{% endif %}
             </a>
             <a href="/login{% if lang %}?lang={{ lang }}{% endif %}" class="footer-link">
                 {% if lang == 'es' %}Entrar{% else %}Login{% endif %}

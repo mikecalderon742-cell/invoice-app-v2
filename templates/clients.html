@@ -1,157 +1,273 @@
 {% extends "base.html" %}
+
+{% block title %}
+    {% if lang == 'es' %}Clientes · BillBeam{% else %}Clients · BillBeam{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Gestiona tus clientes en BillBeam, guarda datos de contacto y crea facturas más rápido.
+    {% else %}
+        Manage your clients in BillBeam, save contact details, and create invoices faster.
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 
-{# Language handling #}
 {% set lang = request.args.get('lang', 'en') %}
 
-<!-- LANGUAGE SWITCHER -->
-<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-    <div style="font-size:13px;opacity:0.85;">
-        {% if lang == 'es' %}
-            Idioma:
-        {% else %}
-            Language:
-        {% endif %}
-        <a href="?lang=en"
-           style="margin-left:6px;{% if lang == 'en' %}font-weight:600;text-decoration:underline;{% endif %}">
-            EN
-        </a>
-        <span style="opacity:0.6;">|</span>
-        <a href="?lang=es"
-           style="margin-left:4px;{% if lang == 'es' %}font-weight:600;text-decoration:underline;{% endif %}">
-            ES
-        </a>
-    </div>
-</div>
-
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
-        </a>
-    </div>
-</div>
-
-<div class="form-wrapper fade-in-up" style="margin-bottom:30px;">
-    <h2 style="margin-top:0;">
-        {% if lang == 'es' %}Añadir nuevo cliente{% else %}Add New Client{% endif %}
-    </h2>
-    <form method="POST" action="/clients/add{% if lang %}?lang={{ lang }}{% endif %}">
-        <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:12px; margin-bottom:12px;">
+<div class="page-shell" style="max-width:1120px;">
+    <section class="page-card fade-in-up" style="padding:30px 28px 24px; margin-bottom:24px;">
+        <div class="table-section-header" style="align-items:flex-start; margin-bottom:18px;">
             <div>
-                <label for="name" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Nombre *{% else %}Name *{% endif %}
-                </label>
-                <input type="text" id="name" name="name" required
-                       placeholder="{% if lang == 'es' %}Nombre del cliente{% else %}Client name{% endif %}">
-            </div>
-            <div>
-                <label for="email" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Correo electrónico{% else %}Email{% endif %}
-                </label>
-                <input type="email" id="email" name="email" placeholder="client@example.com">
-            </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-            <div>
-                <label for="company" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
-                </label>
-                <input type="text" id="company" name="company"
-                       placeholder="{% if lang == 'es' %}Empresa (opcional){% else %}Company (optional){% endif %}">
-            </div>
-            <div>
-                <label for="phone" style="font-weight:600; font-size:14px;">
-                    {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
-                </label>
-                <input type="text" id="phone" name="phone"
-                       placeholder="{% if lang == 'es' %}Teléfono (opcional){% else %}Phone (optional){% endif %}">
-            </div>
-        </div>
-
-        <div style="margin-bottom:12px;">
-            <label for="address" style="font-weight:600; font-size:14px;">
-                {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
-            </label>
-            <input type="text" id="address" name="address"
-                   placeholder="{% if lang == 'es' %}Dirección (opcional){% else %}Address (optional){% endif %}">
-        </div>
-
-        <div style="margin-bottom:12px;">
-            <label for="notes" style="font-weight:600; font-size:14px;">
-                {% if lang == 'es' %}Notas{% else %}Notes{% endif %}
-            </label>
-            <input type="text" id="notes" name="notes"
-                   placeholder="{% if lang == 'es' %}p.ej. Prefiere PayPal, pagar en 7 días{% else %}e.g. Prefers PayPal, pay in 7 days{% endif %}">
-        </div>
-
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <button type="submit" class="btn btn-brand">
-                {% if lang == 'es' %}Añadir cliente{% else %}Add Client{% endif %}
-            </button>
-        </div>
-    </form>
-</div>
-
-<div class="table-wrapper">
-    <table class="modern-table">
-        <thead>
-            <tr>
-                <th>
-                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-                </th>
-                <th>Email</th>
-                <th>
-                    {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
-                </th>
-                <th>
-                    {% if lang == 'es' %}Creado{% else %}Created{% endif %}
-                </th>
-                <th>
-                    {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-        {% if clients %}
-            {% for client in clients %}
-            <tr>
-                <td>{{ client[1] }}</td>
-                <td>{{ client[2] or "—" }}</td>
-                <td>{{ client[3] or "—" }}</td>
-                <td>{{ client[4].strftime('%Y-%m-%d') if client[4] else "—" }}</td>
-                <td class="action-buttons">
-                    <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-edit">
-                        {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-                    </a>
-                    <a href="/clients/delete/{{ client[0] }}{% if lang %}?lang={{ lang }}{% endif %}"
-                       class="btn btn-danger"
-                       onclick="return confirm('{% if lang == 'es' %}¿Eliminar este cliente? ESTO NO elimina sus facturas, pero puede dejar referencias huérfanas.{% else %}Delete this client? This does NOT delete their invoices, but may orphan references.{% endif %}');">
-                        {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        {% else %}
-            <tr>
-                <td colspan="5" style="text-align:center; padding:20px;">
+                <div class="page-eyebrow">
+                    {% if lang == 'es' %}Relaciones con clientes{% else %}Client relationships{% endif %}
+                </div>
+                <h1 style="margin:0 0 8px 0;">
+                    {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
+                </h1>
+                <p style="margin:0; max-width:760px; font-size:15px; line-height:1.6;">
                     {% if lang == 'es' %}
-                        Todavía no hay clientes. Añade tu primer cliente arriba.
+                        Guarda información de clientes una sola vez y reutilízala al crear nuevas facturas.
+                        Esto hace que tu flujo de trabajo sea más rápido, más limpio y mucho más consistente.
                     {% else %}
-                        No clients yet. Add your first client above.
+                        Save client details once and reuse them every time you create a new invoice.
+                        It keeps your workflow faster, cleaner, and much more consistent.
                     {% endif %}
-                </td>
-            </tr>
-        {% endif %}
-        </tbody>
-    </table>
+                </p>
+            </div>
+
+            <div class="quick-actions">
+                <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                    {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
+                </a>
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+                </a>
+            </div>
+        </div>
+
+        <div class="status-summary" style="margin-bottom:0;">
+            <div class="status-item sent">
+                {% if lang == 'es' %}
+                    {{ clients|length if clients else 0 }} cliente{{ '' if (clients|length if clients else 0) == 1 else 's' }} guardado{{ '' if (clients|length if clients else 0) == 1 else 's' }}
+                {% else %}
+                    {{ clients|length if clients else 0 }} saved client{{ '' if (clients|length if clients else 0) == 1 else 's' }}
+                {% endif %}
+            </div>
+            <div class="status-item paid">
+                {% if lang == 'es' %}
+                    Reutiliza contactos en nuevas facturas
+                {% else %}
+                    Reuse contacts in new invoices
+                {% endif %}
+            </div>
+            <div class="status-item draft">
+                {% if lang == 'es' %}
+                    Menos escritura repetida
+                {% else %}
+                    Less repeated typing
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="page-card fade-in-up" style="padding:28px 26px; margin-bottom:24px;">
+        <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px;">
+            <div>
+                <h2 style="margin:0 0 6px 0;">
+                    {% if lang == 'es' %}Añadir nuevo cliente{% else %}Add New Client{% endif %}
+                </h2>
+                <p style="margin:0; font-size:14px; opacity:0.82; line-height:1.6;">
+                    {% if lang == 'es' %}
+                        Añade los datos clave ahora para que crear facturas después sea cuestión de unos pocos clics.
+                    {% else %}
+                        Add the key details now so future invoices take just a few clicks.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" action="/clients/add{% if lang %}?lang={{ lang }}{% endif %}">
+            <div style="display:grid; grid-template-columns:1.35fr 1fr; gap:14px; margin-bottom:14px;">
+                <div>
+                    <label for="name" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                        {% if lang == 'es' %}Nombre del cliente *{% else %}Client Name *{% endif %}
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        placeholder="{% if lang == 'es' %}p. ej. Jane Doe o Acme Studio{% else %}e.g. Jane Doe or Acme Studio{% endif %}"
+                    >
+                </div>
+
+                <div>
+                    <label for="email" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                        {% if lang == 'es' %}Correo electrónico{% else %}Email{% endif %}
+                    </label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="client@example.com"
+                    >
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+                <div>
+                    <label for="company" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                        {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
+                    </label>
+                    <input
+                        type="text"
+                        id="company"
+                        name="company"
+                        placeholder="{% if lang == 'es' %}Empresa u organización{% else %}Company or organization{% endif %}"
+                    >
+                </div>
+
+                <div>
+                    <label for="phone" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                        {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
+                    </label>
+                    <input
+                        type="text"
+                        id="phone"
+                        name="phone"
+                        placeholder="{% if lang == 'es' %}+52, +1, etc. (opcional){% else %}+1, +44, etc. (optional){% endif %}"
+                    >
+                </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label for="address" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                    {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
+                </label>
+                <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    placeholder="{% if lang == 'es' %}Ciudad, estado, país o dirección completa{% else %}City, state, country, or full address{% endif %}"
+                >
+            </div>
+
+            <div style="margin-bottom:8px;">
+                <label for="notes" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                    {% if lang == 'es' %}Notas internas{% else %}Internal Notes{% endif %}
+                </label>
+                <input
+                    type="text"
+                    id="notes"
+                    name="notes"
+                    placeholder="{% if lang == 'es' %}p. ej. Prefiere transferencia bancaria, paga en 7 días, contacto principal de diseño{% else %}e.g. Prefers bank transfer, pays in 7 days, main design contact{% endif %}"
+                >
+            </div>
+
+            <div style="font-size:12px; opacity:0.72; margin-top:8px; line-height:1.55;">
+                {% if lang == 'es' %}
+                    Consejo: guarda cualquier detalle útil de facturación aquí para reducir errores y ahorrar tiempo después.
+                {% else %}
+                    Tip: save any useful billing details here so you reduce errors and save time later.
+                {% endif %}
+            </div>
+
+            <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+                <button type="submit" class="btn btn-brand">
+                    {% if lang == 'es' %}Añadir cliente{% else %}Add Client{% endif %}
+                </button>
+            </div>
+        </form>
+    </section>
+
+    {% if clients %}
+        <section class="table-wrapper fade-in-up">
+            <div class="table-section-header">
+                <div>
+                    <h2>
+                        {% if lang == 'es' %}Lista de clientes{% else %}Client List{% endif %}
+                    </h2>
+                    <p>
+                        {% if lang == 'es' %}
+                            Revisa tus contactos guardados y crea nuevas facturas con mayor rapidez.
+                        {% else %}
+                            Review your saved contacts and create new invoices faster.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="table-meta">
+                    {% if lang == 'es' %}
+                        {{ clients|length }} cliente{{ '' if clients|length == 1 else 's' }}
+                    {% else %}
+                        {{ clients|length }} client{{ '' if clients|length == 1 else 's' }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>{% if lang == 'es' %}Cliente{% else %}Client{% endif %}</th>
+                        <th>Email</th>
+                        <th>{% if lang == 'es' %}Empresa{% else %}Company{% endif %}</th>
+                        <th>{% if lang == 'es' %}Creado{% else %}Created{% endif %}</th>
+                        <th>{% if lang == 'es' %}Acciones{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                        <tr>
+                            <td>
+                                <div style="display:flex; flex-direction:column; gap:3px;">
+                                    <strong style="font-size:14px;">{{ client[1] }}</strong>
+                                    <span style="font-size:12px; opacity:0.7;">
+                                        {% if lang == 'es' %}
+                                            Cliente guardado
+                                        {% else %}
+                                            Saved contact
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+                            <td>{{ client[2] or "—" }}</td>
+                            <td>{{ client[3] or "—" }}</td>
+                            <td>{{ client[4].strftime('%Y-%m-%d') if client[4] else "—" }}</td>
+                            <td class="action-buttons">
+                                <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-edit">
+                                    {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                                </a>
+                                <a href="/clients/delete/{{ client[0] }}{% if lang %}?lang={{ lang }}{% endif %}"
+                                   class="btn btn-danger"
+                                   onclick="return confirm('{% if lang == 'es' %}¿Eliminar este cliente? Esto no elimina sus facturas existentes, pero sí quitará este contacto guardado.{% else %}Delete this client? This will not delete existing invoices, but it will remove this saved contact.{% endif %}');">
+                                    {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    {% else %}
+        <section class="page-card fade-in-up" style="padding:34px 28px; text-align:center;">
+            <h2 style="margin:0 0 10px 0;">
+                {% if lang == 'es' %}Todavía no hay clientes{% else %}No clients yet{% endif %}
+            </h2>
+            <p style="margin:0 auto 18px auto; max-width:700px; font-size:14px; opacity:0.82; line-height:1.7;">
+                {% if lang == 'es' %}
+                    Guarda tu primer cliente arriba para empezar a reutilizar sus datos en futuras facturas.
+                    Una vez que tengas algunos contactos aquí, tu flujo de trabajo se sentirá mucho más rápido.
+                {% else %}
+                    Add your first client above to start reusing their details in future invoices.
+                    Once you have a few contacts here, your workflow will feel much faster.
+                {% endif %}
+            </p>
+            <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                {% if lang == 'es' %}Ir a crear factura{% else %}Go to Create Invoice{% endif %}
+            </a>
+        </section>
+    {% endif %}
 </div>
 
 {% endblock %}

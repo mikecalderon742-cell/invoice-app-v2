@@ -1,129 +1,619 @@
 {% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Acerca de BillBeam
+  {% else %}
+    About BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Conoce BillBeam, la app de facturación moderna creada para freelancers, estudios pequeños y equipos ágiles.
+  {% else %}
+    Learn about BillBeam, the modern invoicing app built for freelancers, small studios, and lean teams.
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 
-<div class="dashboard-header">
-    <h1>
+<style>
+  .about-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .about-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .about-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .about-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(32px, 4vw, 46px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .about-subcopy {
+    max-width: 780px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .about-subcopy {
+    color: #94a3b8;
+  }
+
+  .about-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) 320px;
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .about-hero-panel,
+  .about-side-panel,
+  .about-section-card,
+  .about-value-card {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .about-hero-panel,
+  body.dark .about-side-panel,
+  body.dark .about-section-card,
+  body.dark .about-value-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .about-hero-panel {
+    padding: 26px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .about-hero-panel::after {
+    content: "";
+    position: absolute;
+    inset: auto -70px -70px auto;
+    width: 200px;
+    height: 200px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .about-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.2);
+    margin-bottom: 14px;
+  }
+
+  body.dark .about-kicker {
+    background: rgba(15,23,42,0.55);
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .about-hero-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+
+  .about-hero-copy {
+    margin-top: 14px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .about-hero-copy {
+    color: #cbd5e1;
+  }
+
+  .about-hero-points {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .about-point {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .about-point {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .about-point-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .about-point-label {
+    color: #94a3b8;
+  }
+
+  .about-point-value {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .about-side-panel {
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+  }
+
+  .about-side-panel h3 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .about-side-copy {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .about-side-copy {
+    color: #94a3b8;
+  }
+
+  .about-side-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .about-side-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .about-side-item {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .about-side-bullet {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 8px 18px rgba(58,139,255,0.22);
+  }
+
+  .about-grid {
+    display: grid;
+    gap: 20px;
+  }
+
+  .about-section-card {
+    padding: 22px;
+  }
+
+  .about-section-card h2,
+  .about-section-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .about-section-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #475569;
+  }
+
+  body.dark .about-section-card p {
+    color: #cbd5e1;
+  }
+
+  .about-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .about-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .about-list li {
+    color: #cbd5e1;
+  }
+
+  .about-list-bullet {
+    color: var(--accent);
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .about-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .about-value-card {
+    padding: 18px;
+  }
+
+  .about-value-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .about-value-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .about-value-copy {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 1020px) {
+    .about-hero,
+    .about-values {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .about-hero-points {
+      grid-template-columns: 1fr;
+    }
+
+    .about-hero-panel,
+    .about-side-panel,
+    .about-section-card,
+    .about-value-card {
+      padding: 18px;
+    }
+  }
+</style>
+
+<div class="about-page">
+
+  <div class="about-topbar">
+    <div class="about-title-wrap">
+      <h1>
         {% if lang == 'es' %}
-            Acerca de BillBeam
+          Acerca de BillBeam
         {% else %}
-            About BillBeam
+          About BillBeam
         {% endif %}
-    </h1>
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
-        </a>
+      </h1>
+      <div class="about-subcopy">
+        {% if lang == 'es' %}
+          Una experiencia de facturación moderna creada para ayudarte a cobrar más rápido, trabajar con más claridad y presentar mejor tu negocio.
+        {% else %}
+          A modern invoicing experience built to help you get paid faster, work with more clarity, and present your business more professionally.
+        {% endif %}
+      </div>
     </div>
-</div>
 
-<div class="form-wrapper fade-in-up" style="max-width:900px;">
-    <section class="reveal" style="margin-bottom:24px;">
-        <h2 style="margin-top:0;">
+    <div class="quick-actions">
+      <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+      </a>
+    </div>
+  </div>
+
+  <div class="about-hero">
+    <div class="about-hero-panel reveal">
+      <div class="about-kicker">
+        {% if lang == 'es' %}
+          Facturación moderna • BillBeam
+        {% else %}
+          Modern invoicing • BillBeam
+        {% endif %}
+      </div>
+
+      <h2 class="about-hero-title">
+        {% if lang == 'es' %}
+          Tu panel de control para facturas rápidas y claras
+        {% else %}
+          Your command center for clean, fast invoices
+        {% endif %}
+      </h2>
+
+      <div class="about-hero-copy">
+        {% if lang == 'es' %}
+          BillBeam está diseñado para freelancers, agencias pequeñas y equipos ágiles que quieren enviar facturas claras sin pelear con hojas de cálculo pesadas o herramientas demasiado complejas. La meta es simple: ayudarte a cobrar más rápido y con menos fricción.
+        {% else %}
+          BillBeam is built for freelancers, small agencies, and lean teams who want to send clear invoices without wrestling with bloated spreadsheets or overly complex tools. The goal is simple: help you get paid faster, with less friction.
+        {% endif %}
+      </div>
+
+      <div class="about-hero-points">
+        <div class="about-point">
+          <div class="about-point-label">
+            {% if lang == 'es' %}Enfoque{% else %}Focus{% endif %}
+          </div>
+          <div class="about-point-value">
+            {% if lang == 'es' %}Facturas claras{% else %}Clear invoices{% endif %}
+          </div>
+        </div>
+
+        <div class="about-point">
+          <div class="about-point-label">
+            {% if lang == 'es' %}Meta{% else %}Goal{% endif %}
+          </div>
+          <div class="about-point-value">
+            {% if lang == 'es' %}Cobrar más rápido{% else %}Get paid faster{% endif %}
+          </div>
+        </div>
+
+        <div class="about-point">
+          <div class="about-point-label">
+            {% if lang == 'es' %}Experiencia{% else %}Experience{% endif %}
+          </div>
+          <div class="about-point-value">
+            {% if lang == 'es' %}Simple y moderna{% else %}Simple and modern{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="about-side-panel reveal">
+      <h3>
+        {% if lang == 'es' %}Lo que BillBeam prioriza{% else %}What BillBeam prioritizes{% endif %}
+      </h3>
+
+      <div class="about-side-copy">
+        {% if lang == 'es' %}
+          BillBeam no intenta ser una herramienta para todo. Se enfoca en hacer la facturación más clara, rápida y menos frustrante.
+        {% else %}
+          BillBeam does not try to be everything software. It focuses on making invoicing clearer, faster, and less frustrating.
+        {% endif %}
+      </div>
+
+      <div class="about-side-list">
+        <div class="about-side-item">
+          <div class="about-side-bullet">1</div>
+          <div>
             {% if lang == 'es' %}
-                Tu panel de control para facturas rápidas y claras
+              Menos fricción al crear y enviar facturas.
             {% else %}
-                Your command center for clean, fast invoices
+              Less friction when creating and sending invoices.
             {% endif %}
-        </h2>
-        <p style="font-size:0.95rem; opacity:0.9;">
+          </div>
+        </div>
+
+        <div class="about-side-item">
+          <div class="about-side-bullet">2</div>
+          <div>
             {% if lang == 'es' %}
-                BillBeam está diseñado para freelancers, agencias pequeñas y equipos que necesitan
-                enviar facturas claras sin perder tiempo peleando con hojas de cálculo pesadas o
-                herramientas demasiado complejas. La meta es simple: ayudarte a cobrar más rápido
-                y con menos fricción.
+              Mejor claridad para ti y para tu cliente.
             {% else %}
-                BillBeam is built for freelancers, small agencies, and lean teams who want to send
-                clear invoices without wrestling with bloated spreadsheets or overly complex tools.
-                The goal is simple: help you get paid faster, with less friction.
+              Better clarity for both you and your client.
             {% endif %}
-        </p>
+          </div>
+        </div>
+
+        <div class="about-side-item">
+          <div class="about-side-bullet">3</div>
+          <div>
+            {% if lang == 'es' %}
+              Una experiencia más profesional en cada paso.
+            {% else %}
+              A more professional experience at every step.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="about-grid">
+
+    <section class="about-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}Qué hace BillBeam bien{% else %}What BillBeam focuses on{% endif %}
+      </h3>
+
+      <ul class="about-list">
+        <li>
+          <span class="about-list-bullet">•</span>
+          <span>
+            {% if lang == 'es' %}
+              Crear facturas en segundos con un flujo simple y visual.
+            {% else %}
+              Create invoices in seconds with a streamlined visual flow.
+            {% endif %}
+          </span>
+        </li>
+        <li>
+          <span class="about-list-bullet">•</span>
+          <span>
+            {% if lang == 'es' %}
+              Ver historial de facturas y pagos sin perderte entre pantallas.
+            {% else %}
+              See invoice and payment history without getting lost across too many screens.
+            {% endif %}
+          </span>
+        </li>
+        <li>
+          <span class="about-list-bullet">•</span>
+          <span>
+            {% if lang == 'es' %}
+              Compartir enlaces públicos modernos de facturas con tus clientes.
+            {% else %}
+              Share modern public invoice pages with your clients.
+            {% endif %}
+          </span>
+        </li>
+        <li>
+          <span class="about-list-bullet">•</span>
+          <span>
+            {% if lang == 'es' %}
+              Mantener un registro claro de pagos parciales y facturas vencidas.
+            {% else %}
+              Keep a clear record of partial payments and overdue invoices.
+            {% endif %}
+          </span>
+        </li>
+        <li>
+          <span class="about-list-bullet">•</span>
+          <span>
+            {% if lang == 'es' %}
+              Recibir ayuda dentro de la app con BillBeam Assistant.
+            {% else %}
+              Get in-app guidance from BillBeam Assistant when you need it.
+            {% endif %}
+          </span>
+        </li>
+      </ul>
     </section>
 
-    <section class="reveal" style="margin-bottom:28px;">
-        <h3>
-            {% if lang == 'es' %}Qué hace BillBeam bien{% else %}What BillBeam focuses on{% endif %}
-        </h3>
-        <ul style="font-size:0.95rem; padding-left:1.2rem; margin-top:10px;">
-            <li>
-                {% if lang == 'es' %}
-                    Crear facturas en segundos con un flujo simple.
-                {% else %}
-                    Create invoices in seconds with a streamlined flow.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Ver el historial de facturas y pagos sin perderte en mil pantallas.
-                {% else %}
-                    See invoice and payment history without getting lost in ten screens.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Compartir enlaces públicos modernos de facturas con tus clientes.
-                {% else %}
-                    Share modern public invoice pages with your clients.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Mantener un registro claro de pagos parciales y facturas vencidas.
-                {% else %}
-                    Keep a clear record of partial payments and overdue invoices.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Recibir ayuda inteligente dentro de la app con el Asistente BillBeam.
-                {% else %}
-                    Get in-app guidance from the BillBeam Assistant when you’re stuck.
-                {% endif %}
-            </li>
-        </ul>
+    <section class="about-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}Filosofía del producto{% else %}Product philosophy{% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          En lugar de intentar ser “la herramienta para todo”, BillBeam se enfoca en hacer una cosa extremadamente bien: ayudarte a enviar facturas profesionales y dar seguimiento a pagos sin dolores de cabeza. La interfaz está pensada para ser rápida, minimalista y amigable incluso si no te consideras una persona técnica.
+        {% else %}
+          Instead of trying to be “everything software,” BillBeam focuses on doing one thing extremely well: helping you send professional invoices and track payments without headaches. The interface is designed to feel fast, minimal, and friendly even if you do not consider yourself a technical person.
+        {% endif %}
+      </p>
     </section>
 
-    <section class="reveal" style="margin-bottom:28px;">
-        <h3>
-            {% if lang == 'es' %}Filosofía del producto{% else %}Product philosophy{% endif %}
-        </h3>
-        <p style="font-size:0.95rem; opacity:0.9;">
-            {% if lang == 'es' %}
-                En lugar de intentar ser “la herramienta para todo”, BillBeam se enfoca en hacer
-                una cosa extremadamente bien: ayudarte a enviar facturas profesionales y dar
-                seguimiento a los pagos sin dolores de cabeza. La interfaz está pensada para ser
-                rápida, minimalista y amigable incluso si no eres “persona de sistemas”.
-            {% else %}
-                Instead of trying to be “everything software,” BillBeam focuses on doing one
-                thing extremely well: helping you send professional invoices and track payments
-                without headaches. The interface aims to be fast, minimal, and friendly even if
-                you don’t consider yourself “a systems person.”
-            {% endif %}
-        </p>
+    <div class="about-values reveal">
+      <div class="about-value-card">
+        <div class="about-value-title">
+          {% if lang == 'es' %}Claridad{% else %}Clarity{% endif %}
+        </div>
+        <div class="about-value-copy">
+          {% if lang == 'es' %}
+            Menos ruido, menos desorden y más enfoque en lo que realmente importa: cobrar.
+          {% else %}
+            Less noise, less clutter, and more focus on what actually matters: getting paid.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="about-value-card">
+        <div class="about-value-title">
+          {% if lang == 'es' %}Velocidad{% else %}Speed{% endif %}
+        </div>
+        <div class="about-value-copy">
+          {% if lang == 'es' %}
+            Un flujo rápido ayuda a crear, revisar y enviar facturas con menos trabajo manual.
+          {% else %}
+            A fast workflow helps you create, review, and send invoices with less manual effort.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="about-value-card">
+        <div class="about-value-title">
+          {% if lang == 'es' %}Confianza{% else %}Trust{% endif %}
+        </div>
+        <div class="about-value-copy">
+          {% if lang == 'es' %}
+            Una experiencia visual más sólida hace que tu negocio se vea más profesional frente al cliente.
+          {% else %}
+            A stronger visual experience helps your business feel more professional to clients.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <section class="about-section-card reveal">
+      <h3>
+        {% if lang == 'es' %}Contacto y retroalimentación{% else %}Contact & feedback{% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          ¿Tienes ideas, comentarios o encontraste un bug raro? BillBeam es un proyecto vivo y siempre mejorando. Tu feedback ayuda a priorizar qué construir después y cómo seguir puliendo la experiencia.
+        {% else %}
+          Have ideas, feedback, or found a weird bug? BillBeam is a living product that is always improving. Your feedback helps prioritize what gets built next and how the experience keeps getting polished.
+        {% endif %}
+      </p>
+      <p style="margin-top: 12px;">
+        {% if lang == 'es' %}
+          Puedes enviar comentarios desde la sección de Ayuda dentro de la app o responder a cualquier correo de BillBeam.
+        {% else %}
+          You can send feedback from the Help section inside the app or by replying to any BillBeam email you receive.
+        {% endif %}
+      </p>
     </section>
 
-    <section class="reveal">
-        <h3>
-            {% if lang == 'es' %}Contacto y retroalimentación{% else %}Contact & feedback{% endif %}
-        </h3>
-        <p style="font-size:0.95rem; opacity:0.9;">
-            {% if lang == 'es' %}
-                ¿Tienes ideas, comentarios o encontraste un bug raro? Este proyecto está vivo y
-                siempre mejorando. Tu feedback ayuda a priorizar qué construir después.
-            {% else %}
-                Have ideas, feedback, or found a weird bug? This project is alive and always
-                improving. Your feedback helps shape what gets built next.
-            {% endif %}
-        </p>
-        <p style="font-size:0.9rem; opacity:0.85;">
-            {% if lang == 'es' %}
-                Envía tus comentarios desde la sección de Ayuda dentro de la app o responde a
-                cualquier correo de BillBeam.
-            {% else %}
-                You can send feedback from the Help section inside the app or by replying to any
-                BillBeam email you receive.
-            {% endif %}
-        </p>
-    </section>
+  </div>
 </div>
 
 {% endblock %}

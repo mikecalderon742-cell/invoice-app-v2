@@ -1,167 +1,657 @@
 {% extends "base.html" %}
-{% block content %}
 
+{% block title %}
+  {% if lang == 'es' %}
+    Precios · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Pricing · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Explora los planes de BillBeam y elige la mejor opción para tu flujo de facturación.
+  {% else %}
+    Explore BillBeam plans and choose the best option for your invoicing workflow.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
+<style>
+  .pricing-page {
+    display: grid;
+    gap: 22px;
+  }
+
+  .pricing-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .pricing-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .pricing-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(32px, 4vw, 46px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .pricing-subcopy {
+    max-width: 780px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .pricing-subcopy {
+    color: #94a3b8;
+  }
+
+  .pricing-alert {
+    padding: 14px 16px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 1px solid transparent;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
+  }
+
+  .pricing-alert.success {
+    border-color: rgba(22, 163, 74, 0.45);
+    background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #14532d;
+  }
+
+  .pricing-alert.warn {
+    border-color: rgba(249, 115, 22, 0.45);
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+    color: #7c2d12;
+  }
+
+  body.dark .pricing-alert.success {
+    background: linear-gradient(180deg, rgba(2, 44, 34, 0.95), rgba(6, 78, 59, 0.88));
+    color: #bbf7d0;
+  }
+
+  body.dark .pricing-alert.warn {
+    background: linear-gradient(180deg, rgba(69, 26, 3, 0.96), rgba(124, 45, 18, 0.88));
+    color: #fed7aa;
+  }
+
+  .pricing-hero-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .pricing-hero-card {
+    padding: 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.76);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .pricing-hero-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .pricing-hero-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .pricing-hero-label {
+    color: #94a3b8;
+  }
+
+  .pricing-hero-value {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .pricing-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px;
+    border-radius: 26px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  body.dark .pricing-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .pricing-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.10), transparent 70%);
+    pointer-events: none;
+  }
+
+  .pricing-pro {
+    transform: translateY(-4px);
+    border-color: rgba(59,130,246,0.22);
+    box-shadow:
+      0 26px 60px rgba(37,99,235,0.12),
+      0 0 0 1px rgba(59,130,246,0.08);
+  }
+
+  body.dark .pricing-pro {
+    border-color: rgba(96,165,250,0.34);
+    box-shadow:
+      0 30px 70px rgba(2,6,23,0.9),
+      0 0 0 1px rgba(96,165,250,0.12);
+  }
+
+  .pricing-current {
+    outline: 2px solid rgba(34,197,94,0.35);
+    outline-offset: 0;
+  }
+
+  .pricing-card-header {
+    display: grid;
+    gap: 10px;
+  }
+
+  .pricing-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pricing-name {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .pricing-tagline {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .pricing-tagline {
+    color: #94a3b8;
+  }
+
+  .pricing-price .amount {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .pricing-pill {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .pricing-pill.current {
+    color: #166534;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+  }
+
+  .pricing-pill.recommended {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+  }
+
+  body.dark .pricing-pill.current {
+    color: #bbf7d0;
+    background: rgba(22, 101, 52, 0.35);
+    border-color: rgba(134, 239, 172, 0.3);
+  }
+
+  body.dark .pricing-pill.recommended {
+    color: #bfdbfe;
+    background: rgba(29, 78, 216, 0.28);
+    border-color: rgba(147, 197, 253, 0.26);
+  }
+
+  .pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .pricing-features li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .feature-bullet {
+    color: var(--accent);
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .pricing-ai-callout {
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .pricing-ai-callout {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .pricing-ai-callout strong {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+  }
+
+  .pricing-ai-callout ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .pricing-cta {
+    margin-top: auto;
+    display: grid;
+    gap: 10px;
+    align-items: start;
+  }
+
+  .pricing-note {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .pricing-note {
+    color: #94a3b8;
+  }
+
+  .pricing-trust-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .pricing-trust-card {
+    padding: 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.76);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .pricing-trust-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .pricing-trust-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .pricing-trust-copy {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .pricing-trust-copy {
+    color: #94a3b8;
+  }
+
+  .pricing-footer-note {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .pricing-footer-note {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 1020px) {
+    .pricing-grid,
+    .pricing-hero-strip,
+    .pricing-trust-row {
+      grid-template-columns: 1fr;
+    }
+
+    .pricing-pro {
+      transform: none;
+    }
+  }
+</style>
+
+<div class="pricing-page">
+
+  <div class="pricing-topbar">
+    <div class="pricing-title-wrap">
+      <h1>
         {% if lang == 'es' %}Elige tu plan{% else %}Choose your plan{% endif %}
-    </h1>
+      </h1>
+      <div class="pricing-subcopy">
+        {% if lang == 'es' %}
+          Empieza gratis y actualiza cuando quieras más automatización, envíos por correo, enlaces públicos y una experiencia de facturación más potente.
+        {% else %}
+          Start free and upgrade when you want more automation, email sending, public invoice links, and a stronger invoicing workflow.
+        {% endif %}
+      </div>
+    </div>
+
     <div class="quick-actions">
-        <a href="{{ url_for('invoices_page') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
-            {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
-        </a>
+      <a href="{{ url_for('invoices_page') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
+        {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
+      </a>
     </div>
-</div>
+  </div>
 
-{% if request.args.get('upgraded') %}
-    <div class="alert-overdue" style="border-color:#16a34a;background:#022c22;color:#bbf7d0;margin-bottom:20px;">
-        {% if lang == 'es' %}
-            🎉 Tu actualización fue exitosa. ¡Bienvenido a Pro!
-        {% else %}
-            🎉 Your upgrade was successful. Welcome to Pro!
-        {% endif %}
+  {% if request.args.get('upgraded') %}
+    <div class="pricing-alert success">
+      {% if lang == 'es' %}
+        🎉 Tu actualización fue exitosa. ¡Bienvenido a Pro!
+      {% else %}
+        🎉 Your upgrade was successful. Welcome to Pro!
+      {% endif %}
     </div>
-{% elif request.args.get('canceled') %}
-    <div class="alert-overdue" style="border-color:#f97316;background:#451a03;color:#fed7aa;margin-bottom:20px;">
-        {% if lang == 'es' %}
-            Actualización cancelada. Puedes intentarlo de nuevo en cualquier momento.
-        {% else %}
-            Upgrade canceled. You can try again any time.
-        {% endif %}
+  {% elif request.args.get('canceled') %}
+    <div class="pricing-alert warn">
+      {% if lang == 'es' %}
+        Actualización cancelada. Puedes intentarlo de nuevo en cualquier momento.
+      {% else %}
+        Upgrade canceled. You can try again any time.
+      {% endif %}
     </div>
-{% endif %}
+  {% endif %}
 
-<div class="pricing-grid">
+  <div class="pricing-hero-strip">
+    <div class="pricing-hero-card">
+      <div class="pricing-hero-label">
+        {% if lang == 'es' %}Inicio rápido{% else %}Fast start{% endif %}
+      </div>
+      <div class="pricing-hero-value">
+        {% if lang == 'es' %}Comienza gratis{% else %}Start free{% endif %}
+      </div>
+    </div>
+
+    <div class="pricing-hero-card">
+      <div class="pricing-hero-label">
+        {% if lang == 'es' %}Actualización simple{% else %}Simple upgrade{% endif %}
+      </div>
+      <div class="pricing-hero-value">
+        {% if lang == 'es' %}Stripe seguro{% else %}Secure Stripe checkout{% endif %}
+      </div>
+    </div>
+
+    <div class="pricing-hero-card">
+      <div class="pricing-hero-label">
+        {% if lang == 'es' %}Escala contigo{% else %}Scales with you{% endif %}
+      </div>
+      <div class="pricing-hero-value">
+        {% if lang == 'es' %}De freelance a estudio{% else %}From freelancer to studio{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="pricing-grid">
     {% for key, plan in plans.items() %}
-        <div class="pricing-card
-            {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
-            {% if key == user_plan %} pricing-current{% endif %}
-        ">
-            <div class="pricing-card-header">
-                <div class="pricing-title-row">
-                    <div>
-                        <div class="pricing-name">{{ plan.name }}</div>
-                        <p class="pricing-tagline">{{ plan.tagline }}</p>
-                    </div>
-
-                    <div class="pricing-price" style="text-align:right;">
-                        <span class="amount">{{ plan.price_label }}</span><br>
-
-                        {% if key == user_plan %}
-                            <span class="pricing-pill current">
-                                {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
-                            </span>
-                        {% elif plan.recommended %}
-                            <span class="pricing-pill recommended">
-                                {% if lang == 'es' %}Mejor para crecer{% else %}Best for growing{% endif %}
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
+      <div class="pricing-card
+        {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
+        {% if key == user_plan %} pricing-current{% endif %}
+      ">
+        <div class="pricing-card-header">
+          <div class="pricing-title-row">
+            <div>
+              <div class="pricing-name">{{ plan.name }}</div>
+              <p class="pricing-tagline">{{ plan.tagline }}</p>
             </div>
 
-            <ul class="pricing-features">
-                {% for f in plan.features %}
-                    <li>
-                        <span class="feature-bullet">•</span>
-                        <span>{{ f }}</span>
-                    </li>
-                {% endfor %}
-            </ul>
+            <div class="pricing-price" style="text-align:right;">
+              <span class="amount">{{ plan.price_label }}</span><br>
 
-            {% if key == 'pro' %}
-                <div class="pricing-ai-callout">
-                    <strong>
-                        {% if lang == 'es' %}
-                            Incluye InvoicePro Assistant:
-                        {% else %}
-                            Includes InvoicePro Assistant:
-                        {% endif %}
-                    </strong>
-                    <ul>
-                        <li>
-                            {% if lang == 'es' %}
-                                Explica tu panel en lenguaje sencillo.
-                            {% else %}
-                                Explain your dashboard in plain English.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Ayuda a redactar notas y recordatorios de facturas.
-                            {% else %}
-                                Help draft invoice notes & reminders.
-                            {% endif %}
-                        </li>
-                        <li>
-                            {% if lang == 'es' %}
-                                Sugiere seguimientos para clientes con facturas vencidas.
-                            {% else %}
-                                Suggest follow-ups for overdue clients.
-                            {% endif %}
-                        </li>
-                    </ul>
-                </div>
-            {% endif %}
-
-            <div class="pricing-cta">
-                {# 1) If THIS is the user’s current plan, show status only #}
-                {% if key == user_plan %}
-                    <span class="badge paid">
-                        {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
-                    </span>
-                    <span class="pricing-note">
-                        {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
-                    </span>
-
-                {# 2) If this is PRO and user is NOT pro, show upgrade button #}
-                {% elif key == 'pro' and user_plan != 'pro' %}
-                    <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
-                        {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
-                    </button>
-                    <span class="pricing-note">
-                        {% if lang == 'es' %}
-                            Activa Pro en segundos con Stripe.
-                        {% else %}
-                            Turn on Pro in seconds with Stripe.
-                        {% endif %}
-                    </span>
-
-                {# 3) Free card when not current: show Included copy #}
-                {% elif key == 'free' %}
-                    <span class="badge draft">
-                        {% if lang == 'es' %}Incluido{% else %}Included{% endif %}
-                    </span>
-                    <span class="pricing-note">
-                        {% if lang == 'es' %}
-                            Perfecto si estás empezando.
-                        {% else %}
-                            Perfect if you’re just getting started.
-                        {% endif %}
-                    </span>
-
-                {# 4) Enterprise card: contact sales #}
-                {% else %}
-                    <a href="mailto:support@mikeinvoices.com"
-                       class="btn btn-secondary btn-compact"
-                       style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
-                        {% if lang == 'es' %}Contactar ventas{% else %}Contact sales{% endif %}
-                    </a>
-                    <span class="pricing-note">
-                        {% if lang == 'es' %}
-                            Te ayudaremos a diseñar un plan de mayor volumen.
-                        {% else %}
-                            We’ll help you design a higher-volume plan.
-                        {% endif %}
-                    </span>
-                {% endif %}
+              {% if key == user_plan %}
+                <span class="pricing-pill current">
+                  {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                </span>
+              {% elif plan.recommended %}
+                <span class="pricing-pill recommended">
+                  {% if lang == 'es' %}Mejor para crecer{% else %}Best for growing{% endif %}
+                </span>
+              {% endif %}
             </div>
+          </div>
         </div>
+
+        <ul class="pricing-features">
+          {% for f in plan.features %}
+            <li>
+              <span class="feature-bullet">•</span>
+              <span>{{ f }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% if key == 'pro' %}
+          <div class="pricing-ai-callout">
+            <strong>
+              {% if lang == 'es' %}
+                Incluye BillBeam Assistant:
+              {% else %}
+                Includes BillBeam Assistant:
+              {% endif %}
+            </strong>
+            <ul>
+              <li>
+                {% if lang == 'es' %}
+                  Explica tu panel en lenguaje sencillo.
+                {% else %}
+                  Explain your dashboard in plain English.
+                {% endif %}
+              </li>
+              <li>
+                {% if lang == 'es' %}
+                  Ayuda a redactar notas y recordatorios de facturas.
+                {% else %}
+                  Help draft invoice notes and reminders.
+                {% endif %}
+              </li>
+              <li>
+                {% if lang == 'es' %}
+                  Sugiere seguimientos para clientes con facturas vencidas.
+                {% else %}
+                  Suggest follow-ups for overdue clients.
+                {% endif %}
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="pricing-cta">
+          {% if key == user_plan %}
+            <span class="badge paid">
+              {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+            </span>
+            <span class="pricing-note">
+              {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
+            </span>
+
+          {% elif key == 'pro' and user_plan != 'pro' %}
+            <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
+              {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
+            </button>
+            <span class="pricing-note">
+              {% if lang == 'es' %}
+                Activa Pro en segundos con Stripe.
+              {% else %}
+                Turn on Pro in seconds with Stripe.
+              {% endif %}
+            </span>
+
+          {% elif key == 'free' %}
+            <span class="badge draft">
+              {% if lang == 'es' %}Incluido{% else %}Included{% endif %}
+            </span>
+            <span class="pricing-note">
+              {% if lang == 'es' %}
+                Perfecto si estás empezando.
+              {% else %}
+                Perfect if you’re just getting started.
+              {% endif %}
+            </span>
+
+          {% else %}
+            <a href="mailto:support@mikeinvoices.com"
+               class="btn btn-secondary btn-compact"
+               style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
+              {% if lang == 'es' %}Contactar ventas{% else %}Contact sales{% endif %}
+            </a>
+            <span class="pricing-note">
+              {% if lang == 'es' %}
+                Te ayudaremos a diseñar un plan de mayor volumen.
+              {% else %}
+                We’ll help you design a higher-volume plan.
+              {% endif %}
+            </span>
+          {% endif %}
+        </div>
+      </div>
     {% endfor %}
+  </div>
+
+  <div class="pricing-trust-row">
+    <div class="pricing-trust-card">
+      <div class="pricing-trust-title">
+        {% if lang == 'es' %}Más claridad{% else %}More clarity{% endif %}
+      </div>
+      <div class="pricing-trust-copy">
+        {% if lang == 'es' %}
+          Facturas, estados y seguimiento en una experiencia más limpia y profesional.
+        {% else %}
+          Invoices, statuses, and follow-up in one cleaner, more professional experience.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="pricing-trust-card">
+      <div class="pricing-trust-title">
+        {% if lang == 'es' %}Más velocidad{% else %}More speed{% endif %}
+      </div>
+      <div class="pricing-trust-copy">
+        {% if lang == 'es' %}
+          Envía más rápido, comparte enlaces públicos y reduce trabajo manual.
+        {% else %}
+          Send faster, share public links, and reduce manual busywork.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="pricing-trust-card">
+      <div class="pricing-trust-title">
+        {% if lang == 'es' %}Más confianza{% else %}More trust{% endif %}
+      </div>
+      <div class="pricing-trust-copy">
+        {% if lang == 'es' %}
+          Una experiencia moderna ayuda a que tu negocio se vea más sólido frente a tus clientes.
+        {% else %}
+          A modern experience helps your business feel more credible to your clients.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if stripe_publishable_key %}
+    <div class="pricing-footer-note">
+      {% if lang == 'es' %}
+        Pagos y suscripciones procesados de forma segura por Stripe.
+      {% else %}
+        Payments and subscriptions are securely processed by Stripe.
+      {% endif %}
+    </div>
+  {% endif %}
+
 </div>
 
-{# ✅ Script ONLY ONCE (outside the loop) #}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("upgradeProBtn");
@@ -183,27 +673,17 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || "Could not start checkout.");
+        alert(data.error || "{{ 'No se pudo iniciar el checkout.' if lang == 'es' else 'Could not start checkout.' }}");
         btn.disabled = false;
         btn.textContent = oldText;
       }
     } catch (e) {
-      alert("Network error starting checkout.");
+      alert("{{ 'Error de red al iniciar el checkout.' if lang == 'es' else 'Network error starting checkout.' }}");
       btn.disabled = false;
       btn.textContent = oldText;
     }
   });
 });
 </script>
-
-{% if stripe_publishable_key %}
-    <p style="font-size:0.8rem;opacity:0.7;margin-top:16px;">
-        {% if lang == 'es' %}
-            Pagos procesados de forma segura por Stripe.
-        {% else %}
-            Payments securely powered by Stripe.
-        {% endif %}
-    </p>
-{% endif %}
 
 {% endblock %}

@@ -1,20 +1,141 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>
-        {% set lang = request.args.get('lang', 'en') %}
-        {% if lang == 'es' %}Factura eliminada{% else %}Invoice Deleted{% endif %}
-    </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<div class="container">
-    <h1>
-        {% if lang == 'es' %}Factura eliminada{% else %}Invoice Deleted{% endif %}
-    </h1>
-    <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Volver al historial{% else %}Back to History{% endif %}
-    </a>
+{% extends "base.html" %}
+
+{% block title %}
+    {% if lang == 'es' %}Factura eliminada{% else %}Invoice Deleted{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+{% endblock %}
+
+{% block meta_description %}
+    {% if lang == 'es' %}
+        Confirmación de eliminación de factura en BillBeam.
+    {% else %}
+        Invoice deletion confirmation in BillBeam.
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = request.args.get('lang', 'en') %}
+
+<div class="dashboard-header">
+    <div>
+        <h1>
+            {% if lang == 'es' %}
+                Factura eliminada
+            {% else %}
+                Invoice Deleted
+            {% endif %}
+        </h1>
+        <p style="margin:6px 0 0 0; font-size:14px; opacity:.8;">
+            {% if lang == 'es' %}
+                La factura fue eliminada correctamente de tu historial.
+            {% else %}
+                The invoice was successfully removed from your history.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="quick-actions">
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+        </a>
+    </div>
 </div>
-</body>
-</html>
+
+<div class="form-wrapper fade-in-up" style="max-width:760px; margin:0 auto;">
+    <div style="
+        padding:18px;
+        border-radius:16px;
+        background:rgba(220,38,38,0.08);
+        border:1px solid rgba(220,38,38,0.18);
+        margin-bottom:18px;
+    ">
+        <div style="
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:6px 10px;
+            border-radius:999px;
+            background:rgba(220,38,38,0.12);
+            color:#b91c1c;
+            font-size:12px;
+            font-weight:800;
+            letter-spacing:.06em;
+            text-transform:uppercase;
+            margin-bottom:12px;
+        ">
+            {% if lang == 'es' %}Eliminación completada{% else %}Deletion complete{% endif %}
+        </div>
+
+        <h2 style="margin:0 0 10px 0; font-size:22px;">
+            {% if lang == 'es' %}
+                Esta factura ya no aparece en BillBeam
+            {% else %}
+                This invoice no longer appears in BillBeam
+            {% endif %}
+        </h2>
+
+        <p style="margin:0; font-size:14px; line-height:1.65; opacity:.88;">
+            {% if lang == 'es' %}
+                La factura y sus conceptos asociados se eliminaron del flujo activo. Si estabas limpiando registros antiguos o corrigiendo un borrador equivocado, ya puedes continuar.
+            {% else %}
+                The invoice and its associated line items were removed from the active workflow. If you were cleaning up old records or correcting a mistaken draft, you’re all set.
+            {% endif %}
+        </p>
+    </div>
+
+    <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:14px;
+        margin-bottom:20px;
+    ">
+        <div style="
+            padding:14px 16px;
+            border-radius:14px;
+            background:rgba(15,23,42,0.04);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
+                {% if lang == 'es' %}Qué hacer ahora{% else %}What to do next{% endif %}
+            </div>
+            <div style="font-size:14px; font-weight:600;">
+                {% if lang == 'es' %}
+                    Crea una nueva factura o vuelve al historial.
+                {% else %}
+                    Create a new invoice or return to your history.
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="
+            padding:14px 16px;
+            border-radius:14px;
+            background:rgba(15,23,42,0.04);
+            border:1px solid rgba(148,163,184,0.22);
+        ">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
+                {% if lang == 'es' %}Consejo{% else %}Tip{% endif %}
+            </div>
+            <div style="font-size:14px; font-weight:600;">
+                {% if lang == 'es' %}
+                    Si era una factura real, confirma que ya tienes el PDF o registro que necesitas.
+                {% else %}
+                    If this was a real invoice, make sure you already saved the PDF or record you need.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions" style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+            {% if lang == 'es' %}Crear otra factura{% else %}Create Another Invoice{% endif %}
+        </a>
+        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+        </a>
+    </div>
+</div>
+
+{% endblock %}

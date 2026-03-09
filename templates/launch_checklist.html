@@ -1,144 +1,511 @@
 {% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Checklist de lanzamiento · BillBeam
+  {% else %}
+    Launch Checklist · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Checklist interna de lanzamiento para revisar calidad, legal, pagos, activos de marketing y tareas post-lanzamiento de BillBeam.
+  {% else %}
+    Internal launch checklist for reviewing quality, legal, payments, marketing assets, and post-launch tasks for BillBeam.
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 
-<div class="checklist-shell">
-    <header class="checklist-header">
+<style>
+  .launch-page {
+    display: grid;
+    gap: 22px;
+    max-width: 1020px;
+    margin: 24px auto 10px;
+  }
+
+  .launch-hero,
+  .launch-strip-card,
+  .launch-card {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .launch-hero,
+  body.dark .launch-strip-card,
+  body.dark .launch-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .launch-hero {
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .launch-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto -70px -70px auto;
+    width: 200px;
+    height: 200px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .launch-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.2);
+    margin-bottom: 14px;
+  }
+
+  body.dark .launch-kicker {
+    background: rgba(15,23,42,0.55);
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .launch-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .launch-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(32px, 4vw, 44px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .launch-title-wrap p {
+    margin: 10px 0 0;
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .launch-title-wrap p {
+    color: #94a3b8;
+  }
+
+  .launch-version {
+    font-size: 12px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.45);
+    background: rgba(15,23,42,0.04);
+    white-space: nowrap;
+  }
+
+  body.dark .launch-version {
+    background: rgba(15,23,42,0.45);
+  }
+
+  .launch-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .launch-strip-card {
+    padding: 16px;
+  }
+
+  .launch-strip-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .launch-strip-label {
+    color: #94a3b8;
+  }
+
+  .launch-strip-value {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .launch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 16px;
+  }
+
+  .launch-card {
+    padding: 18px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .launch-card h2 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .launch-card-sub {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .launch-card-sub {
+    color: #94a3b8;
+  }
+
+  .launch-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .launch-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .launch-list li {
+    color: #cbd5e1;
+  }
+
+  .launch-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  .launch-mark.done {
+    color: #166534;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+  }
+
+  .launch-mark.todo {
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+  }
+
+  body.dark .launch-mark.done {
+    color: #bbf7d0;
+    background: rgba(22,101,52,0.35);
+    border-color: rgba(134,239,172,0.32);
+  }
+
+  body.dark .launch-mark.todo {
+    color: #fde68a;
+    background: rgba(146,64,14,0.35);
+    border-color: rgba(252,211,77,0.28);
+  }
+
+  .launch-footer {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .launch-footer {
+    color: #94a3b8;
+  }
+
+  .launch-highlight {
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .launch-highlight {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .launch-highlight strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .launch-highlight p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .launch-highlight p {
+    color: #cbd5e1;
+  }
+
+  @media (max-width: 980px) {
+    .launch-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .launch-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .launch-hero,
+    .launch-strip-card,
+    .launch-card {
+      padding: 16px;
+    }
+  }
+</style>
+
+<div class="launch-page">
+
+  <header class="launch-hero">
+    <div class="launch-kicker">
+      {% if lang == 'es' %}
+        Lanzamiento • BillBeam
+      {% else %}
+        Launch • BillBeam
+      {% endif %}
+    </div>
+
+    <div class="launch-title-row">
+      <div class="launch-title-wrap">
         <h1>
-            {% if lang == 'es' %}
-                Checklist de lanzamiento de BillBeam
-            {% else %}
-                BillBeam Launch Checklist
-            {% endif %}
+          {% if lang == 'es' %}
+            Checklist de lanzamiento de BillBeam
+          {% else %}
+            BillBeam Launch Checklist
+          {% endif %}
         </h1>
         <p>
-            {% if lang == 'es' %}
-                Una vista rápida de todo lo que queda por hacer desde ahora hasta el día de lanzamiento.
-            {% else %}
-                A quick view of everything from now through launch day.
-            {% endif %}
+          {% if lang == 'es' %}
+            Una vista rápida de lo que queda por cerrar antes del lanzamiento: calidad, legal, cobros, activos de marketing y tareas posteriores al release.
+          {% else %}
+            A quick view of what still needs to be closed before launch: quality, legal, payments, marketing assets, and post-release follow-through.
+          {% endif %}
         </p>
-        <span class="checklist-tag">v1.0</span>
-    </header>
+      </div>
 
-    <div class="checklist-grid">
+      <div class="launch-version">v1.0</div>
+    </div>
+  </header>
 
-        <!-- Phase: Polish & Stability -->
-        <section class="checklist-card">
-            <h2>0. {% if lang == 'es' %}Estabilidad y pulido{% else %}Stability & polish{% endif %}</h2>
-            <ul>
-                <li>✔ Signature canvas & PDF output feel right</li>
-                <li>✔ All screens responsive (mobile, tablet, desktop)</li>
-                <li>✔ Charts readable on small screens</li>
-                <li>✔ No obvious 500 errors in normal flows</li>
-                <li>✔ All main buttons visible & centered</li>
-            </ul>
-        </section>
-
-        <!-- Phase: Spanish & UX -->
-        <section class="checklist-card">
-            <h2>1. {% if lang == 'es' %}Experiencia bilingüe{% else %}Bilingual experience{% endif %}</h2>
-            <ul>
-                <li>✔ EN/ES toggle wired on all main routes</li>
-                <li>✔ App copy translated where it matters (clients & invoices)</li>
-                <li>✔ Email templates tested in English and Spanish</li>
-                <li>✔ Public invoice portal looks good in both languages</li>
-            </ul>
-        </section>
-
-        <!-- Phase: Launch Day Setup -->
-        <section class="checklist-card">
-            <h2>2. {% if lang == 'es' %}Día de lanzamiento{% else %}Launch day{% endif %}</h2>
-            <ul>
-                <li>⬜ Create Product Hunt listing assets</li>
-                <li>⬜ Short Loom walkthrough of the app</li>
-                <li>⬜ Screenshots for landing + socials</li>
-                <li>⬜ Draft announcement posts (X, Threads, LinkedIn)</li>
-                <li>⬜ Decide launch day & time</li>
-            </ul>
-        </section>
-
-        <!-- Phase: After Launch -->
-        <section class="checklist-card">
-            <h2>3. {% if lang == 'es' %}Después del lanzamiento{% else %}Post-launch{% endif %}</h2>
-            <ul>
-                <li>⬜ Add simple feedback form / link</li>
-                <li>⬜ Track first 10–20 users & their use cases</li>
-                <li>⬜ Capture testimonials & friction points</li>
-                <li>⬜ Decide the next “one big thing” after launch</li>
-            </ul>
-        </section>
-
+  <div class="launch-strip">
+    <div class="launch-strip-card">
+      <div class="launch-strip-label">
+        {% if lang == 'es' %}Meta{% else %}Goal{% endif %}
+      </div>
+      <div class="launch-strip-value">
+        {% if lang == 'es' %}Lanzar con confianza{% else %}Launch with confidence{% endif %}
+      </div>
     </div>
 
-    <div class="checklist-footer">
+    <div class="launch-strip-card">
+      <div class="launch-strip-label">
+        {% if lang == 'es' %}Prioridad{% else %}Priority{% endif %}
+      </div>
+      <div class="launch-strip-value">
+        {% if lang == 'es' %}Legal + cobros + UX{% else %}Legal + payments + UX{% endif %}
+      </div>
+    </div>
+
+    <div class="launch-strip-card">
+      <div class="launch-strip-label">
+        {% if lang == 'es' %}Enfoque{% else %}Focus{% endif %}
+      </div>
+      <div class="launch-strip-value">
+        {% if lang == 'es' %}Claridad y confianza{% else %}Clarity and trust{% endif %}
+      </div>
+    </div>
+
+    <div class="launch-strip-card">
+      <div class="launch-strip-label">
+        {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+      </div>
+      <div class="launch-strip-value">
+        {% if lang == 'es' %}Recta final{% else %}Final stretch{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="launch-grid">
+
+    <section class="launch-card">
+      <h2>0. {% if lang == 'es' %}Estabilidad y pulido{% else %}Stability & polish{% endif %}</h2>
+      <div class="launch-card-sub">
         {% if lang == 'es' %}
-            ¿Algo nuevo que quieras añadir? Solo edita este archivo HTML;
-            la estructura ya está lista para crecer.
+          Lo esencial de experiencia, visual, respuesta y flujo general del producto.
         {% else %}
-            Want to add more? Just edit this HTML file – the structure is ready to grow with you.
+          The essential experience, visual, responsiveness, and core flow quality checks.
         {% endif %}
-    </div>
-</div>
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark done">✓</span><span>Signature canvas & PDF output feel right</span></li>
+        <li><span class="launch-mark done">✓</span><span>All screens responsive (mobile, tablet, desktop)</span></li>
+        <li><span class="launch-mark done">✓</span><span>Charts readable on small screens</span></li>
+        <li><span class="launch-mark done">✓</span><span>No obvious 500 errors in normal flows</span></li>
+        <li><span class="launch-mark done">✓</span><span>All main buttons visible & centered</span></li>
+      </ul>
+    </section>
 
-<style>
-.checklist-shell {
-    max-width: 920px;
-    margin: 24px auto 10px;
-}
-.checklist-header {
-    position: relative;
-    margin-bottom: 20px;
-}
-.checklist-header h1 {
-    font-size: 1.6rem;
-    margin-bottom: 4px;
-}
-.checklist-header p {
-    font-size: 0.95rem;
-    opacity: 0.85;
-    max-width: 520px;
-}
-.checklist-tag {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 999px;
-    border: 1px solid rgba(148,163,184,0.6);
-    opacity: 0.8;
-}
-.checklist-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 16px;
-}
-.checklist-card {
-    border-radius: 16px;
-    padding: 14px 14px 10px;
-    background: var(--card-light);
-    border: 1px solid var(--border-subtle-light);
-    font-size: 0.9rem;
-}
-body.dark .checklist-card {
-    background: radial-gradient(circle at top left, #111827, #020617);
-    border-color: var(--border-subtle-dark);
-}
-.checklist-card h2 {
-    font-size: 1rem;
-    margin-bottom: 6px;
-}
-.checklist-card ul {
-    padding-left: 18px;
-}
-.checklist-card li + li {
-    margin-top: 3px;
-}
-.checklist-footer {
-    font-size: 0.8rem;
-    opacity: 0.75;
-    margin-top: 14px;
-}
-</style>
+    <section class="launch-card">
+      <h2>1. {% if lang == 'es' %}Experiencia bilingüe{% else %}Bilingual experience{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          Verifica consistencia de idioma y presentación para usuarios EN/ES.
+        {% else %}
+          Verify consistent language and presentation for EN/ES users.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark done">✓</span><span>EN/ES toggle wired on all main routes</span></li>
+        <li><span class="launch-mark done">✓</span><span>App copy translated where it matters most</span></li>
+        <li><span class="launch-mark done">✓</span><span>Email templates tested in English and Spanish</span></li>
+        <li><span class="launch-mark done">✓</span><span>Public invoice portal looks strong in both languages</span></li>
+      </ul>
+    </section>
+
+    <section class="launch-card">
+      <h2>2. {% if lang == 'es' %}Legal, confianza y cumplimiento{% else %}Legal, trust & compliance{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          Lo que debe estar especialmente sólido antes de revisión legal y lanzamiento público.
+        {% else %}
+          What must be especially solid before legal review and public launch.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark todo">⬜</span><span>Privacy Policy drafted and attorney-ready</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Terms of Service drafted and attorney-ready</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>AI / assistant notice and disclosure page drafted</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Billing / cancellation / subscription terms documented</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Footer legal links added across app and landing</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Attorney review pass completed</span></li>
+      </ul>
+    </section>
+
+    <section class="launch-card">
+      <h2>3. {% if lang == 'es' %}Pagos, correo y dominio{% else %}Payments, email & domain{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          Infraestructura visible al cliente y reputación operativa de la app.
+        {% else %}
+          Customer-visible infrastructure and operational trust signals.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark todo">⬜</span><span>Stripe checkout fully tested end to end</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Webhook behavior verified in test and production-like flows</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Resend / SMTP sender identity verified on real domain</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Support email inbox confirmed and monitored</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>APP_BASE_URL / domain / SSL all verified</span></li>
+      </ul>
+    </section>
+
+    <section class="launch-card">
+      <h2>4. {% if lang == 'es' %}Día de lanzamiento{% else %}Launch day{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          Materiales públicos, presentación del producto y coordinación del anuncio.
+        {% else %}
+          Public assets, product presentation, and announcement coordination.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark todo">⬜</span><span>Create Product Hunt listing assets</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Short Loom walkthrough of the app</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Screenshots for landing + socials</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Draft announcement posts (X, Threads, LinkedIn)</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Decide launch day & time</span></li>
+      </ul>
+    </section>
+
+    <section class="launch-card">
+      <h2>5. {% if lang == 'es' %}Después del lanzamiento{% else %}Post-launch{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          Lo necesario para aprender rápido y convertir uso real en mejoras concretas.
+        {% else %}
+          What you need to learn quickly and turn real usage into concrete improvements.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark todo">⬜</span><span>Add simple feedback form / link</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Track first 10–20 users & their use cases</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Capture testimonials & friction points</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>Decide the next one big thing after launch</span></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <div class="launch-highlight">
+    <strong>
+      {% if lang == 'es' %}Prioridad actual{% else %}Current priority{% endif %}
+    </strong>
+    <p>
+      {% if lang == 'es' %}
+        La siguiente fase crítica es cerrar el paquete legal y de confianza: privacidad, términos, aviso de IA, política de cobros/suscripción y enlaces legales visibles en toda la app.
+      {% else %}
+        The next critical phase is closing the legal and trust package: privacy, terms, AI notice, billing/subscription policy, and visible legal links across the app.
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="launch-footer">
+    {% if lang == 'es' %}
+      ¿Quieres añadir algo más? Este archivo ya está preparado para crecer como checklist interna de lanzamiento y operación.
+    {% else %}
+      Want to add more? This file is already structured to grow as your internal launch and operations checklist.
+    {% endif %}
+  </div>
+
+</div>
 
 {% endblock %}

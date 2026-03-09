@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% set lang = request.args.get('lang', 'en') %}
+
+{% block title %}
+{% if lang == 'es' %}
+Aviso de IA · BillBeam
+{% else %}
+AI Notice · BillBeam
+{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+{% if lang == 'es' %}
+Cómo funcionan las funciones de asistencia de IA de BillBeam y cuáles son sus limitaciones.
+{% else %}
+How BillBeam’s AI assistance features work and the limitations that apply to them.
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-shell">
+
+    <header class="legal-header">
+        <h1>
+            {% if lang == 'es' %}
+                Aviso sobre Asistencia de IA
+            {% else %}
+                AI Assistance Notice
+            {% endif %}
+        </h1>
+        <p class="legal-updated">
+            {% if lang == 'es' %}
+                Última actualización: {{ now().strftime("%B %Y") }}
+            {% else %}
+                Last updated: {{ now().strftime("%B %Y") }}
+            {% endif %}
+        </p>
+    </header>
+
+    <section class="legal-section">
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede incluir funciones de asistencia basadas en inteligencia artificial dentro de su sitio web, aplicación móvil y servicios relacionados.
+                Este aviso explica, en términos generales, cómo funcionan esas funciones y qué limitaciones aplican.
+            {% else %}
+                BillBeam may include AI-powered assistance features within its website, mobile application, and related services.
+                This notice explains, in general terms, how those features work and the limitations that apply to them.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}1. Finalidad{% else %}1. Purpose{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Las funciones de IA de BillBeam están diseñadas para ayudar con tareas como redacción, sugerencias de seguimiento, resúmenes y orientación general basada en el contexto visible dentro del Servicio.
+            {% else %}
+                BillBeam’s AI features are designed to help with tasks such as drafting, follow-up suggestions, summaries, and general guidance based on context visible within the Service.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Su finalidad es aumentar productividad y claridad, no reemplazar el juicio del usuario.
+            {% else %}
+                Their purpose is to improve productivity and clarity, not replace user judgment.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}2. Limitaciones{% else %}2. Limitations{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Las respuestas generadas por IA pueden ser incompletas, inexactas, ambiguas o desactualizadas. El contenido generado debe revisarse antes de utilizarse en facturas, mensajes, notas, comunicaciones o decisiones operativas.
+            {% else %}
+                AI-generated responses may be incomplete, inaccurate, ambiguous, or outdated. Generated content should be reviewed before being used in invoices, messages, notes, communications, or operational decisions.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}3. No constituye asesoramiento profesional{% else %}3. Not Professional Advice{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Las funciones de IA de BillBeam no constituyen asesoramiento legal, financiero, fiscal, contable ni otro asesoramiento profesional. Si necesitas orientación especializada, debes consultar con un profesional cualificado.
+            {% else %}
+                BillBeam’s AI features do not constitute legal, financial, tax, accounting, or other professional advice. If specialized guidance is needed, you should consult a qualified professional.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}4. Uso de contexto{% else %}4. Use of Context{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Para generar respuestas, BillBeam puede utilizar información contextual disponible dentro de la página, pantalla o flujo activo, incluyendo contenido visible o datos proporcionados por el usuario dentro del Servicio.
+            {% else %}
+                To generate responses, BillBeam may use contextual information available within the active page, screen, or workflow, including visible content or data provided by the user within the Service.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Estas funciones no están diseñadas para asumir que toda salida es correcta ni para tomar decisiones automáticas vinculantes por sí solas.
+            {% else %}
+                These features are not designed to assume that all output is correct or to make binding automated decisions on their own.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}5. Responsabilidad del usuario{% else %}5. User Responsibility{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                El usuario sigue siendo responsable del contenido final utilizado, enviado, compartido o publicado a través del Servicio, incluso cuando se haya generado o sugerido con ayuda de IA.
+            {% else %}
+                The user remains responsible for final content used, sent, shared, or published through the Service, even when it was generated or suggested with AI assistance.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}6. Cambios en las funciones de IA{% else %}6. Changes to AI Features{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam puede añadir, modificar, limitar, suspender o eliminar funciones de IA en cualquier momento para mejorar calidad, seguridad, rendimiento o cumplimiento.
+            {% else %}
+                BillBeam may add, modify, limit, suspend, or remove AI features at any time to improve quality, security, performance, or compliance.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-section">
+        <h2>{% if lang == 'es' %}7. Contacto{% else %}7. Contact{% endif %}</h2>
+        <p>
+            {% if lang == 'es' %}
+                Si tienes preguntas sobre estas funciones o su funcionamiento, puedes contactar a través de la sección de ayuda o soporte dentro del Servicio.
+            {% else %}
+                If you have questions about these features or how they operate, you may contact us through the help or support section within the Service.
+            {% endif %}
+        </p>
+    </section>
+
+</div>
+
+<style>
+.legal-shell{max-width:900px;margin:30px auto;font-size:0.95rem;line-height:1.7}
+.legal-header{margin-bottom:28px}
+.legal-header h1{font-size:1.7rem;margin-bottom:4px}
+.legal-updated{font-size:0.85rem;opacity:0.7}
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-size:1.05rem;margin-bottom:8px}
+</style>
+{% endblock %}
