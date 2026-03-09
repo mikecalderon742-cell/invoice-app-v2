@@ -1189,38 +1189,54 @@ body.dark .chart-card {
     justify-content: space-between;
     align-items: center;
     gap: 40px;
-    padding: 70px 40px;
+    padding: 72px 40px;
     margin-bottom: 54px;
     border-radius: 24px;
     color: #ffffff;
-    background: linear-gradient(-45deg, var(--accent), var(--accent-dark), #6366f1, #8b5cf6);
-    background-size: 400% 400%;
-    animation: gradientShift 12s ease infinite;
-    box-shadow: 0 26px 60px rgba(21, 27, 84, 0.22);
+    background:
+        radial-gradient(circle at 18% 20%, rgba(96, 165, 250, 0.34), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(59, 130, 246, 0.28), transparent 26%),
+        linear-gradient(135deg, #3A8BFF 0%, #2563eb 34%, #151B54 72%, #0f172a 100%);
+    box-shadow:
+        0 24px 70px rgba(21, 27, 84, 0.30),
+        0 0 0 1px rgba(147, 197, 253, 0.12),
+        0 0 80px rgba(59, 130, 246, 0.18);
+    isolation: isolate;
 }
 
+/* soft blue aura behind whole hero */
 .hero::before {
     content: "";
     position: absolute;
-    inset: 16px 24px auto auto;
-    width: 180px;
-    height: 90px;
-    border-radius: 999px;
-    background-image:
-        linear-gradient(120deg, rgba(255,255,255,0.55) 0, transparent 60%),
-        radial-gradient(circle at 0 100%, rgba(15,23,42,0.18), transparent 70%);
-    mix-blend-mode: screen;
-    opacity: 0.35;
+    inset: -20% -10% auto auto;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.34) 0%, rgba(59, 130, 246, 0.18) 32%, transparent 72%);
+    filter: blur(10px);
+    z-index: 0;
+    pointer-events: none;
 }
 
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+/* secondary glow for depth */
+.hero::after {
+    content: "";
+    position: absolute;
+    left: -80px;
+    bottom: -120px;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(147, 197, 253, 0.22) 0%, rgba(59, 130, 246, 0.12) 42%, transparent 74%);
+    filter: blur(8px);
+    z-index: 0;
+    pointer-events: none;
 }
 
 .hero-left,
 .hero-right {
+    position: relative;
+    z-index: 1;
     flex: 1;
     min-width: 0;
 }
@@ -1230,12 +1246,17 @@ body.dark .chart-card {
     font-size: 42px;
     font-weight: 800;
     letter-spacing: 0.02em;
+    line-height: 1.08;
+    color: #ffffff;
+    text-shadow: 0 6px 22px rgba(15, 23, 42, 0.24);
 }
 
 .hero-left p {
     margin-bottom: 24px;
     font-size: 18px;
-    opacity: 0.96;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.92);
+    max-width: 620px;
 }
 
 .hero-right {
@@ -1246,10 +1267,56 @@ body.dark .chart-card {
 .mock-card {
     width: 280px;
     padding: 30px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.16);
+    border-radius: 20px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.10));
+    border: 1px solid rgba(255,255,255,0.22);
     backdrop-filter: blur(20px);
-    box-shadow: 0 18px 36px rgba(0,0,0,0.18);
+    box-shadow:
+        0 20px 50px rgba(2, 6, 23, 0.30),
+        0 0 40px rgba(96, 165, 250, 0.14);
+}
+
+/* optional hero CTA polish */
+.hero .btn,
+.hero .hero-cta,
+.hero a.btn {
+    box-shadow:
+        0 14px 30px rgba(15, 23, 42, 0.22),
+        0 0 24px rgba(59, 130, 246, 0.16);
+}
+
+/* mobile */
+@media (max-width: 768px) {
+    .hero {
+        flex-direction: column !important;
+        align-items: stretch;
+        gap: 18px;
+        padding: 40px 20px;
+        text-align: center;
+    }
+
+    .hero-left,
+    .hero-right {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .hero-left h1 {
+        font-size: 28px;
+    }
+
+    .hero-left p {
+        font-size: 16px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .mock-card {
+        width: 100%;
+        max-width: 350px;
+        margin: 8px auto 0;
+    }
 }
 
 .home-stats {
