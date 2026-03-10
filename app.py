@@ -1068,6 +1068,18 @@ def help_page():
     return render_template("help.html", lang=lang)
 
 
+@app.route("/support")
+def support():
+    lang = normalize_lang(request.args.get("lang", "en"))
+    return render_template("support.html", lang=lang)
+
+
+@app.route("/contact")
+def contact():
+    lang = normalize_lang(request.args.get("lang", "en"))
+    return render_template("contact.html", lang=lang)
+
+
 @app.route("/faq")
 def faq_page():
     lang = normalize_lang(request.args.get("lang"))
