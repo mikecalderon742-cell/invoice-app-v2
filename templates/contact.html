@@ -52,7 +52,7 @@
                 text-transform:uppercase;
                 margin-bottom:14px;
             ">
-                {% if lang == 'es' %}BillBeam{% else %}BillBeam{% endif %}
+                BillBeam
             </div>
 
             <h2 style="margin:0 0 10px 0; font-size:22px;">
@@ -157,28 +157,10 @@
             <div style="display:grid; gap:14px; font-size:14px; line-height:1.7;">
                 <div>
                     <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
-                        {% if lang == 'es' %}Correo de soporte{% else %}Support email{% endif %}
+                        {% if lang == 'es' %}Correo de contacto{% else %}Contact email{% endif %}
                     </div>
                     <div style="margin-top:4px;">
-                        <a href="mailto:support@billbeam.com" style="font-weight:600;">support@billbeam.com</a>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
-                        {% if lang == 'es' %}Correo legal{% else %}Legal email{% endif %}
-                    </div>
-                    <div style="margin-top:4px;">
-                        <a href="mailto:legal@billbeam.com" style="font-weight:600;">legal@billbeam.com</a>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
-                        {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
-                    </div>
-                    <div style="margin-top:4px;">
-                        <a href="mailto:billing@billbeam.com" style="font-weight:600;">billing@billbeam.com</a>
+                        <a href="mailto:support@billbeam.app" style="font-weight:600;">support@billbeam.app</a>
                     </div>
                 </div>
 
@@ -188,10 +170,28 @@
                     </div>
                     <div style="margin-top:4px; opacity:.9;">
                         {% if lang == 'es' %}
-                            Normalmente respondemos dentro de 1 a 3 días hábiles.
+                            Normalmente respondemos dentro de 24 horas hábiles.
                         {% else %}
-                            We typically respond within 1 to 3 business days.
+                            We typically respond within 24 business hours.
                         {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                        {% if lang == 'es' %}Páginas relacionadas{% else %}Related pages{% endif %}
+                    </div>
+                    <div style="margin-top:4px; display:grid; gap:6px;">
+                        <a href="/support?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Soporte{% else %}Support{% endif %}
+                        </a>
+                        <a href="/faq?lang={{ lang }}" style="font-weight:600;">FAQ</a>
+                        <a href="/privacy?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+                        </a>
+                        <a href="/terms?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Términos{% else %}Terms{% endif %}
+                        </a>
                     </div>
                 </div>
             </div>
@@ -207,9 +207,9 @@
                 opacity:.95;
             ">
                 {% if lang == 'es' %}
-                    Para evitar retrasos, usa la dirección más cercana a tu solicitud y envía tu mensaje desde el correo asociado a tu cuenta cuando sea posible.
+                    Para evitar retrasos, envía tu mensaje desde el correo asociado a tu cuenta cuando sea posible e incluye cualquier detalle útil como número de factura, error visible o capturas de pantalla.
                 {% else %}
-                    To avoid delays, use the address closest to your request and send your message from the email associated with your account whenever possible.
+                    To avoid delays, send your message from the email associated with your account whenever possible and include any helpful details like invoice number, visible error text, or screenshots.
                 {% endif %}
             </div>
         </aside>
@@ -232,9 +232,9 @@
         <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.75; opacity:.9;">
             <li>
                 {% if lang == 'es' %}
-                    Revisa primero la página de <a href="/help?lang={{ lang }}">Ayuda</a> y las <a href="/faq?lang={{ lang }}">Preguntas frecuentes</a>.
+                    Revisa primero la página de <a href="/support?lang={{ lang }}">Soporte</a> y las <a href="/faq?lang={{ lang }}">Preguntas frecuentes</a>.
                 {% else %}
-                    Check the <a href="/help?lang={{ lang }}">Help</a> page and <a href="/faq?lang={{ lang }}">FAQ</a> first.
+                    Check the <a href="/support?lang={{ lang }}">Support</a> page and <a href="/faq?lang={{ lang }}">FAQ</a> first.
                 {% endif %}
             </li>
             <li>

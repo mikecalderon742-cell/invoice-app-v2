@@ -80,7 +80,7 @@
                     </h3>
                     <p style="margin:0; font-size:14px; line-height:1.72; opacity:.9;">
                         {% if lang == 'es' %}
-                            Verifica que estás usando la dirección correcta, revisa errores de escritura y prueba el flujo de restablecimiento de contraseña. Si sigues sin poder acceder, escríbenos desde el correo asociado a tu cuenta.
+                            Verifica que estás usando la dirección correcta, revisa errores de escritura y prueba el flujo de restablecimiento de contraseña. Si sigues sin poder acceder, contáctanos desde el correo asociado a tu cuenta.
                         {% else %}
                             Confirm that you are using the correct email address, check for typing mistakes, and try the password reset flow. If you still cannot access your account, contact us from the email associated with it.
                         {% endif %}
@@ -228,30 +228,24 @@
                         {% if lang == 'es' %}Ayuda general{% else %}General help{% endif %}
                     </div>
                     <div style="margin-top:4px;">
-                        <a href="mailto:support@billbeam.com" style="font-weight:600;">support@billbeam.com</a>
+                        <a href="mailto:support@billbeam.app" style="font-weight:600;">support@billbeam.app</a>
                     </div>
                 </div>
 
                 <div>
                     <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
-                        {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
-                    </div>
-                    <div style="margin-top:4px;">
-                        <a href="mailto:billing@billbeam.com" style="font-weight:600;">billing@billbeam.com</a>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
-                        {% if lang == 'es' %}Documentos útiles{% else %}Helpful pages{% endif %}
+                        {% if lang == 'es' %}Páginas útiles{% else %}Helpful pages{% endif %}
                     </div>
                     <div style="margin-top:4px; display:grid; gap:6px;">
-                        <a href="/help?lang={{ lang }}" style="font-weight:600;">
-                            {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
-                        </a>
                         <a href="/faq?lang={{ lang }}" style="font-weight:600;">FAQ</a>
                         <a href="/contact?lang={{ lang }}" style="font-weight:600;">
                             {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+                        </a>
+                        <a href="/privacy?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+                        </a>
+                        <a href="/terms?lang={{ lang }}" style="font-weight:600;">
+                            {% if lang == 'es' %}Términos{% else %}Terms{% endif %}
                         </a>
                     </div>
                 </div>
@@ -262,9 +256,9 @@
                     </div>
                     <div style="margin-top:4px; opacity:.92;">
                         {% if lang == 'es' %}
-                            Normalmente de 1 a 3 días hábiles.
+                            Normalmente dentro de 24 horas hábiles.
                         {% else %}
-                            Typically 1 to 3 business days.
+                            Typically within 24 business hours.
                         {% endif %}
                     </div>
                 </div>
@@ -281,9 +275,9 @@
                 opacity:.95;
             ">
                 {% if lang == 'es' %}
-                    No envíes números completos de tarjetas, contraseñas ni información sensible no solicitada por correo.
+                    No envíes números completos de tarjetas, contraseñas ni otra información sensible por correo.
                 {% else %}
-                    Do not send full card numbers, passwords, or other sensitive information by email unless specifically requested through a secure channel.
+                    Do not send full card numbers, passwords, or other sensitive information by email.
                 {% endif %}
             </div>
         </aside>
