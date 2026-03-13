@@ -3181,12 +3181,12 @@ https://billbeam.app
 
 msg.set_content(body_text)
 
-    msg.add_attachment(
-        pdf_bytes,
-        maintype="application",
-        subtype="pdf",
-        filename=filename,
-    )
+msg.add_attachment(
+    pdf_bytes,
+    maintype="application",
+    subtype="pdf",
+    filename=filename,
+)
 
     try:
         with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
