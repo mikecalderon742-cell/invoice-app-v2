@@ -15,16 +15,156 @@
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="page-shell" style="max-width: 980px;">
-    <div class="invoice-preview-shell" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 22px; align-items: stretch;">
+<style>
+  .auth-shell {
+    max-width: 980px;
+    margin: 0 auto;
+  }
 
-        <!-- Left: login form -->
-        <section class="page-card fade-in-up" style="padding: 32px 30px;">
-            <div class="page-eyebrow">
+  .auth-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .auth-card,
+  .auth-side {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .auth-card,
+  body.dark .auth-side {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .auth-card {
+    padding: 32px 30px;
+  }
+
+  .auth-side {
+    padding: 26px 22px;
+  }
+
+  .auth-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.14);
+  }
+
+  body.dark .auth-eyebrow {
+    background: rgba(37,99,235,0.18);
+    border-color: rgba(96,165,250,0.2);
+  }
+
+  .auth-title {
+    margin: 0 0 10px 0;
+  }
+
+  .auth-lead {
+    margin-bottom: 22px;
+  }
+
+  .auth-error {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #dc2626;
+  }
+
+  body.dark .auth-error {
+    background: rgba(127, 29, 29, 0.35);
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.45);
+  }
+
+  .auth-form-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .auth-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .auth-link-subtle {
+    font-size: 13px;
+    opacity: .82;
+    text-decoration: underline;
+  }
+
+  .auth-micro {
+    font-size: 12px;
+    opacity: .7;
+  }
+
+  .auth-form-actions {
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 22px;
+  }
+
+  .auth-highlight-box {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.10));
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .auth-highlight-box {
+    color: #cbd5e1;
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  @media (max-width: 900px) {
+    .auth-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="auth-shell">
+    <div class="auth-layout">
+
+        <section class="auth-card fade-in-up">
+            <div class="auth-eyebrow">
                 {% if lang == 'es' %}Acceso seguro{% else %}Secure access{% endif %}
             </div>
 
-            <h1 style="margin-bottom:10px;">
+            <h1 class="auth-title">
                 {% if lang == 'es' %}
                     Inicia sesión en BillBeam
                 {% else %}
@@ -32,7 +172,7 @@
                 {% endif %}
             </h1>
 
-            <p class="page-lead" style="margin-bottom:22px;">
+            <p class="page-lead auth-lead">
                 {% if lang == 'es' %}
                     Entra para crear facturas, revisar tu panel, enviar cobros y mantener tu flujo de caja bajo control.
                 {% else %}
@@ -41,22 +181,13 @@
             </p>
 
             {% if error %}
-                <div style="
-                    margin-bottom:18px;
-                    padding:12px 14px;
-                    border-radius:12px;
-                    font-size:14px;
-                    font-weight:600;
-                    background:#fee2e2;
-                    color:#b91c1c;
-                    border:1px solid #dc2626;
-                ">
+                <div class="auth-error">
                     {{ error }}
                 </div>
             {% endif %}
 
             <form method="POST" action="/login{% if lang %}?lang={{ lang }}{% endif %}" novalidate>
-                <div style="display:grid; gap:16px;">
+                <div class="auth-form-grid">
                     <div>
                         <label for="email">
                             {% if lang == 'es' %}Correo electrónico{% else %}Email address{% endif %}
@@ -69,6 +200,7 @@
                             autocomplete="email"
                             inputmode="email"
                             placeholder="you@example.com"
+                            value="{{ request.form.get('email', '') if request.method == 'POST' else '' }}"
                         >
                     </div>
 
@@ -87,17 +219,17 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px;">
-                    <a href="/password-reset-request{% if lang %}?lang={{ lang }}{% endif %}" style="font-size:13px; opacity:.82; text-decoration:underline;">
+                <div class="auth-meta-row">
+                    <a href="/password-reset-request{% if lang %}?lang={{ lang }}{% endif %}" class="auth-link-subtle">
                         {% if lang == 'es' %}¿Olvidaste tu contraseña?{% else %}Forgot your password?{% endif %}
                     </a>
 
-                    <span style="font-size:12px; opacity:.7;">
+                    <span class="auth-micro">
                         {% if lang == 'es' %}Acceso cifrado{% else %}Encrypted access{% endif %}
                     </span>
                 </div>
 
-                <div class="form-actions" style="justify-content:space-between; align-items:center; margin-top:22px;">
+                <div class="form-actions auth-form-actions">
                     <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
                         {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
                     </a>
@@ -107,10 +239,17 @@
                     </button>
                 </div>
             </form>
+
+            <div class="auth-highlight-box">
+                {% if lang == 'es' %}
+                    Usa el mismo correo con el que registraste tu cuenta. Si tienes problemas para entrar, también puedes visitar Soporte o usar el restablecimiento de contraseña.
+                {% else %}
+                    Use the same email address you registered with. If you run into trouble signing in, you can also visit Support or use the password reset flow.
+                {% endif %}
+            </div>
         </section>
 
-        <!-- Right: trust / helper panel -->
-        <aside class="preview-sidebar fade-in-up" style="padding: 26px 22px;">
+        <aside class="auth-side fade-in-up">
             <h2 style="font-size:18px; margin-bottom:10px;">
                 {% if lang == 'es' %}
                     Bienvenido de nuevo

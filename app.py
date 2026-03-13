@@ -165,24 +165,25 @@ PLAN_DEFINITIONS = {
     "pro": {
         "name_en": "Pro",
         "name_es": "Pro",
-        "price_label": "$29 / month",
-        "tagline_en": "For growing businesses who invoice regularly.",
-        "tagline_es": "Para negocios en crecimiento que facturan con frecuencia.",
+        "price_label": "$12 / month",
+        "tagline_en": "For freelancers and small businesses who invoice regularly.",
+        "tagline_es": "Para freelancers y pequeños negocios que facturan con frecuencia.",
         "features_en": [
             "Unlimited invoices",
             "Multiple invoice templates",
             "Email delivery + PDFs",
             "Public invoice links & Pay Now",
-            "Recurring invoices",
+            "BillBeam Assistant",
         ],
         "features_es": [
             "Facturas ilimitadas",
             "Múltiples plantillas de factura",
             "Envío por email + PDFs",
             "Enlaces públicos de factura y botón Pagar ahora",
-            "Facturas recurrentes",
+            "BillBeam Assistant",
         ],
         "recommended": True,
+    },
     },
     "enterprise": {
         "name_en": "Studio",
@@ -1991,35 +1992,87 @@ def settings():
     feedback_type = None
 
     if request.method == "POST":
-        business_name = (request.form.get("business_name") or "").strip()
-        email = (request.form.get("email") or "").strip()
-        phone = (request.form.get("phone") or "").strip()
-        website = (request.form.get("website") or "").strip()
-        address = (request.form.get("address") or "").strip()
-        logo_url = (request.form.get("logo_url") or "").strip()
-        brand_color = (request.form.get("brand_color") or "").strip() or DEFAULT_BRAND_COLOR
-        accent_color = (request.form.get("accent_color") or "").strip() or DEFAULT_ACCENT_COLOR
-        default_terms = (request.form.get("default_terms") or "").strip()
-        default_notes = (request.form.get("default_notes") or "").strip()
+        form_type = (request.form.get("form_type") or "profile").strip().lower()
 
-        data = {
-            "business_name": business_name or DEFAULT_BUSINESS_NAME,
-            "email": email,
-            "phone": phone,
-            "website": website,
-            "address": address,
-            "logo_url": logo_url,
-            "brand_color": brand_color,
-            "accent_color": accent_color,
-            "default_terms": default_terms,
-            "default_notes": default_notes,
-        }
+        if form_type == "password":
+            user = get_current_user()
+            user_id = user["id"]
 
-        upsert_business_profile(data)
-        profile = get_business_profile()
+            current_password = request.form.get("current_password") or ""
+            new_password = request.form.get("new_password") or ""
+            confirm_password = request.form.get("confirm_password") or ""
 
-        feedback_message = "Business profile updated successfully."
-        feedback_type = "success"
+            if not current_password or not new_password or not confirm_password:
+                feedback_message = "Please fill out all password fields."
+                feedback_type = "error"
+            elif len(new_password) < 8:
+                feedback_message = "New password must be at least 8 characters long."
+                feedback_type = "error"
+            elif new_password != confirm_password:
+                feedback_message = "New password and confirmation do not match."
+                feedback_type = "error"
+            else:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT password_hash FROM users WHERE id = %s",
+                    (user_id,),
+                )
+                row = cursor.fetchone()
+
+                if not row or not row[0]:
+                    feedback_message = "Unable to update password for this account."
+                    feedback_type = "error"
+                    cursor.close()
+                    conn.close()
+                elif not check_password_hash(row[0], current_password):
+                    feedback_message = "Your current password is incorrect."
+                    feedback_type = "error"
+                    cursor.close()
+                    conn.close()
+                else:
+                    new_password_hash = generate_password_hash(new_password)
+                    cursor.execute(
+                        "UPDATE users SET password_hash = %s WHERE id = %s",
+                        (new_password_hash, user_id),
+                    )
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+
+                    feedback_message = "Password updated successfully."
+                    feedback_type = "success"
+
+        else:
+            business_name = (request.form.get("business_name") or "").strip()
+            email = (request.form.get("email") or "").strip()
+            phone = (request.form.get("phone") or "").strip()
+            website = (request.form.get("website") or "").strip()
+            address = (request.form.get("address") or "").strip()
+            logo_url = (request.form.get("logo_url") or "").strip()
+            brand_color = (request.form.get("brand_color") or "").strip() or DEFAULT_BRAND_COLOR
+            accent_color = (request.form.get("accent_color") or "").strip() or DEFAULT_ACCENT_COLOR
+            default_terms = (request.form.get("default_terms") or "").strip()
+            default_notes = (request.form.get("default_notes") or "").strip()
+
+            data = {
+                "business_name": business_name or DEFAULT_BUSINESS_NAME,
+                "email": email,
+                "phone": phone,
+                "website": website,
+                "address": address,
+                "logo_url": logo_url,
+                "brand_color": brand_color,
+                "accent_color": accent_color,
+                "default_terms": default_terms,
+                "default_notes": default_notes,
+            }
+
+            upsert_business_profile(data)
+            profile = get_business_profile()
+
+            feedback_message = "Business profile updated successfully."
+            feedback_type = "success"
 
     return render_template(
         "settings.html",

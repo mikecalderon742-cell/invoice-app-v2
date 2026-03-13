@@ -15,16 +15,151 @@
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="page-shell" style="max-width: 980px;">
-    <div class="invoice-preview-shell" style="grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 22px; align-items: stretch;">
+<style>
+  .auth-shell {
+    max-width: 980px;
+    margin: 0 auto;
+  }
 
-        <!-- Left: register form -->
-        <section class="page-card fade-in-up" style="padding: 32px 30px;">
-            <div class="page-eyebrow">
+  .auth-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .auth-card,
+  .auth-side {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .auth-card,
+  body.dark .auth-side {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .auth-card {
+    padding: 32px 30px;
+  }
+
+  .auth-side {
+    padding: 26px 22px;
+  }
+
+  .auth-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.14);
+  }
+
+  body.dark .auth-eyebrow {
+    background: rgba(37,99,235,0.18);
+    border-color: rgba(96,165,250,0.2);
+  }
+
+  .auth-title {
+    margin: 0 0 10px 0;
+  }
+
+  .auth-lead {
+    margin-bottom: 22px;
+  }
+
+  .auth-error {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #dc2626;
+  }
+
+  body.dark .auth-error {
+    background: rgba(127, 29, 29, 0.35);
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.45);
+  }
+
+  .auth-form-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .auth-plan-note {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.18);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  body.dark .auth-plan-note {
+    background: rgba(37,99,235,0.16);
+    border-color: rgba(96,165,250,0.18);
+  }
+
+  .auth-highlight-box {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.10));
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .auth-highlight-box {
+    color: #cbd5e1;
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .auth-form-actions {
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 22px;
+  }
+
+  @media (max-width: 900px) {
+    .auth-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="auth-shell">
+    <div class="auth-layout">
+
+        <section class="auth-card fade-in-up">
+            <div class="auth-eyebrow">
                 {% if lang == 'es' %}Empezar gratis{% else %}Start free{% endif %}
             </div>
 
-            <h1 style="margin-bottom:10px;">
+            <h1 class="auth-title">
                 {% if lang == 'es' %}
                     Crea tu cuenta de BillBeam
                 {% else %}
@@ -32,7 +167,7 @@
                 {% endif %}
             </h1>
 
-            <p class="page-lead" style="margin-bottom:22px;">
+            <p class="page-lead auth-lead">
                 {% if lang == 'es' %}
                     Empieza con una cuenta Starter y crea facturas limpias, modernas y fáciles de enviar desde un solo lugar.
                 {% else %}
@@ -41,22 +176,13 @@
             </p>
 
             {% if error %}
-                <div style="
-                    margin-bottom:18px;
-                    padding:12px 14px;
-                    border-radius:12px;
-                    font-size:14px;
-                    font-weight:600;
-                    background:#fee2e2;
-                    color:#b91c1c;
-                    border:1px solid #dc2626;
-                ">
+                <div class="auth-error">
                     {{ error }}
                 </div>
             {% endif %}
 
             <form method="POST" action="/register{% if lang %}?lang={{ lang }}{% endif %}" novalidate>
-                <div style="display:grid; gap:16px;">
+                <div class="auth-form-grid">
                     <div>
                         <label for="email">
                             {% if lang == 'es' %}Correo electrónico{% else %}Email address{% endif %}
@@ -69,6 +195,7 @@
                             autocomplete="email"
                             inputmode="email"
                             placeholder="you@example.com"
+                            value="{{ request.form.get('email', '') if request.method == 'POST' else '' }}"
                         >
                     </div>
 
@@ -101,15 +228,7 @@
                     </div>
                 </div>
 
-                <div style="
-                    margin-top:14px;
-                    padding:12px 14px;
-                    border-radius:12px;
-                    background:rgba(37,99,235,0.08);
-                    border:1px solid rgba(37,99,235,0.18);
-                    font-size:13px;
-                    line-height:1.5;
-                ">
+                <div class="auth-plan-note">
                     {% if lang == 'es' %}
                         Las cuentas nuevas comienzan en el plan <strong>Starter</strong>. Podrás actualizar a <strong>Pro</strong> más adelante desde la página de precios si necesitas más capacidad.
                     {% else %}
@@ -117,7 +236,7 @@
                     {% endif %}
                 </div>
 
-                <div class="form-actions" style="justify-content:space-between; align-items:center; margin-top:22px;">
+                <div class="form-actions auth-form-actions">
                     <a href="/login{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
                         {% if lang == 'es' %}Ya tengo cuenta{% else %}I already have an account{% endif %}
                     </a>
@@ -127,10 +246,17 @@
                     </button>
                 </div>
             </form>
+
+            <div class="auth-highlight-box">
+                {% if lang == 'es' %}
+                    Puedes empezar gratis, crear tus primeras facturas y actualizar más adelante cuando necesites más capacidad, envíos por correo y enlaces públicos para clientes.
+                {% else %}
+                    You can start free, create your first invoices, and upgrade later when you need more capacity, email sending, and public invoice links for clients.
+                {% endif %}
+            </div>
         </section>
 
-        <!-- Right: value / trust panel -->
-        <aside class="preview-sidebar fade-in-up" style="padding: 26px 22px;">
+        <aside class="auth-side fade-in-up">
             <h2 style="font-size:18px; margin-bottom:10px;">
                 {% if lang == 'es' %}
                     Qué obtienes al empezar
@@ -206,7 +332,7 @@
                     {% if lang == 'es' %}Facturas modernas{% else %}Modern invoices{% endif %}
                 </div>
                 <div class="trust-pill">
-                    {% if lang == 'es' %}Escala a Pro cuando quieras{% else %}Upgrade to Pro anytime{% endif %}
+                    {% if lang == 'es' %}Actualiza cuando quieras{% else %}Upgrade anytime{% endif %}
                 </div>
             </div>
         </aside>

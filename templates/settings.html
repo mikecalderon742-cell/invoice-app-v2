@@ -328,10 +328,6 @@
     color: #94a3b8;
   }
 
-  .settings-section-spacer {
-    height: 8px;
-  }
-
   .defaults-card {
     margin-top: 22px;
   }
@@ -356,6 +352,32 @@
     color: #cbd5e1;
     background: rgba(15,23,42,0.45);
     border-color: rgba(148,163,184,0.16);
+  }
+
+  .security-card {
+    margin-top: 22px;
+  }
+
+  .security-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .security-note {
+    margin-top: 8px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.14);
+  }
+
+  body.dark .security-note {
+    color: #cbd5e1;
+    background: rgba(30,64,175,0.20);
+    border-color: rgba(96,165,250,0.18);
   }
 
   .form-actions {
@@ -417,6 +439,8 @@
 
     <div class="settings-form-shell fade-in-up">
         <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+            <input type="hidden" name="form_type" value="profile">
+
             <div class="settings-grid">
 
                 <div class="settings-card">
@@ -667,6 +691,62 @@
                 </button>
             </div>
         </form>
+
+        <div class="settings-card security-card">
+            <h2>
+                {% if lang == 'es' %}Seguridad de la cuenta{% else %}Account Security{% endif %}
+            </h2>
+            <div class="settings-card-sub">
+                {% if lang == 'es' %}
+                    Actualiza tu contraseña para mantener segura tu cuenta de BillBeam.
+                {% else %}
+                    Update your password to keep your BillBeam account secure.
+                {% endif %}
+            </div>
+
+            <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+                <input type="hidden" name="form_type" value="password">
+
+                <div class="security-grid">
+                    <div class="field-group">
+                        <label for="current_password">
+                            {% if lang == 'es' %}Contraseña actual{% else %}Current Password{% endif %}
+                        </label>
+                        <input id="current_password" type="password" name="current_password" autocomplete="current-password">
+                    </div>
+
+                    <div class="field-row-2">
+                        <div class="field-group">
+                            <label for="new_password">
+                                {% if lang == 'es' %}Nueva contraseña{% else %}New Password{% endif %}
+                            </label>
+                            <input id="new_password" type="password" name="new_password" autocomplete="new-password">
+                        </div>
+
+                        <div class="field-group">
+                            <label for="confirm_password">
+                                {% if lang == 'es' %}Confirmar nueva contraseña{% else %}Confirm New Password{% endif %}
+                            </label>
+                            <input id="confirm_password" type="password" name="confirm_password" autocomplete="new-password">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="security-note">
+                    {% if lang == 'es' %}
+                        Usa una contraseña de al menos 8 caracteres. Para mejores resultados, combina letras mayúsculas, minúsculas, números y un símbolo.
+                    {% else %}
+                        Use a password with at least 8 characters. For stronger security, include uppercase letters, lowercase letters, numbers, and a symbol.
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}Actualizar contraseña{% else %}Update Password{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
