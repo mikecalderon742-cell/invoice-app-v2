@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import urlparse
 from email.message import EmailMessage
+from functools import wraps
 
 import base64
 import io
@@ -590,7 +591,24 @@ def get_current_user():
                     "created_at": created_at,
                 }
 
-    return get_default_user()
+    return {
+        "id": None,
+        "email": "",
+        "plan": "free",
+        "is_active": False,
+        "created_at": None,
+    }
+
+
+def login_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        user = get_current_user()
+        if not user.get("id"):
+            lang = normalize_lang(request.args.get("lang", "en"))
+            return redirect(url_for("login", lang=lang))
+        return view_func(*args, **kwargs)
+    return wrapped_view
 
 
 def get_plan_for_current_user():
@@ -660,6 +678,9 @@ def check_invoice_quota_or_reason():
     user_id = user["id"]
     plan = user.get("plan") or "free"
 
+    if not user_id:
+        return False, "Please log in to create invoices."
+
     if plan != "free":
         return True, None
 
@@ -692,6 +713,22 @@ def check_invoice_quota_or_reason():
 def get_business_profile():
     user = get_current_user()
     user_id = user["id"]
+
+    if not user_id:
+        return {
+            "id": None,
+            "business_name": DEFAULT_BUSINESS_NAME,
+            "email": "",
+            "phone": "",
+            "website": "",
+            "address": "",
+            "logo_url": "",
+            "brand_color": DEFAULT_BRAND_COLOR,
+            "accent_color": DEFAULT_ACCENT_COLOR,
+            "default_terms": "",
+            "default_notes": "",
+            "user_id": None,
+        }
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -900,6 +937,7 @@ def inject_current_user_ctx():
 # HOME
 # -------------------------
 @app.route("/")
+@login_required
 def home():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1166,6 +1204,7 @@ def app_store_privacy():
 # DEV / DEBUG
 # -------------------------
 @app.route("/debug-plan")
+@login_required
 def debug_plan():
     user = get_current_user()
     return {
@@ -1176,6 +1215,7 @@ def debug_plan():
 
 
 @app.route("/dev/force-pro")
+@login_required
 def dev_force_pro():
     if not IS_DEBUG_MODE:
         return "Not available outside debug/development mode.", 404
@@ -1205,6 +1245,7 @@ def dev_force_pro():
 # STRIPE CHECKOUT
 # -------------------------
 @app.route("/create-checkout-session", methods=["POST"])
+@login_required
 def create_checkout_session():
     user = get_current_user()
     user_id = user.get("id")
@@ -1374,11 +1415,13 @@ def billing_cancel():
 # PREVIEW
 # -------------------------
 @app.route("/preview", methods=["GET", "POST"])
+@login_required
 def preview_invoice():
     lang = normalize_lang(request.args.get("lang", "en"))
 
     if request.method == "GET":
-        return redirect(url_for("index", lang=lang))
+        return redirect(url_for("home", lang=lang))
+
     selected_client_id = request.form.get("client_id")
     new_client_name = (request.form.get("new_client_name") or "").strip()
     new_client_email = (request.form.get("new_client_email") or "").strip()
@@ -1483,6 +1526,7 @@ def preview_invoice():
 # SAVE INVOICE
 # -------------------------
 @app.route("/save", methods=["POST"])
+@login_required
 def save():
     allowed, reason = check_invoice_quota_or_reason()
     if not allowed:
@@ -1652,6 +1696,7 @@ def save():
 # INVOICES DASHBOARD
 # -------------------------
 @app.route("/invoices")
+@login_required
 def invoices_page():
     update_overdue_statuses()
 
@@ -1922,6 +1967,7 @@ def invoices_page():
 # GLOBAL SEARCH
 # -------------------------
 @app.route("/search")
+@login_required
 def global_search():
     q = (request.args.get("q") or "").strip()
     user = get_current_user()
@@ -1985,6 +2031,7 @@ def global_search():
 # SETTINGS
 # -------------------------
 @app.route("/settings", methods=["GET", "POST"])
+@login_required
 def settings():
     profile = get_business_profile()
     feedback_message = None
@@ -2085,6 +2132,7 @@ def settings():
 # CLIENTS
 # -------------------------
 @app.route("/clients")
+@login_required
 def clients_page():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2107,6 +2155,7 @@ def clients_page():
 
 
 @app.route("/clients/add", methods=["POST"])
+@login_required
 def add_client():
     name = (request.form.get("name") or "").strip()
     email = (request.form.get("email") or "").strip()
@@ -2138,6 +2187,7 @@ def add_client():
 
 
 @app.route("/clients/delete/<int:client_id>")
+@login_required
 def delete_client(client_id):
     user = get_current_user()
     user_id = user["id"]
@@ -2159,6 +2209,7 @@ def delete_client(client_id):
 # PAYMENTS
 # -------------------------
 @app.route("/add-payment/<int:invoice_id>", methods=["GET", "POST"])
+@login_required
 def add_payment(invoice_id):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2267,6 +2318,7 @@ def add_payment(invoice_id):
 # EDIT / UPDATE / DELETE INVOICE
 # -------------------------
 @app.route("/edit/<int:invoice_id>")
+@login_required
 def edit(invoice_id):
     conn = get_db_connection()
     c = conn.cursor()
@@ -2298,6 +2350,7 @@ def edit(invoice_id):
 
 
 @app.route("/update/<int:invoice_id>", methods=["POST"])
+@login_required
 def update(invoice_id):
     client_name = (request.form.get("client") or "").strip() or "Unknown client"
     descriptions = request.form.getlist("description")
@@ -2363,6 +2416,7 @@ def update(invoice_id):
 
 
 @app.route("/update-status/<int:invoice_id>/<string:new_status>")
+@login_required
 def update_status(invoice_id, new_status):
     if new_status not in ALLOWED_STATUSES:
         return "Invalid status", 400
@@ -2406,6 +2460,7 @@ def update_status(invoice_id, new_status):
 
 
 @app.route("/delete/<int:invoice_id>")
+@login_required
 def delete(invoice_id):
     lang = normalize_lang(request.args.get("lang", "en"))
 
@@ -2686,6 +2741,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
 
 
 @app.route("/history-pdf/<int:invoice_id>")
+@login_required
 def history_pdf(invoice_id):
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
@@ -2707,11 +2763,6 @@ def public_invoice(token):
     paid_flag = request.args.get("paid")
     session_id = request.args.get("session_id")
 
-    # --------------------------------------------------
-    # Success-page verification fallback
-    # If user returned from Stripe and webhook is delayed,
-    # verify the Checkout Session directly and record payment.
-    # --------------------------------------------------
     if paid_flag and session_id:
         try:
             session_obj = stripe.checkout.Session.retrieve(session_id)
@@ -2876,6 +2927,7 @@ def public_invoice(token):
 
 
 @app.route("/invoice/<int:invoice_id>")
+@login_required
 def invoice_detail(invoice_id):
     current_user = get_current_user()
     user_id = current_user["id"]
@@ -3144,6 +3196,7 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
 
 
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
+@login_required
 def send_email_view(invoice_id):
     if not plan_allows("pro"):
         return render_template(
@@ -3323,6 +3376,7 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
 
 
 @app.route("/ai-helper", methods=["POST"])
+@login_required
 def ai_helper():
     if not ai_client or not OPENAI_API_KEY:
         return {"error": "AI helper is not configured on the server."}, 500
@@ -3409,6 +3463,7 @@ Never:
 
 
 @app.route("/api/ai-assistant", methods=["POST"])
+@login_required
 def api_ai_assistant():
     data = request.get_json() or {}
     user_message = (data.get("message") or "").strip()
