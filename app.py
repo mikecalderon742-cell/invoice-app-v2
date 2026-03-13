@@ -3188,34 +3188,35 @@ msg.add_attachment(
     filename=filename,
 )
 
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
-            server.starttls()
-            if smtp_user and smtp_password:
-                server.login(smtp_user, smtp_password)
-            server.send_message(msg)
-    except Exception as e:
-        return False, f"Error sending email (connection or SMTP error): {e}"
+try:
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+        server.starttls()
+        if smtp_user and smtp_password:
+            server.login(smtp_user, smtp_password)
+        server.send_message(msg)
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
-        (now_local(), to_email, invoice_id),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+except Exception as e:
+    return False, f"Error sending email (connection or SMTP error): {e}"
 
-    log_invoice_event(
-        invoice_id=invoice_id,
-        event_type="invoice_emailed",
-        title="Invoice emailed",
-        details=f"Invoice emailed to {to_email}.",
-        visibility="private",
-    )
+conn = get_db_connection()
+cur = conn.cursor()
+cur.execute(
+    "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
+    (now_local(), to_email, invoice_id),
+)
+conn.commit()
+cur.close()
+conn.close()
 
-    return True, None
+log_invoice_event(
+    invoice_id=invoice_id,
+    event_type="invoice_emailed",
+    title="Invoice emailed",
+    details=f"Invoice emailed to {to_email}.",
+    visibility="private",
+)
+
+return True, None
 
 
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
