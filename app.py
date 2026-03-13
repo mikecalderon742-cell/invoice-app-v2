@@ -184,7 +184,6 @@ PLAN_DEFINITIONS = {
         ],
         "recommended": True,
     },
-    },
     "enterprise": {
         "name_en": "Studio",
         "name_es": "Studio",
