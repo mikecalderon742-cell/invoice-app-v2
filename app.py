@@ -2726,18 +2726,29 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         page_width, page_height = LETTER
         y = page_height - 120
 
-    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
-    pdf.line(72, y, page_width - 72, y)
-    y -= 24
+pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
+pdf.line(72, y, page_width - 72, y)
+y -= 24
 
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.setFillColorRGB(*accent_color)
-    pdf.drawRightString(page_width - 72, y, f"Total Due: ${amount_float:,.2f}")
+pdf.setFont("Helvetica-Bold", 12)
+pdf.setFillColorRGB(*accent_color)
+pdf.drawRightString(page_width - 72, y, f"Total Due: ${amount_float:,.2f}")
 
-    pdf.showPage()
-    pdf.save()
-    buffer.seek(0)
-    return buffer.getvalue(), None
+# -------------------------
+# BillBeam Branding Footer
+# -------------------------
+pdf.setFont("Helvetica", 8)
+pdf.setFillColorRGB(0.45, 0.45, 0.45)
+pdf.drawCentredString(
+    page_width / 2,
+    20,
+    "Created with BillBeam • Modern invoicing made simple • billbeam.app"
+)
+
+pdf.showPage()
+pdf.save()
+buffer.seek(0)
+return buffer.getvalue(), None
 
 
 @app.route("/history-pdf/<int:invoice_id>")
@@ -3152,11 +3163,23 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             "or SMTP (SMTP_HOST & SMTP_FROM)."
         )
 
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = smtp_from
-    msg["To"] = to_email
-    msg.set_content(body_text)
+msg = EmailMessage()
+msg["Subject"] = subject
+msg["From"] = smtp_from
+msg["To"] = to_email
+
+# -------------------------
+# BillBeam Email Branding
+# -------------------------
+body_text += """
+
+—
+Created with BillBeam
+Modern invoicing made simple
+https://billbeam.app
+"""
+
+msg.set_content(body_text)
 
     msg.add_attachment(
         pdf_bytes,
