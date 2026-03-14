@@ -1463,6 +1463,51 @@ def billing_manage():
         return redirect(url_for("pricing", lang=lang))
 
 
+@app.route("/manage-subscription", methods=["GET"])
+@login_required
+def manage_subscription():
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not user_id:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT stripe_customer_id, plan
+        FROM users
+        WHERE id = %s
+        """,
+        (user_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        return redirect(url_for("pricing", missing_billing=1))
+
+    stripe_customer_id, plan = row
+
+    if not stripe_customer_id:
+        return redirect(url_for("pricing", no_subscription=1))
+
+    base_url = APP_BASE_URL or request.host_url.rstrip("/")
+    lang = normalize_lang(request.args.get("lang", "en"))
+
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=stripe_customer_id,
+            return_url=f"{base_url}/pricing?lang={lang}",
+        )
+        return redirect(portal_session.url)
+    except Exception as e:
+        logger.exception("Stripe customer portal error")
+        return redirect(url_for("pricing", portal_error=1, lang=lang))
+
+
 # -------------------------
 # PREVIEW
 # -------------------------

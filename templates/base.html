@@ -35,16 +35,40 @@
         font-weight: 700;
     }
 
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .nav-left img {
+        flex: 0 0 auto;
+    }
+
+    .nav-brand-text {
+        min-width: 0;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
     .nav-right {
         display: flex;
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
         justify-content: flex-end;
+        flex: 0 1 auto;
+        min-width: 0;
     }
 
     .nav-right a {
         position: relative;
+        white-space: nowrap;
     }
 
     .nav-right a::after {
@@ -127,6 +151,27 @@
         font-weight: 600;
     }
 
+    .sidebar-header {
+        padding: 0 24px 14px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 18px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        color: #ffffff;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .sidebar-link {
+        word-break: break-word;
+    }
+
     .public-top-banner {
         max-width: 1100px;
         margin: 8px auto 0;
@@ -176,6 +221,8 @@
     .footer-contact-row a {
         font-weight: 600;
         text-decoration: none;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .footer-contact-row a:hover {
@@ -191,11 +238,37 @@
         .nav-user-pill {
             max-width: 220px;
         }
+
+        .nav-brand-text {
+            max-width: 160px;
+        }
     }
 
     @media (max-width: 760px) {
         .nav-user-pill {
             display: none;
+        }
+
+        .nav-left {
+            max-width: 120px;
+        }
+
+        .nav-brand-text {
+            max-width: 92px;
+            font-size: 15px;
+        }
+
+        .nav-right {
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .nav-right a {
+            font-size: 13px;
+        }
+
+        .nav-right .nav-primary-link {
+            font-size: 13px;
         }
 
         .public-top-banner {
@@ -209,6 +282,29 @@
         .footer-contact-row {
             flex-direction: column;
             gap: 8px;
+        }
+    }
+
+    @media (max-width: 560px) {
+        .nav-left {
+            max-width: 92px;
+        }
+
+        .nav-brand-text {
+            max-width: 72px;
+            font-size: 14px;
+        }
+
+        .nav-right {
+            gap: 8px;
+        }
+
+        .nav-right a {
+            font-size: 12px;
+        }
+
+        .sidebar-header h3 {
+            font-size: 17px;
         }
     }
     </style>
@@ -331,9 +427,9 @@
         {% if business_profile.logo_url %}
             <img src="{{ business_profile.logo_url }}"
                  alt="Logo"
-                 style="height:28px; margin-right:10px; border-radius:6px;">
+                 style="height:28px; width:28px; object-fit:cover; border-radius:6px;">
         {% endif %}
-        <span class="logo">
+        <span class="logo nav-brand-text">
             {{ business_profile.business_name or "BillBeam" }}
         </span>
     </div>
