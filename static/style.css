@@ -2846,6 +2846,42 @@ body.dark .footer-chip {
     justify-items: center;
 }
 
+.footer-contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 18px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    opacity: 0.9;
+    text-align: center;
+    width: 100%;
+}
+
+.footer-contact-row > div {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.footer-contact-row a {
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.footer-contact-row a:hover {
+    text-decoration: underline;
+}
+
+.footer-contact-label {
+    opacity: 0.72;
+    margin-right: 4px;
+}
+
 .footer-note {
     max-width: 860px;
     margin: 0 auto;
@@ -3182,6 +3218,21 @@ body.dark .inline-success {
     .floating-btn {
         right: 18px;
         bottom: 18px;
+    }
+}
+
+@media (max-width: 760px) {
+    .footer-contact-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .footer-contact-row > div {
+        width: 100%;
+    }
+
+    .footer-contact-row a {
+        max-width: 100%;
     }
 }
 
