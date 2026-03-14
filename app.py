@@ -1177,7 +1177,6 @@ def uploaded_file(filename):
 # -------------------------
 # LEGAL / SUPPORT PAGES
 # -------------------------
-
 @app.route("/legal")
 def legal_hub():
     return render_template(
@@ -1185,12 +1184,14 @@ def legal_hub():
         lang=normalize_lang(request.args.get("lang", "en"))
     )
 
+
 @app.route("/data-security")
 def data_security():
     return render_template(
         "data_security.html",
         lang=normalize_lang(request.args.get("lang", "en"))
     )
+
 
 @app.route("/app-store-privacy")
 def app_store_privacy():
@@ -1398,7 +1399,7 @@ def billing_success():
             logger.warning("[BillingSuccess] No user row matched for user_id=%s", user_id)
             return redirect(url_for("pricing", lang=lang, canceled=1))
 
-    except Exception as e:
+    except Exception:
         logger.exception("[BillingSuccess] error")
         return redirect(url_for("pricing", lang=lang, canceled=1))
 
@@ -2555,7 +2556,10 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     profile = get_business_profile()
     business_name = profile.get("business_name") or DEFAULT_BUSINESS_NAME
 
-    c.execute("SELECT description, amount FROM invoice_items WHERE invoice_id = %s", (invoice_id,))
+    c.execute(
+        "SELECT description, amount FROM invoice_items WHERE invoice_id = %s",
+        (invoice_id,),
+    )
     items = c.fetchall()
     c.close()
     conn.close()
@@ -2647,6 +2651,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         pdf.drawString(72, y, f"{desc}")
         pdf.drawRightString(page_width - 72, y, f"${amt_float:,.2f}")
         y -= 16
+
         if y < 120:
             pdf.showPage()
             page_width, page_height = LETTER
@@ -2673,6 +2678,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
             pdf.showPage()
             page_width, page_height = LETTER
             y = page_height - 100
+
         pdf.setFont("Helvetica-Bold", 11)
         pdf.setFillColorRGB(0.1, 0.1, 0.15)
         pdf.drawString(72, y, "Payment Terms")
@@ -2726,33 +2732,29 @@ def generate_invoice_pdf_bytes(invoice_id: int):
         page_width, page_height = LETTER
         y = page_height - 120
 
-pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
-pdf.line(72, y, page_width - 72, y)
-y -= 24
+    pdf.setStrokeColorRGB(0.85, 0.87, 0.9)
+    pdf.line(72, y, page_width - 72, y)
+    y -= 24
 
-pdf.setFont("Helvetica-Bold", 12)
-pdf.setFillColorRGB(*accent_color)
-pdf.drawRightString(page_width - 72, y, f"Total Due: ${amount_float:,.2f}")
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.setFillColorRGB(*accent_color)
+    pdf.drawRightString(page_width - 72, y, f"Total Due: ${amount_float:,.2f}")
 
-# -------------------------
-# BillBeam Branding Footer
-# -------------------------
-pdf.setFont("Helvetica", 8)
-pdf.setFillColorRGB(0.45, 0.45, 0.45)
-pdf.drawCentredString(
-    page_width / 2,
-    20,
-    "Created with BillBeam • Modern invoicing made simple • billbeam.app"
-)
+    pdf.setFont("Helvetica", 8)
+    pdf.setFillColorRGB(0.45, 0.45, 0.45)
+    pdf.drawCentredString(
+        page_width / 2,
+        20,
+        "Created with BillBeam • Modern invoicing made simple • billbeam.app"
+    )
 
-pdf.showPage()
-pdf.save()
-buffer.seek(0)
-return buffer.getvalue(), None
+    pdf.showPage()
+    pdf.save()
+    buffer.seek(0)
+    return buffer.getvalue(), None
 
 
 @app.route("/history-pdf/<int:invoice_id>")
-@login_required
 def history_pdf(invoice_id):
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
@@ -2803,7 +2805,7 @@ def public_invoice(token):
             else:
                 logger.info("[PublicInvoiceFallback] Session did not qualify for invoice payment sync")
 
-        except Exception as e:
+        except Exception:
             logger.exception("[PublicInvoiceFallback] error verifying Stripe session")
 
     conn = get_db_connection()
@@ -3163,15 +3165,12 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             "or SMTP (SMTP_HOST & SMTP_FROM)."
         )
 
-msg = EmailMessage()
-msg["Subject"] = subject
-msg["From"] = smtp_from
-msg["To"] = to_email
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = smtp_from
+    msg["To"] = to_email
 
-# -------------------------
-# BillBeam Email Branding
-# -------------------------
-body_text += """
+    body_text += """
 
 —
 Created with BillBeam
@@ -3179,44 +3178,44 @@ Modern invoicing made simple
 https://billbeam.app
 """
 
-msg.set_content(body_text)
+    msg.set_content(body_text)
 
-msg.add_attachment(
-    pdf_bytes,
-    maintype="application",
-    subtype="pdf",
-    filename=filename,
-)
+    msg.add_attachment(
+        pdf_bytes,
+        maintype="application",
+        subtype="pdf",
+        filename=filename,
+    )
 
-try:
-    with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
-        server.starttls()
-        if smtp_user and smtp_password:
-            server.login(smtp_user, smtp_password)
-        server.send_message(msg)
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.starttls()
+            if smtp_user and smtp_password:
+                server.login(smtp_user, smtp_password)
+            server.send_message(msg)
 
-except Exception as e:
-    return False, f"Error sending email (connection or SMTP error): {e}"
+    except Exception as e:
+        return False, f"Error sending email (connection or SMTP error): {e}"
 
-conn = get_db_connection()
-cur = conn.cursor()
-cur.execute(
-    "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
-    (now_local(), to_email, invoice_id),
-)
-conn.commit()
-cur.close()
-conn.close()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
+        (now_local(), to_email, invoice_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
 
-log_invoice_event(
-    invoice_id=invoice_id,
-    event_type="invoice_emailed",
-    title="Invoice emailed",
-    details=f"Invoice emailed to {to_email}.",
-    visibility="private",
-)
+    log_invoice_event(
+        invoice_id=invoice_id,
+        event_type="invoice_emailed",
+        title="Invoice emailed",
+        details=f"Invoice emailed to {to_email}.",
+        visibility="private",
+    )
 
-return True, None
+    return True, None
 
 
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
@@ -3551,7 +3550,7 @@ def api_ai_assistant():
         )
         reply = completion.choices[0].message.content
         return jsonify({"reply": reply})
-    except Exception as e:
+    except Exception:
         logger.exception("AI error in /api/ai-assistant")
         msg = (
             "Lo siento, el asistente tuvo un problema. Intenta de nuevo en un momento."
@@ -3607,8 +3606,6 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             if existing:
                 logger.info("[Stripe] Payment already recorded for checkout session %s", checkout_session_id)
                 conn.commit()
-                cur.close()
-                conn.close()
                 return
 
         if payment_intent_id:
@@ -3620,8 +3617,6 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             if existing:
                 logger.info("[Stripe] Payment already recorded for payment intent %s", payment_intent_id)
                 conn.commit()
-                cur.close()
-                conn.close()
                 return
 
         cur.execute(
@@ -3693,7 +3688,7 @@ def _record_invoice_payment_from_checkout_session(session_obj):
         else:
             conn.commit()
 
-    except Exception as e:
+    except Exception:
         conn.rollback()
         logger.exception("[Stripe] Error recording invoice payment")
     finally:
@@ -3741,7 +3736,7 @@ def _handle_subscription_checkout_completed(session_obj):
         )
         conn.commit()
         logger.info("[Stripe] Upgraded user %s to Pro (rows_updated=%s)", user_id, cur.rowcount)
-    except Exception as e:
+    except Exception:
         conn.rollback()
         logger.exception("[Stripe] DB error upgrading user %s", user_id)
     finally:
@@ -3825,7 +3820,7 @@ def stripe_webhook():
             conn.close()
 
             logger.info("[Stripe] Subscription sync rows_updated=%s for customer_id=%s", updated, customer_id)
-        except Exception as e:
+        except Exception:
             logger.exception("[Stripe] subscription sync error")
 
     return "OK", 200
