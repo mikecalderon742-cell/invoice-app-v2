@@ -49,12 +49,11 @@
 
     .nav-brand-text {
         min-width: 0;
-        max-width: none;
+        flex: 1 1 auto;
+        display: inline-block;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
-        flex: 1 1 auto;
     }
 
     .nav-right {
@@ -264,15 +263,12 @@
         }
 
         .nav-left {
-            max-width: none;
             min-width: 0;
             flex: 1 1 auto;
         }
 
         .nav-brand-text {
-            max-width: none;
             font-size: 15px;
-            flex: 1 1 auto;
         }
 
         .nav-right {
@@ -294,12 +290,7 @@
     }
 
     @media (max-width: 560px) {
-        .nav-left {
-            max-width: none;
-        }
-
         .nav-brand-text {
-            max-width: none;
             font-size: 14px;
         }
 

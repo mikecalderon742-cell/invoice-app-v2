@@ -269,9 +269,8 @@ body.dark .muted-text {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 14px;
-    padding: 14px 18px 14px 58px;
-    min-width: 0;
+    gap: 18px;
+    padding: 14px 22px 14px 58px;
     background: rgba(255, 255, 255, 0.74);
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     backdrop-filter: blur(14px);
@@ -288,43 +287,28 @@ body.dark .navbar {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex: 1 1 auto;
     min-width: 0;
-    padding-left: 0;
+    padding-left: 6px;
+    flex: 1 1 auto;
+}
+
+.nav-left .logo {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-left img {
     flex: 0 0 auto;
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-}
-
-.logo {
-    display: block;
-    flex: 1 1 auto;
-    min-width: 0;
-    max-width: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
 }
 
 .nav-right {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 12px;
-    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     min-width: 0;
-    flex-wrap: nowrap;
-}
-
-.nav-right > * {
-    flex: 0 0 auto;
 }
 
 .nav-right a {
@@ -332,7 +316,6 @@ body.dark .navbar {
     font-size: 14px;
     font-weight: 500;
     color: inherit;
-    white-space: nowrap;
 }
 
 .nav-right a::after {
@@ -374,8 +357,22 @@ body.dark .navbar {
 body.dark .nav-user-pill,
 body.dark .client-view-pill {
     background: rgba(15, 23, 42, 0.72);
-    border-
+    border-color: rgba(148, 163, 184, 0.46);
+}
 
+.plan-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, rgba(58, 139, 255, 0.16), rgba(252, 220, 42, 0.18));
+    border: 1px solid rgba(58, 139, 255, 0.18);
+    flex: 0 0 auto;
+}
 
 /* =========================
    LANGUAGE TOGGLE
@@ -1399,8 +1396,8 @@ body.dark .chart-card {
     top: 20px;
     left: 16px;
     z-index: 1200;
-    width: 22px;
-    height: 18px;
+    width: 20px;
+    height: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1435,10 +1432,10 @@ body.dark .hamburger span {
 .sidebar {
     position: fixed;
     top: 0;
-    left: -280px;
+    left: -260px;
     z-index: 1100;
-    width: 250px;
-    max-width: calc(100vw - 34px);
+    width: 240px;
+    max-width: calc(100vw - 40px);
     height: 100%;
     padding-top: 80px;
     background: #1f2937;
@@ -1526,7 +1523,6 @@ body.dark .theme-toggle {
     color: #e5e7eb;
     border-color: rgba(148,163,184,0.72);
 }
-
 
 /* =========================
    REVEAL / EMPTY / ALERT
@@ -2850,42 +2846,6 @@ body.dark .footer-chip {
     justify-items: center;
 }
 
-.footer-contact-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px 18px;
-    margin-bottom: 8px;
-    font-size: 13px;
-    opacity: 0.9;
-    text-align: center;
-    width: 100%;
-}
-
-.footer-contact-row > div {
-    min-width: 0;
-    max-width: 100%;
-}
-
-.footer-contact-row a {
-    font-weight: 600;
-    text-decoration: none;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    white-space: normal;
-    display: inline-block;
-    max-width: 100%;
-}
-
-.footer-contact-row a:hover {
-    text-decoration: underline;
-}
-
-.footer-contact-label {
-    opacity: 0.72;
-    margin-right: 4px;
-}
-
 .footer-note {
     max-width: 860px;
     margin: 0 auto;
@@ -3024,6 +2984,46 @@ body.dark .inline-success {
 }
 
 /* =========================
+   SUPPORT / FOOTER CONTACT WRAP SAFETY
+   ========================= */
+
+.footer-contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 18px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    opacity: 0.9;
+    text-align: center;
+    width: 100%;
+}
+
+.footer-contact-row > div {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.footer-contact-row a {
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.footer-contact-row a:hover {
+    text-decoration: underline;
+}
+
+.footer-contact-label {
+    opacity: 0.72;
+    margin-right: 4px;
+}
+
+/* =========================
    RESPONSIVE
    ========================= */
 
@@ -3072,34 +3072,18 @@ body.dark .inline-success {
     }
 
     .navbar {
-        padding: 14px 14px 14px 50px;
-        gap: 8px;
+        padding: 14px 16px 14px 46px;
+        gap: 10px;
     }
 
-    .nav-left {
-        gap: 8px;
-    }
-
-    .nav-left img {
-        width: 28px;
-        height: 28px;
-    }
-
-    .logo {
-        font-size: 16px;
-        overflow: visible;
-        text-overflow: clip;
-    }
-
-    /* Hide everything except brand on mobile top row */
     .nav-right {
-        display: none !important;
+        gap: 8px;
     }
 
     .nav-user-pill {
-        order: initial;
-        width: auto;
-        justify-content: flex-start;
+        order: -1;
+        width: 100%;
+        justify-content: space-between;
     }
 
     .hero {
@@ -3241,7 +3225,6 @@ body.dark .inline-success {
     }
 }
 
-
 @media (max-width: 760px) {
     .footer-contact-row {
         flex-direction: column;
@@ -3308,21 +3291,16 @@ body.dark .inline-success {
     }
 
     .navbar {
-        padding: 12px 12px 12px 46px;
+        padding: 12px 14px 12px 42px;
     }
 
     .logo {
-        font-size: 15px;
-    }
-
-    .nav-left {
-        gap: 7px;
+        font-size: 16px;
     }
 
     .nav-left img {
-        width: 24px !important;
         height: 24px !important;
-        margin-right: 0 !important;
+        margin-right: 8px !important;
     }
 
     .public-table,
@@ -3333,95 +3311,5 @@ body.dark .inline-success {
 
     .welcome-content {
         padding: 28px 20px;
-    }
-}
-
-/* =========================================================
-   SUPPORT PAGE — MOBILE OVERFLOW PATCH
-   Fixes:
-   - support email spilling off-screen
-   - response time text wrapping awkwardly
-   - narrow right-side support card on small screens
-   ========================================================= */
-
-@media (max-width: 768px) {
-    /* Let support/contact card columns stack sooner on mobile */
-    .support-grid,
-    .contact-grid,
-    .help-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    /* Make all support/contact side cards fully shrinkable */
-    .support-grid > *,
-    .contact-grid > *,
-    .help-grid > *,
-    .support-card,
-    .support-side-card,
-    .contact-side-card,
-    .help-side-card {
-        min-width: 0 !important;
-    }
-
-    /* Force long email addresses and similar strings to wrap */
-    .support-card a,
-    .support-side-card a,
-    .contact-side-card a,
-    .help-side-card a,
-    .support-card strong,
-    .support-side-card strong,
-    .contact-side-card strong,
-    .help-side-card strong,
-    .support-card p,
-    .support-side-card p,
-    .contact-side-card p,
-    .help-side-card p,
-    .support-card div,
-    .support-side-card div,
-    .contact-side-card div,
-    .help-side-card div {
-        overflow-wrap: anywhere !important;
-        word-break: break-word !important;
-    }
-
-    /* Specific protection for support email line */
-    a[href^="mailto:"] {
-        overflow-wrap: anywhere !important;
-        word-break: break-word !important;
-        white-space: normal !important;
-    }
-
-    /* Tighten side card spacing just a bit on mobile */
-    .support-card,
-    .support-side-card,
-    .contact-side-card,
-    .help-side-card {
-        padding: 16px !important;
-    }
-
-    /* Slightly smaller text for cramped side metadata blocks */
-    .support-meta,
-    .contact-meta,
-    .help-meta,
-    .response-time,
-    .support-response-time {
-        font-size: 13px !important;
-        line-height: 1.6 !important;
-    }
-}
-
-@media (max-width: 520px) {
-    /* Extra protection for very narrow iPhone widths */
-    .support-card,
-    .support-side-card,
-    .contact-side-card,
-    .help-side-card {
-        border-radius: 18px !important;
-        padding: 14px !important;
-    }
-
-    a[href^="mailto:"] {
-        font-size: 0.96rem !important;
-        line-height: 1.5 !important;
     }
 }
