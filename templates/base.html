@@ -49,11 +49,12 @@
 
     .nav-brand-text {
         min-width: 0;
-        max-width: 220px;
+        max-width: none;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         display: inline-block;
+        flex: 1 1 auto;
     }
 
     .nav-right {
@@ -172,6 +173,23 @@
         word-break: break-word;
     }
 
+    .sidebar-controls {
+        padding: 14px 24px 8px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        margin-top: 10px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .sidebar-controls .lang-toggle,
+    .sidebar-controls .theme-toggle {
+        width: 100%;
+    }
+
+    .sidebar-controls .theme-toggle {
+        justify-content: center;
+    }
+
     .public-top-banner {
         max-width: 1100px;
         margin: 8px auto 0;
@@ -238,10 +256,6 @@
         .nav-user-pill {
             max-width: 220px;
         }
-
-        .nav-brand-text {
-            max-width: 160px;
-        }
     }
 
     @media (max-width: 760px) {
@@ -250,25 +264,19 @@
         }
 
         .nav-left {
-            max-width: 120px;
+            max-width: none;
+            min-width: 0;
+            flex: 1 1 auto;
         }
 
         .nav-brand-text {
-            max-width: 92px;
+            max-width: none;
             font-size: 15px;
+            flex: 1 1 auto;
         }
 
         .nav-right {
-            gap: 10px;
-            flex-wrap: nowrap;
-        }
-
-        .nav-right a {
-            font-size: 13px;
-        }
-
-        .nav-right .nav-primary-link {
-            font-size: 13px;
+            display: none !important;
         }
 
         .public-top-banner {
@@ -287,20 +295,12 @@
 
     @media (max-width: 560px) {
         .nav-left {
-            max-width: 92px;
+            max-width: none;
         }
 
         .nav-brand-text {
-            max-width: 72px;
+            max-width: none;
             font-size: 14px;
-        }
-
-        .nav-right {
-            gap: 8px;
-        }
-
-        .nav-right a {
-            font-size: 12px;
         }
 
         .sidebar-header h3 {
@@ -418,6 +418,15 @@
             {% if lang == 'es' %}Crear cuenta{% else %}Sign Up{% endif %}
         </a>
     {% endif %}
+
+    <div class="sidebar-controls">
+        <div class="lang-toggle">
+            <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
+            <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
+        </div>
+
+        <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
+    </div>
 </div>
 
 <div id="overlay" class="overlay" {% if is_public_view %}style="display:none;"{% endif %}></div>
@@ -445,7 +454,7 @@
                 <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
             </div>
 
-            <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+            <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
         {% else %}
             {% if is_authenticated %}
                 <span class="nav-user-pill">
@@ -462,7 +471,7 @@
                     <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
                 </div>
 
-                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
             {% else %}
                 <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}">
                     {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
@@ -479,7 +488,7 @@
                     <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
                 </div>
 
-                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
             {% endif %}
         {% endif %}
     </div>
@@ -760,21 +769,25 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener("scroll", revealOnScroll);
     revealOnScroll();
 
-    const toggleBtn = document.getElementById("themeToggle");
+    const themeToggleButtons = document.querySelectorAll(".js-theme-toggle");
+
     function setTheme(theme) {
         document.body.classList.remove("light", "dark");
         document.body.classList.add(theme);
         localStorage.setItem("theme", theme);
-        if (toggleBtn) {
-            toggleBtn.textContent = theme === "dark" ? "☀️" : "🌙";
-        }
+
+        themeToggleButtons.forEach((btn) => {
+            btn.textContent = theme === "dark" ? "☀️" : "🌙";
+        });
     }
-    if (toggleBtn) {
-        toggleBtn.addEventListener("click", function () {
+
+    themeToggleButtons.forEach((btn) => {
+        btn.addEventListener("click", function () {
             const isDark = document.body.classList.contains("dark");
             setTheme(isDark ? "light" : "dark");
         });
-    }
+    });
+
     const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
 

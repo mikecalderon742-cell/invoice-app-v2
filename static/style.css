@@ -269,8 +269,9 @@ body.dark .muted-text {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 18px;
-    padding: 14px 22px 14px 58px;
+    gap: 14px;
+    padding: 14px 18px 14px 58px;
+    min-width: 0;
     background: rgba(255, 255, 255, 0.74);
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     backdrop-filter: blur(14px);
@@ -287,28 +288,43 @@ body.dark .navbar {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 0;
-    padding-left: 6px;
     flex: 1 1 auto;
-}
-
-.nav-left .logo {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0;
+    padding-left: 0;
 }
 
 .nav-left img {
     flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.logo {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .nav-right {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 12px;
+    flex: 0 0 auto;
     min-width: 0;
+    flex-wrap: nowrap;
+}
+
+.nav-right > * {
+    flex: 0 0 auto;
 }
 
 .nav-right a {
@@ -316,6 +332,7 @@ body.dark .navbar {
     font-size: 14px;
     font-weight: 500;
     color: inherit;
+    white-space: nowrap;
 }
 
 .nav-right a::after {
@@ -357,22 +374,8 @@ body.dark .navbar {
 body.dark .nav-user-pill,
 body.dark .client-view-pill {
     background: rgba(15, 23, 42, 0.72);
-    border-color: rgba(148, 163, 184, 0.46);
-}
+    border-
 
-.plan-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: linear-gradient(135deg, rgba(58, 139, 255, 0.16), rgba(252, 220, 42, 0.18));
-    border: 1px solid rgba(58, 139, 255, 0.18);
-    flex: 0 0 auto;
-}
 
 /* =========================
    LANGUAGE TOGGLE
@@ -1396,8 +1399,8 @@ body.dark .chart-card {
     top: 20px;
     left: 16px;
     z-index: 1200;
-    width: 20px;
-    height: 16px;
+    width: 22px;
+    height: 18px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1432,10 +1435,10 @@ body.dark .hamburger span {
 .sidebar {
     position: fixed;
     top: 0;
-    left: -260px;
+    left: -280px;
     z-index: 1100;
-    width: 240px;
-    max-width: calc(100vw - 40px);
+    width: 250px;
+    max-width: calc(100vw - 34px);
     height: 100%;
     padding-top: 80px;
     background: #1f2937;
@@ -1523,6 +1526,7 @@ body.dark .theme-toggle {
     color: #e5e7eb;
     border-color: rgba(148,163,184,0.72);
 }
+
 
 /* =========================
    REVEAL / EMPTY / ALERT
@@ -3068,18 +3072,34 @@ body.dark .inline-success {
     }
 
     .navbar {
-        padding: 14px 16px 14px 46px;
-        gap: 10px;
-    }
-
-    .nav-right {
+        padding: 14px 14px 14px 50px;
         gap: 8px;
     }
 
+    .nav-left {
+        gap: 8px;
+    }
+
+    .nav-left img {
+        width: 28px;
+        height: 28px;
+    }
+
+    .logo {
+        font-size: 16px;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    /* Hide everything except brand on mobile top row */
+    .nav-right {
+        display: none !important;
+    }
+
     .nav-user-pill {
-        order: -1;
-        width: 100%;
-        justify-content: space-between;
+        order: initial;
+        width: auto;
+        justify-content: flex-start;
     }
 
     .hero {
@@ -3221,6 +3241,7 @@ body.dark .inline-success {
     }
 }
 
+
 @media (max-width: 760px) {
     .footer-contact-row {
         flex-direction: column;
@@ -3287,16 +3308,21 @@ body.dark .inline-success {
     }
 
     .navbar {
-        padding: 12px 14px 12px 42px;
+        padding: 12px 12px 12px 46px;
     }
 
     .logo {
-        font-size: 16px;
+        font-size: 15px;
+    }
+
+    .nav-left {
+        gap: 7px;
     }
 
     .nav-left img {
+        width: 24px !important;
         height: 24px !important;
-        margin-right: 8px !important;
+        margin-right: 0 !important;
     }
 
     .public-table,
