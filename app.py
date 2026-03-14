@@ -1412,6 +1412,57 @@ def billing_cancel():
     return redirect(url_for("pricing", canceled=1, lang=lang))
 
 
+@app.route("/billing/manage", methods=["GET", "POST"])
+@login_required
+def billing_manage():
+    lang = normalize_lang(request.args.get("lang", "en"))
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not STRIPE_SECRET_KEY:
+        logger.warning("[BillingManage] STRIPE_SECRET_KEY is not configured")
+        return redirect(url_for("pricing", lang=lang))
+
+    if not user_id:
+        return redirect(url_for("login", lang=lang))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT stripe_customer_id, stripe_subscription_id, plan
+        FROM users
+        WHERE id = %s
+        """,
+        (user_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        logger.warning("[BillingManage] No user row found for user_id=%s", user_id)
+        return redirect(url_for("pricing", lang=lang))
+
+    stripe_customer_id, stripe_subscription_id, plan = row
+
+    if not stripe_customer_id:
+        logger.info("[BillingManage] No Stripe customer found for user_id=%s", user_id)
+        return redirect(url_for("pricing", lang=lang))
+
+    return_url = f"{APP_BASE_URL or request.host_url.rstrip('/')}/pricing?lang={lang}"
+
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=stripe_customer_id,
+            return_url=return_url,
+        )
+        return redirect(portal_session.url)
+    except Exception:
+        logger.exception("[BillingManage] Failed to create Stripe billing portal session")
+        return redirect(url_for("pricing", lang=lang))
+
+
 # -------------------------
 # PREVIEW
 # -------------------------

@@ -26,7 +26,11 @@
   .public-portal {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 8px 0 24px;
+    padding: 10px 0 28px;
+  }
+
+  .public-portal * {
+    min-width: 0;
   }
 
   .public-alert {
@@ -125,6 +129,7 @@
     object-fit: cover;
     border-radius: 14px;
     box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    flex: 0 0 auto;
   }
 
   .public-title {
@@ -133,6 +138,7 @@
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.03em;
+    word-break: break-word;
   }
 
   .public-subtitle {
@@ -156,8 +162,13 @@
     color: #475569;
   }
 
+  body.dark .inv-label {
+    color: #cbd5e1;
+  }
+
   .mono {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     margin-left: 8px;
     padding: 5px 9px;
     border-radius: 999px;
@@ -165,6 +176,8 @@
     font-size: 13px;
     background: rgba(15, 23, 42, 0.05);
     color: #0f172a;
+    max-width: 100%;
+    word-break: break-word;
   }
 
   body.dark .mono {
@@ -207,6 +220,7 @@
     letter-spacing: 0.05em;
     text-transform: uppercase;
     border: 1px solid transparent;
+    white-space: nowrap;
   }
 
   .status-pill.paid {
@@ -248,6 +262,7 @@
   .status-note {
     font-size: 14px;
     color: #64748b;
+    line-height: 1.5;
   }
 
   body.dark .status-note {
@@ -288,6 +303,7 @@
     font-size: 18px;
     font-weight: 700;
     color: #0f172a;
+    word-break: break-word;
   }
 
   body.dark .glance-value {
@@ -334,6 +350,7 @@
     line-height: 0.95;
     letter-spacing: -0.04em;
     font-weight: 700;
+    word-break: break-word;
   }
 
   .summary-breakdown {
@@ -353,6 +370,10 @@
 
   .summary-breakdown .row:last-child {
     border-bottom: 0;
+  }
+
+  .summary-breakdown .row strong {
+    text-align: right;
   }
 
   .summary-actions {
@@ -417,11 +438,14 @@
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.02em;
+    word-break: break-word;
   }
 
   .client-sub {
     color: #64748b;
     font-size: 14px;
+    word-break: break-word;
+    line-height: 1.55;
   }
 
   body.dark .client-sub {
@@ -441,6 +465,7 @@
   .muted {
     color: #64748b;
     font-size: 14px;
+    line-height: 1.6;
   }
 
   body.dark .mini-hint,
@@ -479,6 +504,7 @@
   .snap-value {
     font-size: 18px;
     font-weight: 700;
+    word-break: break-word;
   }
 
   .public-table-wrap {
@@ -487,6 +513,7 @@
 
   .public-table {
     width: 100%;
+    min-width: 520px;
     border-collapse: collapse;
   }
 
@@ -503,6 +530,7 @@
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    white-space: nowrap;
   }
 
   body.dark .public-table th {
@@ -555,10 +583,15 @@
     flex-wrap: wrap;
   }
 
+  .timeline-top strong {
+    word-break: break-word;
+  }
+
   .timeline-sub {
     font-size: 14px;
     color: #475569;
     line-height: 1.5;
+    word-break: break-word;
   }
 
   body.dark .timeline-sub {
@@ -585,6 +618,7 @@
     font-size: 14px;
     line-height: 1.65;
     white-space: pre-wrap;
+    word-break: break-word;
   }
 
   .trust-row {
@@ -648,6 +682,10 @@
   }
 
   @media (max-width: 640px) {
+    .public-portal {
+      padding-top: 4px;
+    }
+
     .public-hero-left,
     .summary-card,
     .public-card {
@@ -667,6 +705,21 @@
     .timeline-top {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    .public-brand {
+      align-items: flex-start;
+    }
+
+    .public-logo {
+      width: 48px;
+      height: 48px;
+    }
+
+    .mono {
+      display: inline-block;
+      margin-left: 0;
+      margin-top: 8px;
     }
   }
 </style>
@@ -1174,19 +1227,13 @@
 
 </div>
 
-<div style="
-    margin-top: 28px;
-    text-align: center;
-    font-size: 12px;
-    line-height: 1.5;
-    opacity: 0.72;
-">
-    ⚡
-    {% if lang == 'es' %}
-        Funciona con <strong>BillBeam</strong>
-    {% else %}
-        Powered by <strong>BillBeam</strong>
-    {% endif %}
+<div class="powered-by">
+  ⚡
+  {% if lang == 'es' %}
+    Funciona con <strong>BillBeam</strong>
+  {% else %}
+    Powered by <strong>BillBeam</strong>
+  {% endif %}
 </div>
 
 <script>

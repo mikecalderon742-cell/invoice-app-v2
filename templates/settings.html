@@ -25,6 +25,10 @@
     gap: 20px;
   }
 
+  .settings-shell * {
+    min-width: 0;
+  }
+
   .settings-topbar {
     display: flex;
     justify-content: space-between;
@@ -195,6 +199,13 @@
     width: 100%;
   }
 
+  .settings-form-shell input[type="text"],
+  .settings-form-shell input[type="email"],
+  .settings-form-shell input[type="password"],
+  .settings-form-shell textarea {
+    border-radius: 14px;
+  }
+
   .brand-preview {
     display: grid;
     gap: 16px;
@@ -257,6 +268,7 @@
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.03em;
+    word-break: break-word;
   }
 
   .brand-preview-sub {
@@ -277,6 +289,11 @@
     gap: 12px;
     align-items: center;
     font-size: 14px;
+  }
+
+  .brand-preview-stat strong {
+    text-align: right;
+    word-break: break-word;
   }
 
   .brand-preview-label {
@@ -403,6 +420,23 @@
     .settings-card {
       padding: 18px;
     }
+
+    .brand-preview-stat {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .brand-preview-stat strong {
+      text-align: left;
+    }
+
+    .form-actions {
+      justify-content: stretch;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+    }
   }
 </style>
 
@@ -501,7 +535,7 @@
                                 id="address"
                                 name="address"
                                 rows="4"
-                                style="padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                                style="padding:12px 14px; border-radius:14px; font-size:14px; font-family:inherit;"
                             >{{ profile.address }}</textarea>
                         </div>
                     </div>
@@ -654,7 +688,7 @@
                             id="default_notes"
                             name="default_notes"
                             rows="4"
-                            style="padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                            style="padding:12px 14px; border-radius:14px; font-size:14px; font-family:inherit;"
                             placeholder="{% if lang == 'es' %}Gracias por su negocio...{% else %}Thank you for your business...{% endif %}"
                         >{{ profile.default_notes }}</textarea>
                     </div>
@@ -667,7 +701,7 @@
                             id="default_terms"
                             name="default_terms"
                             rows="4"
-                            style="padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;"
+                            style="padding:12px 14px; border-radius:14px; font-size:14px; font-family:inherit;"
                             placeholder="{% if lang == 'es' %}El pago vence en 14 días...{% else %}Payment is due within 14 days...{% endif %}"
                         >{{ profile.default_terms }}</textarea>
                     </div>
