@@ -3309,3 +3309,93 @@ body.dark .inline-success {
         padding: 28px 20px;
     }
 }
+
+/* =========================================================
+   SUPPORT PAGE — MOBILE OVERFLOW PATCH
+   Fixes:
+   - support email spilling off-screen
+   - response time text wrapping awkwardly
+   - narrow right-side support card on small screens
+   ========================================================= */
+
+@media (max-width: 768px) {
+    /* Let support/contact card columns stack sooner on mobile */
+    .support-grid,
+    .contact-grid,
+    .help-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Make all support/contact side cards fully shrinkable */
+    .support-grid > *,
+    .contact-grid > *,
+    .help-grid > *,
+    .support-card,
+    .support-side-card,
+    .contact-side-card,
+    .help-side-card {
+        min-width: 0 !important;
+    }
+
+    /* Force long email addresses and similar strings to wrap */
+    .support-card a,
+    .support-side-card a,
+    .contact-side-card a,
+    .help-side-card a,
+    .support-card strong,
+    .support-side-card strong,
+    .contact-side-card strong,
+    .help-side-card strong,
+    .support-card p,
+    .support-side-card p,
+    .contact-side-card p,
+    .help-side-card p,
+    .support-card div,
+    .support-side-card div,
+    .contact-side-card div,
+    .help-side-card div {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    /* Specific protection for support email line */
+    a[href^="mailto:"] {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        white-space: normal !important;
+    }
+
+    /* Tighten side card spacing just a bit on mobile */
+    .support-card,
+    .support-side-card,
+    .contact-side-card,
+    .help-side-card {
+        padding: 16px !important;
+    }
+
+    /* Slightly smaller text for cramped side metadata blocks */
+    .support-meta,
+    .contact-meta,
+    .help-meta,
+    .response-time,
+    .support-response-time {
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+    }
+}
+
+@media (max-width: 520px) {
+    /* Extra protection for very narrow iPhone widths */
+    .support-card,
+    .support-side-card,
+    .contact-side-card,
+    .help-side-card {
+        border-radius: 18px !important;
+        padding: 14px !important;
+    }
+
+    a[href^="mailto:"] {
+        font-size: 0.96rem !important;
+        line-height: 1.5 !important;
+    }
+}
