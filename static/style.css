@@ -3313,3 +3313,57 @@ body.dark .inline-success {
         padding: 28px 20px;
     }
 }
+
+/* =========================================================
+   CONTACT PAGE — MOBILE EMAIL OVERFLOW PATCH
+   Fixes long email addresses spilling off-screen
+   ========================================================= */
+
+.contact-card a,
+.contact-card p,
+.contact-card div,
+.contact-side-card a,
+.contact-side-card p,
+.contact-side-card div,
+a[href^="mailto:"] {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .contact-grid,
+    .contact-grid > *,
+    .contact-card,
+    .contact-side-card {
+        min-width: 0 !important;
+    }
+
+    .contact-card,
+    .contact-side-card {
+        padding: 16px !important;
+    }
+
+    .contact-card a,
+    .contact-side-card a,
+    a[href^="mailto:"] {
+        white-space: normal !important;
+        display: inline-block;
+        max-width: 100%;
+        line-height: 1.6;
+    }
+}
+
+@media (max-width: 520px) {
+    .contact-card,
+    .contact-side-card {
+        padding: 14px !important;
+        border-radius: 18px !important;
+    }
+
+    .contact-card a,
+    .contact-side-card a,
+    a[href^="mailto:"] {
+        font-size: 0.96rem !important;
+    }
+}
+

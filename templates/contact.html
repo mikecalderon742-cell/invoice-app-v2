@@ -15,6 +15,23 @@
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
+<style>
+/* Fix long email wrapping on mobile */
+.contact-email a,
+.contact-email {
+    overflow-wrap:anywhere;
+    word-break:break-word;
+}
+
+@media (max-width:640px){
+    .contact-email a{
+        display:inline-block;
+        max-width:100%;
+        line-height:1.6;
+    }
+}
+</style>
+
 <div class="dashboard-header">
     <div>
         <h1>
@@ -72,6 +89,7 @@
             </p>
 
             <div style="display:grid; gap:14px;">
+
                 <div style="
                     padding:16px;
                     border-radius:16px;
@@ -137,6 +155,7 @@
                         {% endif %}
                     </p>
                 </div>
+
             </div>
         </section>
 
@@ -146,6 +165,7 @@
             background:rgba(15,23,42,0.05);
             border:1px solid rgba(148,163,184,0.22);
         ">
+
             <h2 style="margin:0 0 12px 0; font-size:18px;">
                 {% if lang == 'es' %}
                     Detalles de contacto
@@ -155,12 +175,15 @@
             </h2>
 
             <div style="display:grid; gap:14px; font-size:14px; line-height:1.7;">
-                <div>
+
+                <div class="contact-email">
                     <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
                         {% if lang == 'es' %}Correo de contacto{% else %}Contact email{% endif %}
                     </div>
                     <div style="margin-top:4px;">
-                        <a href="mailto:support@billbeam.app" style="font-weight:600;">support@billbeam.app</a>
+                        <a href="mailto:support@billbeam.app" style="font-weight:600;">
+                            support@billbeam.app
+                        </a>
                     </div>
                 </div>
 
@@ -182,77 +205,18 @@
                         {% if lang == 'es' %}Páginas relacionadas{% else %}Related pages{% endif %}
                     </div>
                     <div style="margin-top:4px; display:grid; gap:6px;">
-                        <a href="/support?lang={{ lang }}" style="font-weight:600;">
-                            {% if lang == 'es' %}Soporte{% else %}Support{% endif %}
-                        </a>
+                        <a href="/support?lang={{ lang }}" style="font-weight:600;">{% if lang == 'es' %}Soporte{% else %}Support{% endif %}</a>
                         <a href="/faq?lang={{ lang }}" style="font-weight:600;">FAQ</a>
-                        <a href="/privacy?lang={{ lang }}" style="font-weight:600;">
-                            {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
-                        </a>
-                        <a href="/terms?lang={{ lang }}" style="font-weight:600;">
-                            {% if lang == 'es' %}Términos{% else %}Terms{% endif %}
-                        </a>
+                        <a href="/privacy?lang={{ lang }}" style="font-weight:600;">{% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}</a>
+                        <a href="/terms?lang={{ lang }}" style="font-weight:600;">{% if lang == 'es' %}Términos{% else %}Terms{% endif %}</a>
                     </div>
                 </div>
+
             </div>
 
-            <div style="
-                margin-top:16px;
-                padding:12px;
-                border-radius:12px;
-                background:rgba(37,99,235,0.08);
-                border:1px solid rgba(37,99,235,0.14);
-                font-size:12px;
-                line-height:1.65;
-                opacity:.95;
-            ">
-                {% if lang == 'es' %}
-                    Para evitar retrasos, envía tu mensaje desde el correo asociado a tu cuenta cuando sea posible e incluye cualquier detalle útil como número de factura, error visible o capturas de pantalla.
-                {% else %}
-                    To avoid delays, send your message from the email associated with your account whenever possible and include any helpful details like invoice number, visible error text, or screenshots.
-                {% endif %}
-            </div>
         </aside>
     </div>
 
-    <div style="
-        margin-top:22px;
-        padding:16px;
-        border-radius:16px;
-        background:rgba(15,23,42,0.04);
-        border:1px solid rgba(148,163,184,0.22);
-    ">
-        <h3 style="margin:0 0 8px 0; font-size:16px;">
-            {% if lang == 'es' %}
-                Antes de escribirnos
-            {% else %}
-                Before you contact us
-            {% endif %}
-        </h3>
-        <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.75; opacity:.9;">
-            <li>
-                {% if lang == 'es' %}
-                    Revisa primero la página de <a href="/support?lang={{ lang }}">Soporte</a> y las <a href="/faq?lang={{ lang }}">Preguntas frecuentes</a>.
-                {% else %}
-                    Check the <a href="/support?lang={{ lang }}">Support</a> page and <a href="/faq?lang={{ lang }}">FAQ</a> first.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Si tu consulta es sobre una factura, incluye el número de factura o una captura de pantalla.
-                {% else %}
-                    If your request is about an invoice, include the invoice number or a screenshot.
-                {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Si reportas un error, indica el navegador y el dispositivo que estabas usando.
-                {% else %}
-                    If you are reporting a bug, mention the browser and device you were using.
-                {% endif %}
-            </li>
-        </ul>
-    </div>
 </div>
 
 {% endblock %}
