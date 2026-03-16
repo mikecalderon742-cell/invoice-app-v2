@@ -1404,11 +1404,23 @@ def billing_success():
             logger.warning("[BillingSuccess] No user row matched for user_id=%s", user_id)
             return redirect(url_for("pricing", lang=lang, canceled=1))
 
+        # Re-bind the browser session to the upgraded user just in case
+        session["user_id"] = user_id
+        session.permanent = True
+        session.modified = True
+
     except Exception:
         logger.exception("[BillingSuccess] error")
         return redirect(url_for("pricing", lang=lang, canceled=1))
 
-    return redirect(url_for("pricing", lang=lang, upgraded=1, refresh=int(datetime.utcnow().timestamp())))
+    return redirect(
+        url_for(
+            "pricing",
+            lang=lang,
+            upgraded=1,
+            refresh=int(datetime.utcnow().timestamp()),
+        )
+    )
 
 
 @app.route("/billing/cancel")
