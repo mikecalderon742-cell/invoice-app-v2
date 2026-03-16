@@ -1738,11 +1738,23 @@ def save():
 
     cursor.execute(
         """
+        SELECT COUNT(*)
+        FROM invoices
+        WHERE user_id = %s
+        """,
+        (user_id,),
+    )
+    user_invoice_count = cursor.fetchone()[0] or 0
+    invoice_number = f"INV-{user_invoice_count + 1:05d}"
+
+    cursor.execute(
+        """
         INSERT INTO invoices (
             client,
             amount,
             created_at,
             status,
+            invoice_number,
             due_date,
             notes,
             terms,
@@ -1751,7 +1763,7 @@ def save():
             user_id,
             signature_data
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
         (
@@ -1759,6 +1771,7 @@ def save():
             total,
             created_at,
             status,
+            invoice_number,
             due_date,
             notes,
             terms,
@@ -1770,12 +1783,6 @@ def save():
     )
 
     invoice_id = cursor.fetchone()[0]
-    invoice_number = f"INV-{invoice_id:05d}"
-
-    cursor.execute(
-        "UPDATE invoices SET invoice_number = %s WHERE id = %s",
-        (invoice_number, invoice_id),
-    )
 
     for desc, amt in cleaned_items:
         cursor.execute(
