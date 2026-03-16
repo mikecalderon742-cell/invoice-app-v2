@@ -897,10 +897,15 @@ def add_security_headers(response):
         "/edit/",
         "/update/",
         "/delete/",
+        "/pricing",
+        "/billing/",
+        "/manage-subscription",
     )
+
     if path.startswith(sensitive_prefixes):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
 
     return response
 
@@ -1403,7 +1408,7 @@ def billing_success():
         logger.exception("[BillingSuccess] error")
         return redirect(url_for("pricing", lang=lang, canceled=1))
 
-    return redirect(url_for("pricing", lang=lang, upgraded=1))
+    return redirect(url_for("pricing", lang=lang, upgraded=1, refresh=int(datetime.utcnow().timestamp())))
 
 
 @app.route("/billing/cancel")
