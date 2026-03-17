@@ -1115,18 +1115,24 @@
           </div>
 
           <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap;">
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-              {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-            </a>
-            <button type="button" id="previewButton" class="btn btn-secondary">
-              {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
-            </button>
-            <button type="submit" class="btn btn-brand">
-              {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
-            </button>
-          </div>
-        </form>
-      </div>
+  <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+    {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+  </a>
+
+  <button
+    type="submit"
+    formaction="/preview{% if lang %}?lang={{ lang }}{% endif %}"
+    formmethod="post"
+    class="btn btn-secondary"
+  >
+    {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
+  </button>
+
+  <button type="submit" class="btn btn-brand">
+    {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
+  </button>
+</div>
+</form>
 
       <div class="create-summary-side">
         <div class="summary-side-card">
