@@ -10,6 +10,16 @@
    - preview / send email / clients / payments / legal pages
    ========================================================= */
 
+html, body {
+  height: 100;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* =========================
    TOKENS / ROOT
    ========================= */
@@ -3381,3 +3391,13 @@ input, select {
   width: 100%;
 }
 
+.form-container {
+  overflow: visible;
+}
+
+.form-wrapper,
+.form-container,
+.card,
+.dashboard-card {
+  overflow: visible;
+}
