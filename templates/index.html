@@ -619,6 +619,33 @@
     backface-visibility: visible !important;
   }
 }
+
+  @media (max-width: 900px) {
+    .create-form-shell .table-wrapper {
+      overflow: visible !important;
+      padding: 0 !important;
+      margin-top: 12px !important;
+    }
+
+    .create-form-shell .modern-table {
+      min-width: 0 !important;
+      width: 100% !important;
+      table-layout: fixed !important;
+    }
+   
+    .create-form-shell .modern-table thead th,
+    .create-form-shell .modern-table tbody td {
+      white-space: normal !important;
+    }
+ 
+    .create-form-shell .modern-table td > div {
+      flex-wrap: wrap !important;
+    }
+
+    .create-form-shell .modern-table input {
+      min-width: 0 !important;
+    }
+  }
 </style>
 
 <div class="create-shell">
