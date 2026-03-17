@@ -592,6 +592,33 @@
       padding: 18px;
     }
   }
+
+  @media (max-width: 900px) {
+  .create-hero-panel,
+  .create-side-panel,
+  .create-form-shell,
+  .form-section,
+  .summary-side-card,
+  .side-check {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  .create-hero-panel::before,
+  .create-hero-panel::after,
+  .hero-orb,
+  .hero-grid-lines {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .create-hero-panel {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+}
 </style>
 
 <div class="create-shell">
