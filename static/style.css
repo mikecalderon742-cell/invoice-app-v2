@@ -3058,6 +3058,71 @@ body.dark .inline-success {
     .invoice-meta {
         grid-template-columns: 1fr;
     }
+
+    .create-form-shell .table-wrapper {
+        overflow: visible !important;
+        padding: 0 !important;
+        margin-top: 12px !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .create-form-shell .modern-table {
+        min-width: 0 !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+    }
+
+    .create-form-shell .modern-table thead {
+        display: none !important;
+    }
+
+    .create-form-shell .modern-table,
+    .create-form-shell .modern-table tbody,
+    .create-form-shell .modern-table tr,
+    .create-form-shell .modern-table td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .create-form-shell .modern-table tr {
+        margin-bottom: 12px !important;
+        padding: 12px !important;
+        border-radius: 14px !important;
+        background: rgba(15, 23, 42, 0.04) !important;
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    }
+
+    body.dark .create-form-shell .modern-table tr {
+        background: rgba(15, 23, 42, 0.42) !important;
+        border-color: rgba(148, 163, 184, 0.16) !important;
+    }
+
+    .create-form-shell .modern-table td {
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    .create-form-shell .modern-table td + td {
+        margin-top: 10px !important;
+    }
+
+    .create-form-shell .modern-table td > div {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    .create-form-shell .modern-table input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .create-form-shell .modern-table button {
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 768px) {
@@ -3304,8 +3369,7 @@ body.dark .inline-success {
     }
 
     .public-table,
-    .preview-table,
-    .modern-table {
+    .preview-table {
         min-width: 480px;
     }
 
@@ -3435,6 +3499,3 @@ button {
     touch-action: auto !important;
   }
 }
-
-
-

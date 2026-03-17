@@ -503,8 +503,8 @@
   .create-summary-side {
     display: grid;
     gap: 16px;
-    position: sticky;
-    top: 88px;
+    position: static;
+    top: auto;
   }
 
   .summary-side-card {
@@ -594,31 +594,31 @@
   }
 
   @media (max-width: 900px) {
-  .create-hero-panel,
-  .create-side-panel,
-  .create-form-shell,
-  .form-section,
-  .summary-side-card,
-  .side-check {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
-  }
+    .create-hero-panel,
+    .create-side-panel,
+    .create-form-shell,
+    .form-section,
+    .summary-side-card,
+    .side-check {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+    }
 
-  .create-hero-panel::before,
-  .create-hero-panel::after,
-  .hero-orb,
-  .hero-grid-lines {
-    display: none !important;
-    animation: none !important;
-  }
+    .create-hero-panel::before,
+    .create-hero-panel::after,
+    .hero-orb,
+    .hero-grid-lines {
+      display: none !important;
+      animation: none !important;
+    }
 
-  .create-hero-panel {
-    transform: none !important;
-    will-change: auto !important;
-    backface-visibility: visible !important;
+    .create-hero-panel {
+      transform: none !important;
+      will-change: auto !important;
+      backface-visibility: visible !important;
+    }
   }
-}
 
   @media (max-width: 900px) {
     .create-form-shell .table-wrapper {
@@ -632,18 +632,30 @@
       width: 100% !important;
       table-layout: fixed !important;
     }
-   
+
     .create-form-shell .modern-table thead th,
     .create-form-shell .modern-table tbody td {
       white-space: normal !important;
     }
- 
+
     .create-form-shell .modern-table td > div {
       flex-wrap: wrap !important;
     }
 
     .create-form-shell .modern-table input {
       min-width: 0 !important;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .create-shell,
+    .create-form-shell,
+    .invoice-layout-grid,
+    .invoice-form-col,
+    .form-section {
+      overflow: visible !important;
+      height: auto !important;
+      min-height: 0 !important;
     }
   }
 </style>
@@ -1091,7 +1103,7 @@
                 id="signature-pad"
                 width="600"
                 height="200"
-                style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:none;"
+                style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:auto;"
               ></canvas>
 
               <div class="signature-toolbar">
@@ -1169,24 +1181,25 @@
           </div>
 
           <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap;">
-  <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-    {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-  </a>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+              {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            </a>
 
-  <button
-    type="submit"
-    formaction="/preview{% if lang %}?lang={{ lang }}{% endif %}"
-    formmethod="post"
-    class="btn btn-secondary"
-  >
-    {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
-  </button>
+            <button
+              type="submit"
+              formaction="/preview{% if lang %}?lang={{ lang }}{% endif %}"
+              formmethod="post"
+              class="btn btn-secondary"
+            >
+              {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
+            </button>
 
-  <button type="submit" class="btn btn-brand">
-    {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
-  </button>
-</div>
-</form>
+            <button type="submit" class="btn btn-brand">
+              {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
 
       <div class="create-summary-side">
         <div class="summary-side-card">
