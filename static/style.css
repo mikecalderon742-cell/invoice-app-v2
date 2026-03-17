@@ -3367,3 +3367,17 @@ a[href^="mailto:"] {
     }
 }
 
+* {
+  box-sizing: border-box;
+}
+
+input, select {
+  width: 100%;
+  max-width: 100%;
+}
+
+.search-filter input,
+.search-filter select {
+  width: 100%;
+}
+
