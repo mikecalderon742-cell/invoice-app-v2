@@ -3474,8 +3474,6 @@ button {
 }
 
 @media (max-width: 900px) {
-  .ai-helper,
-  .floating-btn,
   .bg-doodles,
   .public-stamp-doodle,
   #loader {
