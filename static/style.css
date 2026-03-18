@@ -3023,6 +3023,18 @@ body.dark .inline-success {
     margin-right: 4px;
 }
 
+.footer-contact-row > div {
+    position: relative;
+    z-index: 2;
+}
+
+.footer-email-link {
+    position: relative;
+    z-index: 3;
+    pointer-events: auto !important;
+    -webkit-touch-callout: default;
+}
+
 /* =========================
    RESPONSIVE
    ========================= */
