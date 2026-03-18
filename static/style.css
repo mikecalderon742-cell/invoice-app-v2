@@ -3487,15 +3487,3 @@ button {
     display: none !important;
   }
 }
-
-@media (max-width: 900px) {
-  canvas,
-  .signature-pad,
-  .signature-wrapper,
-  .signature-container,
-  #signaturePad,
-  #signatureCanvas {
-    pointer-events: none !important;
-    touch-action: auto !important;
-  }
-}
