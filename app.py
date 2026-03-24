@@ -929,12 +929,12 @@ def sync_stripe_connect_status_for_user(user_id: int):
 
 def build_stripe_connect_return_url(lang: str = "en"):
     base_url = APP_BASE_URL or request.host_url.rstrip("/")
-    return f"{base_url}/settings?payments=connected&lang={lang}"
+    return f"{base_url}/settings?payments_connected=1&lang={lang}"
 
 
 def build_stripe_connect_refresh_url(lang: str = "en"):
     base_url = APP_BASE_URL or request.host_url.rstrip("/")
-    return f"{base_url}/settings/payments/connect?refresh=1&lang={lang}"
+    return f"{base_url}/settings?payments_refresh=1&lang={lang}"
 
 
 def get_business_profile():
@@ -1803,23 +1803,33 @@ def connect_payment_account():
     user = get_current_user()
     user_id = user.get("id")
 
-    if not STRIPE_SECRET_KEY:
-        return redirect(url_for("settings", payments_error=1, lang=lang))
-
     if not user_id:
         return redirect(url_for("login", lang=lang))
 
+    if not STRIPE_SECRET_KEY:
+        logger.warning("[StripeConnect] STRIPE_SECRET_KEY is not configured")
+        return redirect(url_for("settings", payments_error=1, lang=lang))
+
     try:
         account = get_or_create_stripe_connect_account(user_id, user.get("email") or "")
+
         account_link = stripe.AccountLink.create(
             account=account.get("id"),
             refresh_url=build_stripe_connect_refresh_url(lang),
             return_url=build_stripe_connect_return_url(lang),
             type="account_onboarding",
         )
+
+        logger.info(
+            "[StripeConnect] Started onboarding for user_id=%s account_id=%s",
+            user_id,
+            account.get("id"),
+        )
+
         return redirect(account_link.url)
-    except Exception:
-        logger.exception("Failed to start Stripe Connect onboarding for user_id=%s", user_id)
+
+    except Exception as e:
+        logger.exception("[StripeConnect] Failed to start onboarding for user_id=%s: %s", user_id, e)
         return redirect(url_for("settings", payments_error=1, lang=lang))
 
 
