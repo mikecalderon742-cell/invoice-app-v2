@@ -155,7 +155,7 @@ def get_price_id_for_plan(plan_key: str):
     return None
 
 
-def get_plan_for_apple_product_id(product_id: str) -> str | None:
+def get_plan_for_apple_product_id(product_id: str):
     product_id = (product_id or "").strip()
 
     if not product_id:
