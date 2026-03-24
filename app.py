@@ -211,7 +211,7 @@ PLAN_DEFINITIONS = {
     "pro": {
         "name_en": "Pro",
         "name_es": "Pro",
-        "price_label": "$19 / month",
+        "price_label": "$19.99 / month",
         "tagline_en": "For freelancers and small businesses who invoice regularly.",
         "tagline_es": "Para freelancers y pequeños negocios que facturan con frecuencia.",
         "features_en": [
