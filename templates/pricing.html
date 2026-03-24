@@ -81,6 +81,12 @@
     color: #7c2d12;
   }
 
+  .pricing-alert.info {
+    border-color: rgba(37, 99, 235, 0.30);
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1e3a8a;
+  }
+
   body.dark .pricing-alert.success {
     background: linear-gradient(180deg, rgba(2, 44, 34, 0.95), rgba(6, 78, 59, 0.88));
     color: #bbf7d0;
@@ -89,6 +95,23 @@
   body.dark .pricing-alert.warn {
     background: linear-gradient(180deg, rgba(69, 26, 3, 0.96), rgba(124, 45, 18, 0.88));
     color: #fed7aa;
+  }
+
+  body.dark .pricing-alert.info {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(30, 64, 175, 0.78));
+    color: #dbeafe;
+  }
+
+  .pricing-native-note {
+    margin-top: -8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #475569;
+    font-weight: 700;
+  }
+
+  body.dark .pricing-native-note {
+    color: #cbd5e1;
   }
 
   .pricing-hero-strip {
@@ -499,6 +522,20 @@
     background: rgba(30,41,59,0.92);
   }
 
+  .pricing-helper-actions {
+    display: none;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pricing-helper-actions.active {
+    display: flex;
+  }
+
+  .pricing-helper-actions .btn {
+    min-width: 180px;
+  }
+
   .badge {
     display: inline-flex;
     align-items: center;
@@ -627,9 +664,9 @@
       </h1>
       <div class="pricing-subcopy">
         {% if lang == 'es' %}
-          Empieza gratis y actualiza cuando quieras más capacidad, envíos por correo, enlaces públicos y una experiencia de facturación más potente.
+          Empieza gratis y actualiza cuando quieras más capacidad, envíos por correo, enlaces públicos, pagos más profesionales y una experiencia de facturación más potente.
         {% else %}
-          Start free and upgrade when you want more capacity, email sending, public invoice links, and a stronger invoicing workflow.
+          Start free and upgrade when you want more capacity, email sending, public invoice links, more professional payment tools, and a stronger invoicing workflow.
         {% endif %}
       </div>
     </div>
@@ -640,6 +677,8 @@
       </a>
     </div>
   </div>
+
+  <div id="nativeBillingAlert" style="display:none;"></div>
 
   {% if request.args.get('upgraded') %}
     <div class="pricing-alert success">
@@ -697,17 +736,17 @@
       <div class="pricing-hero-label">
         {% if lang == 'es' %}Actualización simple{% else %}Simple upgrade{% endif %}
       </div>
-      <div class="pricing-hero-value">
+      <div class="pricing-hero-value" id="billingMethodHeroValue">
         {% if lang == 'es' %}Stripe seguro{% else %}Secure Stripe checkout{% endif %}
       </div>
     </div>
 
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
-        {% if lang == 'es' %}Control real{% else %}Real control{% endif %}
+        {% if lang == 'es' %}Operación profesional{% else %}Professional operations{% endif %}
       </div>
       <div class="pricing-hero-value">
-        {% if lang == 'es' %}Administra tu suscripción{% else %}Manage your subscription{% endif %}
+        {% if lang == 'es' %}Más control de pagos{% else %}More payment control{% endif %}
       </div>
     </div>
   </div>
@@ -735,6 +774,10 @@
               {% elif plan.recommended %}
                 <span class="pricing-pill recommended">
                   {% if lang == 'es' %}Más popular{% else %}Most popular{% endif %}
+                </span>
+              {% elif key == 'enterprise' %}
+                <span class="pricing-pill recommended">
+                  {% if lang == 'es' %}Más control{% else %}More control{% endif %}
                 </span>
               {% endif %}
             </div>
@@ -783,18 +826,63 @@
               </li>
             </ul>
           </div>
+        {% elif key == 'enterprise' %}
+          <div class="pricing-ai-callout">
+            <strong>
+              {% if lang == 'es' %}
+                Diseñado para operaciones más serias:
+              {% else %}
+                Built for more serious operations:
+              {% endif %}
+            </strong>
+            <ul>
+              <li>
+                {% if lang == 'es' %}
+                  Configura una cuenta Stripe profesional para administrar pagos.
+                {% else %}
+                  Set up a professional Stripe account connection to manage payments.
+                {% endif %}
+              </li>
+              <li>
+                {% if lang == 'es' %}
+                  Separa mejor tu suscripción de BillBeam y el cobro de facturas a clientes.
+                {% else %}
+                  Better separate your BillBeam subscription from client invoice payments.
+                {% endif %}
+              </li>
+              <li>
+                {% if lang == 'es' %}
+                  Prepara tu flujo para reportes y herramientas más avanzadas.
+                {% else %}
+                  Prepare your workflow for more advanced reporting and operational tools.
+                {% endif %}
+              </li>
+            </ul>
+          </div>
         {% endif %}
 
         <div class="pricing-cta">
           {% if key == user_plan and key == 'pro' %}
-            <a href="/manage-subscription{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
+            <a href="/manage-subscription{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact" id="manageSubscriptionBtn">
               {% if lang == 'es' %}Administrar suscripción{% else %}Manage Subscription{% endif %}
             </a>
-            <span class="pricing-note">
+            <span class="pricing-note" id="manageSubscriptionNote">
               {% if lang == 'es' %}
                 Actualiza tu método de pago, cambia tu plan o cancela tu suscripción desde Stripe.
               {% else %}
                 Update your payment method, switch plans, or cancel your subscription from Stripe.
+              {% endif %}
+            </span>
+
+          {% elif key == user_plan and key == 'enterprise' %}
+            <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
+              {% if lang == 'es' %}Ir a configuración{% else %}Go to Settings{% endif %}
+            </a>
+            <span class="pricing-note">
+              {% if lang == 'es' %}
+                Gestiona tu marca, seguridad y configuración profesional de pagos desde ajustes.
+              {% else %}
+                Manage your branding, security, and professional payment setup from settings.
               {% endif %}
             </span>
 
@@ -806,17 +894,32 @@
               {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
             </span>
 
-          {% elif key == 'pro' and user_plan != 'pro' %}
+          {% elif key == 'pro' and user_plan != 'pro' and user_plan != 'enterprise' %}
             <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
               {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
             </button>
-            <span class="pricing-note">
+
+            <div class="pricing-helper-actions" id="nativeRestoreWrap">
+              <button type="button" class="btn btn-secondary btn-compact" id="restorePurchasesBtn">
+                {% if lang == 'es' %}Restaurar compras{% else %}Restore Purchases{% endif %}
+              </button>
+            </div>
+
+            <span class="pricing-note" id="upgradeProNote">
               {% if lang == 'es' %}
                 Activa Pro en segundos con Stripe.
               {% else %}
                 Turn on Pro in seconds with Stripe.
               {% endif %}
             </span>
+
+            <div class="pricing-native-note" id="nativeUpgradeHint" style="display:none;">
+              {% if lang == 'es' %}
+                Dentro de la app para iPhone, la actualización usa la compra integrada de Apple.
+              {% else %}
+                Inside the iPhone app, upgrading uses Apple’s in-app purchase flow.
+              {% endif %}
+            </div>
 
           {% elif key == 'free' %}
             <span class="badge draft">
@@ -838,9 +941,9 @@
             </a>
             <span class="pricing-note">
               {% if lang == 'es' %}
-                Te ayudaremos a diseñar un plan más avanzado cuando lo necesites.
+                Este nivel está pensado para una operación más avanzada y una configuración de pagos más profesional.
               {% else %}
-                We’ll help you design a more advanced plan when you need it.
+                This tier is built for a more advanced operation and a more professional payment setup.
               {% endif %}
             </span>
           {% endif %}
@@ -882,16 +985,16 @@
       </div>
       <div class="pricing-trust-copy">
         {% if lang == 'es' %}
-          Administra tu suscripción de forma simple cuando quieras cambiar, actualizar o cancelar.
+          Administra tu suscripción y prepara una configuración de pagos más profesional cuando tu negocio lo necesite.
         {% else %}
-          Manage your subscription simply whenever you want to switch, update, or cancel.
+          Manage your subscription and prepare for a more professional payment setup as your business grows.
         {% endif %}
       </div>
     </div>
   </div>
 
   {% if stripe_publishable_key %}
-    <div class="pricing-footer-note">
+    <div class="pricing-footer-note" id="pricingFooterBillingNote">
       {% if lang == 'es' %}
         Pagos y suscripciones procesados de forma segura por Stripe.
       {% else %}
@@ -904,13 +1007,49 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("upgradeProBtn");
-  if (!btn) return;
+  const isNativeIOSApp = !!(window.BillBeamNative && window.BillBeamNative.isNativeApp);
 
-  btn.addEventListener("click", async function () {
-    btn.disabled = true;
-    const oldText = btn.textContent;
-    btn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
+  const upgradeBtn = document.getElementById("upgradeProBtn");
+  const restoreBtn = document.getElementById("restorePurchasesBtn");
+  const restoreWrap = document.getElementById("nativeRestoreWrap");
+  const upgradeNote = document.getElementById("upgradeProNote");
+  const nativeHint = document.getElementById("nativeUpgradeHint");
+  const nativeAlert = document.getElementById("nativeBillingAlert");
+  const billingMethodHeroValue = document.getElementById("billingMethodHeroValue");
+  const manageSubscriptionBtn = document.getElementById("manageSubscriptionBtn");
+  const manageSubscriptionNote = document.getElementById("manageSubscriptionNote");
+  const pricingFooterBillingNote = document.getElementById("pricingFooterBillingNote");
+
+  function showNativeAlert(type, message) {
+    if (!nativeAlert) return;
+
+    nativeAlert.className = "";
+    nativeAlert.style.display = "block";
+    nativeAlert.classList.add("pricing-alert");
+
+    if (type === "success") {
+      nativeAlert.classList.add("success");
+    } else if (type === "info") {
+      nativeAlert.classList.add("info");
+    } else {
+      nativeAlert.classList.add("warn");
+    }
+
+    nativeAlert.textContent = message;
+    nativeAlert.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function resetUpgradeButton() {
+    if (!upgradeBtn) return;
+    upgradeBtn.disabled = false;
+    upgradeBtn.textContent = "{{ 'Actualizar a Pro' if lang == 'es' else 'Upgrade to Pro' }}";
+  }
+
+  async function startStripeCheckout() {
+    if (!upgradeBtn) return;
+
+    upgradeBtn.disabled = true;
+    upgradeBtn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
 
     try {
       const resp = await fetch("/create-checkout-session?lang={{ lang }}", {
@@ -920,17 +1059,169 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       const data = await resp.json();
+
       if (data.url) {
         window.location.href = data.url;
       } else {
         alert(data.error || "{{ 'No se pudo iniciar el checkout.' if lang == 'es' else 'Could not start checkout.' }}");
-        btn.disabled = false;
-        btn.textContent = oldText;
+        resetUpgradeButton();
       }
     } catch (e) {
       alert("{{ 'Error de red al iniciar el checkout.' if lang == 'es' else 'Network error starting checkout.' }}");
-      btn.disabled = false;
-      btn.textContent = oldText;
+      resetUpgradeButton();
+    }
+  }
+
+  function startNativePurchase() {
+    if (!upgradeBtn) return;
+    if (!window.BillBeamNative || typeof window.BillBeamNative.purchasePro !== "function") {
+      showNativeAlert(
+        "warn",
+        "{{ 'La compra integrada de Apple aún no está disponible en esta pantalla. Cierra y vuelve a abrir la app e inténtalo de nuevo.' if lang == 'es' else 'Apple in-app purchase is not ready on this screen yet. Close and reopen the app, then try again.' }}"
+      );
+      resetUpgradeButton();
+      return;
+    }
+
+    upgradeBtn.disabled = true;
+    upgradeBtn.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else 'Opening Apple purchase...' }}";
+    window.BillBeamNative.purchasePro();
+  }
+
+  if (isNativeIOSApp) {
+    if (billingMethodHeroValue) {
+      billingMethodHeroValue.textContent = "{{ 'Compra integrada de Apple' if lang == 'es' else 'Apple in-app purchase' }}";
+    }
+
+    if (upgradeNote) {
+      upgradeNote.textContent = "{{ 'Activa Pro con la suscripción integrada de Apple dentro de la app para iPhone.' if lang == 'es' else 'Activate Pro with Apple’s built-in subscription flow inside the iPhone app.' }}";
+    }
+
+    if (nativeHint) {
+      nativeHint.style.display = "block";
+    }
+
+    if (restoreWrap) {
+      restoreWrap.classList.add("active");
+    }
+
+    if (pricingFooterBillingNote) {
+      pricingFooterBillingNote.textContent = "{{ 'Dentro de la app para iPhone, las suscripciones usan la compra integrada de Apple.' if lang == 'es' else 'Inside the iPhone app, subscriptions use Apple in-app purchase.' }}";
+    }
+
+    if (manageSubscriptionBtn) {
+      manageSubscriptionBtn.setAttribute("href", "#");
+      manageSubscriptionBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        showNativeAlert(
+          "info",
+          "{{ 'La administración de suscripciones de Apple se hace desde la configuración de tu Apple ID. Más adelante conectaremos esta pantalla a un flujo más completo.' if lang == 'es' else 'Apple subscription management is handled from your Apple ID subscription settings. We will connect this screen to a fuller flow next.' }}"
+        );
+      });
+    }
+
+    if (manageSubscriptionNote) {
+      manageSubscriptionNote.textContent = "{{ 'Las suscripciones compradas en iPhone se administran a través de Apple.' if lang == 'es' else 'Subscriptions purchased on iPhone are managed through Apple.' }}";
+    }
+  }
+
+  if (upgradeBtn) {
+    upgradeBtn.addEventListener("click", async function () {
+      if (isNativeIOSApp) {
+        startNativePurchase();
+      } else {
+        await startStripeCheckout();
+      }
+    });
+  }
+
+  if (restoreBtn) {
+    restoreBtn.addEventListener("click", function () {
+      if (!window.BillBeamNative || typeof window.BillBeamNative.restorePurchases !== "function") {
+        showNativeAlert(
+          "warn",
+          "{{ 'La restauración de compras no está disponible todavía en esta pantalla.' if lang == 'es' else 'Purchase restore is not available on this screen yet.' }}"
+        );
+        return;
+      }
+
+      showNativeAlert(
+        "info",
+        "{{ 'Intentando restaurar tus compras anteriores…' if lang == 'es' else 'Trying to restore your previous purchases…' }}"
+      );
+
+      window.BillBeamNative.restorePurchases();
+    });
+  }
+
+  window.addEventListener("billbeam:purchase-started", function () {
+    if (!upgradeBtn) return;
+    upgradeBtn.disabled = true;
+    upgradeBtn.textContent = "{{ 'Procesando compra...' if lang == 'es' else 'Processing purchase...' }}";
+  });
+
+  window.addEventListener("billbeam:purchase-pending", function () {
+    resetUpgradeButton();
+    showNativeAlert(
+      "info",
+      "{{ 'Tu compra está pendiente de aprobación o confirmación. Apple terminará el proceso cuando esté lista.' if lang == 'es' else 'Your purchase is pending approval or confirmation. Apple will finish the process when it is ready.' }}"
+    );
+  });
+
+  window.addEventListener("billbeam:purchase-cancelled", function () {
+    resetUpgradeButton();
+    showNativeAlert(
+      "warn",
+      "{{ 'La compra fue cancelada.' if lang == 'es' else 'The purchase was cancelled.' }}"
+    );
+  });
+
+  window.addEventListener("billbeam:purchase-error", function (event) {
+    resetUpgradeButton();
+    const message = event.detail && event.detail.message
+      ? event.detail.message
+      : "{{ 'No se pudo completar la compra integrada.' if lang == 'es' else 'Could not complete the in-app purchase.' }}";
+    showNativeAlert("warn", message);
+  });
+
+  window.addEventListener("billbeam:purchase-success", function () {
+    resetUpgradeButton();
+    showNativeAlert(
+      "success",
+      "{{ 'Compra completada. El siguiente paso es sincronizar el acceso Pro con tu cuenta BillBeam en el servidor.' if lang == 'es' else 'Purchase completed. The next step is syncing Pro access with your BillBeam account on the server.' }}"
+    );
+  });
+
+  window.addEventListener("billbeam:restore-finished", function () {
+    resetUpgradeButton();
+    showNativeAlert(
+      "success",
+      "{{ 'La restauración terminó. Si tu suscripción sigue activa, el siguiente paso es sincronizarla con tu cuenta BillBeam.' if lang == 'es' else 'Restore finished. If your subscription is still active, the next step is syncing it to your BillBeam account.' }}"
+    );
+  });
+
+  window.addEventListener("billbeam:entitlements", function (event) {
+    if (!isNativeIOSApp) return;
+
+    const proActive = !!(event.detail && event.detail.proActive);
+
+    if (proActive) {
+      showNativeAlert(
+        "info",
+        "{{ 'Apple informa que esta cuenta tiene una suscripción Pro activa en el dispositivo. Falta sincronizar ese acceso con tu cuenta BillBeam del servidor.' if lang == 'es' else 'Apple reports that this device account has an active Pro subscription. The remaining step is syncing that access to your BillBeam server account.' }}"
+      );
+    }
+  });
+
+  window.addEventListener("billbeam:native-ready", function () {
+    if (!isNativeIOSApp) return;
+
+    if (nativeHint) {
+      nativeHint.style.display = "block";
+    }
+
+    if (restoreWrap) {
+      restoreWrap.classList.add("active");
     }
   });
 });
