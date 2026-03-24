@@ -58,7 +58,15 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+APPLE_IAP_PRO_PRODUCT_ID = os.environ.get("APPLE_IAP_PRO_PRODUCT_ID", "app.billbeam.pro.monthly")
+APPLE_IAP_ENTERPRISE_PRODUCT_ID = os.environ.get("APPLE_IAP_ENTERPRISE_PRODUCT_ID", "app.billbeam.business.monthly")
 STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO") or os.environ.get("STRIPE_PRICE_PRO_MONTHLY")
+STRIPE_PRICE_ENTERPRISE = (
+    os.environ.get("STRIPE_PRICE_ENTERPRISE")
+    or os.environ.get("STRIPE_PRICE_BUSINESS")
+    or os.environ.get("STRIPE_PRICE_ENTERPRISE_MONTHLY")
+    or os.environ.get("STRIPE_PRICE_BUSINESS_MONTHLY")
+)
 STRIPE_CURRENCY = (os.environ.get("STRIPE_CURRENCY") or "usd").lower()
 
 APP_BASE_URL = (os.environ.get("APP_BASE_URL") or "").rstrip("/")
@@ -125,6 +133,43 @@ def money_to_cents(amount: float) -> int:
     return int(round(float(amount or 0) * 100))
 
 
+def normalize_plan_key(plan_value: str) -> str:
+    plan_value = (plan_value or "free").strip().lower()
+    aliases = {
+        "starter": "free",
+        "free": "free",
+        "pro": "pro",
+        "business": "enterprise",
+        "studio": "enterprise",
+        "enterprise": "enterprise",
+    }
+    return aliases.get(plan_value, "free")
+
+
+def get_price_id_for_plan(plan_key: str):
+    plan_key = normalize_plan_key(plan_key)
+    if plan_key == "pro":
+        return STRIPE_PRICE_PRO
+    if plan_key == "enterprise":
+        return STRIPE_PRICE_ENTERPRISE
+    return None
+
+
+def get_plan_for_apple_product_id(product_id: str) -> str | None:
+    product_id = (product_id or "").strip()
+
+    if not product_id:
+        return None
+
+    if product_id == APPLE_IAP_PRO_PRODUCT_ID:
+        return "pro"
+
+    if product_id == APPLE_IAP_ENTERPRISE_PRODUCT_ID:
+        return "enterprise"
+
+    return None
+
+
 # -------------------------
 # DB CONNECTION
 # -------------------------
@@ -153,12 +198,12 @@ PLAN_DEFINITIONS = {
         "tagline_en": "For freelancers just getting started.",
         "tagline_es": "Para freelancers que están empezando.",
         "features_en": [
-            "Up to 10 invoices / month",
+            "Up to 3 invoices / month",
             "Single invoice template",
             "Basic dashboard",
         ],
         "features_es": [
-            "Hasta 10 facturas al mes",
+            "Hasta 3 facturas al mes",
             "Una sola plantilla de factura",
             "Panel básico",
         ],
@@ -166,7 +211,7 @@ PLAN_DEFINITIONS = {
     "pro": {
         "name_en": "Pro",
         "name_es": "Pro",
-        "price_label": "$12 / month",
+        "price_label": "$19 / month",
         "tagline_en": "For freelancers and small businesses who invoice regularly.",
         "tagline_es": "Para freelancers y pequeños negocios que facturan con frecuencia.",
         "features_en": [
@@ -206,7 +251,14 @@ PLAN_DEFINITIONS = {
     },
 }
 
-PLAN_LEVELS = {"free": 1, "pro": 2, "enterprise": 3}
+PLAN_LEVELS = {
+    "free": 1,
+    "starter": 1,
+    "pro": 2,
+    "business": 3,
+    "studio": 3,
+    "enterprise": 3,
+}
 
 
 # -------------------------
@@ -347,6 +399,16 @@ def init_db():
 
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_charges_enabled BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_payouts_enabled BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_details_submitted BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_onboarded_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_last_status_sync TIMESTAMP;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_product_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_original_transaction_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_transaction_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_last_purchase_at TIMESTAMP;")
 
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
@@ -561,7 +623,7 @@ def get_default_user():
     return {
         "id": user_id,
         "email": email,
-        "plan": plan or "free",
+        "plan": normalize_plan_key(plan or "free"),
         "is_active": is_active,
         "created_at": created_at,
     }
@@ -586,7 +648,7 @@ def get_current_user():
                 return {
                     "id": uid,
                     "email": email,
-                    "plan": plan or "free",
+                    "plan": normalize_plan_key(plan or "free"),
                     "is_active": is_active,
                     "created_at": created_at,
                 }
@@ -613,7 +675,7 @@ def login_required(view_func):
 
 def get_plan_for_current_user():
     user = get_current_user()
-    return user.get("plan") or "free"
+    return normalize_plan_key(user.get("plan") or "free")
 
 
 def get_user_plan_by_user_id(user_id: int) -> str:
@@ -623,7 +685,7 @@ def get_user_plan_by_user_id(user_id: int) -> str:
     row = cur.fetchone()
     cur.close()
     conn.close()
-    return row[0] if row and row[0] else "free"
+    return normalize_plan_key(row[0] if row and row[0] else "free")
 
 
 def get_invoice_by_public_token(token: str):
@@ -704,10 +766,164 @@ def check_invoice_quota_or_reason():
     cursor.close()
     conn.close()
 
-    if count >= 10:
-        return False, "You've reached the 10 invoices / month limit on the Starter plan."
+    if count >= 3:
+        return False, "You've reached the 3 invoices / month limit on the Starter plan."
 
     return True, None
+
+
+def get_user_payment_setup(user_id: int):
+    default_state = {
+        "stripe_connect_account_id": "",
+        "charges_enabled": False,
+        "payouts_enabled": False,
+        "details_submitted": False,
+        "is_connected": False,
+        "is_ready": False,
+        "last_status_sync": None,
+        "onboarded_at": None,
+    }
+
+    if not user_id:
+        return default_state
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT
+            stripe_connect_account_id,
+            stripe_connect_charges_enabled,
+            stripe_connect_payouts_enabled,
+            stripe_connect_details_submitted,
+            stripe_connect_last_status_sync,
+            stripe_connect_onboarded_at
+        FROM users
+        WHERE id = %s
+        """,
+        (user_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        return default_state
+
+    (
+        stripe_connect_account_id,
+        charges_enabled,
+        payouts_enabled,
+        details_submitted,
+        last_status_sync,
+        onboarded_at,
+    ) = row
+
+    is_connected = bool(stripe_connect_account_id)
+    is_ready = bool(is_connected and charges_enabled and payouts_enabled and details_submitted)
+
+    return {
+        "stripe_connect_account_id": stripe_connect_account_id or "",
+        "charges_enabled": bool(charges_enabled),
+        "payouts_enabled": bool(payouts_enabled),
+        "details_submitted": bool(details_submitted),
+        "is_connected": is_connected,
+        "is_ready": is_ready,
+        "last_status_sync": last_status_sync,
+        "onboarded_at": onboarded_at,
+    }
+
+
+def update_user_payment_setup_from_account(user_id: int, account):
+    if not user_id or not account:
+        return
+
+    details_submitted = bool(account.get("details_submitted"))
+    charges_enabled = bool(account.get("charges_enabled"))
+    payouts_enabled = bool(account.get("payouts_enabled"))
+    account_id = account.get("id") or ""
+    onboarded_at = now_local() if details_submitted else None
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE users
+        SET stripe_connect_account_id = %s,
+            stripe_connect_charges_enabled = %s,
+            stripe_connect_payouts_enabled = %s,
+            stripe_connect_details_submitted = %s,
+            stripe_connect_onboarded_at = COALESCE(stripe_connect_onboarded_at, %s),
+            stripe_connect_last_status_sync = %s
+        WHERE id = %s
+        """,
+        (
+            account_id or None,
+            charges_enabled,
+            payouts_enabled,
+            details_submitted,
+            onboarded_at,
+            now_local(),
+            user_id,
+        ),
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def get_or_create_stripe_connect_account(user_id: int, email: str = ""):
+    payment_setup = get_user_payment_setup(user_id)
+    existing_account_id = payment_setup.get("stripe_connect_account_id")
+
+    if existing_account_id:
+        try:
+            account = stripe.Account.retrieve(existing_account_id)
+            update_user_payment_setup_from_account(user_id, account)
+            return account
+        except Exception:
+            logger.exception("Failed retrieving existing Stripe Connect account for user_id=%s", user_id)
+
+    account = stripe.Account.create(
+        type="express",
+        email=email or None,
+        metadata={
+            "billbeam_user_id": str(user_id),
+            "product": APP_NAME,
+        },
+        business_type="individual",
+        capabilities={
+            "card_payments": {"requested": True},
+            "transfers": {"requested": True},
+        },
+    )
+    update_user_payment_setup_from_account(user_id, account)
+    return account
+
+
+def sync_stripe_connect_status_for_user(user_id: int):
+    payment_setup = get_user_payment_setup(user_id)
+    account_id = payment_setup.get("stripe_connect_account_id")
+    if not account_id:
+        return payment_setup
+
+    try:
+        account = stripe.Account.retrieve(account_id)
+        update_user_payment_setup_from_account(user_id, account)
+        return get_user_payment_setup(user_id)
+    except Exception:
+        logger.exception("Failed syncing Stripe Connect status for user_id=%s", user_id)
+        return payment_setup
+
+
+def build_stripe_connect_return_url(lang: str = "en"):
+    base_url = APP_BASE_URL or request.host_url.rstrip("/")
+    return f"{base_url}/settings?payments=connected&lang={lang}"
+
+
+def build_stripe_connect_refresh_url(lang: str = "en"):
+    base_url = APP_BASE_URL or request.host_url.rstrip("/")
+    return f"{base_url}/settings/payments/connect?refresh=1&lang={lang}"
 
 
 def get_business_profile():
@@ -900,6 +1116,7 @@ def add_security_headers(response):
         "/pricing",
         "/billing/",
         "/manage-subscription",
+        "/settings/payments",
     )
 
     if path.startswith(sensitive_prefixes):
@@ -926,8 +1143,18 @@ def inject_business_profile_ctx():
 @app.context_processor
 def inject_current_user_ctx():
     user = get_current_user()
-    plan = user.get("plan") or "free"
+    plan = normalize_plan_key(user.get("plan") or "free")
     is_authenticated = "user_id" in session and user.get("id") is not None
+    payment_setup = get_user_payment_setup(user.get("id")) if user.get("id") else {
+        "stripe_connect_account_id": "",
+        "charges_enabled": False,
+        "payouts_enabled": False,
+        "details_submitted": False,
+        "is_connected": False,
+        "is_ready": False,
+        "last_status_sync": None,
+        "onboarded_at": None,
+    }
     return {
         "current_user": user,
         "user_plan": plan,
@@ -935,6 +1162,7 @@ def inject_current_user_ctx():
         "is_authenticated": is_authenticated,
         "app_name": APP_NAME,
         "ai_notice_enabled": AI_NOTICE_ENABLED,
+        "payment_setup": payment_setup,
     }
 
 
@@ -1065,7 +1293,7 @@ def logout():
 def pricing():
     lang = normalize_lang(request.args.get("lang", "en"))
     user = get_current_user()
-    user_plan = user.get("plan", "free") if user else "free"
+    user_plan = normalize_plan_key(user.get("plan", "free")) if user else "free"
 
     plans = {}
     for key, p in PLAN_DEFINITIONS.items():
@@ -1260,8 +1488,17 @@ def create_checkout_session():
     if not user_id:
         return jsonify({"error": "No logged-in user found."}), 401
 
-    price_id = STRIPE_PRICE_PRO
+    payload = request.get_json(silent=True) or {}
+    requested_plan = payload.get("plan") or request.form.get("plan") or request.args.get("plan") or "pro"
+    normalized_plan = normalize_plan_key(requested_plan)
+
+    if normalized_plan == "free":
+        return jsonify({"error": "Starter does not require checkout."}), 400
+
+    price_id = get_price_id_for_plan(normalized_plan)
     if not price_id:
+        if normalized_plan == "enterprise":
+            return jsonify({"error": "Missing STRIPE_PRICE_ENTERPRISE / STRIPE_PRICE_BUSINESS configuration"}), 500
         return jsonify({"error": "Missing STRIPE_PRICE_PRO or STRIPE_PRICE_PRO_MONTHLY"}), 500
 
     base_url = APP_BASE_URL or request.host_url.rstrip("/")
@@ -1277,11 +1514,13 @@ def create_checkout_session():
             metadata={
                 "user_id": str(user_id),
                 "user_email": user_email or "",
+                "plan_key": normalized_plan,
             },
             subscription_data={
                 "metadata": {
                     "user_id": str(user_id),
                     "user_email": user_email or "",
+                    "plan_key": normalized_plan,
                 }
             },
             client_reference_id=str(user_id),
@@ -1295,6 +1534,7 @@ def create_checkout_session():
 
 
 @app.route("/public/<string:token>/create-pay-session", methods=["POST"])
+
 def create_public_invoice_pay_session(token):
     base_url = APP_BASE_URL or request.host_url.rstrip("/")
     currency = STRIPE_CURRENCY
@@ -1318,10 +1558,10 @@ def create_public_invoice_pay_session(token):
     line_desc = f"Invoice {invoice_label} — Balance Due"
 
     try:
-        checkout_session = stripe.checkout.Session.create(
-            mode="payment",
-            payment_method_types=["card"],
-            line_items=[
+        checkout_kwargs = {
+            "mode": "payment",
+            "payment_method_types": ["card"],
+            "line_items": [
                 {
                     "price_data": {
                         "currency": currency,
@@ -1333,16 +1573,34 @@ def create_public_invoice_pay_session(token):
                     "quantity": 1,
                 }
             ],
-            success_url=f"{base_url}/public/{token}?paid=1&session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{base_url}/public/{token}?canceled=1",
-            metadata={
+            "success_url": f"{base_url}/public/{token}?paid=1&session_id={{CHECKOUT_SESSION_ID}}",
+            "cancel_url": f"{base_url}/public/{token}?canceled=1",
+            "metadata": {
                 "kind": "invoice_payment",
                 "invoice_id": str(inv["invoice_id"]),
                 "token": token,
                 "public_token": token,
                 "invoice_user_id": str(inv["user_id"]),
             },
-        )
+        }
+
+        payment_setup = get_user_payment_setup(inv["user_id"])
+        destination_account = payment_setup.get("stripe_connect_account_id")
+        if payment_setup.get("is_ready") and destination_account:
+            checkout_kwargs["payment_intent_data"] = {
+                "transfer_data": {
+                    "destination": destination_account,
+                },
+                "metadata": {
+                    "kind": "invoice_payment",
+                    "invoice_id": str(inv["invoice_id"]),
+                    "public_token": token,
+                    "invoice_user_id": str(inv["user_id"]),
+                    "connected_account_id": destination_account,
+                },
+            }
+
+        checkout_session = stripe.checkout.Session.create(**checkout_kwargs)
         return jsonify({"url": checkout_session.url})
 
     except Exception as e:
@@ -1363,16 +1621,18 @@ def billing_success():
 
         metadata = cs.get("metadata") or {}
         user_id_str = metadata.get("user_id") or cs.get("client_reference_id")
+        plan_key = normalize_plan_key(metadata.get("plan_key") or "pro")
 
         customer_id = cs.get("customer")
         subscription_id = cs.get("subscription")
 
         logger.info(
-            "[BillingSuccess] session_id=%s user_id_str=%s customer_id=%s subscription_id=%s",
+            "[BillingSuccess] session_id=%s user_id_str=%s customer_id=%s subscription_id=%s plan_key=%s",
             session_id,
             user_id_str,
             customer_id,
             subscription_id,
+            plan_key,
         )
 
         if not user_id_str:
@@ -1391,7 +1651,7 @@ def billing_success():
                 stripe_subscription_id = COALESCE(%s, stripe_subscription_id)
             WHERE id = %s
             """,
-            ("pro", customer_id, subscription_id, user_id),
+            (plan_key, customer_id, subscription_id, user_id),
         )
         conn.commit()
         updated = cursor.rowcount
@@ -1523,6 +1783,60 @@ def manage_subscription():
     except Exception as e:
         logger.exception("Stripe customer portal error")
         return redirect(url_for("pricing", portal_error=1, lang=lang))
+
+
+@app.route("/settings/payments/connect", methods=["GET"])
+@login_required
+def connect_payment_account():
+    lang = normalize_lang(request.args.get("lang", "en"))
+    user = get_current_user()
+    user_id = user.get("id")
+    user_plan = normalize_plan_key(user.get("plan") or "free")
+
+    if not STRIPE_SECRET_KEY:
+        return redirect(url_for("settings", payments_error=1, lang=lang))
+
+    if PLAN_LEVELS.get(user_plan, 0) < PLAN_LEVELS.get("enterprise", 0):
+        return render_template(
+            "upgrade_gate.html",
+            title="Upgrade to connect your payout account",
+            reason="Professional Stripe account connection and payout setup are available on the Studio plan.",
+            required_plan="enterprise",
+            plans=PLAN_DEFINITIONS,
+        )
+
+    try:
+        account = get_or_create_stripe_connect_account(user_id, user.get("email") or "")
+        account_link = stripe.AccountLink.create(
+            account=account.get("id"),
+            refresh_url=build_stripe_connect_refresh_url(lang),
+            return_url=build_stripe_connect_return_url(lang),
+            type="account_onboarding",
+        )
+        return redirect(account_link.url)
+    except Exception:
+        logger.exception("Failed to start Stripe Connect onboarding for user_id=%s", user_id)
+        return redirect(url_for("settings", payments_error=1, lang=lang))
+
+
+@app.route("/settings/payments/dashboard", methods=["GET"])
+@login_required
+def payment_account_dashboard():
+    lang = normalize_lang(request.args.get("lang", "en"))
+    user = get_current_user()
+    user_id = user.get("id")
+    payment_setup = sync_stripe_connect_status_for_user(user_id)
+    account_id = payment_setup.get("stripe_connect_account_id")
+
+    if not STRIPE_SECRET_KEY or not account_id:
+        return redirect(url_for("settings", payments_missing=1, lang=lang))
+
+    try:
+        login_link = stripe.Account.create_login_link(account_id)
+        return redirect(login_link.url)
+    except Exception:
+        logger.exception("Failed to create Stripe Connect dashboard login for user_id=%s", user_id)
+        return redirect(url_for("settings", payments_error=1, lang=lang))
 
 
 # -------------------------
@@ -2246,6 +2560,8 @@ def settings():
         profile=profile,
         feedback_message=feedback_message,
         feedback_type=feedback_type,
+        payment_setup=sync_stripe_connect_status_for_user(get_current_user()["id"]),
+        current_plan=normalize_plan_key(get_current_user().get("plan") or "free"),
     )
 
 
@@ -3819,15 +4135,17 @@ def _record_invoice_payment_from_checkout_session(session_obj):
 def _handle_subscription_checkout_completed(session_obj):
     metadata = session_obj.get("metadata") or {}
     user_id_str = metadata.get("user_id") or session_obj.get("client_reference_id")
+    plan_key = normalize_plan_key(metadata.get("plan_key") or "pro")
 
     stripe_customer_id = session_obj.get("customer")
     stripe_subscription_id = session_obj.get("subscription")
 
     logger.info(
-        "[Stripe] subscription checkout.session.completed user_id_str=%s customer=%s sub=%s",
+        "[Stripe] subscription checkout.session.completed user_id_str=%s customer=%s sub=%s plan_key=%s",
         user_id_str,
         stripe_customer_id,
         stripe_subscription_id,
+        plan_key,
     )
 
     if not user_id_str:
@@ -3852,10 +4170,10 @@ def _handle_subscription_checkout_completed(session_obj):
                 stripe_subscription_id = COALESCE(%s, stripe_subscription_id)
             WHERE id = %s
             """,
-            ("pro", stripe_customer_id, stripe_subscription_id, user_id),
+            (plan_key, stripe_customer_id, stripe_subscription_id, user_id),
         )
         conn.commit()
-        logger.info("[Stripe] Upgraded user %s to Pro (rows_updated=%s)", user_id, cur.rowcount)
+        logger.info("[Stripe] Upgraded user %s to %s (rows_updated=%s)", user_id, plan_key, cur.rowcount)
     except Exception:
         conn.rollback()
         logger.exception("[Stripe] DB error upgrading user %s", user_id)
@@ -3908,7 +4226,9 @@ def stripe_webhook():
         sub = event["data"]["object"]
         customer_id = sub.get("customer")
         status = (sub.get("status") or "").lower()
-        new_plan = "pro" if status in ("active", "trialing") else "free"
+        sub_metadata = sub.get("metadata") or {}
+        paid_plan = normalize_plan_key(sub_metadata.get("plan_key") or "pro")
+        new_plan = paid_plan if status in ("active", "trialing") else "free"
 
         logger.info(
             "[Stripe] Subscription sync customer=%s sub=%s status=%s => plan=%s",
@@ -3969,6 +4289,92 @@ def favicon():
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
+
+
+@app.route("/ios/activate-subscription", methods=["POST"])
+@login_required
+def ios_activate_subscription():
+    data = request.get_json(silent=True) or {}
+
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not user_id:
+        return jsonify({"error": "No logged-in user found."}), 401
+
+    product_id = (data.get("product_id") or "").strip()
+    transaction_id = (data.get("transaction_id") or "").strip()
+    original_transaction_id = (data.get("original_transaction_id") or "").strip()
+
+    if not product_id:
+        return jsonify({"error": "Missing product_id."}), 400
+
+    plan_key = get_plan_for_apple_product_id(product_id)
+    if not plan_key:
+        return jsonify({"error": "Unknown Apple product_id."}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            UPDATE users
+            SET plan = %s,
+                apple_product_id = %s,
+                apple_transaction_id = %s,
+                apple_original_transaction_id = %s,
+                apple_last_purchase_at = %s
+            WHERE id = %s
+            """,
+            (
+                plan_key,
+                product_id,
+                transaction_id or None,
+                original_transaction_id or None,
+                now_local(),
+                user_id,
+            ),
+        )
+        conn.commit()
+
+        logger.info(
+            "[AppleIAP] Activated plan=%s for user_id=%s product_id=%s transaction_id=%s original_transaction_id=%s",
+            plan_key,
+            user_id,
+            product_id,
+            transaction_id,
+            original_transaction_id,
+        )
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("[AppleIAP] Failed activation for user_id=%s", user_id)
+        return jsonify({"error": f"Database error: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify(
+        {
+            "success": True,
+            "plan": plan_key,
+            "product_id": product_id,
+        }
+    ), 200
+
+
+@app.route("/api/account-plan", methods=["GET"])
+@login_required
+def api_account_plan():
+    user = get_current_user()
+    return jsonify(
+        {
+            "authenticated": bool(user.get("id")),
+            "plan": normalize_plan_key(user.get("plan") or "free"),
+            "email": user.get("email") or "",
+        }
+    ), 200
 
 
 # -------------------------
