@@ -4302,20 +4302,28 @@ def ios_activate_subscription():
 
     data = request.get_json(silent=True) or {}
 
-    product_id = (data.get("productId") or "").strip()
-    transaction_id = (data.get("transactionId") or "").strip()
-    original_transaction_id = (data.get("originalTransactionId") or "").strip()
+    product_id = (
+        data.get("product_id")
+        or data.get("productId")
+        or ""
+    ).strip()
+
+    transaction_id = (
+        data.get("transaction_id")
+        or data.get("transactionId")
+        or ""
+    ).strip()
+
+    original_transaction_id = (
+        data.get("original_transaction_id")
+        or data.get("originalTransactionId")
+        or ""
+    ).strip()
 
     if not product_id:
         return jsonify({"error": "Missing productId."}), 400
 
-    allowed_products = {
-        "app.billbeam.pro.monthly": "pro",
-    }
-
-    normalized_product_id = product_id.lower()
-    new_plan = allowed_products.get(normalized_product_id)
-
+    new_plan = get_plan_for_apple_product_id(product_id)
     if not new_plan:
         return jsonify({"error": "Unknown productId."}), 400
 
@@ -4326,10 +4334,21 @@ def ios_activate_subscription():
         cursor.execute(
             """
             UPDATE users
-            SET plan = %s
+            SET plan = %s,
+                apple_product_id = %s,
+                apple_transaction_id = %s,
+                apple_original_transaction_id = %s,
+                apple_last_purchase_at = %s
             WHERE id = %s
             """,
-            (new_plan, user_id),
+            (
+                new_plan,
+                product_id,
+                transaction_id or None,
+                original_transaction_id or None,
+                now_local(),
+                user_id,
+            ),
         )
 
         conn.commit()
@@ -4340,16 +4359,20 @@ def ios_activate_subscription():
             "[iOS Activate Subscription] user_id=%s upgraded to %s via product_id=%s transaction_id=%s original_transaction_id=%s",
             user_id,
             new_plan,
-            normalized_product_id,
+            product_id,
             transaction_id,
             original_transaction_id,
         )
+
+        session["user_id"] = user_id
+        session.permanent = True
+        session.modified = True
 
         return jsonify(
             {
                 "success": True,
                 "plan": new_plan,
-                "productId": normalized_product_id,
+                "productId": product_id,
             }
         ), 200
 
