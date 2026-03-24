@@ -1007,7 +1007,23 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const isNativeIOSApp = !!(window.BillBeamNative && window.BillBeamNative.isNativeApp);
+  function nativePurchaseAvailable() {
+    return !!(
+      window.BillBeamNative &&
+      typeof window.BillBeamNative.purchasePro === "function"
+    );
+  }
+
+  function nativeRestoreAvailable() {
+    return !!(
+      window.BillBeamNative &&
+      typeof window.BillBeamNative.restorePurchases === "function"
+    );
+  }
+
+  function isNativeIOSApp() {
+    return nativePurchaseAvailable() || nativeRestoreAvailable();
+  }
 
   const upgradeBtn = document.getElementById("upgradeProBtn");
   const restoreBtn = document.getElementById("restorePurchasesBtn");
@@ -1045,6 +1061,45 @@ document.addEventListener("DOMContentLoaded", function () {
     upgradeBtn.textContent = "{{ 'Actualizar a Pro' if lang == 'es' else 'Upgrade to Pro' }}";
   }
 
+  function applyNativeUIState() {
+    if (!isNativeIOSApp()) return;
+
+    if (billingMethodHeroValue) {
+      billingMethodHeroValue.textContent = "{{ 'Compra integrada de Apple' if lang == 'es' else 'Apple in-app purchase' }}";
+    }
+
+    if (upgradeNote) {
+      upgradeNote.textContent = "{{ 'Activa Pro con la suscripción integrada de Apple dentro de la app para iPhone.' if lang == 'es' else 'Activate Pro with Apple’s built-in subscription flow inside the iPhone app.' }}";
+    }
+
+    if (nativeHint) {
+      nativeHint.style.display = "block";
+    }
+
+    if (restoreWrap) {
+      restoreWrap.classList.add("active");
+    }
+
+    if (pricingFooterBillingNote) {
+      pricingFooterBillingNote.textContent = "{{ 'Dentro de la app para iPhone, las suscripciones usan la compra integrada de Apple.' if lang == 'es' else 'Inside the iPhone app, subscriptions use Apple in-app purchase.' }}";
+    }
+
+    if (manageSubscriptionBtn) {
+      manageSubscriptionBtn.setAttribute("href", "#");
+      manageSubscriptionBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        showNativeAlert(
+          "info",
+          "{{ 'Las suscripciones de Apple se administran desde la configuración de tu Apple ID.' if lang == 'es' else 'Apple subscriptions are managed from your Apple ID subscription settings.' }}"
+        );
+      });
+    }
+
+    if (manageSubscriptionNote) {
+      manageSubscriptionNote.textContent = "{{ 'Las suscripciones compradas en iPhone se administran a través de Apple.' if lang == 'es' else 'Subscriptions purchased on iPhone are managed through Apple.' }}";
+    }
+  }
+
   async function startStripeCheckout() {
     if (!upgradeBtn) return;
 
@@ -1074,7 +1129,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function startNativePurchase() {
     if (!upgradeBtn) return;
-    if (!window.BillBeamNative || typeof window.BillBeamNative.purchasePro !== "function") {
+
+    if (!nativePurchaseAvailable()) {
       showNativeAlert(
         "warn",
         "{{ 'La compra integrada de Apple aún no está disponible en esta pantalla. Cierra y vuelve a abrir la app e inténtalo de nuevo.' if lang == 'es' else 'Apple in-app purchase is not ready on this screen yet. Close and reopen the app, then try again.' }}"
@@ -1088,46 +1144,11 @@ document.addEventListener("DOMContentLoaded", function () {
     window.BillBeamNative.purchasePro();
   }
 
-  if (isNativeIOSApp) {
-    if (billingMethodHeroValue) {
-      billingMethodHeroValue.textContent = "{{ 'Compra integrada de Apple' if lang == 'es' else 'Apple in-app purchase' }}";
-    }
-
-    if (upgradeNote) {
-      upgradeNote.textContent = "{{ 'Activa Pro con la suscripción integrada de Apple dentro de la app para iPhone.' if lang == 'es' else 'Activate Pro with Apple’s built-in subscription flow inside the iPhone app.' }}";
-    }
-
-    if (nativeHint) {
-      nativeHint.style.display = "block";
-    }
-
-    if (restoreWrap) {
-      restoreWrap.classList.add("active");
-    }
-
-    if (pricingFooterBillingNote) {
-      pricingFooterBillingNote.textContent = "{{ 'Dentro de la app para iPhone, las suscripciones usan la compra integrada de Apple.' if lang == 'es' else 'Inside the iPhone app, subscriptions use Apple in-app purchase.' }}";
-    }
-
-    if (manageSubscriptionBtn) {
-      manageSubscriptionBtn.setAttribute("href", "#");
-      manageSubscriptionBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        showNativeAlert(
-          "info",
-          "{{ 'La administración de suscripciones de Apple se hace desde la configuración de tu Apple ID. Más adelante conectaremos esta pantalla a un flujo más completo.' if lang == 'es' else 'Apple subscription management is handled from your Apple ID subscription settings. We will connect this screen to a fuller flow next.' }}"
-        );
-      });
-    }
-
-    if (manageSubscriptionNote) {
-      manageSubscriptionNote.textContent = "{{ 'Las suscripciones compradas en iPhone se administran a través de Apple.' if lang == 'es' else 'Subscriptions purchased on iPhone are managed through Apple.' }}";
-    }
-  }
+  applyNativeUIState();
 
   if (upgradeBtn) {
     upgradeBtn.addEventListener("click", async function () {
-      if (isNativeIOSApp) {
+      if (isNativeIOSApp()) {
         startNativePurchase();
       } else {
         await startStripeCheckout();
@@ -1137,7 +1158,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (restoreBtn) {
     restoreBtn.addEventListener("click", function () {
-      if (!window.BillBeamNative || typeof window.BillBeamNative.restorePurchases !== "function") {
+      if (!nativeRestoreAvailable()) {
         showNativeAlert(
           "warn",
           "{{ 'La restauración de compras no está disponible todavía en esta pantalla.' if lang == 'es' else 'Purchase restore is not available on this screen yet.' }}"
@@ -1201,7 +1222,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:entitlements", function (event) {
-    if (!isNativeIOSApp) return;
+    if (!isNativeIOSApp()) return;
 
     const proActive = !!(event.detail && event.detail.proActive);
 
@@ -1214,15 +1235,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:native-ready", function () {
-    if (!isNativeIOSApp) return;
-
-    if (nativeHint) {
-      nativeHint.style.display = "block";
-    }
-
-    if (restoreWrap) {
-      restoreWrap.classList.add("active");
-    }
+    applyNativeUIState();
   });
 });
 </script>
