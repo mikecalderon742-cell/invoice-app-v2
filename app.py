@@ -4294,74 +4294,68 @@ def favicon():
 @app.route("/ios/activate-subscription", methods=["POST"])
 @login_required
 def ios_activate_subscription():
-    data = request.get_json(silent=True) or {}
-
     user = get_current_user()
     user_id = user.get("id")
 
     if not user_id:
-        return jsonify({"error": "No logged-in user found."}), 401
+        return jsonify({"error": "Not authenticated."}), 401
 
-    product_id = (data.get("product_id") or "").strip()
-    transaction_id = (data.get("transaction_id") or "").strip()
-    original_transaction_id = (data.get("original_transaction_id") or "").strip()
+    data = request.get_json(silent=True) or {}
+
+    product_id = (data.get("productId") or "").strip()
+    transaction_id = (data.get("transactionId") or "").strip()
+    original_transaction_id = (data.get("originalTransactionId") or "").strip()
 
     if not product_id:
-        return jsonify({"error": "Missing product_id."}), 400
+        return jsonify({"error": "Missing productId."}), 400
 
-    plan_key = get_plan_for_apple_product_id(product_id)
-    if not plan_key:
-        return jsonify({"error": "Unknown Apple product_id."}), 400
+    allowed_products = {
+        "app.billbeam.pro.monthly": "pro",
+    }
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    normalized_product_id = product_id.lower()
+    new_plan = allowed_products.get(normalized_product_id)
+
+    if not new_plan:
+        return jsonify({"error": "Unknown productId."}), 400
 
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
         cursor.execute(
             """
             UPDATE users
-            SET plan = %s,
-                apple_product_id = %s,
-                apple_transaction_id = %s,
-                apple_original_transaction_id = %s,
-                apple_last_purchase_at = %s
+            SET plan = %s
             WHERE id = %s
             """,
-            (
-                plan_key,
-                product_id,
-                transaction_id or None,
-                original_transaction_id or None,
-                now_local(),
-                user_id,
-            ),
+            (new_plan, user_id),
         )
+
         conn.commit()
+        cursor.close()
+        conn.close()
 
         logger.info(
-            "[AppleIAP] Activated plan=%s for user_id=%s product_id=%s transaction_id=%s original_transaction_id=%s",
-            plan_key,
+            "[iOS Activate Subscription] user_id=%s upgraded to %s via product_id=%s transaction_id=%s original_transaction_id=%s",
             user_id,
-            product_id,
+            new_plan,
+            normalized_product_id,
             transaction_id,
             original_transaction_id,
         )
 
-    except Exception as e:
-        conn.rollback()
-        logger.exception("[AppleIAP] Failed activation for user_id=%s", user_id)
-        return jsonify({"error": f"Database error: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
+        return jsonify(
+            {
+                "success": True,
+                "plan": new_plan,
+                "productId": normalized_product_id,
+            }
+        ), 200
 
-    return jsonify(
-        {
-            "success": True,
-            "plan": plan_key,
-            "product_id": product_id,
-        }
-    ), 200
+    except Exception as e:
+        logger.exception("[iOS Activate Subscription] error for user_id=%s", user_id)
+        return jsonify({"error": f"Server error: {e}"}), 500
 
 
 @app.route("/api/account-plan", methods=["GET"])
