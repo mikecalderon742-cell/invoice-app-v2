@@ -201,11 +201,13 @@ PLAN_DEFINITIONS = {
             "Up to 3 invoices / month",
             "Single invoice template",
             "Basic dashboard",
+            "Connect your own Stripe account",
         ],
         "features_es": [
             "Hasta 3 facturas al mes",
             "Una sola plantilla de factura",
             "Panel básico",
+            "Conecta tu propia cuenta de Stripe",
         ],
     },
     "pro": {
@@ -782,6 +784,7 @@ def get_user_payment_setup(user_id: int):
         "is_ready": False,
         "last_status_sync": None,
         "onboarded_at": None,
+        "status_label": "Not connected",
     }
 
     if not user_id:
@@ -822,6 +825,13 @@ def get_user_payment_setup(user_id: int):
     is_connected = bool(stripe_connect_account_id)
     is_ready = bool(is_connected and charges_enabled and payouts_enabled and details_submitted)
 
+    if is_ready:
+        status_label = "Ready"
+    elif is_connected:
+        status_label = "Pending"
+    else:
+        status_label = "Not connected"
+
     return {
         "stripe_connect_account_id": stripe_connect_account_id or "",
         "charges_enabled": bool(charges_enabled),
@@ -831,6 +841,7 @@ def get_user_payment_setup(user_id: int):
         "is_ready": is_ready,
         "last_status_sync": last_status_sync,
         "onboarded_at": onboarded_at,
+        "status_label": status_label,
     }
 
 
@@ -1791,19 +1802,12 @@ def connect_payment_account():
     lang = normalize_lang(request.args.get("lang", "en"))
     user = get_current_user()
     user_id = user.get("id")
-    user_plan = normalize_plan_key(user.get("plan") or "free")
 
     if not STRIPE_SECRET_KEY:
         return redirect(url_for("settings", payments_error=1, lang=lang))
 
-    if PLAN_LEVELS.get(user_plan, 0) < PLAN_LEVELS.get("enterprise", 0):
-        return render_template(
-            "upgrade_gate.html",
-            title="Upgrade to connect your payout account",
-            reason="Professional Stripe account connection and payout setup are available on the Studio plan.",
-            required_plan="enterprise",
-            plans=PLAN_DEFINITIONS,
-        )
+    if not user_id:
+        return redirect(url_for("login", lang=lang))
 
     try:
         account = get_or_create_stripe_connect_account(user_id, user.get("email") or "")
