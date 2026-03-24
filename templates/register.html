@@ -106,6 +106,15 @@
     gap: 16px;
   }
 
+  .auth-field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .auth-field input {
+    width: 100%;
+  }
+
   .auth-plan-note {
     margin-top: 14px;
     padding: 12px 14px;
@@ -144,9 +153,31 @@
     margin-top: 22px;
   }
 
+  .auth-side-grid {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
   @media (max-width: 900px) {
     .auth-layout {
       grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .auth-card,
+    .auth-side {
+      padding: 22px 18px;
+    }
+
+    .auth-form-actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+
+    .auth-form-actions .btn {
+      width: 100%;
     }
   }
 </style>
@@ -183,7 +214,7 @@
 
             <form method="POST" action="/register{% if lang %}?lang={{ lang }}{% endif %}" novalidate>
                 <div class="auth-form-grid">
-                    <div>
+                    <div class="auth-field">
                         <label for="email">
                             {% if lang == 'es' %}Correo electrónico{% else %}Email address{% endif %}
                         </label>
@@ -199,7 +230,7 @@
                         >
                     </div>
 
-                    <div>
+                    <div class="auth-field">
                         <label for="password">
                             {% if lang == 'es' %}Contraseña{% else %}Password{% endif %}
                         </label>
@@ -213,7 +244,7 @@
                         >
                     </div>
 
-                    <div>
+                    <div class="auth-field">
                         <label for="confirm_password">
                             {% if lang == 'es' %}Confirmar contraseña{% else %}Confirm password{% endif %}
                         </label>
@@ -273,7 +304,7 @@
                 {% endif %}
             </p>
 
-            <div style="display:grid; gap:12px; margin-bottom:18px;">
+            <div class="auth-side-grid">
                 <div class="snap-item">
                     <div class="snap-label">
                         {% if lang == 'es' %}Plan inicial{% else %}Starting plan{% endif %}

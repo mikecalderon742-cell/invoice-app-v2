@@ -15,139 +15,286 @@ BillBeam application privacy summary for web and mobile app users.
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
+<style>
+  .privacy-shell {
+    max-width: 920px;
+    margin: 0 auto;
+    display: grid;
+    gap: 18px;
+  }
+
+  .privacy-hero,
+  .privacy-card {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .privacy-hero,
+  body.dark .privacy-card {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .privacy-hero {
+    padding: 28px 26px 22px;
+  }
+
+  .privacy-card {
+    padding: 20px 22px;
+  }
+
+  .privacy-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.14);
+  }
+
+  body.dark .privacy-eyebrow {
+    background: rgba(37,99,235,0.18);
+    border-color: rgba(96,165,250,0.22);
+  }
+
+  .privacy-hero h1 {
+    margin: 0 0 8px 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .privacy-lead {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #64748b;
+    max-width: 720px;
+  }
+
+  body.dark .privacy-lead {
+    color: #94a3b8;
+  }
+
+  .privacy-card h2 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .privacy-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #475569;
+  }
+
+  body.dark .privacy-card p {
+    color: #cbd5e1;
+  }
+
+  .privacy-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #475569;
+  }
+
+  body.dark .privacy-list {
+    color: #cbd5e1;
+  }
+
+  .privacy-list li {
+    margin-bottom: 8px;
+  }
+
+  .privacy-cta {
+    margin-top: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .privacy-hero,
+    .privacy-card {
+      padding: 16px;
+      border-radius: 18px;
+    }
+
+    .privacy-card h2 {
+      font-size: 16px;
+    }
+
+    .privacy-list,
+    .privacy-card p,
+    .privacy-lead {
+      font-size: 13px;
+    }
+  }
+</style>
+
+<div class="privacy-shell">
+
+  <section class="privacy-hero fade-in-up">
+    <div class="privacy-eyebrow">
+      {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+    </div>
+
     <h1>
-        {% if lang == 'es' %}
-            Aviso de privacidad de la aplicación
-        {% else %}
-            App Privacy Notice
-        {% endif %}
+      {% if lang == 'es' %}
+        Aviso de privacidad de la aplicación
+      {% else %}
+        App Privacy Notice
+      {% endif %}
     </h1>
 
-    <p style="max-width:720px; font-size:14px; opacity:.85; margin-top:6px;">
-        {% if lang == 'es' %}
+    <p class="privacy-lead">
+      {% if lang == 'es' %}
         Este documento resume cómo la aplicación BillBeam recopila y utiliza información cuando utilizas el producto en la web o en aplicaciones móviles. Este resumen complementa la Política de Privacidad completa.
-        {% else %}
+      {% else %}
         This document summarizes how the BillBeam application collects and uses information when you use the product on the web or through mobile applications. This summary complements the full Privacy Policy.
-        {% endif %}
+      {% endif %}
     </p>
-</div>
+  </section>
 
-<div class="form-wrapper fade-in-up" style="max-width:900px; margin:auto;">
-
+  <section class="privacy-card fade-in-up">
     <h2>
-        {% if lang == 'es' %}Información que recopilamos{% else %}Information We Collect{% endif %}
+      {% if lang == 'es' %}Información que recopilamos{% else %}Information We Collect{% endif %}
     </h2>
 
-    <ul style="line-height:1.7; font-size:14px;">
-        <li>
-            {% if lang == 'es' %}
-            Información de cuenta como correo electrónico y credenciales de acceso.
-            {% else %}
-            Account information such as email address and login credentials.
-            {% endif %}
-        </li>
-
-        <li>
-            {% if lang == 'es' %}
-            Datos introducidos por el usuario como clientes, facturas y notas.
-            {% else %}
-            User-entered data such as clients, invoices, and notes.
-            {% endif %}
-        </li>
-
-        <li>
-            {% if lang == 'es' %}
-            Información técnica limitada necesaria para operar el servicio (navegador, dispositivo y registros del sistema).
-            {% else %}
-            Limited technical information necessary to operate the service (browser, device, and system logs).
-            {% endif %}
-        </li>
-    </ul>
-
-
-    <h2 style="margin-top:20px;">
-        {% if lang == 'es' %}Cómo utilizamos la información{% else %}How Information Is Used{% endif %}
-    </h2>
-
-    <ul style="line-height:1.7; font-size:14px;">
-        <li>
-            {% if lang == 'es' %}
-            Proporcionar funciones de creación y gestión de facturas.
-            {% else %}
-            Provide invoice creation and management features.
-            {% endif %}
-        </li>
-
-        <li>
-            {% if lang == 'es' %}
-            Mantener la seguridad y estabilidad de la plataforma.
-            {% else %}
-            Maintain platform security and reliability.
-            {% endif %}
-        </li>
-
-        <li>
-            {% if lang == 'es' %}
-            Mejorar el producto mediante análisis de uso agregados.
-            {% else %}
-            Improve the product through aggregated usage analytics.
-            {% endif %}
-        </li>
-    </ul>
-
-
-    <h2 style="margin-top:20px;">
-        {% if lang == 'es' %}Compartición de datos{% else %}Data Sharing{% endif %}
-    </h2>
-
-    <p style="font-size:14px; line-height:1.7;">
+    <ul class="privacy-list">
+      <li>
         {% if lang == 'es' %}
-        BillBeam no vende datos personales. Los datos pueden compartirse únicamente con proveedores de infraestructura y servicios necesarios para operar la plataforma (por ejemplo, alojamiento, correo electrónico o procesamiento de pagos).
+        Información de cuenta como correo electrónico y credenciales de acceso.
         {% else %}
-        BillBeam does not sell personal data. Data may only be shared with infrastructure and service providers necessary to operate the platform (for example hosting, email delivery, or payment processing).
+        Account information such as email address and login credentials.
         {% endif %}
+      </li>
+
+      <li>
+        {% if lang == 'es' %}
+        Datos introducidos por el usuario como clientes, facturas y notas.
+        {% else %}
+        User-entered data such as clients, invoices, and notes.
+        {% endif %}
+      </li>
+
+      <li>
+        {% if lang == 'es' %}
+        Información técnica limitada necesaria para operar el servicio (navegador, dispositivo y registros del sistema).
+        {% else %}
+        Limited technical information necessary to operate the service (browser, device, and system logs).
+        {% endif %}
+      </li>
+    </ul>
+  </section>
+
+  <section class="privacy-card fade-in-up">
+    <h2>
+      {% if lang == 'es' %}Cómo utilizamos la información{% else %}How Information Is Used{% endif %}
+    </h2>
+
+    <ul class="privacy-list">
+      <li>
+        {% if lang == 'es' %}
+        Proporcionar funciones de creación y gestión de facturas.
+        {% else %}
+        Provide invoice creation and management features.
+        {% endif %}
+      </li>
+
+      <li>
+        {% if lang == 'es' %}
+        Mantener la seguridad y estabilidad de la plataforma.
+        {% else %}
+        Maintain platform security and reliability.
+        {% endif %}
+      </li>
+
+      <li>
+        {% if lang == 'es' %}
+        Mejorar el producto mediante análisis de uso agregados.
+        {% else %}
+        Improve the product through aggregated usage analytics.
+        {% endif %}
+      </li>
+    </ul>
+  </section>
+
+  <section class="privacy-card fade-in-up">
+    <h2>
+      {% if lang == 'es' %}Compartición de datos{% else %}Data Sharing{% endif %}
+    </h2>
+
+    <p>
+      {% if lang == 'es' %}
+      BillBeam no vende datos personales. Los datos pueden compartirse únicamente con proveedores de infraestructura y servicios necesarios para operar la plataforma (por ejemplo, alojamiento, correo electrónico o procesamiento de pagos).
+      {% else %}
+      BillBeam does not sell personal data. Data may only be shared with infrastructure and service providers necessary to operate the platform (for example hosting, email delivery, or payment processing).
+      {% endif %}
+    </p>
+  </section>
+
+  <section class="privacy-card fade-in-up">
+    <h2>
+      {% if lang == 'es' %}Control del usuario{% else %}User Control{% endif %}
+    </h2>
+
+    <ul class="privacy-list">
+      <li>
+        {% if lang == 'es' %}
+        Los usuarios pueden actualizar o eliminar información de cuenta desde la aplicación.
+        {% else %}
+        Users can update or remove account information from within the application.
+        {% endif %}
+      </li>
+
+      <li>
+        {% if lang == 'es' %}
+        Los usuarios pueden solicitar la eliminación de su cuenta.
+        {% else %}
+        Users may request account deletion.
+        {% endif %}
+      </li>
+    </ul>
+  </section>
+
+  <section class="privacy-card fade-in-up">
+    <h2>
+      {% if lang == 'es' %}Más información{% else %}More Information{% endif %}
+    </h2>
+
+    <p>
+      {% if lang == 'es' %}
+      Para información completa sobre privacidad, consulta la Política de Privacidad completa.
+      {% else %}
+      For full details about privacy practices, please review the full Privacy Policy.
+      {% endif %}
     </p>
 
-
-    <h2 style="margin-top:20px;">
-        {% if lang == 'es' %}Control del usuario{% else %}User Control{% endif %}
-    </h2>
-
-    <ul style="line-height:1.7; font-size:14px;">
-        <li>
-            {% if lang == 'es' %}
-            Los usuarios pueden actualizar o eliminar información de cuenta desde la aplicación.
-            {% else %}
-            Users can update or remove account information from within the application.
-            {% endif %}
-        </li>
-
-        <li>
-            {% if lang == 'es' %}
-            Los usuarios pueden solicitar la eliminación de su cuenta.
-            {% else %}
-            Users may request account deletion.
-            {% endif %}
-        </li>
-    </ul>
-
-
-    <h2 style="margin-top:20px;">
-        {% if lang == 'es' %}Más información{% else %}More Information{% endif %}
-    </h2>
-
-    <p style="font-size:14px;">
-        {% if lang == 'es' %}
-        Para información completa sobre privacidad, consulta la Política de Privacidad completa.
-        {% else %}
-        For full details about privacy practices, please review the full Privacy Policy.
-        {% endif %}
-    </p>
-
-    <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+    <div class="privacy-cta">
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
         {% if lang == 'es' %}Ver Política de Privacidad{% else %}View Privacy Policy{% endif %}
-    </a>
+      </a>
+    </div>
+  </section>
 
 </div>
 

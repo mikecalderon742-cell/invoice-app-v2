@@ -15,89 +15,232 @@ The page you’re looking for does not exist or may have moved. Head back to you
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="form-wrapper fade-in-up" style="max-width:820px; margin:28px auto;">
-    <div style="display:grid; gap:18px; align-items:center;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-            <div>
-                <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:rgba(59,130,246,0.10); border:1px solid rgba(59,130,246,0.24); font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;">
-                    404 • BillBeam
-                </div>
-                <h1 style="margin:14px 0 8px; font-size:clamp(2rem, 4vw, 3rem); line-height:1.04;">
-                    {% if lang == 'es' %}
-                        Esta página no se pudo encontrar
-                    {% else %}
-                        We couldn’t find that page
-                    {% endif %}
-                </h1>
-                <p style="margin:0; max-width:680px; font-size:15px; line-height:1.7; opacity:0.86;">
-                    {% if lang == 'es' %}
-                        El enlace puede estar roto, la página pudo haber sido movida o la URL puede tener un error. No te preocupes: tus datos y facturas no se han visto afectados.
-                    {% else %}
-                        The link may be broken, the page may have moved, or the URL may contain a typo. Don’t worry: your data and invoices have not been affected.
-                    {% endif %}
-                </p>
-            </div>
+<style>
+  .error-shell {
+    max-width: 860px;
+    margin: 28px auto;
+  }
 
-            <div style="min-width:120px; text-align:right;">
-                <div style="font-family:'Space Grotesk', sans-serif; font-size:72px; font-weight:700; line-height:0.9; opacity:0.12;">
-                    404
-                </div>
-            </div>
-        </div>
+  .error-card {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    padding: 28px 26px;
+  }
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-top:6px;">
-            <div style="border-radius:16px; padding:16px; background:rgba(255,255,255,0.56); border:1px solid rgba(15,23,42,0.06);">
-                <div style="font-size:13px; font-weight:700; margin-bottom:6px;">
-                    {% if lang == 'es' %}Volver a un lugar seguro{% else %}Get back to a safe place{% endif %}
-                </div>
-                <p style="font-size:13px; line-height:1.65; margin:0; opacity:0.82;">
-                    {% if lang == 'es' %}
-                        Regresa al panel principal, abre tu historial de facturas o crea una nueva factura con un clic.
-                    {% else %}
-                        Head back to your main dashboard, open invoice history, or create a new invoice with one click.
-                    {% endif %}
-                </p>
-            </div>
+  body.dark .error-card {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
 
-            <div style="border-radius:16px; padding:16px; background:rgba(255,255,255,0.56); border:1px solid rgba(15,23,42,0.06);">
-                <div style="font-size:13px; font-weight:700; margin-bottom:6px;">
-                    {% if lang == 'es' %}¿Buscabas ayuda?{% else %}Looking for help?{% endif %}
-                </div>
-                <p style="font-size:13px; line-height:1.65; margin:0; opacity:0.82;">
-                    {% if lang == 'es' %}
-                        También puedes visitar el centro de ayuda, preguntas frecuentes o la página de contacto.
-                    {% else %}
-                        You can also visit the help center, FAQs, or the contact page.
-                    {% endif %}
-                </p>
-            </div>
-        </div>
+  .error-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
 
-        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:2px;">
-            <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
-            </a>
+  .error-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(59,130,246,0.10);
+    border: 1px solid rgba(59,130,246,0.24);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
 
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Ver facturas{% else %}View Invoices{% endif %}
-            </a>
+  .error-title {
+    margin: 14px 0 8px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+  }
 
-            <a href="/help{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
-            </a>
+  .error-copy {
+    margin: 0;
+    max-width: 680px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #475569;
+  }
 
-            <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
-            </a>
-        </div>
+  body.dark .error-copy {
+    color: #cbd5e1;
+  }
 
-        <div style="font-size:12px; opacity:0.7; margin-top:2px;">
-            {% if lang == 'es' %}
-                Si escribiste la dirección manualmente, revisa la URL y vuelve a intentarlo.
-            {% else %}
-                If you typed the address manually, double-check the URL and try again.
-            {% endif %}
-        </div>
+  .error-ghost {
+    min-width: 120px;
+    text-align: right;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 0.9;
+    opacity: 0.12;
+    letter-spacing: -0.05em;
+  }
+
+  .error-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .error-mini-card {
+    border-radius: 18px;
+    padding: 16px;
+    background: rgba(255,255,255,0.56);
+    border: 1px solid rgba(15,23,42,0.06);
+  }
+
+  body.dark .error-mini-card {
+    background: rgba(15,23,42,0.42);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .error-mini-card h3 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .error-mini-card p {
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0;
+    color: #475569;
+  }
+
+  body.dark .error-mini-card p {
+    color: #cbd5e1;
+  }
+
+  .error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .error-footnote {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  body.dark .error-footnote {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 640px) {
+    .error-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .error-ghost {
+      font-size: 56px;
+      min-width: 0;
+      text-align: left;
+    }
+  }
+</style>
+
+<div class="error-shell">
+  <div class="error-card fade-in-up">
+    <div class="error-top">
+      <div>
+        <div class="error-badge">404 • BillBeam</div>
+
+        <h1 class="error-title">
+          {% if lang == 'es' %}
+            Esta página no se pudo encontrar
+          {% else %}
+            We couldn’t find that page
+          {% endif %}
+        </h1>
+
+        <p class="error-copy">
+          {% if lang == 'es' %}
+            El enlace puede estar roto, la página pudo haber sido movida o la URL puede tener un error. No te preocupes: tus datos y facturas no se han visto afectados.
+          {% else %}
+            The link may be broken, the page may have moved, or the URL may contain a typo. Don’t worry: your data and invoices have not been affected.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="error-ghost">404</div>
     </div>
+
+    <div class="error-grid">
+      <div class="error-mini-card">
+        <h3>
+          {% if lang == 'es' %}Volver a un lugar seguro{% else %}Get back to a safe place{% endif %}
+        </h3>
+        <p>
+          {% if lang == 'es' %}
+            Regresa al panel principal, abre tu historial de facturas o crea una nueva factura con un clic.
+          {% else %}
+            Head back to your main dashboard, open invoice history, or create a new invoice with one click.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="error-mini-card">
+        <h3>
+          {% if lang == 'es' %}¿Buscabas ayuda?{% else %}Looking for help?{% endif %}
+        </h3>
+        <p>
+          {% if lang == 'es' %}
+            También puedes visitar el centro de ayuda, preguntas frecuentes o la página de contacto.
+          {% else %}
+            You can also visit the help center, FAQs, or the contact page.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="error-actions">
+      <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+      </a>
+
+      <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Ver facturas{% else %}View Invoices{% endif %}
+      </a>
+
+      <a href="/help{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
+      </a>
+
+      <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+        {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+      </a>
+    </div>
+
+    <div class="error-footnote">
+      {% if lang == 'es' %}
+        Si escribiste la dirección manualmente, revisa la URL y vuelve a intentarlo.
+      {% else %}
+        If you typed the address manually, double-check the URL and try again.
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

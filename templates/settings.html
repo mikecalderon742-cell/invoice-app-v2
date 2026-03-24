@@ -18,6 +18,16 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% set payment_setup = payment_setup or {} %}
+{% set current_plan = current_plan or (user_plan or 'free') %}
+{% set connect_ready = payment_setup.is_ready if payment_setup.is_ready is defined else payment_setup.get('is_ready') %}
+{% set connect_connected = payment_setup.is_connected if payment_setup.is_connected is defined else payment_setup.get('is_connected') %}
+{% set connect_account_id = payment_setup.stripe_connect_account_id if payment_setup.stripe_connect_account_id is defined else payment_setup.get('stripe_connect_account_id') %}
+{% set charges_enabled = payment_setup.charges_enabled if payment_setup.charges_enabled is defined else payment_setup.get('charges_enabled') %}
+{% set payouts_enabled = payment_setup.payouts_enabled if payment_setup.payouts_enabled is defined else payment_setup.get('payouts_enabled') %}
+{% set details_submitted = payment_setup.details_submitted if payment_setup.details_submitted is defined else payment_setup.get('details_submitted') %}
+{% set last_status_sync = payment_setup.last_status_sync if payment_setup.last_status_sync is defined else payment_setup.get('last_status_sync') %}
+{% set onboarded_at = payment_setup.onboarded_at if payment_setup.onboarded_at is defined else payment_setup.get('onboarded_at') %}
 
 <style>
   .settings-shell {
@@ -93,6 +103,12 @@
     border-color: #dc2626;
   }
 
+  .settings-feedback.info {
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1d4ed8;
+    border-color: #60a5fa;
+  }
+
   body.dark .settings-feedback.success {
     background: linear-gradient(180deg, rgba(6, 78, 59, 0.95), rgba(22, 101, 52, 0.86));
     color: #dcfce7;
@@ -101,6 +117,12 @@
   body.dark .settings-feedback.error {
     background: linear-gradient(180deg, rgba(127, 29, 29, 0.96), rgba(153, 27, 27, 0.86));
     color: #fee2e2;
+  }
+
+  body.dark .settings-feedback.info {
+    background: linear-gradient(180deg, rgba(30, 64, 175, 0.32), rgba(30, 41, 59, 0.72));
+    color: #dbeafe;
+    border-color: rgba(96,165,250,0.32);
   }
 
   .settings-form-shell {
@@ -371,6 +393,165 @@
     border-color: rgba(148,163,184,0.16);
   }
 
+  .payments-card {
+    margin-top: 22px;
+  }
+
+  .payment-shell-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .payment-status-stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .payment-status-banner {
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(148,163,184,0.18);
+    background: rgba(255,255,255,0.55);
+  }
+
+  .payment-status-banner.ready {
+    background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: rgba(22,163,74,0.35);
+    color: #166534;
+  }
+
+  .payment-status-banner.pending {
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+    border-color: rgba(249,115,22,0.35);
+    color: #9a3412;
+  }
+
+  .payment-status-banner.locked {
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: rgba(59,130,246,0.30);
+    color: #1d4ed8;
+  }
+
+  body.dark .payment-status-banner {
+    background: rgba(15,23,42,0.5);
+    border-color: rgba(148,163,184,0.18);
+    color: #e2e8f0;
+  }
+
+  body.dark .payment-status-banner.ready {
+    background: linear-gradient(180deg, rgba(6, 78, 59, 0.95), rgba(22, 101, 52, 0.86));
+    color: #dcfce7;
+  }
+
+  body.dark .payment-status-banner.pending {
+    background: linear-gradient(180deg, rgba(124, 45, 18, 0.78), rgba(69, 26, 3, 0.82));
+    color: #fed7aa;
+  }
+
+  body.dark .payment-status-banner.locked {
+    background: linear-gradient(180deg, rgba(30,64,175,0.28), rgba(15,23,42,0.72));
+    color: #dbeafe;
+  }
+
+  .payment-status-banner strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .payment-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .payment-kpi {
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .payment-kpi {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .payment-kpi-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .payment-kpi-label {
+    color: #94a3b8;
+  }
+
+  .payment-kpi-value {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .payment-checklist {
+    display: grid;
+    gap: 10px;
+  }
+
+  .payment-check {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .payment-check {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .payment-check-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    box-shadow: 0 8px 18px rgba(58,139,255,0.22);
+  }
+
+  .payment-account-id {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #475569;
+    word-break: break-all;
+  }
+
+  body.dark .payment-account-id {
+    color: #cbd5e1;
+  }
+
+  .payment-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
   .security-card {
     margin-top: 22px;
   }
@@ -406,13 +587,15 @@
   }
 
   @media (max-width: 980px) {
-    .settings-grid {
+    .settings-grid,
+    .payment-shell-grid {
       grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 640px) {
-    .field-row-2 {
+    .field-row-2,
+    .payment-kpi-grid {
       grid-template-columns: 1fr;
     }
 
@@ -434,7 +617,8 @@
       justify-content: stretch;
     }
 
-    .form-actions .btn {
+    .form-actions .btn,
+    .payment-actions .btn {
       width: 100%;
     }
   }
@@ -468,6 +652,40 @@
     {% if feedback_message %}
         <div class="settings-feedback {% if feedback_type == 'success' %}success{% else %}error{% endif %}">
             {{ feedback_message }}
+        </div>
+    {% endif %}
+
+    {% if request.args.get('payments_connected') %}
+        <div class="settings-feedback success">
+            {% if lang == 'es' %}
+                Tu cuenta de pagos fue conectada. Ahora revisaremos si ya está lista para aceptar cobros y recibir depósitos.
+            {% else %}
+                Your payment account was connected. We’ll now verify whether it is fully ready to accept charges and receive payouts.
+            {% endif %}
+        </div>
+    {% elif request.args.get('payments_error') %}
+        <div class="settings-feedback error">
+            {% if lang == 'es' %}
+                No pudimos abrir la configuración de pagos en este momento. Inténtalo de nuevo en unos minutos.
+            {% else %}
+                We could not open payment setup right now. Please try again in a few minutes.
+            {% endif %}
+        </div>
+    {% elif request.args.get('payments_missing') %}
+        <div class="settings-feedback error">
+            {% if lang == 'es' %}
+                No encontramos una cuenta de pagos conectada para administrar todavía.
+            {% else %}
+                We could not find a connected payment account to manage yet.
+            {% endif %}
+        </div>
+    {% elif request.args.get('payments_refresh') %}
+        <div class="settings-feedback info">
+            {% if lang == 'es' %}
+                Reanuda la configuración de pagos para completar cualquier paso pendiente.
+            {% else %}
+                Resume payment setup to complete any remaining steps.
+            {% endif %}
         </div>
     {% endif %}
 
@@ -725,6 +943,215 @@
                 </button>
             </div>
         </form>
+
+        <div class="settings-card payments-card">
+            <h2>
+                {% if lang == 'es' %}Pagos y depósitos{% else %}Payments & Payouts{% endif %}
+            </h2>
+            <div class="settings-card-sub">
+                {% if lang == 'es' %}
+                    Conecta tu cuenta profesional de Stripe para que tus clientes paguen facturas y los fondos se envíen a tu propia cuenta, sin que BillBeam maneje tu dinero directamente.
+                {% else %}
+                    Connect your professional Stripe account so clients can pay invoices and funds can route to your own account, without BillBeam directly handling your money.
+                {% endif %}
+            </div>
+
+            <div class="payment-shell-grid">
+                <div class="payment-status-stack">
+                    {% if current_plan != 'enterprise' %}
+                        <div class="payment-status-banner locked">
+                            <strong>
+                                {% if lang == 'es' %}Disponible en Studio{% else %}Available on Studio{% endif %}
+                            </strong>
+                            <div>
+                                {% if lang == 'es' %}
+                                    La conexión profesional de Stripe y la administración de depósitos forman parte del nivel Studio. Tu facturación actual sigue funcionando igual.
+                                {% else %}
+                                    Professional Stripe connection and payout management are part of the Studio tier. Your current invoicing workflow continues working as-is.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif connect_ready %}
+                        <div class="payment-status-banner ready">
+                            <strong>
+                                {% if lang == 'es' %}Tu cuenta está lista{% else %}Your account is ready{% endif %}
+                            </strong>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Tu cuenta de Stripe parece configurada para aceptar cobros y recibir depósitos. Puedes administrar los detalles directamente desde Stripe.
+                                {% else %}
+                                    Your Stripe account appears ready to accept charges and receive payouts. You can manage details directly from Stripe.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif connect_connected %}
+                        <div class="payment-status-banner pending">
+                            <strong>
+                                {% if lang == 'es' %}Configuración en progreso{% else %}Setup in progress{% endif %}
+                            </strong>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Ya existe una cuenta conectada, pero todavía faltan uno o más pasos para dejarla completamente lista.
+                                {% else %}
+                                    A connected account exists, but one or more steps still need to be completed before it is fully ready.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="payment-status-banner pending">
+                            <strong>
+                                {% if lang == 'es' %}Aún no conectada{% else %}Not connected yet{% endif %}
+                            </strong>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Empieza la configuración profesional de pagos cuando quieras preparar depósitos y administración de cobros desde tu propia cuenta de Stripe.
+                                {% else %}
+                                    Start professional payment setup whenever you want to prepare payouts and payment management through your own Stripe account.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="payment-kpi-grid">
+                        <div class="payment-kpi">
+                            <div class="payment-kpi-label">
+                                {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                            </div>
+                            <div class="payment-kpi-value">
+                                {{ current_plan|capitalize }}
+                            </div>
+                        </div>
+
+                        <div class="payment-kpi">
+                            <div class="payment-kpi-label">
+                                {% if lang == 'es' %}Cuenta conectada{% else %}Connected account{% endif %}
+                            </div>
+                            <div class="payment-kpi-value">
+                                {% if connect_connected %}
+                                    {% if lang == 'es' %}Sí{% else %}Yes{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}No{% else %}No{% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="payment-kpi">
+                            <div class="payment-kpi-label">
+                                {% if lang == 'es' %}Cobros habilitados{% else %}Charges enabled{% endif %}
+                            </div>
+                            <div class="payment-kpi-value">
+                                {% if charges_enabled %}
+                                    {% if lang == 'es' %}Listo{% else %}Ready{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}Pendiente{% else %}Pending{% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="payment-kpi">
+                            <div class="payment-kpi-label">
+                                {% if lang == 'es' %}Depósitos habilitados{% else %}Payouts enabled{% endif %}
+                            </div>
+                            <div class="payment-kpi-value">
+                                {% if payouts_enabled %}
+                                    {% if lang == 'es' %}Listo{% else %}Ready{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}Pendiente{% else %}Pending{% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if connect_account_id %}
+                        <div class="payment-account-id">
+                            <strong>
+                                {% if lang == 'es' %}ID de cuenta Stripe:{% else %}Stripe account ID:{% endif %}
+                            </strong>
+                            {{ connect_account_id }}
+                            {% if onboarded_at %}
+                                <br>
+                                <strong>
+                                    {% if lang == 'es' %}Conectada:{% else %}Connected:{% endif %}
+                                </strong>
+                                {{ onboarded_at.strftime('%Y-%m-%d %H:%M') if onboarded_at else '—' }}
+                            {% endif %}
+                            {% if last_status_sync %}
+                                <br>
+                                <strong>
+                                    {% if lang == 'es' %}Última verificación:{% else %}Last sync:{% endif %}
+                                </strong>
+                                {{ last_status_sync.strftime('%Y-%m-%d %H:%M') if last_status_sync else '—' }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="payment-actions">
+                        {% if current_plan == 'enterprise' %}
+                            <a href="{{ url_for('connect_payment_account', lang=lang) }}" class="btn btn-brand">
+                                {% if connect_connected %}
+                                    {% if lang == 'es' %}Completar configuración{% else %}Complete Setup{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}Conectar Stripe{% else %}Connect Stripe{% endif %}
+                                {% endif %}
+                            </a>
+
+                            {% if connect_connected %}
+                                <a href="{{ url_for('payment_account_dashboard', lang=lang) }}" class="btn btn-secondary">
+                                    {% if lang == 'es' %}Abrir panel de Stripe{% else %}Open Stripe Dashboard{% endif %}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ url_for('pricing', lang=lang) }}" class="btn btn-brand">
+                                {% if lang == 'es' %}Ver Studio{% else %}View Studio{% endif %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="payment-checklist">
+                    <div class="payment-check">
+                        <div class="payment-check-mark">1</div>
+                        <div>
+                            {% if lang == 'es' %}
+                                Conecta tu propia cuenta de Stripe para mantener una experiencia más profesional de cobros y depósitos.
+                            {% else %}
+                                Connect your own Stripe account to keep a more professional payment and payout experience.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="payment-check">
+                        <div class="payment-check-mark">2</div>
+                        <div>
+                            {% if lang == 'es' %}
+                                Completa cualquier verificación pendiente en Stripe para activar cobros y depósitos.
+                            {% else %}
+                                Complete any remaining verification steps in Stripe to enable charges and payouts.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="payment-check">
+                        <div class="payment-check-mark">3</div>
+                        <div>
+                            {% if lang == 'es' %}
+                                Cuando la cuenta esté lista, BillBeam podrá dirigir el flujo de pagos de facturas de forma más profesional hacia tu propia cuenta.
+                            {% else %}
+                                Once the account is ready, BillBeam can route invoice-payment flows more professionally to your own account.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-note" style="margin-top:16px;">
+                {% if lang == 'es' %}
+                    Importante: esta sección prepara una cuenta profesional de pagos sin cambiar por la fuerza la lógica que ya funciona en tu app. El objetivo es añadir valor y control, no romper tu flujo actual.
+                {% else %}
+                    Important: this section prepares a professional payment account without force-changing logic that already works in your app. The goal is to add value and control, not break your current flow.
+                {% endif %}
+            </div>
+        </div>
 
         <div class="settings-card security-card">
             <h2>

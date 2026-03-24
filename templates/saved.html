@@ -15,175 +15,321 @@
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <div>
-        <h1>
-            {% if lang == 'es' %}
-                Factura guardada con éxito
-            {% else %}
-                Invoice Saved Successfully
-            {% endif %}
-        </h1>
-        <p style="margin:6px 0 0 0; font-size:14px; opacity:.8;">
-            {% if lang == 'es' %}
-                Tu factura ya forma parte de tu historial y está lista para revisarse, descargarse o enviarse.
-            {% else %}
-                Your invoice is now part of your history and ready to review, download, or send.
-            {% endif %}
-        </p>
-    </div>
+<style>
+  .saved-shell {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    gap: 20px;
+  }
 
-    <div class="quick-actions">
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Ir al historial{% else %}Go to Invoices{% endif %}
-        </a>
-    </div>
-</div>
+  .saved-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
 
-<div class="form-wrapper fade-in-up" style="max-width:820px; margin:0 auto;">
-    <div style="
-        padding:18px;
-        border-radius:16px;
-        background:rgba(22,163,74,0.08);
-        border:1px solid rgba(22,163,74,0.18);
-        margin-bottom:18px;
-    ">
-        <div style="
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            padding:6px 10px;
-            border-radius:999px;
-            background:rgba(22,163,74,0.12);
-            color:#166534;
-            font-size:12px;
-            font-weight:800;
-            letter-spacing:.06em;
-            text-transform:uppercase;
-            margin-bottom:12px;
-        ">
-            {% if lang == 'es' %}Guardado correctamente{% else %}Saved successfully{% endif %}
-        </div>
+  .saved-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
 
-        <h2 style="margin:0 0 10px 0; font-size:22px;">
-            {% if lang == 'es' %}
-                Tu factura ya está lista en BillBeam
-            {% else %}
-                Your invoice is now live in BillBeam
-            {% endif %}
-        </h2>
+  .saved-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #22c55e, #3A8BFF);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
 
-        <p style="margin:0; font-size:14px; line-height:1.65; opacity:.88;">
-            {% if lang == 'es' %}
-                Ya puedes volver al historial para verla, descargar el PDF, registrar pagos o enviarla al cliente cuando quieras.
-            {% else %}
-                You can now return to your invoice history to view it, download the PDF, record payments, or send it to your client whenever you’re ready.
-            {% endif %}
-        </p>
-    </div>
+  .saved-subcopy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
 
-    <div style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-        gap:14px;
-        margin-bottom:20px;
-    ">
-        <div style="
-            padding:14px 16px;
-            border-radius:14px;
-            background:rgba(15,23,42,0.04);
-            border:1px solid rgba(148,163,184,0.22);
-        ">
-            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
-                {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
-            </div>
-            <div style="font-size:16px; font-weight:800;">
-                {{ inv_label or ('#' ~ invoice_id) }}
-            </div>
-        </div>
+  body.dark .saved-subcopy {
+    color: #94a3b8;
+  }
 
-        <div style="
-            padding:14px 16px;
-            border-radius:14px;
-            background:rgba(15,23,42,0.04);
-            border:1px solid rgba(148,163,184,0.22);
-        ">
-            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
-                {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-            </div>
-            <div style="font-size:16px; font-weight:800;">
-                {{ client_name or client or "—" }}
-            </div>
-        </div>
+  .saved-main-card {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    padding: 24px;
+  }
 
-        <div style="
-            padding:14px 16px;
-            border-radius:14px;
-            background:rgba(15,23,42,0.04);
-            border:1px solid rgba(148,163,184,0.22);
-        ">
-            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:6px;">
-                {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-            </div>
-            <div style="font-size:16px; font-weight:800;">
-                ${{ "{:,.2f}".format(amount|float) if amount is not none else "0.00" }}
-            </div>
-        </div>
-    </div>
+  body.dark .saved-main-card {
+    background: rgba(15,23,42,0.78);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
 
-    <div style="
-        padding:16px;
-        border-radius:16px;
-        background:rgba(37,99,235,0.06);
-        border:1px solid rgba(37,99,235,0.14);
-        margin-bottom:20px;
-    ">
-        <div style="font-size:13px; font-weight:700; margin-bottom:8px;">
-            {% if lang == 'es' %}
-                Siguientes pasos recomendados
-            {% else %}
-                Recommended next steps
-            {% endif %}
-        </div>
+  .saved-success-banner {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(22,163,74,0.08);
+    border: 1px solid rgba(22,163,74,0.18);
+    margin-bottom: 18px;
+  }
 
-        <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.7;">
-            <li>
+  body.dark .saved-success-banner {
+    background: rgba(22,163,74,0.14);
+    border-color: rgba(74,222,128,0.24);
+  }
+
+  .saved-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(22,163,74,0.12);
+    color: #166534;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  body.dark .saved-pill {
+    background: rgba(22,163,74,0.22);
+    color: #bbf7d0;
+  }
+
+  .saved-success-banner h2 {
+    margin: 0 0 10px 0;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+  }
+
+  .saved-success-banner p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    opacity: 0.9;
+  }
+
+  .saved-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .saved-stat-card {
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.04);
+    border: 1px solid rgba(148,163,184,0.22);
+  }
+
+  body.dark .saved-stat-card {
+    background: rgba(15,23,42,0.46);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .saved-stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+    margin-bottom: 6px;
+  }
+
+  .saved-stat-value {
+    font-size: 16px;
+    font-weight: 800;
+    word-break: break-word;
+  }
+
+  .saved-next-steps {
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(37,99,235,0.06);
+    border: 1px solid rgba(37,99,235,0.14);
+    margin-bottom: 20px;
+  }
+
+  body.dark .saved-next-steps {
+    background: rgba(37,99,235,0.12);
+    border-color: rgba(96,165,250,0.18);
+  }
+
+  .saved-next-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .saved-next-steps ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .saved-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 760px) {
+    .saved-main-card {
+      padding: 18px;
+    }
+
+    .saved-stat-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .saved-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="saved-shell">
+    <div class="saved-topbar">
+        <div class="saved-title-wrap">
+            <h1>
                 {% if lang == 'es' %}
-                    Revisa la factura en tu historial antes de enviarla.
+                    Factura guardada con éxito
                 {% else %}
-                    Review the invoice in your history before sending it.
+                    Invoice Saved Successfully
                 {% endif %}
-            </li>
-            <li>
+            </h1>
+            <div class="saved-subcopy">
                 {% if lang == 'es' %}
-                    Descarga el PDF si quieres archivarlo o compartirlo manualmente.
+                    Tu factura ya forma parte de tu historial y está lista para revisarse, descargarse o enviarse.
                 {% else %}
-                    Download the PDF if you want to archive or share it manually.
+                    Your invoice is now part of your history and ready to review, download, or send.
                 {% endif %}
-            </li>
-            <li>
-                {% if lang == 'es' %}
-                    Si usas Pro, envíala por correo directamente desde BillBeam.
-                {% else %}
-                    If you’re on Pro, send it by email directly from BillBeam.
-                {% endif %}
-            </li>
-        </ul>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+            </a>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Ir al historial{% else %}Go to Invoices{% endif %}
+            </a>
+        </div>
     </div>
 
-    <div class="form-actions" style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-        <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-            {% if lang == 'es' %}Abrir factura{% else %}Open Invoice{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Ver historial{% else %}View Invoice History{% endif %}
-        </a>
-        <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Crear otra{% else %}Create Another{% endif %}
-        </a>
+    <div class="saved-main-card fade-in-up">
+        <div class="saved-success-banner">
+            <div class="saved-pill">
+                {% if lang == 'es' %}Guardado correctamente{% else %}Saved successfully{% endif %}
+            </div>
+
+            <h2>
+                {% if lang == 'es' %}
+                    Tu factura ya está lista en BillBeam
+                {% else %}
+                    Your invoice is now live in BillBeam
+                {% endif %}
+            </h2>
+
+            <p>
+                {% if lang == 'es' %}
+                    Ya puedes volver al historial para verla, descargar el PDF, registrar pagos o enviarla al cliente cuando quieras.
+                {% else %}
+                    You can now return to your invoice history to view it, download the PDF, record payments, or send it to your client whenever you’re ready.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="saved-stat-grid">
+            <div class="saved-stat-card">
+                <div class="saved-stat-label">
+                    {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+                </div>
+                <div class="saved-stat-value">
+                    {{ inv_label or ('#' ~ invoice_id) }}
+                </div>
+            </div>
+
+            <div class="saved-stat-card">
+                <div class="saved-stat-label">
+                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                </div>
+                <div class="saved-stat-value">
+                    {{ client_name or client or "—" }}
+                </div>
+            </div>
+
+            <div class="saved-stat-card">
+                <div class="saved-stat-label">
+                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                </div>
+                <div class="saved-stat-value">
+                    ${{ "{:,.2f}".format(amount|float) if amount is not none else "0.00" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="saved-next-steps">
+            <div class="saved-next-title">
+                {% if lang == 'es' %}
+                    Siguientes pasos recomendados
+                {% else %}
+                    Recommended next steps
+                {% endif %}
+            </div>
+
+            <ul>
+                <li>
+                    {% if lang == 'es' %}
+                        Revisa la factura en tu historial antes de enviarla.
+                    {% else %}
+                        Review the invoice in your history before sending it.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Descarga el PDF si quieres archivarlo o compartirlo manualmente.
+                    {% else %}
+                        Download the PDF if you want to archive or share it manually.
+                    {% endif %}
+                </li>
+                <li>
+                    {% if lang == 'es' %}
+                        Si usas Pro, envíala por correo directamente desde BillBeam.
+                    {% else %}
+                        If you’re on Pro, send it by email directly from BillBeam.
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        <div class="saved-actions">
+            <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                {% if lang == 'es' %}Abrir factura{% else %}Open Invoice{% endif %}
+            </a>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Ver historial{% else %}View Invoice History{% endif %}
+            </a>
+            <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Crear otra{% else %}Create Another{% endif %}
+            </a>
+        </div>
     </div>
 </div>
 

@@ -561,6 +561,36 @@
     color: #94a3b8;
   }
 
+  .summary-side-highlight {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .summary-side-highlight {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .summary-side-highlight strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+  }
+
+  .summary-side-highlight p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .summary-side-highlight p {
+    color: #cbd5e1;
+  }
+
   @media (max-width: 1100px) {
     .invoice-layout-grid {
       grid-template-columns: 1fr;
@@ -701,6 +731,15 @@
               View Invoice History
             {% endif %}
           </a>
+          {% if user_plan == 'free' %}
+          <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn hero-cta">
+            {% if lang == 'es' %}
+              Ver Pro
+            {% else %}
+              View Pro
+            {% endif %}
+          </a>
+          {% endif %}
         </div>
 
         <div class="hero-mini-grid">
@@ -785,6 +824,25 @@
           </div>
         </div>
       </div>
+
+      {% if user_plan == 'free' %}
+      <div class="summary-side-highlight">
+        <strong>
+          {% if lang == 'es' %}
+            Consejo de crecimiento
+          {% else %}
+            Growth tip
+          {% endif %}
+        </strong>
+        <p>
+          {% if lang == 'es' %}
+            Pro desbloquea correos con PDF, enlaces públicos y pagos en línea para que tu flujo de cobro se vea mucho más profesional.
+          {% else %}
+            Pro unlocks invoice emails with PDFs, public invoice links, and online payments so your collection flow feels much more professional.
+          {% endif %}
+        </p>
+      </div>
+      {% endif %}
     </div>
   </div>
 
@@ -1268,6 +1326,23 @@
             {% endif %}
           </div>
         </div>
+
+        <div class="summary-side-highlight">
+          <strong>
+            {% if lang == 'es' %}
+              Flujo profesional
+            {% else %}
+              Professional flow
+            {% endif %}
+          </strong>
+          <p>
+            {% if lang == 'es' %}
+              Una factura clara aquí se convierte en una mejor vista pública, un mejor correo y un cobro más rápido después.
+            {% else %}
+              A clear invoice here turns into a better public page, a better email, and faster collection later.
+            {% endif %}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -1277,7 +1352,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("invoiceForm");
-    const previewBtn = document.getElementById("previewButton");
 
     const lineItemsBody = document.getElementById("lineItemsBody");
     const addLineItemBtn = document.getElementById("addLineItemBtn");
@@ -1469,25 +1543,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     window.captureSignatureToHiddenField = captureSignatureToHiddenField;
-
-    if (form && previewBtn) {
-        previewBtn.addEventListener("click", function (e) {
-            e.preventDefault();
-
-            captureSignatureToHiddenField();
-
-            const originalAction = form.action;
-            const originalTarget = form.target;
-
-            form.action = "/preview{% if lang %}?lang={{ lang }}{% endif %}";
-            form.target = "_blank";
-
-            form.submit();
-
-            form.action = originalAction;
-            form.target = originalTarget;
-        });
-    }
 
     if (form) {
         form.addEventListener("submit", function () {

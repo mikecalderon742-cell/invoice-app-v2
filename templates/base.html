@@ -97,7 +97,7 @@
         border: 1px solid rgba(148, 163, 184, 0.3);
         font-size: 13px;
         opacity: 0.92;
-        max-width: 280px;
+        max-width: 320px;
     }
 
     .nav-user-pill-text {
@@ -374,6 +374,9 @@
         <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}Configuración{% else %}Settings{% endif %}
         </a>
+        <a href="/settings{% if lang %}?lang={{ lang }}#payments-payouts{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}Pagos y retiros{% else %}Payments & Payouts{% endif %}
+        </a>
         <a href="/billing/manage{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}Gestionar suscripción{% else %}Manage Subscription{% endif %}
         </a>
@@ -450,11 +453,21 @@
             {% if is_authenticated %}
                 <span class="nav-user-pill">
                     <span class="nav-user-pill-text">{{ current_user.email }}</span>
-                    <span class="plan-badge">{{ user_plan|capitalize }}</span>
+                    <span class="plan-badge">
+                        {% if user_plan == 'enterprise' %}
+                            {% if lang == 'es' %}Business{% else %}Business{% endif %}
+                        {% else %}
+                            {{ user_plan|capitalize }}
+                        {% endif %}
+                    </span>
                 </span>
 
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
                     {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+                </a>
+
+                <a href="/settings{% if lang %}?lang={{ lang }}#payments-payouts{% endif %}" class="nav-primary-link">
+                    {% if lang == 'es' %}Pagos{% else %}Payments{% endif %}
                 </a>
 
                 <div class="lang-toggle">

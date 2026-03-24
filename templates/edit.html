@@ -15,228 +15,488 @@
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <div>
-        <h1>
-            {% if lang == 'es' %}
-                Editar factura #{{ invoice_id }}
-            {% else %}
-                Edit Invoice #{{ invoice_id }}
-            {% endif %}
-        </h1>
-        <p style="margin:6px 0 0 0; font-size:14px; opacity:.8;">
-            {% if lang == 'es' %}
-                Actualiza el nombre del cliente y los conceptos antes de guardar los cambios.
-            {% else %}
-                Update the client name and line items before saving your changes.
-            {% endif %}
-        </p>
-    </div>
+<style>
+  .edit-shell {
+    max-width: 1040px;
+    margin: 0 auto;
+    display: grid;
+    gap: 20px;
+  }
 
-    <div class="quick-actions">
-        <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Ver factura{% else %}View Invoice{% endif %}
-        </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
-        </a>
-    </div>
-</div>
+  .edit-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
 
-<div class="form-wrapper fade-in-up" style="max-width:980px;">
-    <div style="
-        display:flex;
-        align-items:flex-start;
-        justify-content:space-between;
-        gap:16px;
-        flex-wrap:wrap;
-        margin-bottom:18px;
-        padding:14px 16px;
-        border-radius:14px;
-        background:rgba(59,130,246,0.07);
-        border:1px solid rgba(59,130,246,0.18);
-    ">
-        <div>
-            <div style="font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.72;">
-                {% if lang == 'es' %}Edición en curso{% else %}Editing in progress{% endif %}
-            </div>
-            <div style="margin-top:4px; font-size:14px; opacity:.88;">
+  .edit-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .edit-title-wrap h1 {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .edit-subcopy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .edit-subcopy {
+    color: #94a3b8;
+  }
+
+  .edit-main-card {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    padding: 24px;
+  }
+
+  body.dark .edit-main-card {
+    background: rgba(15,23,42,0.78);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .edit-status-banner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(59,130,246,0.07);
+    border: 1px solid rgba(59,130,246,0.18);
+  }
+
+  body.dark .edit-status-banner {
+    background: rgba(59,130,246,0.14);
+    border-color: rgba(96,165,250,0.18);
+  }
+
+  .edit-status-kicker {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .72;
+  }
+
+  .edit-status-copy {
+    margin-top: 4px;
+    font-size: 14px;
+    opacity: .88;
+    line-height: 1.6;
+  }
+
+  .edit-status-side {
+    font-size: 13px;
+    opacity: .75;
+    line-height: 1.55;
+  }
+
+  .edit-section {
+    margin-bottom: 24px;
+  }
+
+  .edit-section:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .edit-section h2 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .edit-label {
+    font-weight: 600;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .edit-section-sub {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    opacity: .78;
+    line-height: 1.6;
+  }
+
+  .edit-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .edit-table-wrap {
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.38);
+    border: 1px solid rgba(148,163,184,0.16);
+  }
+
+  body.dark .edit-table-wrap {
+    background: rgba(2,6,23,0.35);
+    border-color: rgba(148,163,184,0.14);
+  }
+
+  .edit-table-scroll {
+    overflow-x: auto;
+  }
+
+  .edit-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .edit-table thead th {
+    text-align: left;
+    padding: 14px 14px;
+    font-size: 12px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #64748b;
+    background: rgba(248,250,252,0.96);
+    border-bottom: 1px solid rgba(148,163,184,0.18);
+  }
+
+  body.dark .edit-table thead th {
+    color: #94a3b8;
+    background: rgba(15,23,42,0.96);
+    border-bottom-color: rgba(148,163,184,0.16);
+  }
+
+  .edit-table tbody td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(148,163,184,0.14);
+    vertical-align: middle;
+  }
+
+  .edit-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .edit-table input {
+    width: 100%;
+  }
+
+  .btn-remove-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(239,68,68,0.22);
+    background: rgba(239,68,68,0.08);
+    color: #b91c1c;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+  }
+
+  .btn-remove-row:hover {
+    transform: translateY(-1px);
+    background: rgba(239,68,68,0.14);
+    border-color: rgba(239,68,68,0.32);
+  }
+
+  body.dark .btn-remove-row {
+    background: rgba(239,68,68,0.14);
+    color: #fecaca;
+    border-color: rgba(248,113,113,0.22);
+  }
+
+  .edit-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .edit-tip {
+    font-size: 12px;
+    opacity: .72;
+    line-height: 1.55;
+  }
+
+  .edit-total-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.22);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  body.dark .edit-total-box {
+    background: rgba(15,23,42,0.48);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .edit-total-label {
+    opacity: .72;
+  }
+
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 760px) {
+    .edit-main-card {
+      padding: 18px;
+    }
+
+    .edit-actions .btn {
+      width: 100%;
+    }
+
+    .edit-toolbar {
+      align-items: flex-start;
+    }
+
+    .edit-footer-row {
+      align-items: stretch;
+    }
+  }
+</style>
+
+<div class="edit-shell">
+    <div class="edit-topbar">
+        <div class="edit-title-wrap">
+            <h1>
                 {% if lang == 'es' %}
-                    Factura <strong>#{{ invoice_id }}</strong>. Revisa cuidadosamente los importes antes de guardar.
+                    Editar factura #{{ invoice_id }}
                 {% else %}
-                    Invoice <strong>#{{ invoice_id }}</strong>. Review all amounts carefully before saving.
+                    Edit Invoice #{{ invoice_id }}
+                {% endif %}
+            </h1>
+            <div class="edit-subcopy">
+                {% if lang == 'es' %}
+                    Actualiza el nombre del cliente y los conceptos antes de guardar los cambios.
+                {% else %}
+                    Update the client name and line items before saving your changes.
                 {% endif %}
             </div>
         </div>
-        <div style="font-size:13px; opacity:.75;">
-            {% if lang == 'es' %}
-                Los cambios reemplazarán los conceptos actuales.
-            {% else %}
-                Saving will replace the current line items.
-            {% endif %}
+
+        <div class="quick-actions">
+            <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Ver factura{% else %}View Invoice{% endif %}
+            </a>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+            </a>
         </div>
     </div>
 
-    <form method="POST" action="/update/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" id="editInvoiceForm">
-        <section style="margin-bottom:24px;">
-            <h2 style="margin:0 0 12px 0; font-size:18px;">
-                {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
-            </h2>
-
-            <label for="client" style="font-weight:600; font-size:14px; display:block; margin-bottom:6px;">
-                {% if lang == 'es' %}Nombre del cliente{% else %}Client Name{% endif %}
-            </label>
-            <input
-                id="client"
-                type="text"
-                name="client"
-                value="{{ client }}"
-                required
-                placeholder="{% if lang == 'es' %}Ej. Acme Studio{% else %}e.g. Acme Studio{% endif %}"
-            >
-        </section>
-
-        <section>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
-                <div>
-                    <h2 style="margin:0; font-size:18px;">
-                        {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
-                    </h2>
-                    <p style="margin:4px 0 0 0; font-size:13px; opacity:.78;">
-                        {% if lang == 'es' %}
-                            Ajusta descripciones e importes. Puedes añadir o quitar filas según sea necesario.
-                        {% else %}
-                            Update descriptions and amounts. You can add or remove rows as needed.
-                        {% endif %}
-                    </p>
+    <div class="edit-main-card fade-in-up">
+        <div class="edit-status-banner">
+            <div>
+                <div class="edit-status-kicker">
+                    {% if lang == 'es' %}Edición en curso{% else %}Editing in progress{% endif %}
                 </div>
-
-                <button type="button" id="addLineItemBtn" class="btn btn-secondary">
-                    {% if lang == 'es' %}+ Añadir concepto{% else %}+ Add line item{% endif %}
-                </button>
-            </div>
-
-            <div class="table-wrapper" style="margin-top:0;">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>
-                                {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
-                            </th>
-                            <th style="width:190px;">
-                                {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
-                            </th>
-                            <th style="width:72px; text-align:center;">
-                                {% if lang == 'es' %}Quitar{% else %}Remove{% endif %}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="lineItemsBody">
-                        {% if items and items|length > 0 %}
-                            {% for item in items %}
-                            <tr class="line-item-row">
-                                <td>
-                                    <input
-                                        type="text"
-                                        name="description"
-                                        value="{{ item[0] }}"
-                                        placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
-                                        required
-                                    >
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        name="amount"
-                                        value="{{ item[1] }}"
-                                        placeholder="0.00"
-                                        required
-                                    >
-                                </td>
-                                <td style="text-align:center;">
-                                    <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
-                                        ✕
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr class="line-item-row">
-                                <td>
-                                    <input
-                                        type="text"
-                                        name="description"
-                                        placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
-                                        required
-                                    >
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        name="amount"
-                                        placeholder="0.00"
-                                        required
-                                    >
-                                </td>
-                                <td style="text-align:center;">
-                                    <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
-                                        ✕
-                                    </button>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:12px;
-                flex-wrap:wrap;
-                margin-top:12px;
-            ">
-                <div style="font-size:12px; opacity:.72;">
+                <div class="edit-status-copy">
                     {% if lang == 'es' %}
-                        Consejo: deja al menos un concepto válido con importe mayor que cero.
+                        Factura <strong>#{{ invoice_id }}</strong>. Revisa cuidadosamente los importes antes de guardar.
                     {% else %}
-                        Tip: keep at least one valid line item with an amount greater than zero.
+                        Invoice <strong>#{{ invoice_id }}</strong>. Review all amounts carefully before saving.
                     {% endif %}
                 </div>
-
-                <div style="
-                    display:inline-flex;
-                    align-items:center;
-                    gap:10px;
-                    padding:10px 14px;
-                    border-radius:12px;
-                    background:rgba(15,23,42,0.05);
-                    border:1px solid rgba(148,163,184,0.22);
-                    font-size:14px;
-                    font-weight:700;
-                ">
-                    <span style="opacity:.72;">
-                        {% if lang == 'es' %}Total actualizado{% else %}Updated Total{% endif %}
-                    </span>
-                    <span id="invoiceTotalPreview">$0.00</span>
-                </div>
             </div>
-        </section>
 
-        <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px; flex-wrap:wrap;">
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
-            </a>
-            <button type="submit" class="btn btn-brand">
-                {% if lang == 'es' %}Guardar cambios{% else %}Save Changes{% endif %}
-            </button>
+            <div class="edit-status-side">
+                {% if lang == 'es' %}
+                    Los cambios reemplazarán los conceptos actuales.
+                {% else %}
+                    Saving will replace the current line items.
+                {% endif %}
+            </div>
         </div>
-    </form>
+
+        <form method="POST" action="/update/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" id="editInvoiceForm">
+            <section class="edit-section">
+                <h2>
+                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                </h2>
+
+                <label for="client" class="edit-label">
+                    {% if lang == 'es' %}Nombre del cliente{% else %}Client Name{% endif %}
+                </label>
+                <input
+                    id="client"
+                    type="text"
+                    name="client"
+                    value="{{ client }}"
+                    required
+                    placeholder="{% if lang == 'es' %}Ej. Acme Studio{% else %}e.g. Acme Studio{% endif %}"
+                >
+            </section>
+
+            <section class="edit-section">
+                <div class="edit-toolbar">
+                    <div>
+                        <h2>
+                            {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
+                        </h2>
+                        <p class="edit-section-sub">
+                            {% if lang == 'es' %}
+                                Ajusta descripciones e importes. Puedes añadir o quitar filas según sea necesario.
+                            {% else %}
+                                Update descriptions and amounts. You can add or remove rows as needed.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <button type="button" id="addLineItemBtn" class="btn btn-secondary">
+                        {% if lang == 'es' %}+ Añadir concepto{% else %}+ Add line item{% endif %}
+                    </button>
+                </div>
+
+                <div class="edit-table-wrap">
+                    <div class="edit-table-scroll">
+                        <table class="edit-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                                    </th>
+                                    <th style="width:190px;">
+                                        {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                                    </th>
+                                    <th style="width:72px; text-align:center;">
+                                        {% if lang == 'es' %}Quitar{% else %}Remove{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="lineItemsBody">
+                                {% if items and items|length > 0 %}
+                                    {% for item in items %}
+                                    <tr class="line-item-row">
+                                        <td>
+                                            <input
+                                                type="text"
+                                                name="description"
+                                                value="{{ item[0] }}"
+                                                placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                                                required
+                                            >
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                name="amount"
+                                                value="{{ item[1] }}"
+                                                placeholder="0.00"
+                                                required
+                                            >
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                                                ✕
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr class="line-item-row">
+                                        <td>
+                                            <input
+                                                type="text"
+                                                name="description"
+                                                placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                                                required
+                                            >
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                name="amount"
+                                                placeholder="0.00"
+                                                required
+                                            >
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                                                ✕
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="edit-footer-row">
+                    <div class="edit-tip">
+                        {% if lang == 'es' %}
+                            Consejo: deja al menos un concepto válido con importe mayor que cero.
+                        {% else %}
+                            Tip: keep at least one valid line item with an amount greater than zero.
+                        {% endif %}
+                    </div>
+
+                    <div class="edit-total-box">
+                        <span class="edit-total-label">
+                            {% if lang == 'es' %}Total actualizado{% else %}Updated Total{% endif %}
+                        </span>
+                        <span id="invoiceTotalPreview">$0.00</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="edit-actions">
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                </a>
+                <button type="submit" class="btn btn-brand">
+                    {% if lang == 'es' %}Guardar cambios{% else %}Save Changes{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>

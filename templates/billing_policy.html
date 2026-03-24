@@ -20,7 +20,15 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
 {% block content %}
 <div class="legal-shell">
 
-    <header class="legal-header">
+    <section class="legal-hero fade-in-up">
+        <div class="legal-eyebrow">
+            {% if lang == 'es' %}
+                Transparencia de planes y cobros
+            {% else %}
+                Transparency around plans and charges
+            {% endif %}
+        </div>
+
         <h1>
             {% if lang == 'es' %}
                 Política de Facturación y Suscripciones
@@ -28,26 +36,35 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
                 Billing & Subscription Policy
             {% endif %}
         </h1>
-        <p class="legal-updated">
-            {% if lang == 'es' %}
-                Última actualización: {{ now().strftime("%B %Y") }}
-            {% else %}
-                Last updated: {{ now().strftime("%B %Y") }}
-            {% endif %}
-        </p>
-    </header>
 
-    <section class="legal-section">
-        <p>
+        <p class="legal-lead">
             {% if lang == 'es' %}
                 Esta Política de Facturación y Suscripciones explica cómo BillBeam gestiona planes gratuitos y de pago dentro de su sitio web, aplicación móvil y servicios relacionados.
             {% else %}
                 This Billing & Subscription Policy explains how BillBeam handles free and paid plans across its website, mobile application, and related services.
             {% endif %}
         </p>
+
+        <div class="legal-meta-row">
+            <div class="legal-meta-pill">
+                {% if lang == 'es' %}
+                    Última actualización: {{ now().strftime("%B %Y") }}
+                {% else %}
+                    Last updated: {{ now().strftime("%B %Y") }}
+                {% endif %}
+            </div>
+
+            <div class="legal-meta-pill">
+                {% if lang == 'es' %}
+                    Pagos, renovaciones y cancelaciones
+                {% else %}
+                    Payments, renewals, and cancellations
+                {% endif %}
+            </div>
+        </div>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}1. Planes y funciones{% else %}1. Plans and Features{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -58,7 +75,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}2. Proveedor de pagos{% else %}2. Payment Processor{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -69,7 +86,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}3. Renovaciones automáticas{% else %}3. Automatic Renewals{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -87,7 +104,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}4. Cancelación{% else %}4. Cancellation{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -105,7 +122,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}5. Reembolsos{% else %}5. Refunds{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -123,7 +140,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}6. Cambios de precio o plan{% else %}6. Pricing or Plan Changes{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -134,7 +151,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}7. Cobros fallidos{% else %}7. Failed Charges{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -152,7 +169,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}8. Impuestos{% else %}8. Taxes{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -163,7 +180,7 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         </p>
     </section>
 
-    <section class="legal-section">
+    <section class="legal-card fade-in-up">
         <h2>{% if lang == 'es' %}9. Contacto de facturación{% else %}9. Billing Contact{% endif %}</h2>
         <p>
             {% if lang == 'es' %}
@@ -177,11 +194,153 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
 </div>
 
 <style>
-.legal-shell{max-width:900px;margin:30px auto;font-size:0.95rem;line-height:1.7}
-.legal-header{margin-bottom:28px}
-.legal-header h1{font-size:1.7rem;margin-bottom:4px}
-.legal-updated{font-size:0.85rem;opacity:0.7}
-.legal-section{margin-bottom:24px}
-.legal-section h2{font-size:1.05rem;margin-bottom:8px}
+.legal-shell{
+    max-width:960px;
+    margin:28px auto 40px;
+    display:grid;
+    gap:18px;
+}
+
+.legal-hero,
+.legal-card{
+    border-radius:24px;
+    background:rgba(255,255,255,0.82);
+    border:1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter:blur(12px);
+}
+
+body.dark .legal-hero,
+body.dark .legal-card{
+    background:rgba(15,23,42,0.76);
+    border-color:rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+}
+
+.legal-hero{
+    padding:30px 28px 24px;
+}
+
+.legal-card{
+    padding:22px 24px;
+}
+
+.legal-eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+    padding:7px 11px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    background:rgba(37,99,235,0.08);
+    border:1px solid rgba(37,99,235,0.14);
+}
+
+body.dark .legal-eyebrow{
+    background:rgba(37,99,235,0.18);
+    border-color:rgba(96,165,250,0.2);
+}
+
+.legal-hero h1{
+    margin:0 0 10px 0;
+    font-family:"Space Grotesk", sans-serif;
+    font-size:clamp(32px, 5vw, 46px);
+    line-height:0.98;
+    letter-spacing:-0.04em;
+    background:linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+.legal-lead{
+    margin:0;
+    max-width:760px;
+    font-size:15px;
+    line-height:1.7;
+    color:#475569;
+}
+
+body.dark .legal-lead{
+    color:#cbd5e1;
+}
+
+.legal-meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:16px;
+}
+
+.legal-meta-pill{
+    display:inline-flex;
+    align-items:center;
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    background:rgba(15,23,42,0.05);
+    border:1px solid rgba(148,163,184,0.24);
+}
+
+body.dark .legal-meta-pill{
+    background:rgba(15,23,42,0.52);
+    border-color:rgba(148,163,184,0.24);
+}
+
+.legal-card h2{
+    margin:0 0 10px 0;
+    font-size:19px;
+    letter-spacing:-0.02em;
+}
+
+.legal-card p{
+    margin:0 0 12px 0;
+    font-size:14px;
+    line-height:1.75;
+    color:#334155;
+}
+
+body.dark .legal-card p{
+    color:#dbe4f0;
+}
+
+.legal-card p:last-child{
+    margin-bottom:0;
+}
+
+@media (max-width: 700px){
+    .legal-shell{
+        margin:18px auto 28px;
+        gap:14px;
+    }
+
+    .legal-hero,
+    .legal-card{
+        padding:18px 16px;
+        border-radius:18px;
+    }
+
+    .legal-hero h1{
+        font-size:30px;
+    }
+
+    .legal-lead,
+    .legal-card p{
+        font-size:13.5px;
+    }
+
+    .legal-meta-row{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
 </style>
 {% endblock %}

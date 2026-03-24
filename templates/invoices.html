@@ -62,6 +62,51 @@
     flex-wrap: wrap;
   }
 
+  .dashboard-upgrade-strip {
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.04),
+      0 0 0 1px rgba(15,23,42,0.01);
+  }
+
+  body.dark .dashboard-upgrade-strip {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 20px 48px rgba(2,6,23,0.68),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .dashboard-upgrade-strip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-upgrade-strip strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+
+  .dashboard-upgrade-strip-copy {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .dashboard-upgrade-strip-copy {
+    color: #cbd5e1;
+  }
+
   .dashboard-filter-shell {
     margin-bottom: 20px;
     padding: 18px;
@@ -451,6 +496,60 @@
         </a>
     </div>
 </div>
+
+{% if user_plan == 'free' %}
+<div class="dashboard-upgrade-strip">
+    <div class="dashboard-upgrade-strip-top">
+        <div>
+            <strong>
+                {% if lang == 'es' %}
+                    Desbloquea más velocidad con Pro
+                {% else %}
+                    Unlock more speed with Pro
+                {% endif %}
+            </strong>
+            <div class="dashboard-upgrade-strip-copy">
+                {% if lang == 'es' %}
+                    Activa correos con PDF, enlaces públicos de factura, pagos en línea y un flujo más profesional para cobrar más rápido.
+                {% else %}
+                    Turn on invoice emails with PDFs, public invoice links, online payments, and a more professional flow to get paid faster.
+                {% endif %}
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                {% if lang == 'es' %}Ver planes{% else %}View Plans{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+{% elif user_plan in ['pro', 'enterprise'] and not current_user.get('stripe_connect_account_id') %}
+<div class="dashboard-upgrade-strip">
+    <div class="dashboard-upgrade-strip-top">
+        <div>
+            <strong>
+                {% if lang == 'es' %}
+                    Completa tu configuración de pagos
+                {% else %}
+                    Complete your payment setup
+                {% endif %}
+            </strong>
+            <div class="dashboard-upgrade-strip-copy">
+                {% if lang == 'es' %}
+                    Conecta tu cuenta de Stripe en Configuración para ofrecer una experiencia de cobro más profesional y preparar tus pagos en línea.
+                {% else %}
+                    Connect your Stripe account in Settings to offer a more professional payment experience and prepare your online payment flow.
+                {% endif %}
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                {% if lang == 'es' %}Abrir configuración{% else %}Open Settings{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="dashboard-filter-shell">
     <div class="filter-top">
@@ -955,11 +1054,7 @@
                                     </a>
                                 {% endif %}
 
-                                {% if invoice[4] == "Draft" %}
-                                    <a class="btn btn-info" href="/update-status/{{ invoice[0] }}/Sent{% if lang %}?lang={{ lang }}{% endif %}">
-                                        {% if lang == 'es' %}Marcar enviada{% else %}Mark Sent{% endif %}
-                                    </a>
-                                {% endif %}
+                                {# Kept safe: legacy Draft branch removed because live backend uses Sent/Paid/Overdue only. #}
 
                                 <a class="btn btn-info" href="/send-email/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
                                     {% if lang == 'es' %}Enviar{% else %}Send{% endif %}

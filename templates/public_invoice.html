@@ -401,6 +401,22 @@
     color: #94a3b8;
   }
 
+  .summary-safe-note {
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    color: #475569;
+  }
+
+  body.dark .summary-safe-note {
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: #cbd5e1;
+  }
+
   .public-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -952,6 +968,16 @@
             {% endif %}
           {% endif %}
         </div>
+
+        {% if can_pay %}
+          <div class="summary-safe-note">
+            {% if lang == 'es' %}
+              El pago en línea se procesa de forma segura a través de Stripe. El PDF y el historial de esta factura seguirán disponibles después del pago.
+            {% else %}
+              Online payment is processed securely through Stripe. The PDF and invoice history will remain available after payment.
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -1203,6 +1229,9 @@
         {% if can_pay %}
         <div class="trust-pill">
           {% if lang == 'es' %}Pago en línea{% else %}Online Payment{% endif %}
+        </div>
+        <div class="trust-pill">
+          {% if lang == 'es' %}Checkout seguro{% else %}Secure Checkout{% endif %}
         </div>
         {% endif %}
       </div>

@@ -14,6 +14,8 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% set current_plan_label = 'Business' if user_plan == 'enterprise' else (user_plan|capitalize) %}
+{% set required_plan_label = 'Business' if required_plan == 'enterprise' else (required_plan|capitalize) %}
 
 <div class="page-shell" style="max-width: 1100px;">
     <section class="page-card fade-in-up" style="padding: 30px 28px 26px;">
@@ -55,7 +57,7 @@
                     {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
                 </div>
                 <div class="snap-value" style="margin-top:6px;">
-                    {{ user_plan|capitalize }}
+                    {{ current_plan_label }}
                 </div>
                 <div class="mini-hint" style="margin-top:8px;">
                     {% if lang == 'es' %}
@@ -71,7 +73,7 @@
                     {% if lang == 'es' %}Plan requerido{% else %}Required plan{% endif %}
                 </div>
                 <div class="snap-value" style="margin-top:6px;">
-                    {{ required_plan|capitalize }}
+                    {{ required_plan_label }}
                     {% if lang == 'es' %} o superior{% else %} or higher{% endif %}
                 </div>
                 <div class="mini-hint" style="margin-top:8px;">
@@ -88,7 +90,9 @@
             {% for key, plan in plans.items() %}
                 {% set is_current = (key == user_plan) %}
                 {% set is_required = (key == required_plan) %}
+                {% set display_key = 'business' if key == 'enterprise' else key %}
                 {% set plan_name = plan.name if plan.name is defined else (key|capitalize) %}
+                {% set display_name = 'Business' if key == 'enterprise' else plan_name %}
 
                 <article class="pricing-card {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %} {% if is_current %}pricing-current{% endif %}"
                          style="position:relative;">
@@ -98,28 +102,38 @@
                             <div>
                                 <div class="pricing-name">
                                     {% if lang == 'es' %}
-                                        {% if key == 'free' %}Starter{% elif key == 'pro' %}Pro{% else %}Studio{% endif %}
+                                        {% if display_key == 'free' %}Starter{% elif display_key == 'pro' %}Pro{% else %}Business{% endif %}
                                     {% else %}
-                                        {{ plan_name }}
+                                        {{ display_name }}
                                     {% endif %}
                                 </div>
                                 <p class="pricing-tagline">
                                     {% if lang == 'es' %}
-                                        {% if key == 'free' %}
+                                        {% if display_key == 'free' %}
                                             Para freelancers que están empezando.
-                                        {% elif key == 'pro' %}
+                                        {% elif display_key == 'pro' %}
                                             Para negocios en crecimiento que facturan con frecuencia.
                                         {% else %}
-                                            Para agencias y equipos que necesitan más.
+                                            Para operaciones que necesitan pagos más profesionales y más control.
                                         {% endif %}
                                     {% else %}
-                                        {{ plan.tagline }}
+                                        {% if display_key == 'business' %}
+                                            For operations that need more professional payment setup and more control.
+                                        {% else %}
+                                            {{ plan.tagline }}
+                                        {% endif %}
                                     {% endif %}
                                 </p>
                             </div>
 
                             <div class="pricing-price" style="text-align:right;">
-                                <span class="amount">{{ plan.price_label }}</span><br>
+                                <span class="amount">
+                                    {% if display_key == 'business' and plan.price_label == 'Contact us' %}
+                                        $49 / month
+                                    {% else %}
+                                        {{ plan.price_label }}
+                                    {% endif %}
+                                </span><br>
 
                                 {% if is_current %}
                                     <span class="pricing-pill current">
@@ -136,29 +150,36 @@
 
                     <ul class="pricing-features">
                         {% if lang == 'es' %}
-                            {% if key == 'free' %}
+                            {% if display_key == 'free' %}
                                 <li><span class="feature-bullet">•</span><span>Hasta 10 facturas al mes</span></li>
                                 <li><span class="feature-bullet">•</span><span>Una sola plantilla de factura</span></li>
                                 <li><span class="feature-bullet">•</span><span>Panel básico</span></li>
-                            {% elif key == 'pro' %}
+                            {% elif display_key == 'pro' %}
                                 <li><span class="feature-bullet">•</span><span>Facturas ilimitadas</span></li>
                                 <li><span class="feature-bullet">•</span><span>Múltiples plantillas de factura</span></li>
                                 <li><span class="feature-bullet">•</span><span>Envío por correo + PDFs</span></li>
                                 <li><span class="feature-bullet">•</span><span>Enlaces públicos y botón “Pagar ahora”</span></li>
-                                <li><span class="feature-bullet">•</span><span>Facturas recurrentes</span></li>
+                                <li><span class="feature-bullet">•</span><span>BillBeam Assistant</span></li>
                             {% else %}
                                 <li><span class="feature-bullet">•</span><span>Todas las funciones Pro</span></li>
-                                <li><span class="feature-bullet">•</span><span>Branding y dominios personalizados</span></li>
+                                <li><span class="feature-bullet">•</span><span>Conexión de cuenta Stripe</span></li>
+                                <li><span class="feature-bullet">•</span><span>Panel de pagos y cobros más profesional</span></li>
                                 <li><span class="feature-bullet">•</span><span>Soporte prioritario</span></li>
-                                <li><span class="feature-bullet">•</span><span>Acceso por equipo (próximamente)</span></li>
                             {% endif %}
                         {% else %}
-                            {% for f in plan.features %}
-                                <li>
-                                    <span class="feature-bullet">•</span>
-                                    <span>{{ f }}</span>
-                                </li>
-                            {% endfor %}
+                            {% if display_key == 'business' %}
+                                <li><span class="feature-bullet">•</span><span>All Pro features</span></li>
+                                <li><span class="feature-bullet">•</span><span>Stripe account connection</span></li>
+                                <li><span class="feature-bullet">•</span><span>More professional payment setup</span></li>
+                                <li><span class="feature-bullet">•</span><span>Priority support</span></li>
+                            {% else %}
+                                {% for f in plan.features %}
+                                    <li>
+                                        <span class="feature-bullet">•</span>
+                                        <span>{{ f }}</span>
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </ul>
 
@@ -175,7 +196,7 @@
                                 {% endif %}
                             </span>
 
-                        {% elif key == 'pro' %}
+                        {% elif display_key == 'pro' %}
                             <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand btn-compact">
                                 {% if lang == 'es' %}Ver Pro{% else %}View Pro{% endif %}
                             </a>
@@ -187,15 +208,15 @@
                                 {% endif %}
                             </span>
 
-                        {% elif key == 'enterprise' %}
+                        {% elif display_key == 'business' %}
                             <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
-                                {% if lang == 'es' %}Ver Studio{% else %}View Studio{% endif %}
+                                {% if lang == 'es' %}Ver Business{% else %}View Business{% endif %}
                             </a>
                             <span class="pricing-note">
                                 {% if lang == 'es' %}
-                                    Pensado para operaciones con necesidades más avanzadas.
+                                    Pensado para operaciones que necesitan pagos más profesionales y mayor control.
                                 {% else %}
-                                    Built for operations with more advanced needs.
+                                    Built for operations that need more professional payment handling and more control.
                                 {% endif %}
                             </span>
 

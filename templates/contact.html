@@ -16,24 +16,287 @@
 {% set lang = request.args.get('lang', 'en') %}
 
 <style>
-/* Fix long email wrapping on mobile */
-.contact-email a,
-.contact-email {
-    overflow-wrap:anywhere;
-    word-break:break-word;
+.contact-shell {
+    max-width: 1040px;
+    margin: 0 auto;
+    display: grid;
+    gap: 22px;
 }
 
-@media (max-width:640px){
-    .contact-email a{
-        display:inline-block;
-        max-width:100%;
-        line-height:1.6;
+.contact-hero,
+.contact-main-card,
+.contact-side-card {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+}
+
+body.dark .contact-hero,
+body.dark .contact-main-card,
+body.dark .contact-side-card {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+}
+
+.contact-hero {
+    padding: 30px 28px 24px;
+}
+
+.contact-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.14);
+}
+
+body.dark .contact-eyebrow {
+    background: rgba(37,99,235,0.18);
+    border-color: rgba(96,165,250,0.20);
+}
+
+.contact-hero h1 {
+    margin: 0 0 10px 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.contact-lead {
+    margin: 0;
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #64748b;
+}
+
+body.dark .contact-lead {
+    color: #94a3b8;
+}
+
+.contact-trust-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.contact-trust-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.24);
+}
+
+body.dark .contact-trust-pill {
+    background: rgba(15,23,42,0.52);
+    border-color: rgba(148,163,184,0.24);
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0,1.2fr) minmax(300px,0.8fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.contact-main-card {
+    padding: 26px 24px;
+}
+
+.contact-side-card {
+    padding: 20px 18px;
+}
+
+.contact-section-title {
+    margin: 0 0 10px 0;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+}
+
+.contact-copy {
+    font-size: 14px;
+    line-height: 1.75;
+    color: #475569;
+}
+
+body.dark .contact-copy {
+    color: #cbd5e1;
+}
+
+.contact-cards {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.contact-item {
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.04);
+    border: 1px solid rgba(148,163,184,0.22);
+}
+
+body.dark .contact-item {
+    background: rgba(15,23,42,0.42);
+    border-color: rgba(148,163,184,0.18);
+}
+
+.contact-item h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+}
+
+.contact-item p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #475569;
+}
+
+body.dark .contact-item p {
+    color: #cbd5e1;
+}
+
+.contact-tip {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.10));
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.68;
+    color: #475569;
+}
+
+body.dark .contact-tip {
+    color: #cbd5e1;
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+}
+
+.contact-side-title {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+}
+
+.contact-side-stack {
+    display: grid;
+    gap: 14px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.contact-meta-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .7;
+}
+
+.contact-meta-value {
+    margin-top: 4px;
+    opacity: .92;
+}
+
+.contact-links {
+    margin-top: 4px;
+    display: grid;
+    gap: 6px;
+}
+
+.contact-links a,
+.contact-email a,
+.contact-email {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.contact-links a,
+.contact-email a {
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.contact-links a:hover,
+.contact-email a:hover {
+    text-decoration: underline;
+}
+
+.contact-side-note {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(15,23,42,0.04);
+    border: 1px solid rgba(148,163,184,0.22);
+    font-size: 12px;
+    line-height: 1.65;
+    opacity: .92;
+}
+
+body.dark .contact-side-note {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.18);
+}
+
+@media (max-width: 900px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .contact-hero,
+    .contact-main-card,
+    .contact-side-card {
+        padding: 18px 16px;
+        border-radius: 18px;
+    }
+
+    .contact-email a {
+        display: inline-block;
+        max-width: 100%;
+        line-height: 1.6;
     }
 }
 </style>
 
-<div class="dashboard-header">
-    <div>
+<div class="contact-shell">
+
+    <section class="contact-hero fade-in-up">
+        <div class="contact-eyebrow">
+            {% if lang == 'es' %}
+                BillBeam
+            {% else %}
+                BillBeam
+            {% endif %}
+        </div>
+
         <h1>
             {% if lang == 'es' %}
                 Contacto
@@ -41,38 +304,32 @@
                 Contact
             {% endif %}
         </h1>
-        <p style="margin:6px 0 0 0; font-size:14px; opacity:.82; max-width:760px;">
+
+        <p class="contact-lead">
             {% if lang == 'es' %}
                 Si necesitas ayuda, quieres compartir comentarios o tienes una consulta relacionada con tu cuenta, BillBeam o temas legales, este es el mejor punto de partida.
             {% else %}
                 If you need help, want to share feedback, or have a question related to your account, BillBeam, or legal matters, this is the best place to start.
             {% endif %}
         </p>
-    </div>
-</div>
 
-<div class="form-wrapper fade-in-up" style="max-width:980px; margin:0 auto;">
-    <div style="display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,0.8fr); gap:20px; align-items:start;">
-
-        <section>
-            <div style="
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                padding:6px 10px;
-                border-radius:999px;
-                background:rgba(37,99,235,0.08);
-                border:1px solid rgba(37,99,235,0.14);
-                font-size:12px;
-                font-weight:800;
-                letter-spacing:.06em;
-                text-transform:uppercase;
-                margin-bottom:14px;
-            ">
-                BillBeam
+        <div class="contact-trust-row">
+            <div class="contact-trust-pill">
+                {% if lang == 'es' %}Soporte claro{% else %}Clear support{% endif %}
             </div>
+            <div class="contact-trust-pill">
+                {% if lang == 'es' %}Respuesta humana{% else %}Human response{% endif %}
+            </div>
+            <div class="contact-trust-pill">
+                {% if lang == 'es' %}Canal oficial{% else %}Official channel{% endif %}
+            </div>
+        </div>
+    </section>
 
-            <h2 style="margin:0 0 10px 0; font-size:22px;">
+    <div class="contact-grid fade-in-up">
+
+        <section class="contact-main-card">
+            <h2 class="contact-section-title">
                 {% if lang == 'es' %}
                     ¿Cómo podemos ayudarte?
                 {% else %}
@@ -80,7 +337,7 @@
                 {% endif %}
             </h2>
 
-            <p style="font-size:14px; line-height:1.75; opacity:.9; margin:0 0 18px 0;">
+            <p class="contact-copy">
                 {% if lang == 'es' %}
                     Para recibir ayuda más rápido, incluye una breve descripción de tu consulta, la dirección de correo asociada a tu cuenta y, si corresponde, capturas de pantalla, el número de factura o el mensaje de error que viste.
                 {% else %}
@@ -88,22 +345,17 @@
                 {% endif %}
             </p>
 
-            <div style="display:grid; gap:14px;">
+            <div class="contact-cards">
 
-                <div style="
-                    padding:16px;
-                    border-radius:16px;
-                    background:rgba(15,23,42,0.04);
-                    border:1px solid rgba(148,163,184,0.22);
-                ">
-                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                <div class="contact-item">
+                    <h3>
                         {% if lang == 'es' %}
                             Soporte general
                         {% else %}
                             General support
                         {% endif %}
                     </h3>
-                    <p style="margin:0; font-size:14px; line-height:1.7; opacity:.88;">
+                    <p>
                         {% if lang == 'es' %}
                             Para preguntas sobre cuentas, facturas, pagos, enlaces públicos, errores del producto y ayuda de uso.
                         {% else %}
@@ -112,20 +364,15 @@
                     </p>
                 </div>
 
-                <div style="
-                    padding:16px;
-                    border-radius:16px;
-                    background:rgba(15,23,42,0.04);
-                    border:1px solid rgba(148,163,184,0.22);
-                ">
-                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                <div class="contact-item">
+                    <h3>
                         {% if lang == 'es' %}
                             Comentarios del producto
                         {% else %}
                             Product feedback
                         {% endif %}
                     </h3>
-                    <p style="margin:0; font-size:14px; line-height:1.7; opacity:.88;">
+                    <p>
                         {% if lang == 'es' %}
                             Para ideas, solicitudes de funciones, mejoras del flujo de trabajo y comentarios sobre la experiencia general.
                         {% else %}
@@ -134,20 +381,15 @@
                     </p>
                 </div>
 
-                <div style="
-                    padding:16px;
-                    border-radius:16px;
-                    background:rgba(15,23,42,0.04);
-                    border:1px solid rgba(148,163,184,0.22);
-                ">
-                    <h3 style="margin:0 0 8px 0; font-size:16px;">
+                <div class="contact-item">
+                    <h3>
                         {% if lang == 'es' %}
                             Asuntos legales o de privacidad
                         {% else %}
                             Legal or privacy matters
                         {% endif %}
                     </h3>
-                    <p style="margin:0; font-size:14px; line-height:1.7; opacity:.88;">
+                    <p>
                         {% if lang == 'es' %}
                             Para solicitudes relacionadas con privacidad, términos, uso aceptable, eliminación de cuenta o consultas formales.
                         {% else %}
@@ -157,16 +399,18 @@
                 </div>
 
             </div>
+
+            <div class="contact-tip">
+                {% if lang == 'es' %}
+                    Consejo: si tu consulta está relacionada con una factura específica, incluir el número de factura y una breve explicación del problema suele acelerar la respuesta.
+                {% else %}
+                    Tip: if your request relates to a specific invoice, including the invoice number and a short explanation of the issue usually speeds things up.
+                {% endif %}
+            </div>
         </section>
 
-        <aside style="
-            padding:18px;
-            border-radius:18px;
-            background:rgba(15,23,42,0.05);
-            border:1px solid rgba(148,163,184,0.22);
-        ">
-
-            <h2 style="margin:0 0 12px 0; font-size:18px;">
+        <aside class="contact-side-card">
+            <h2 class="contact-side-title">
                 {% if lang == 'es' %}
                     Detalles de contacto
                 {% else %}
@@ -174,24 +418,24 @@
                 {% endif %}
             </h2>
 
-            <div style="display:grid; gap:14px; font-size:14px; line-height:1.7;">
+            <div class="contact-side-stack">
 
                 <div class="contact-email">
-                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                    <div class="contact-meta-label">
                         {% if lang == 'es' %}Correo de contacto{% else %}Contact email{% endif %}
                     </div>
-                    <div style="margin-top:4px;">
-                        <a href="mailto:support@billbeam.app" style="font-weight:600;">
+                    <div class="contact-meta-value">
+                        <a href="mailto:support@billbeam.app">
                             support@billbeam.app
                         </a>
                     </div>
                 </div>
 
                 <div>
-                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                    <div class="contact-meta-label">
                         {% if lang == 'es' %}Tiempo de respuesta{% else %}Response time{% endif %}
                     </div>
-                    <div style="margin-top:4px; opacity:.9;">
+                    <div class="contact-meta-value">
                         {% if lang == 'es' %}
                             Normalmente respondemos dentro de 24 horas hábiles.
                         {% else %}
@@ -201,19 +445,26 @@
                 </div>
 
                 <div>
-                    <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7;">
+                    <div class="contact-meta-label">
                         {% if lang == 'es' %}Páginas relacionadas{% else %}Related pages{% endif %}
                     </div>
-                    <div style="margin-top:4px; display:grid; gap:6px;">
-                        <a href="/support?lang={{ lang }}" style="font-weight:600;">{% if lang == 'es' %}Soporte{% else %}Support{% endif %}</a>
-                        <a href="/faq?lang={{ lang }}" style="font-weight:600;">FAQ</a>
-                        <a href="/privacy?lang={{ lang }}" style="font-weight:600;">{% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}</a>
-                        <a href="/terms?lang={{ lang }}" style="font-weight:600;">{% if lang == 'es' %}Términos{% else %}Terms{% endif %}</a>
+                    <div class="contact-links">
+                        <a href="/support?lang={{ lang }}">{% if lang == 'es' %}Soporte{% else %}Support{% endif %}</a>
+                        <a href="/faq?lang={{ lang }}">FAQ</a>
+                        <a href="/privacy?lang={{ lang }}">{% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}</a>
+                        <a href="/terms?lang={{ lang }}">{% if lang == 'es' %}Términos{% else %}Terms{% endif %}</a>
                     </div>
                 </div>
 
             </div>
 
+            <div class="contact-side-note">
+                {% if lang == 'es' %}
+                    Usa este canal para preguntas relacionadas con BillBeam. Para temas delicados o formales, incluir el contexto adecuado desde el primer mensaje suele ayudar mucho.
+                {% else %}
+                    Use this channel for BillBeam-related questions. For sensitive or formal matters, including the right context in your first message usually helps a lot.
+                {% endif %}
+            </div>
         </aside>
     </div>
 

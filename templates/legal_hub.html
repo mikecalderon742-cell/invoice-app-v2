@@ -15,158 +15,429 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="dashboard-header">
-    <h1>
-        {% if lang == 'es' %}
-            Centro legal
-        {% else %}
-            Legal Center
-        {% endif %}
-    </h1>
+<style>
+  .legal-hub-shell {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
 
-    <p style="max-width:720px; font-size:14px; opacity:.85; margin-top:6px;">
-        {% if lang == 'es' %}
-        Aquí puedes consultar todas las políticas legales y documentos regulatorios relacionados con el uso de BillBeam. Estas páginas describen cómo protegemos datos, cómo funciona la facturación y qué condiciones aplican al uso del servicio.
-        {% else %}
-        This page provides access to all legal and regulatory documents related to the use of BillBeam. These policies explain how data is handled, how billing works, and the conditions that apply to use of the service.
-        {% endif %}
-    </p>
-</div>
+  .legal-hub-hero {
+    margin-bottom: 22px;
+  }
 
+  .legal-hub-hero-card {
+    border-radius: 26px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 22px 52px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    padding: 30px 28px 24px;
+  }
 
-<div class="form-wrapper fade-in-up" style="max-width:980px; margin:auto;">
+  body.dark .legal-hub-hero-card {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 24px 56px rgba(2,6,23,0.82),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
 
-    <div class="dashboard-cards">
+  .legal-hub-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.14);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
 
-        <!-- Privacy Policy -->
-        <div class="card kpi teal">
-            <h2>
-                {% if lang == 'es' %}Política de privacidad{% else %}Privacy Policy{% endif %}
-            </h2>
-            <p style="font-size:13px; opacity:.85;">
-                {% if lang == 'es' %}
-                Explica cómo recopilamos, usamos y protegemos datos personales.
-                {% else %}
-                Explains how we collect, use, and protect personal data.
-                {% endif %}
-            </p>
+  body.dark .legal-hub-eyebrow {
+    background: rgba(37,99,235,0.18);
+    border-color: rgba(96,165,250,0.22);
+  }
 
-            <div style="margin-top:10px;">
-                <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Leer política{% else %}Read policy{% endif %}
-                </a>
-            </div>
+  .legal-hub-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .legal-hub-title {
+    margin: 0 0 8px 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .legal-hub-copy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #64748b;
+    margin: 0;
+  }
+
+  body.dark .legal-hub-copy {
+    color: #94a3b8;
+  }
+
+  .legal-hub-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .legal-hub-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.24);
+    white-space: nowrap;
+  }
+
+  body.dark .legal-hub-pill {
+    background: rgba(15,23,42,0.58);
+    border-color: rgba(148,163,184,0.24);
+  }
+
+  .legal-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .legal-hub-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 100%;
+    padding: 22px 20px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+  }
+
+  body.dark .legal-hub-card {
+    background: rgba(15,23,42,0.76);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .legal-hub-card::after {
+    content: "";
+    position: absolute;
+    right: -30px;
+    bottom: -30px;
+    width: 120px;
+    height: 120px;
+    border-radius: 999px;
+    pointer-events: none;
+    opacity: 0.45;
+  }
+
+  .legal-hub-card.teal::after {
+    background: radial-gradient(circle, rgba(20,184,166,0.20), transparent 68%);
+  }
+
+  .legal-hub-card.blue::after {
+    background: radial-gradient(circle, rgba(59,130,246,0.20), transparent 68%);
+  }
+
+  .legal-hub-card-head {
+    display: grid;
+    gap: 8px;
+  }
+
+  .legal-hub-card-title {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .legal-hub-card-copy {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .legal-hub-card-copy {
+    color: #94a3b8;
+  }
+
+  .legal-hub-card-meta {
+    margin-top: auto;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .legal-hub-card-meta {
+    color: #94a3b8;
+  }
+
+  .legal-hub-footer {
+    margin-top: 18px;
+    font-size: 12px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .legal-hub-footer {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 980px) {
+    .legal-hub-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .legal-hub-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .legal-hub-hero-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .legal-hub-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+  }
+</style>
+
+<div class="legal-hub-shell">
+
+  <section class="legal-hub-hero">
+    <div class="legal-hub-hero-card fade-in-up">
+      <div class="legal-hub-eyebrow">
+        {% if lang == 'es' %}Documentación legal{% else %}Legal documentation{% endif %}
+      </div>
+
+      <div class="legal-hub-top">
+        <div>
+          <h1 class="legal-hub-title">
+            {% if lang == 'es' %}
+              Centro legal
+            {% else %}
+              Legal Center
+            {% endif %}
+          </h1>
+
+          <p class="legal-hub-copy">
+            {% if lang == 'es' %}
+              Aquí puedes consultar todas las políticas legales y documentos regulatorios relacionados con el uso de BillBeam. Estas páginas describen cómo protegemos datos, cómo funciona la facturación y qué condiciones aplican al uso del servicio.
+            {% else %}
+              This page provides access to all legal and regulatory documents related to the use of BillBeam. These policies explain how data is handled, how billing works, and the conditions that apply to use of the service.
+            {% endif %}
+          </p>
         </div>
 
-        <!-- Terms -->
-        <div class="card kpi blue">
-            <h2>
-                {% if lang == 'es' %}Términos de servicio{% else %}Terms of Service{% endif %}
-            </h2>
-            <p style="font-size:13px; opacity:.85;">
-                {% if lang == 'es' %}
-                Las condiciones legales para usar BillBeam.
-                {% else %}
-                The legal conditions governing use of BillBeam.
-                {% endif %}
-            </p>
-
-            <div style="margin-top:10px;">
-                <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Leer términos{% else %}Read terms{% endif %}
-                </a>
-            </div>
+        <div class="legal-hub-trust">
+          <span class="legal-hub-pill">
+            {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+          </span>
+          <span class="legal-hub-pill">
+            {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
+          </span>
+          <span class="legal-hub-pill">
+            {% if lang == 'es' %}Seguridad{% else %}Security{% endif %}
+          </span>
         </div>
-
-        <!-- Billing -->
-        <div class="card kpi teal">
-            <h2>
-                {% if lang == 'es' %}Facturación y suscripciones{% else %}Billing Policy{% endif %}
-            </h2>
-            <p style="font-size:13px; opacity:.85;">
-                {% if lang == 'es' %}
-                Describe planes, renovaciones, cancelaciones y reembolsos.
-                {% else %}
-                Describes plans, renewals, cancellations, and refunds.
-                {% endif %}
-            </p>
-
-            <div style="margin-top:10px;">
-                <a href="/billing-policy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Ver política{% else %}View policy{% endif %}
-                </a>
-            </div>
-        </div>
-
-        <!-- Data Security -->
-        <div class="card kpi blue">
-            <h2>
-                {% if lang == 'es' %}Seguridad de datos{% else %}Data Security{% endif %}
-            </h2>
-            <p style="font-size:13px; opacity:.85;">
-                {% if lang == 'es' %}
-                Cómo protegemos información y manejamos seguridad de la plataforma.
-                {% else %}
-                How we protect information and manage platform security.
-                {% endif %}
-            </p>
-
-            <div style="margin-top:10px;">
-                <a href="/data-security{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Ver detalles{% else %}View details{% endif %}
-                </a>
-            </div>
-        </div>
-
-        <!-- AI Policy -->
-        <div class="card kpi teal">
-            <h2>
-                {% if lang == 'es' %}Aviso de IA{% else %}AI Notice{% endif %}
-            </h2>
-            <p style="font-size:13px; opacity:.85;">
-                {% if lang == 'es' %}
-                Información sobre el uso de funciones impulsadas por inteligencia artificial.
-                {% else %}
-                Information about the use of AI-powered features in the product.
-                {% endif %}
-            </p>
-
-            <div style="margin-top:10px;">
-                <a href="/ai-notice{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Ver aviso{% else %}View notice{% endif %}
-                </a>
-            </div>
-        </div>
-
-        <!-- Contact -->
-        <div class="card kpi blue">
-            <h2>
-                {% if lang == 'es' %}Contacto legal{% else %}Legal Contact{% endif %}
-            </h2>
-            <p style="font-size:13px; opacity:.85;">
-                {% if lang == 'es' %}
-                Para consultas legales o regulatorias.
-                {% else %}
-                For legal or regulatory inquiries.
-                {% endif %}
-            </p>
-
-            <div style="margin-top:10px;">
-                <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Contactar{% else %}Contact{% endif %}
-                </a>
-            </div>
-        </div>
-
+      </div>
     </div>
+  </section>
 
-    <div style="margin-top:18px; font-size:12px; opacity:.7;">
-        {% if lang == 'es' %}
-        Estos documentos pueden actualizarse ocasionalmente para reflejar cambios regulatorios, mejoras de producto o requisitos de cumplimiento.
-        {% else %}
-        These documents may be updated periodically to reflect regulatory changes, product improvements, or compliance requirements.
-        {% endif %}
-    </div>
+  <div class="legal-hub-grid fade-in-up">
+
+    <article class="legal-hub-card teal">
+      <div class="legal-hub-card-head">
+        <h2 class="legal-hub-card-title">
+          {% if lang == 'es' %}Política de privacidad{% else %}Privacy Policy{% endif %}
+        </h2>
+        <p class="legal-hub-card-copy">
+          {% if lang == 'es' %}
+            Explica cómo recopilamos, usamos y protegemos datos personales.
+          {% else %}
+            Explains how we collect, use, and protect personal data.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}Leer política{% else %}Read policy{% endif %}
+        </a>
+      </div>
+
+      <div class="legal-hub-card-meta">
+        {% if lang == 'es' %}Privacidad y manejo de datos{% else %}Privacy and data handling{% endif %}
+      </div>
+    </article>
+
+    <article class="legal-hub-card blue">
+      <div class="legal-hub-card-head">
+        <h2 class="legal-hub-card-title">
+          {% if lang == 'es' %}Términos de servicio{% else %}Terms of Service{% endif %}
+        </h2>
+        <p class="legal-hub-card-copy">
+          {% if lang == 'es' %}
+            Las condiciones legales para usar BillBeam.
+          {% else %}
+            The legal conditions governing use of BillBeam.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}Leer términos{% else %}Read terms{% endif %}
+        </a>
+      </div>
+
+      <div class="legal-hub-card-meta">
+        {% if lang == 'es' %}Uso del producto y responsabilidades{% else %}Product use and responsibilities{% endif %}
+      </div>
+    </article>
+
+    <article class="legal-hub-card teal">
+      <div class="legal-hub-card-head">
+        <h2 class="legal-hub-card-title">
+          {% if lang == 'es' %}Facturación y suscripciones{% else %}Billing Policy{% endif %}
+        </h2>
+        <p class="legal-hub-card-copy">
+          {% if lang == 'es' %}
+            Describe planes, renovaciones, cancelaciones y reembolsos.
+          {% else %}
+            Describes plans, renewals, cancellations, and refunds.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <a href="/billing-policy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}Ver política{% else %}View policy{% endif %}
+        </a>
+      </div>
+
+      <div class="legal-hub-card-meta">
+        {% if lang == 'es' %}Planes, cobros y renovaciones{% else %}Plans, charges, and renewals{% endif %}
+      </div>
+    </article>
+
+    <article class="legal-hub-card blue">
+      <div class="legal-hub-card-head">
+        <h2 class="legal-hub-card-title">
+          {% if lang == 'es' %}Seguridad de datos{% else %}Data Security{% endif %}
+        </h2>
+        <p class="legal-hub-card-copy">
+          {% if lang == 'es' %}
+            Cómo protegemos información y manejamos seguridad de la plataforma.
+          {% else %}
+            How we protect information and manage platform security.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <a href="/data-security{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}Ver detalles{% else %}View details{% endif %}
+        </a>
+      </div>
+
+      <div class="legal-hub-card-meta">
+        {% if lang == 'es' %}Protección y prácticas generales{% else %}Protection and general practices{% endif %}
+      </div>
+    </article>
+
+    <article class="legal-hub-card teal">
+      <div class="legal-hub-card-head">
+        <h2 class="legal-hub-card-title">
+          {% if lang == 'es' %}Aviso de IA{% else %}AI Notice{% endif %}
+        </h2>
+        <p class="legal-hub-card-copy">
+          {% if lang == 'es' %}
+            Información sobre el uso de funciones impulsadas por inteligencia artificial.
+          {% else %}
+            Information about the use of AI-powered features in the product.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <a href="/ai-notice{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}Ver aviso{% else %}View notice{% endif %}
+        </a>
+      </div>
+
+      <div class="legal-hub-card-meta">
+        {% if lang == 'es' %}Asistencia de IA y límites{% else %}AI assistance and limits{% endif %}
+      </div>
+    </article>
+
+    <article class="legal-hub-card blue">
+      <div class="legal-hub-card-head">
+        <h2 class="legal-hub-card-title">
+          {% if lang == 'es' %}Contacto legal{% else %}Legal Contact{% endif %}
+        </h2>
+        <p class="legal-hub-card-copy">
+          {% if lang == 'es' %}
+            Para consultas legales o regulatorias.
+          {% else %}
+            For legal or regulatory inquiries.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}Contactar{% else %}Contact{% endif %}
+        </a>
+      </div>
+
+      <div class="legal-hub-card-meta">
+        {% if lang == 'es' %}Ayuda formal y consultas{% else %}Formal help and inquiries{% endif %}
+      </div>
+    </article>
+
+  </div>
+
+  <div class="legal-hub-footer">
+    {% if lang == 'es' %}
+      Estos documentos pueden actualizarse ocasionalmente para reflejar cambios regulatorios, mejoras de producto o requisitos de cumplimiento.
+    {% else %}
+      These documents may be updated periodically to reflect regulatory changes, product improvements, or compliance requirements.
+    {% endif %}
+  </div>
 
 </div>
 

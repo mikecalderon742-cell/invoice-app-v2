@@ -15,8 +15,138 @@
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
 
-<div class="page-shell" style="max-width:1120px;">
-    <section class="page-card fade-in-up" style="padding:30px 28px 24px; margin-bottom:24px;">
+<style>
+    .payment-shell {
+        display: grid;
+        gap: 24px;
+    }
+
+    .payment-hero-card,
+    .payment-form-card,
+    .payment-side-card {
+        border-radius: 26px;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid rgba(15,23,42,0.06);
+        box-shadow:
+            0 22px 52px rgba(15,23,42,0.055),
+            0 0 0 1px rgba(15,23,42,0.015);
+        backdrop-filter: blur(12px);
+    }
+
+    body.dark .payment-hero-card,
+    body.dark .payment-form-card,
+    body.dark .payment-side-card {
+        background: rgba(2,6,23,0.76);
+        border-color: rgba(148,163,184,0.18);
+        box-shadow:
+            0 24px 56px rgba(2,6,23,0.82),
+            0 0 0 1px rgba(59,130,246,0.06);
+    }
+
+    .payment-hero-card {
+        padding: 30px 28px 24px;
+    }
+
+    .payment-form-card {
+        padding: 28px 26px;
+    }
+
+    .payment-side-card {
+        padding: 28px 24px;
+    }
+
+    .payment-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    .payment-form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 10px;
+    }
+
+    .payment-field {
+        display: grid;
+        gap: 6px;
+    }
+
+    .payment-field label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .payment-help {
+        font-size: 12px;
+        opacity: 0.74;
+        line-height: 1.55;
+        margin-top: 8px;
+    }
+
+    .payment-feedback {
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid transparent;
+    }
+
+    .payment-feedback.success {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #16a34a;
+    }
+
+    .payment-feedback.error {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #dc2626;
+    }
+
+    body.dark .payment-feedback.success {
+        background: rgba(6, 78, 59, 0.92);
+        color: #dcfce7;
+        border-color: rgba(34,197,94,0.55);
+    }
+
+    body.dark .payment-feedback.error {
+        background: rgba(127, 29, 29, 0.92);
+        color: #fee2e2;
+        border-color: rgba(239,68,68,0.5);
+    }
+
+    .payment-snapshot-note {
+        margin-top: 16px;
+        font-size: 13px;
+        line-height: 1.65;
+        opacity: 0.82;
+    }
+
+    .payments-table-scroll {
+        overflow-x: auto;
+    }
+
+    @media (max-width: 920px) {
+        .payment-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .payment-hero-card,
+        .payment-form-card,
+        .payment-side-card {
+            padding: 22px 18px;
+        }
+    }
+</style>
+
+<div class="page-shell payment-shell" style="max-width:1120px;">
+    <section class="payment-hero-card fade-in-up">
         <div class="table-section-header" style="align-items:flex-start; margin-bottom:18px;">
             <div>
                 <div class="page-eyebrow">
@@ -73,29 +203,15 @@
 
     {% if feedback_message %}
         <div class="fade-in-up" style="margin-bottom:20px;">
-            <div style="
-                padding:12px 14px;
-                border-radius:12px;
-                font-size:14px;
-                font-weight:500;
-                {% if feedback_type == 'success' %}
-                    background:#dcfce7;
-                    color:#166534;
-                    border:1px solid #16a34a;
-                {% else %}
-                    background:#fee2e2;
-                    color:#b91c1c;
-                    border:1px solid #dc2626;
-                {% endif %}
-            ">
+            <div class="payment-feedback {% if feedback_type == 'success' %}success{% else %}error{% endif %}">
                 {{ feedback_message }}
             </div>
         </div>
     {% endif %}
 
-    <div style="display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(0, 0.9fr); gap:24px;">
-        <section class="page-card fade-in-up" style="padding:28px 26px;">
-            <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px;">
+    <div class="payment-layout">
+        <section class="payment-form-card fade-in-up">
+            <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px; padding:0;">
                 <div>
                     <h2 style="margin:0 0 6px 0;">
                         {% if lang == 'es' %}Nuevo pago{% else %}New Payment{% endif %}
@@ -111,10 +227,10 @@
             </div>
 
             <form method="POST" action="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:10px;">
+                <div class="payment-form-grid">
 
-                    <div>
-                        <label for="amount" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                    <div class="payment-field">
+                        <label for="amount">
                             {% if lang == 'es' %}Importe del pago *{% else %}Payment Amount *{% endif %}
                         </label>
                         <input
@@ -128,8 +244,8 @@
                         >
                     </div>
 
-                    <div>
-                        <label for="method" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                    <div class="payment-field">
+                        <label for="method">
                             {% if lang == 'es' %}Método de pago{% else %}Payment Method{% endif %}
                         </label>
                         <input
@@ -140,8 +256,8 @@
                         >
                     </div>
 
-                    <div>
-                        <label for="note" style="display:block; font-weight:600; font-size:14px; margin-bottom:6px;">
+                    <div class="payment-field">
+                        <label for="note">
                             {% if lang == 'es' %}Nota interna{% else %}Internal Note{% endif %}
                         </label>
                         <textarea
@@ -153,7 +269,7 @@
                     </div>
                 </div>
 
-                <div style="font-size:12px; opacity:0.74; line-height:1.55; margin-top:8px;">
+                <div class="payment-help">
                     {% if lang == 'es' %}
                         Consejo: añade una nota breve si este pago fue parcial, si tiene número de referencia o si necesitas contexto para revisarlo después.
                     {% else %}
@@ -172,7 +288,7 @@
             </form>
         </section>
 
-        <aside class="page-card fade-in-up" style="padding:28px 24px;">
+        <aside class="payment-side-card fade-in-up">
             <h2 style="margin:0 0 14px 0;">
                 {% if lang == 'es' %}Resumen de factura{% else %}Invoice Snapshot{% endif %}
             </h2>
@@ -207,7 +323,7 @@
                 </div>
             </div>
 
-            <div style="margin-top:16px; font-size:13px; line-height:1.65; opacity:0.82;">
+            <div class="payment-snapshot-note">
                 {% if lang == 'es' %}
                     Cuando el total pagado alcance o supere el importe de la factura, BillBeam marcará la factura como pagada automáticamente.
                 {% else %}
@@ -241,32 +357,34 @@
                 </div>
             </div>
 
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>{% if lang == 'es' %}Importe{% else %}Amount{% endif %}</th>
-                        <th>{% if lang == 'es' %}Método{% else %}Method{% endif %}</th>
-                        <th>{% if lang == 'es' %}Nota{% else %}Note{% endif %}</th>
-                        <th>{% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in payments %}
+            <div class="payments-table-scroll">
+                <table class="modern-table">
+                    <thead>
                         <tr>
-                            <td>${{ "{:,.2f}".format(p[0]) }}</td>
-                            <td>{{ p[1] or "—" }}</td>
-                            <td>{{ p[2] or "—" }}</td>
-                            <td>
-                                {% if p[3] %}
-                                    {{ p[3].strftime('%Y-%m-%d %H:%M') }}
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
+                            <th>{% if lang == 'es' %}Importe{% else %}Amount{% endif %}</th>
+                            <th>{% if lang == 'es' %}Método{% else %}Method{% endif %}</th>
+                            <th>{% if lang == 'es' %}Nota{% else %}Note{% endif %}</th>
+                            <th>{% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for p in payments %}
+                            <tr>
+                                <td>${{ "{:,.2f}".format(p[0]) }}</td>
+                                <td>{{ p[1] or "—" }}</td>
+                                <td>{{ p[2] or "—" }}</td>
+                                <td>
+                                    {% if p[3] %}
+                                        {{ p[3].strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </section>
     {% endif %}
 </div>
