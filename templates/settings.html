@@ -428,7 +428,7 @@
     color: #9a3412;
   }
 
-  .payment-status-banner.locked {
+  .payment-status-banner.info {
     background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
     border-color: rgba(59,130,246,0.30);
     color: #1d4ed8;
@@ -450,7 +450,7 @@
     color: #fed7aa;
   }
 
-  body.dark .payment-status-banner.locked {
+  body.dark .payment-status-banner.info {
     background: linear-gradient(180deg, rgba(30,64,175,0.28), rgba(15,23,42,0.72));
     color: #dbeafe;
   }
@@ -950,28 +950,15 @@
             </h2>
             <div class="settings-card-sub">
                 {% if lang == 'es' %}
-                    Conecta tu cuenta profesional de Stripe para que tus clientes paguen facturas y los fondos se envíen a tu propia cuenta, sin que BillBeam maneje tu dinero directamente.
+                    Conecta tu cuenta de Stripe para que tus clientes puedan pagarte y tus fondos se dirijan a tu propia cuenta.
                 {% else %}
-                    Connect your professional Stripe account so clients can pay invoices and funds can route to your own account, without BillBeam directly handling your money.
+                    Connect your Stripe account so clients can pay you and funds can route to your own account.
                 {% endif %}
             </div>
 
             <div class="payment-shell-grid">
                 <div class="payment-status-stack">
-                    {% if current_plan != 'enterprise' %}
-                        <div class="payment-status-banner locked">
-                            <strong>
-                                {% if lang == 'es' %}Disponible en Studio{% else %}Available on Studio{% endif %}
-                            </strong>
-                            <div>
-                                {% if lang == 'es' %}
-                                    La conexión profesional de Stripe y la administración de depósitos forman parte del nivel Studio. Tu facturación actual sigue funcionando igual.
-                                {% else %}
-                                    Professional Stripe connection and payout management are part of the Studio tier. Your current invoicing workflow continues working as-is.
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% elif connect_ready %}
+                    {% if connect_ready %}
                         <div class="payment-status-banner ready">
                             <strong>
                                 {% if lang == 'es' %}Tu cuenta está lista{% else %}Your account is ready{% endif %}
@@ -998,15 +985,15 @@
                             </div>
                         </div>
                     {% else %}
-                        <div class="payment-status-banner pending">
+                        <div class="payment-status-banner info">
                             <strong>
-                                {% if lang == 'es' %}Aún no conectada{% else %}Not connected yet{% endif %}
+                                {% if lang == 'es' %}Conecta tu Stripe{% else %}Connect your Stripe{% endif %}
                             </strong>
                             <div>
                                 {% if lang == 'es' %}
-                                    Empieza la configuración profesional de pagos cuando quieras preparar depósitos y administración de cobros desde tu propia cuenta de Stripe.
+                                    Puedes conectar tu propia cuenta de Stripe desde aquí para preparar cobros y depósitos sin cambiar el resto de tu flujo.
                                 {% else %}
-                                    Start professional payment setup whenever you want to prepare payouts and payment management through your own Stripe account.
+                                    You can connect your own Stripe account here to prepare payments and payouts without changing the rest of your workflow.
                                 {% endif %}
                             </div>
                         </div>
@@ -1086,23 +1073,17 @@
                     {% endif %}
 
                     <div class="payment-actions">
-                        {% if current_plan == 'enterprise' %}
-                            <a href="{{ url_for('connect_payment_account', lang=lang) }}" class="btn btn-brand">
-                                {% if connect_connected %}
-                                    {% if lang == 'es' %}Completar configuración{% else %}Complete Setup{% endif %}
-                                {% else %}
-                                    {% if lang == 'es' %}Conectar Stripe{% else %}Connect Stripe{% endif %}
-                                {% endif %}
-                            </a>
-
+                        <a href="{{ url_for('connect_payment_account', lang=lang) }}" class="btn btn-brand">
                             {% if connect_connected %}
-                                <a href="{{ url_for('payment_account_dashboard', lang=lang) }}" class="btn btn-secondary">
-                                    {% if lang == 'es' %}Abrir panel de Stripe{% else %}Open Stripe Dashboard{% endif %}
-                                </a>
+                                {% if lang == 'es' %}Completar configuración{% else %}Complete Setup{% endif %}
+                            {% else %}
+                                {% if lang == 'es' %}Conectar Stripe{% else %}Connect Stripe{% endif %}
                             {% endif %}
-                        {% else %}
-                            <a href="{{ url_for('pricing', lang=lang) }}" class="btn btn-brand">
-                                {% if lang == 'es' %}Ver Studio{% else %}View Studio{% endif %}
+                        </a>
+
+                        {% if connect_connected %}
+                            <a href="{{ url_for('payment_account_dashboard', lang=lang) }}" class="btn btn-secondary">
+                                {% if lang == 'es' %}Abrir panel de Stripe{% else %}Open Stripe Dashboard{% endif %}
                             </a>
                         {% endif %}
                     </div>
@@ -1113,9 +1094,9 @@
                         <div class="payment-check-mark">1</div>
                         <div>
                             {% if lang == 'es' %}
-                                Conecta tu propia cuenta de Stripe para mantener una experiencia más profesional de cobros y depósitos.
+                                Conecta tu propia cuenta de Stripe para mantener una experiencia profesional de cobros y depósitos.
                             {% else %}
-                                Connect your own Stripe account to keep a more professional payment and payout experience.
+                                Connect your own Stripe account to keep a professional payment and payout experience.
                             {% endif %}
                         </div>
                     </div>
@@ -1135,9 +1116,9 @@
                         <div class="payment-check-mark">3</div>
                         <div>
                             {% if lang == 'es' %}
-                                Cuando la cuenta esté lista, BillBeam podrá dirigir el flujo de pagos de facturas de forma más profesional hacia tu propia cuenta.
+                                Cuando la cuenta esté lista, BillBeam podrá dirigir el flujo de pagos de facturas hacia tu propia cuenta.
                             {% else %}
-                                Once the account is ready, BillBeam can route invoice-payment flows more professionally to your own account.
+                                Once the account is ready, BillBeam can route invoice-payment flows to your own account.
                             {% endif %}
                         </div>
                     </div>
@@ -1146,9 +1127,9 @@
 
             <div class="settings-note" style="margin-top:16px;">
                 {% if lang == 'es' %}
-                    Importante: esta sección prepara una cuenta profesional de pagos sin cambiar por la fuerza la lógica que ya funciona en tu app. El objetivo es añadir valor y control, no romper tu flujo actual.
+                    Importante: esta sección prepara tu cuenta de Stripe sin romper la lógica que ya funciona en tu app. La idea es darte más valor, no complicar lo que ya sirve.
                 {% else %}
-                    Important: this section prepares a professional payment account without force-changing logic that already works in your app. The goal is to add value and control, not break your current flow.
+                    Important: this section prepares your Stripe account without breaking logic that already works in your app. The goal is to add value, not complicate what is already working.
                 {% endif %}
             </div>
         </div>
