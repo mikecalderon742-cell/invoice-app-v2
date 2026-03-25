@@ -642,6 +642,34 @@
     color: #cbd5e1;
   }
 
+  .pricing-subscription-disclosure {
+    margin-top: 10px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #334155;
+    font-weight: 700;
+    background: rgba(15,23,42,0.035);
+    border: 1px solid rgba(148,163,184,0.18);
+  }
+
+  .pricing-subscription-disclosure a {
+    color: #1d4ed8;
+    text-decoration: underline;
+    word-break: break-word;
+  }
+
+  body.dark .pricing-subscription-disclosure {
+    color: #e2e8f0;
+    background: rgba(15,23,42,0.46);
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  body.dark .pricing-subscription-disclosure a {
+    color: #93c5fd;
+  }
+
   @media (max-width: 1020px) {
     .pricing-grid,
     .pricing-hero-strip,
@@ -1002,6 +1030,32 @@
       {% endif %}
     </div>
   {% endif %}
+
+  <div class="pricing-subscription-disclosure">
+    {% if lang == 'es' %}
+      Detalles de suscripción:
+      <br>• BillBeam Pro es una suscripción mensual auto-renovable
+      <br>• Duración: 1 mes
+      <br>• Precio: $19.99 al mes
+      <br>• El pago se cargará a tu cuenta de Apple ID al confirmar la compra
+      <br>• La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual
+      <br>• Política de privacidad:
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver política de privacidad</a>
+      <br>• Términos de uso:
+      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver términos de uso</a>
+    {% else %}
+      Subscription details:
+      <br>• BillBeam Pro is a monthly auto-renewing subscription
+      <br>• Length: 1 month
+      <br>• Price: $19.99 per month
+      <br>• Payment will be charged to your Apple ID account at confirmation of purchase
+      <br>• Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period
+      <br>• Privacy Policy:
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">View Privacy Policy</a>
+      <br>• Terms of Use:
+      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">View Terms of Use</a>
+    {% endif %}
+  </div>
 
 </div>
 
