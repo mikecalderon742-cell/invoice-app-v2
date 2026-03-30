@@ -18,6 +18,18 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% set metrics = dashboard_metrics if dashboard_metrics is defined and dashboard_metrics else {} %}
+{% set outstanding_receivables = metrics.outstanding_receivables if metrics.outstanding_receivables is defined else 0 %}
+{% set overdue_receivables = metrics.overdue_receivables if metrics.overdue_receivables is defined else 0 %}
+{% set amount_collected_this_month = metrics.amount_collected_this_month if metrics.amount_collected_this_month is defined else monthly_revenue %}
+{% set amount_outstanding_this_month = metrics.amount_outstanding_this_month if metrics.amount_outstanding_this_month is defined else 0 %}
+{% set viewed_but_unpaid_count = metrics.viewed_but_unpaid_count if metrics.viewed_but_unpaid_count is defined else 0 %}
+{% set sent_not_viewed_count = metrics.sent_not_viewed_count if metrics.sent_not_viewed_count is defined else 0 %}
+{% set collection_rate = metrics.collection_rate if metrics.collection_rate is defined else 0 %}
+{% set avg_days_to_payment = metrics.avg_days_to_payment if metrics.avg_days_to_payment is defined else none %}
+{% set tax_reserve_percent = metrics.tax_reserve_percent if metrics.tax_reserve_percent is defined else 25 %}
+{% set suggested_tax_reserve = metrics.suggested_tax_reserve if metrics.suggested_tax_reserve is defined else 0 %}
+{% set revenue_after_reserve = metrics.revenue_after_reserve if metrics.revenue_after_reserve is defined else 0 %}
 
 <style>
   .dashboard-topbar {
@@ -193,6 +205,11 @@
     margin-bottom: 18px;
   }
 
+  .dashboard-cards.collections {
+    margin-top: 16px;
+    margin-bottom: 20px;
+  }
+
   .card.kpi {
     position: relative;
     overflow: hidden;
@@ -213,6 +230,14 @@
     margin-bottom: 0;
   }
 
+  .kpi-note {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    opacity: 0.82;
+    line-height: 1.45;
+  }
+
   .status-summary {
     margin-bottom: 22px;
   }
@@ -220,6 +245,62 @@
   .status-item {
     font-weight: 700;
     letter-spacing: 0.01em;
+  }
+
+  .insights-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .insight-card {
+    border-radius: 22px;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.76);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .insight-card {
+    background: rgba(2,6,23,0.76);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 20px 48px rgba(2,6,23,0.78),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .insight-card .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .insight-card .eyebrow {
+    color: #94a3b8;
+  }
+
+  .insight-card .main {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .insight-card .sub {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .insight-card .sub {
+    color: #94a3b8;
   }
 
   .table-wrapper {
@@ -277,7 +358,7 @@
 
   .modern-table {
     width: 100%;
-    min-width: 1080px;
+    min-width: 1240px;
     border-collapse: separate;
     border-spacing: 0;
   }
@@ -352,6 +433,15 @@
     font-size: 14px;
   }
 
+  .client-mini {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .client-mini {
+    color: #94a3b8;
+  }
+
   .amount-cell {
     display: grid;
     gap: 4px;
@@ -410,6 +500,92 @@
     font-weight: 600;
   }
 
+  .balance-partial {
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .signal-stack {
+    display: grid;
+    gap: 6px;
+  }
+
+  .signal-pill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .signal-pill.viewed {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+  }
+
+  .signal-pill.unviewed {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+
+  .signal-pill.partial {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+  }
+
+  .signal-pill.reminded {
+    background: #ede9fe;
+    color: #6d28d9;
+    border-color: #c4b5fd;
+  }
+
+  .signal-pill.overdue {
+    background: #ffedd5;
+    color: #9a3412;
+    border-color: #fdba74;
+  }
+
+  body.dark .signal-pill.viewed {
+    background: rgba(29, 78, 216, 0.26);
+    color: #bfdbfe;
+    border-color: rgba(147, 197, 253, 0.3);
+  }
+
+  body.dark .signal-pill.unviewed {
+    background: rgba(71, 85, 105, 0.26);
+    color: #e2e8f0;
+    border-color: rgba(148, 163, 184, 0.28);
+  }
+
+  body.dark .signal-pill.partial {
+    background: rgba(29, 78, 216, 0.26);
+    color: #bfdbfe;
+    border-color: rgba(147, 197, 253, 0.3);
+  }
+
+  body.dark .signal-pill.reminded {
+    background: rgba(109, 40, 217, 0.22);
+    color: #ddd6fe;
+    border-color: rgba(196, 181, 253, 0.28);
+  }
+
+  body.dark .signal-pill.overdue {
+    background: rgba(154, 52, 18, 0.28);
+    color: #fed7aa;
+    border-color: rgba(253, 186, 116, 0.28);
+  }
+
   .actions-stack {
     display: flex;
     flex-wrap: wrap;
@@ -453,6 +629,10 @@
 
     .filter-actions {
       grid-column: 1 / -1;
+    }
+
+    .insights-strip {
+      grid-template-columns: 1fr;
     }
   }
 
@@ -693,7 +873,242 @@
 
     </div>
 
-    <div class="status-summary">
+    <div class="dashboard-cards collections">
+
+        <div class="card kpi brand-accent">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(outstanding_receivables) }}</h2>
+            <p>
+                {% if lang == 'es' %}Por cobrar{% else %}Outstanding Receivables{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Total pendiente en todas tus facturas abiertas.
+                {% else %}
+                    Total still outstanding across all open invoices.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi orange">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(overdue_receivables) }}</h2>
+            <p>
+                {% if lang == 'es' %}Vencido por cobrar{% else %}Overdue Receivables{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Facturas vencidas que todavía necesitan seguimiento.
+                {% else %}
+                    Past-due invoices that still need follow-up.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi green">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(amount_collected_this_month) }}</h2>
+            <p>
+                {% if lang == 'es' %}Cobrado este mes{% else %}Collected This Month{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Total registrado como cobrado durante este mes.
+                {% else %}
+                    Total recorded as collected during this month.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi blue">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(amount_outstanding_this_month) }}</h2>
+            <p>
+                {% if lang == 'es' %}Pendiente este mes{% else %}Outstanding This Month{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Saldo pendiente en facturas creadas este mes.
+                {% else %}
+                    Balance still open on invoices created this month.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi purple">
+            <h2 class="kpi-number">{{ viewed_but_unpaid_count }}</h2>
+            <p>
+                {% if lang == 'es' %}Vistas sin pagar{% else %}Viewed but Unpaid{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Señal fuerte para seguimiento profesional.
+                {% else %}
+                    Strong signal for professional follow-up.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi teal">
+            <h2 class="kpi-number">{{ sent_not_viewed_count }}</h2>
+            <p>
+                {% if lang == 'es' %}Enviadas no vistas{% else %}Sent not Viewed{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Buenas candidatas para reenvío o recordatorio.
+                {% else %}
+                    Good candidates for resend or reminder.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi orange">
+            <h2 class="kpi-number">{{ "{:.1f}".format(collection_rate) }}%</h2>
+            <p>
+                {% if lang == 'es' %}Tasa de cobro{% else %}Collection Rate{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Basada en facturas pagadas frente a abiertas.
+                {% else %}
+                    Based on paid invoices versus still-open invoices.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi brand-accent">
+            <h2 class="kpi-number">
+                {% if avg_days_to_payment is not none %}
+                    {{ "{:.1f}".format(avg_days_to_payment) }}
+                {% else %}
+                    —
+                {% endif %}
+            </h2>
+            <p>
+                {% if lang == 'es' %}Días promedio a pago{% else %}Avg Days to Payment{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Tiempo promedio entre creación y pago total.
+                {% else %}
+                    Average time between invoice creation and full payment.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi green">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(suggested_tax_reserve) }}</h2>
+            <p>
+                {% if lang == 'es' %}Reserva sugerida{% else %}Suggested Tax Reserve{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    {{ "{:.0f}".format(tax_reserve_percent) }}% de lo cobrado este mes.
+                {% else %}
+                    {{ "{:.0f}".format(tax_reserve_percent) }}% of what you collected this month.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="card kpi blue">
+            <h2 class="kpi-number">${{ "{:,.2f}".format(revenue_after_reserve) }}</h2>
+            <p>
+                {% if lang == 'es' %}Después de reserva{% else %}After Reserve{% endif %}
+            </p>
+            <small class="kpi-note">
+                {% if lang == 'es' %}
+                    Lo cobrado este mes menos tu reserva sugerida.
+                {% else %}
+                    What you collected this month minus your suggested reserve.
+                {% endif %}
+            </small>
+        </div>
+
+    </div>
+
+    <div class="insights-strip">
+        <div class="insight-card">
+            <div class="eyebrow">
+                {% if lang == 'es' %}Señal de cobro{% else %}Collection Signal{% endif %}
+            </div>
+            <div class="main">
+                {% if viewed_but_unpaid_count > 0 %}
+                    {% if lang == 'es' %}
+                        Haz seguimiento a las facturas vistas sin pago.
+                    {% else %}
+                        Follow up on invoices that were viewed but not paid.
+                    {% endif %}
+                {% else %}
+                    {% if lang == 'es' %}
+                        No hay una señal fuerte de seguimiento inmediato.
+                    {% else %}
+                        No strong immediate follow-up signal right now.
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="sub">
+                {% if lang == 'es' %}
+                    Cuando una factura fue vista pero sigue abierta, suele ser una de las mejores candidatas para un recordatorio profesional.
+                {% else %}
+                    When an invoice was viewed but is still open, it is often one of the best candidates for a professional reminder.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <div class="eyebrow">
+                {% if lang == 'es' %}Salud de caja{% else %}Cash Health{% endif %}
+            </div>
+            <div class="main">
+                {% if overdue_receivables > 0 %}
+                    {% if lang == 'es' %}
+                        Tienes saldo vencido por recuperar.
+                    {% else %}
+                        You have overdue balance waiting to be collected.
+                    {% endif %}
+                {% else %}
+                    {% if lang == 'es' %}
+                        No hay saldo vencido destacado ahora mismo.
+                    {% else %}
+                        There is no major overdue balance right now.
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="sub">
+                {% if lang == 'es' %}
+                    Vigilar lo vencido y lo pendiente te ayuda a mover BillBeam de simple facturación a verdadero control operativo.
+                {% else %}
+                    Watching overdue and open balances helps move BillBeam from simple invoicing into real operating control.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="insight-card">
+            <div class="eyebrow">
+                {% if lang == 'es' %}Reserva de impuestos{% else %}Tax Set-Aside{% endif %}
+            </div>
+            <div class="main">
+                {% if suggested_tax_reserve > 0 %}
+                    {% if lang == 'es' %}
+                        Reserva sugerida: ${{ "{:,.2f}".format(suggested_tax_reserve) }}
+                    {% else %}
+                        Suggested reserve: ${{ "{:,.2f}".format(suggested_tax_reserve) }}
+                    {% endif %}
+                {% else %}
+                    {% if lang == 'es' %}
+                        Aún no hay una base suficiente este mes.
+                    {% else %}
+                        There is not enough monthly basis yet.
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="sub">
+                {% if lang == 'es' %}
+                    Esto es una guía simple para ayudarte a apartar efectivo con más disciplina. No es asesoría fiscal.
+                {% else %}
+                    This is a simple guide to help you set cash aside more consistently. It is not tax advice.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
         <div class="status-item paid">
             {% if lang == 'es' %}
                 Pagadas: {{ status_distribution["Paid"] }}
@@ -949,6 +1364,9 @@
                             {% if lang == 'es' %}Saldo{% else %}Balance{% endif %}
                         </th>
                         <th>
+                            {% if lang == 'es' %}Señales{% else %}Signals{% endif %}
+                        </th>
+                        <th>
                             {% if lang == 'es' %}Acciones{% else %}Actions{% endif %}
                         </th>
                     </tr>
@@ -956,25 +1374,67 @@
 
                 <tbody>
                     {% for invoice in invoices %}
-                    {% set invoice_amount = invoice[2] %}
-                    {% set invoice_total_paid = invoice[7] %}
-                    {% set invoice_balance = invoice_amount - invoice_total_paid %}
+
+                    {% if invoice is mapping %}
+                        {% set invoice_id = invoice.id if invoice.id is defined else '' %}
+                        {% set invoice_client = invoice.client if invoice.client is defined else '—' %}
+                        {% set invoice_amount = invoice.amount if invoice.amount is defined else 0 %}
+                        {% set invoice_created = invoice.created_at if invoice.created_at is defined else none %}
+                        {% set invoice_status = invoice.display_status if invoice.display_status is defined and invoice.display_status else (invoice.status if invoice.status is defined else 'Sent') %}
+                        {% set invoice_raw_status = invoice.status if invoice.status is defined else invoice_status %}
+                        {% set invoice_number = invoice.invoice_number if invoice.invoice_number is defined else none %}
+                        {% set invoice_due = invoice.due_date if invoice.due_date is defined else none %}
+                        {% set invoice_total_paid = invoice.total_paid if invoice.total_paid is defined else 0 %}
+                        {% set invoice_balance = invoice.balance if invoice.balance is defined else (invoice_amount - invoice_total_paid) %}
+                        {% set invoice_view_count = invoice.view_count if invoice.view_count is defined else 0 %}
+                        {% set invoice_last_viewed_at = invoice.last_viewed_at if invoice.last_viewed_at is defined else none %}
+                        {% set invoice_last_reminder_sent_at = invoice.last_reminder_sent_at if invoice.last_reminder_sent_at is defined else none %}
+                        {% set invoice_has_been_viewed = invoice.has_been_viewed if invoice.has_been_viewed is defined else (invoice_view_count > 0) %}
+                        {% set invoice_is_partially_paid = invoice.is_partially_paid if invoice.is_partially_paid is defined else (invoice_total_paid > 0 and invoice_balance > 0) %}
+                    {% else %}
+                        {% set invoice_id = invoice[0] %}
+                        {% set invoice_client = invoice[1] %}
+                        {% set invoice_amount = invoice[2] %}
+                        {% set invoice_created = invoice[3] %}
+                        {% set invoice_raw_status = invoice[4] %}
+                        {% set invoice_status = invoice[4] %}
+                        {% set invoice_number = invoice[5] %}
+                        {% set invoice_due = invoice[6] %}
+                        {% set invoice_total_paid = invoice[7] %}
+                        {% set invoice_balance = invoice_amount - invoice_total_paid %}
+                        {% set invoice_view_count = 0 %}
+                        {% set invoice_last_viewed_at = none %}
+                        {% set invoice_last_reminder_sent_at = none %}
+                        {% set invoice_has_been_viewed = false %}
+                        {% set invoice_is_partially_paid = invoice_total_paid > 0 and invoice_balance > 0 %}
+                    {% endif %}
+
+                    {% set safe_balance = invoice_balance if invoice_balance > 0 else 0 %}
                     <tr class="
-                        {% if invoice[4] == 'Paid' %}row-paid
-                        {% elif invoice[4] == 'Overdue' %}row-overdue
-                        {% elif invoice[4] == 'Sent' %}row-sent
+                        {% if invoice_status == 'Paid' %}row-paid
+                        {% elif invoice_status == 'Overdue' %}row-overdue
+                        {% elif invoice_status == 'Sent' %}row-sent
                         {% endif %}
                     ">
                         <td>
                             <div class="invoice-id-block">
-                                <div class="invoice-row-number">{{ invoice[5] or ('#' ~ invoice[0]) }}</div>
-                                <div class="invoice-public-meta">ID {{ invoice[0] }}</div>
+                                <div class="invoice-row-number">{{ invoice_number or ('#' ~ invoice_id) }}</div>
+                                <div class="invoice-public-meta">ID {{ invoice_id }}</div>
                             </div>
                         </td>
 
                         <td>
                             <div class="client-cell">
-                                <strong>{{ invoice[1] }}</strong>
+                                <strong>{{ invoice_client }}</strong>
+                                {% if invoice_view_count > 0 %}
+                                    <div class="client-mini">
+                                        {% if lang == 'es' %}
+                                            {{ invoice_view_count }} vista{{ '' if invoice_view_count == 1 else 's' }}
+                                        {% else %}
+                                            {{ invoice_view_count }} view{{ '' if invoice_view_count == 1 else 's' }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </td>
 
@@ -989,42 +1449,51 @@
 
                         <td>
                             <div class="date-cell">
-                                <div class="date-main">{{ invoice[3].strftime('%Y-%m-%d') if invoice[3] else '—' }}</div>
+                                <div class="date-main">{{ invoice_created.strftime('%Y-%m-%d') if invoice_created else '—' }}</div>
                                 <div class="date-sub">
                                     {% if lang == 'es' %}Vence:{% else %}Due:{% endif %}
-                                    {{ invoice[6].strftime('%Y-%m-%d') if invoice[6] else '—' }}
+                                    {{ invoice_due.strftime('%Y-%m-%d') if invoice_due else '—' }}
                                 </div>
                             </div>
                         </td>
 
                         <td>
-                            {% if invoice[4] == "Paid" %}
+                            {% if invoice_status == "Paid" %}
                                 <span class="badge paid">
                                     {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
                                 </span>
-                            {% elif invoice[4] == "Overdue" %}
+                            {% elif invoice_status == "Overdue" %}
                                 <span class="badge overdue">
                                     {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
                                 </span>
-                            {% elif invoice[4] == "Sent" %}
+                            {% elif invoice_status == "Sent" %}
                                 <span class="badge sent">
                                     {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
                                 </span>
                             {% else %}
-                                {{ invoice[4] }}
+                                {{ invoice_status }}
                             {% endif %}
                         </td>
 
                         <td>
                             <div class="balance-cell">
-                                <div class="balance-due">${{ "{:,.2f}".format(invoice_balance if invoice_balance > 0 else 0) }}</div>
-                                {% if invoice[4] == "Paid" %}
+                                <div class="balance-due">${{ "{:,.2f}".format(safe_balance) }}</div>
+
+                                {% if invoice_status == "Paid" %}
                                     <div class="balance-paid">
                                         {% if lang == 'es' %}Liquidada{% else %}Settled{% endif %}
                                     </div>
-                                {% elif invoice[4] == "Overdue" and invoice_balance > 0 %}
+                                {% elif invoice_status == "Overdue" and safe_balance > 0 %}
                                     <div class="balance-overdue">
                                         {% if lang == 'es' %}Requiere seguimiento{% else %}Needs follow-up{% endif %}
+                                    </div>
+                                {% elif invoice_is_partially_paid %}
+                                    <div class="balance-partial">
+                                        {% if lang == 'es' %}
+                                            Pagado: ${{ "{:,.2f}".format(invoice_total_paid) }}
+                                        {% else %}
+                                            Paid: ${{ "{:,.2f}".format(invoice_total_paid) }}
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div class="amount-sub">
@@ -1035,35 +1504,73 @@
                         </td>
 
                         <td>
-                            <div class="actions-stack">
-                                <a class="btn btn-brand" href="/invoice/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Ver{% else %}View{% endif %}
-                                </a>
-
-                                <a class="btn btn-secondary" href="/history-pdf/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    PDF
-                                </a>
-
-                                <a class="btn btn-edit" href="/edit/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
-                                </a>
-
-                                {% if invoice[4] != "Paid" %}
-                                    <a class="btn btn-success" href="/update-status/{{ invoice[0] }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
-                                        {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
-                                    </a>
+                            <div class="signal-stack">
+                                {% if invoice_has_been_viewed %}
+                                    <span class="signal-pill viewed">
+                                        {% if lang == 'es' %}Vista{% else %}Viewed{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="signal-pill unviewed">
+                                        {% if lang == 'es' %}Sin vista{% else %}Not viewed{% endif %}
+                                    </span>
                                 {% endif %}
 
-                                {# Kept safe: legacy Draft branch removed because live backend uses Sent/Paid/Overdue only. #}
+                                {% if invoice_is_partially_paid %}
+                                    <span class="signal-pill partial">
+                                        {% if lang == 'es' %}Pago parcial{% else %}Partial payment{% endif %}
+                                    </span>
+                                {% endif %}
 
-                                <a class="btn btn-info" href="/send-email/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
-                                </a>
+                                {% if invoice_last_reminder_sent_at %}
+                                    <span class="signal-pill reminded">
+                                        {% if lang == 'es' %}Recordatorio enviado{% else %}Reminder sent{% endif %}
+                                    </span>
+                                {% endif %}
 
-                                <a class="btn btn-danger" href="/delete/{{ invoice[0] }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
-                                </a>
+                                {% if invoice_status == "Overdue" %}
+                                    <span class="signal-pill overdue">
+                                        {% if lang == 'es' %}Cobro prioritario{% else %}Collections priority{% endif %}
+                                    </span>
+                                {% endif %}
                             </div>
+                        </td>
+
+                        <td>
+                            <div class="actions-stack">
+    <a class="btn btn-brand" href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Ver{% else %}View{% endif %}
+    </a>
+
+    <a class="btn btn-secondary" href="/history-pdf/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+        PDF
+    </a>
+
+    <a class="btn btn-edit" href="/edit/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
+    </a>
+
+    {% if invoice_status != "Paid" %}
+        <a class="btn btn-success" href="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Registrar pago{% else %}Add Payment{% endif %}
+        </a>
+
+        <a class="btn btn-secondary" href="/send-reminder/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Recordar{% else %}Reminder{% endif %}
+        </a>
+
+        <a class="btn btn-success" href="/update-status/{{ invoice_id }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
+            {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
+        </a>
+    {% endif %}
+
+    <a class="btn btn-info" href="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
+    </a>
+
+    <a class="btn btn-danger" href="/delete/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+        {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+    </a>
+</div>
                         </td>
                     </tr>
                     {% endfor %}

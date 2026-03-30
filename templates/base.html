@@ -725,32 +725,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    document.body.classList.remove("fade-out");
-
-    const counters = document.querySelectorAll(".kpi-number");
-    counters.forEach(counter => {
-        const target = parseFloat(counter.innerText.replace(/[^0-9.-]+/g,""));
-        const isMoney = counter.innerText.includes("$");
-        let count = 0;
-        const increment = target / 50;
-
-        function update() {
-            count += increment;
-            if (count < target) {
-                counter.innerText = isMoney
-                    ? "$" + count.toFixed(2)
-                    : Math.floor(count);
-                requestAnimationFrame(update);
-            } else {
-                counter.innerText = isMoney
-                    ? "$" + target.toFixed(2)
-                    : target;
-            }
-        }
-        if (!isNaN(target)) {
-            update();
-        }
-    });
+    document.body.classList.remove("fade-out");13
 
     const hero = document.querySelector(".hero");
     window.addEventListener("scroll", () => {
@@ -840,15 +815,6 @@ document.addEventListener("DOMContentLoaded", function () {
         overlay.addEventListener("click", closeSidebar);
     }
 
-    const ticker = document.getElementById("revenueTicker");
-    if (ticker) {
-        let value = 12450;
-        setInterval(() => {
-            value += Math.floor(Math.random() * 50);
-            ticker.innerText = "$" + value.toLocaleString() + ".00";
-        }, 3000);
-    }
-
     const modal = document.getElementById("welcomeModal");
     const closeBtn = document.getElementById("closeWelcome");
 
@@ -933,14 +899,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (aiMessages && !aiMessages.dataset.initialized) {
-        appendMessage(
-            {% if lang == 'es' %}
-            "¡Hola! Puedo ayudarte a interpretar tus gráficos, sugerir mejores textos para tus facturas y darte ideas para manejar facturas vencidas.\n\nPrueba con: “¿Qué dice mi tendencia de ingresos sobre el impulso de mi negocio?”",
-            {% else %}
-            "Hi! I can help interpret your charts, suggest better invoice wording, and give ideas for handling overdue invoices.\n\nTry asking: “What does my revenue trend say about my business momentum?”",
-            {% endif %}
-            "system"
-        );
         aiMessages.dataset.initialized = "true";
     }
 

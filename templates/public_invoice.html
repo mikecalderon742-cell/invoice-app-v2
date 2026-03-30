@@ -18,9 +18,15 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
-{% set is_paid = (status == "Paid") or (balance <= 0 and amount > 0) %}
-{% set is_overdue = (status == "Overdue") and not is_paid %}
+{% set is_paid = (status == "Paid") or (payment_summary and payment_summary.get("is_paid_in_full")) or (balance <= 0 and amount > 0) %}
+{% set is_overdue = (payment_summary and payment_summary.get("is_overdue")) or ((status == "Overdue") and not is_paid) %}
+{% set is_partial = (payment_summary and payment_summary.get("is_partially_paid")) or (total_paid > 0 and balance > 0) %}
+{% set has_views = view_summary and view_summary.get("has_been_viewed") %}
+{% set view_count_safe = view_summary.get("view_count", 0) if view_summary else 0 %}
 {% set can_pay = (not is_paid) and (balance and balance > 0) and public_token %}
+{% set payment_pct = percent_paid if percent_paid is defined and percent_paid is not none else 0 %}
+{% set last_viewed_at = view_summary.get("last_viewed_at") if view_summary else None %}
+{% set first_viewed_at = view_summary.get("first_viewed_at") if view_summary else None %}
 
 <style>
   .public-portal {
@@ -59,6 +65,12 @@
     color: #7c2d12;
   }
 
+  .public-alert.info {
+    border-color: rgba(59, 130, 246, 0.32);
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1e3a8a;
+  }
+
   body.dark .public-alert.success {
     background: linear-gradient(180deg, rgba(2, 44, 34, 0.95), rgba(6, 78, 59, 0.88));
     color: #bbf7d0;
@@ -67,6 +79,11 @@
   body.dark .public-alert.warn {
     background: linear-gradient(180deg, rgba(69, 26, 3, 0.96), rgba(124, 45, 18, 0.88));
     color: #fed7aa;
+  }
+
+  body.dark .public-alert.info {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(30, 64, 175, 0.32));
+    color: #bfdbfe;
   }
 
   .public-hero {
@@ -241,6 +258,12 @@
     border-color: #93c5fd;
   }
 
+  .status-pill.partial {
+    color: #7c3aed;
+    background: #ede9fe;
+    border-color: #c4b5fd;
+  }
+
   body.dark .status-pill.paid {
     color: #bbf7d0;
     background: rgba(22, 101, 52, 0.35);
@@ -257,6 +280,12 @@
     color: #bfdbfe;
     background: rgba(29, 78, 216, 0.28);
     border-color: rgba(147, 197, 253, 0.26);
+  }
+
+  body.dark .status-pill.partial {
+    color: #ddd6fe;
+    background: rgba(91, 33, 182, 0.34);
+    border-color: rgba(196, 181, 253, 0.24);
   }
 
   .status-note {
@@ -353,6 +382,39 @@
     word-break: break-word;
   }
 
+  .payment-progress {
+    display: grid;
+    gap: 10px;
+  }
+
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: #475569;
+  }
+
+  body.dark .progress-top {
+    color: #cbd5e1;
+  }
+
+  .progress-bar {
+    height: 11px;
+    width: 100%;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.22);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    transition: width 0.25s ease;
+  }
+
   .summary-breakdown {
     display: grid;
     gap: 10px;
@@ -412,6 +474,22 @@
   }
 
   body.dark .summary-safe-note {
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: #cbd5e1;
+  }
+
+  .collection-note {
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.6;
+  }
+
+  body.dark .collection-note {
     background: rgba(15, 23, 42, 0.42);
     border-color: rgba(148, 163, 184, 0.18);
     color: #cbd5e1;
@@ -752,7 +830,7 @@
         {% endif %}
       </strong>
       <div style="opacity:.9;">
-        {% if is_paid_in_full %}
+        {% if is_paid %}
           {% if lang == 'es' %}
             Esta factura ya aparece como pagada y liquidada por completo.
           {% else %}
@@ -786,6 +864,19 @@
     </div>
   {% endif %}
 
+  {% if collection_recommendation and not is_public_view %}
+    <div class="public-alert info">
+      <strong>
+        {% if lang == 'es' %}
+          Recomendación de seguimiento
+        {% else %}
+          Collection recommendation
+        {% endif %}
+      </strong>
+      <div style="opacity:.92;">{{ collection_recommendation }}</div>
+    </div>
+  {% endif %}
+
   <div class="public-hero">
     <div class="public-hero-left">
       <div class="public-brand">
@@ -795,7 +886,11 @@
         <div>
           <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
           <div class="public-subtitle">
-            {% if lang == 'es' %}Portal de facturas{% else %}Invoice Portal{% endif %}
+            {% if is_public_view %}
+              {% if lang == 'es' %}Portal de facturas{% else %}Invoice Portal{% endif %}
+            {% else %}
+              {% if lang == 'es' %}Vista interna de factura{% else %}Internal Invoice View{% endif %}
+            {% endif %}
           </div>
         </div>
       </div>
@@ -815,15 +910,26 @@
             {% if lang == 'es' %}Vence:{% else %}Due:{% endif %}
             <strong>{{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}</strong>
           </span>
+          {% if not is_public_view and last_viewed_at %}
+            <span class="dot">•</span>
+            <span>
+              {% if lang == 'es' %}Última vista:{% else %}Last viewed:{% endif %}
+              <strong>{{ last_viewed_at.strftime('%Y-%m-%d %I:%M %p') }}</strong>
+            </span>
+          {% endif %}
         </div>
       </div>
 
       <div class="public-status-row">
-        {% if status == "Paid" %}
+        {% if is_paid %}
           <span class="status-pill paid">
             {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
           </span>
-        {% elif status == "Overdue" %}
+        {% elif is_partial %}
+          <span class="status-pill partial">
+            {% if lang == 'es' %}Pago parcial{% else %}Partially Paid{% endif %}
+          </span>
+        {% elif is_overdue %}
           <span class="status-pill overdue">
             {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
           </span>
@@ -833,12 +939,20 @@
           </span>
         {% endif %}
 
-        {% if status == "Paid" and paid_at %}
+        {% if is_paid and paid_at %}
           <span class="status-note">
             {% if lang == 'es' %}
               Pagada el <strong>{{ paid_at.strftime('%Y-%m-%d') }}</strong>
             {% else %}
               Paid on <strong>{{ paid_at.strftime('%Y-%m-%d') }}</strong>
+            {% endif %}
+          </span>
+        {% elif is_partial %}
+          <span class="status-note">
+            {% if lang == 'es' %}
+              Se recibió un pago parcial. Aún queda saldo pendiente.
+            {% else %}
+              A partial payment has been received. A remaining balance is still due.
             {% endif %}
           </span>
         {% elif is_overdue %}
@@ -851,10 +965,18 @@
           </span>
         {% else %}
           <span class="status-note">
-            {% if lang == 'es' %}
-              Este es un enlace seguro. Guárdalo en privado.
+            {% if is_public_view %}
+              {% if lang == 'es' %}
+                Este es un enlace seguro. Guárdalo en privado.
+              {% else %}
+                This is a secure link. Keep it private.
+              {% endif %}
             {% else %}
-              This is a secure link. Keep it private.
+              {% if lang == 'es' %}
+                Vista interna para seguimiento y cobro.
+              {% else %}
+                Internal view for operations and collections.
+              {% endif %}
             {% endif %}
           </span>
         {% endif %}
@@ -877,15 +999,25 @@
 
         <div class="glance-card">
           <div class="glance-label">
-            {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+            {% if not is_public_view %}
+              {% if lang == 'es' %}Vistas{% else %}Views{% endif %}
+            {% else %}
+              {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+            {% endif %}
           </div>
           <div class="glance-value">
-            {% if is_paid %}
-              {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-            {% elif status == "Overdue" %}
-              {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+            {% if not is_public_view %}
+              {{ view_count_safe }}
             {% else %}
-              {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+              {% if is_paid %}
+                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+              {% elif is_partial %}
+                {% if lang == 'es' %}Parcial{% else %}Partial{% endif %}
+              {% elif is_overdue %}
+                {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+              {% else %}
+                {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+              {% endif %}
             {% endif %}
           </div>
         </div>
@@ -912,6 +1044,20 @@
           </div>
         </div>
 
+        {% if amount and amount > 0 %}
+          <div class="payment-progress">
+            <div class="progress-top">
+              <span>
+                {% if lang == 'es' %}Progreso de pago{% else %}Payment progress{% endif %}
+              </span>
+              <strong>{{ "%.1f"|format(payment_pct) }}%</strong>
+            </div>
+            <div class="progress-bar" aria-hidden="true">
+              <div class="progress-fill" style="width: {{ 100 if payment_pct > 100 else payment_pct }}%;"></div>
+            </div>
+          </div>
+        {% endif %}
+
         <div class="summary-breakdown">
           <div class="row">
             <span>{% if lang == 'es' %}Total{% else %}Total{% endif %}</span>
@@ -923,28 +1069,51 @@
           </div>
           {% if not is_paid %}
             <div class="row">
-              <span>{% if lang == 'es' %}Pendiente{% else %}Due{% endif %}</span>
+              <span>{% if lang == 'es' %}Pendiente{% else %}Remaining{% endif %}</span>
               <strong>${{ "{:,.2f}".format(balance) }}</strong>
             </div>
           {% endif %}
         </div>
 
+        {% if collection_recommendation %}
+          <div class="collection-note">
+            <strong style="display:block; margin-bottom:4px;">
+              {% if is_public_view %}
+                {% if lang == 'es' %}Resumen{% else %}Summary{% endif %}
+              {% else %}
+                {% if lang == 'es' %}Siguiente mejor paso{% else %}Suggested next step{% endif %}
+              {% endif %}
+            </strong>
+            {{ collection_recommendation }}
+          </div>
+        {% endif %}
+
         <div class="summary-actions">
-          <button
-            class="btn btn-brand btn-pay"
-            id="payNowBtn"
-            {% if not can_pay %}disabled{% endif %}
-            data-token="{{ public_token or '' }}"
-            title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
-          >
-            {% if is_paid %}
-              {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-            {% elif balance <= 0 %}
-              {% if lang == 'es' %}Sin saldo{% else %}No balance{% endif %}
-            {% else %}
-              {% if lang == 'es' %}Pagar ahora{% else %}Pay Now{% endif %}
-            {% endif %}
-          </button>
+          {% if is_public_view %}
+            <button
+              class="btn btn-brand btn-pay"
+              id="payNowBtn"
+              {% if not can_pay %}disabled{% endif %}
+              data-token="{{ public_token or '' }}"
+              title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
+            >
+              {% if is_paid %}
+                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+              {% elif balance <= 0 %}
+                {% if lang == 'es' %}Sin saldo{% else %}No balance{% endif %}
+              {% else %}
+                {% if lang == 'es' %}Pagar ahora{% else %}Pay Now{% endif %}
+              {% endif %}
+            </button>
+          {% else %}
+            <div class="summary-safe-note">
+              {% if lang == 'es' %}
+                Usa los botones internos de BillBeam para enviar recordatorios, registrar pagos y hacer seguimiento desde la vista del negocio.
+              {% else %}
+                Use BillBeam’s internal actions to send reminders, record payments, and manage collections from the business view.
+              {% endif %}
+            </div>
+          {% endif %}
 
           {% if pdf_url %}
             <a class="btn btn-secondary btn-wide" href="{{ pdf_url }}" target="_blank" rel="noopener">
@@ -959,6 +1128,12 @@
               Gracias. Esta factura ya quedó liquidada por completo.
             {% else %}
               Thank you. This invoice has been fully settled.
+            {% endif %}
+          {% elif is_partial %}
+            {% if lang == 'es' %}
+              Ya se recibió parte del pago. El saldo restante sigue disponible aquí.
+            {% else %}
+              Part of the invoice has already been paid. The remaining balance is still available here.
             {% endif %}
           {% else %}
             {% if lang == 'es' %}
@@ -1022,7 +1197,9 @@
           <div class="snap-value">
             {% if is_paid %}
               {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-            {% elif status == "Overdue" %}
+            {% elif is_partial %}
+              {% if lang == 'es' %}Parcial{% else %}Partial{% endif %}
+            {% elif is_overdue %}
               {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
             {% else %}
               {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
@@ -1046,7 +1223,7 @@
 
         <div class="snap-item">
           <div class="snap-label">
-            {% if lang == 'es' %}Pendiente{% else %}Due{% endif %}
+            {% if lang == 'es' %}Pendiente{% else %}Remaining{% endif %}
           </div>
           <div class="snap-value">${{ "{:,.2f}".format(balance) }}</div>
         </div>
@@ -1106,8 +1283,50 @@
   <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
-        {% if lang == 'es' %}Actividad de la factura{% else %}Invoice Activity{% endif %}
+        {% if not is_public_view %}
+          {% if lang == 'es' %}Seguimiento de factura{% else %}Invoice Tracking{% endif %}
+        {% else %}
+          {% if lang == 'es' %}Actividad de la factura{% else %}Invoice Activity{% endif %}
+        {% endif %}
       </div>
+
+      {% if not is_public_view %}
+        <div class="snapshot" style="margin-bottom:16px;">
+          <div class="snap-item">
+            <div class="snap-label">
+              {% if lang == 'es' %}Total de vistas{% else %}Total views{% endif %}
+            </div>
+            <div class="snap-value">{{ view_count_safe }}</div>
+          </div>
+
+          <div class="snap-item">
+            <div class="snap-label">
+              {% if lang == 'es' %}Última vista{% else %}Last viewed{% endif %}
+            </div>
+            <div class="snap-value" style="font-size:15px;">
+              {{ last_viewed_at.strftime('%Y-%m-%d %I:%M %p') if last_viewed_at else (lang == 'es' and 'Nunca' or 'Never') }}
+            </div>
+          </div>
+
+          <div class="snap-item">
+            <div class="snap-label">
+              {% if lang == 'es' %}Primera vista{% else %}First viewed{% endif %}
+            </div>
+            <div class="snap-value" style="font-size:15px;">
+              {{ first_viewed_at.strftime('%Y-%m-%d %I:%M %p') if first_viewed_at else (lang == 'es' and 'Nunca' or 'Never') }}
+            </div>
+          </div>
+
+          <div class="snap-item">
+            <div class="snap-label">
+              {% if lang == 'es' %}Último recordatorio{% else %}Last reminder{% endif %}
+            </div>
+            <div class="snap-value" style="font-size:15px;">
+              {{ last_reminder_sent_at.strftime('%Y-%m-%d %I:%M %p') if last_reminder_sent_at else (lang == 'es' and 'Aún no' or 'Not yet') }}
+            </div>
+          </div>
+        </div>
+      {% endif %}
 
       {% if invoice_events and invoice_events|length > 0 %}
         <div class="timeline">
@@ -1118,7 +1337,7 @@
                 <div class="timeline-top">
                   <strong>{{ event.title }}</strong>
                   <span class="muted">
-                    {{ event.created_at.strftime('%Y-%m-%d') if event.created_at else '' }}
+                    {{ event.created_at.strftime('%Y-%m-%d %I:%M %p') if event.created_at else '' }}
                   </span>
                 </div>
                 {% if event.details %}
@@ -1153,11 +1372,17 @@
                 <div class="timeline-top">
                   <strong>${{ "{:,.2f}".format(p[0]) }}</strong>
                   <span class="muted">
-                    {{ p[3].strftime('%Y-%m-%d') if p[3] else '' }}
+                    {{ p[3].strftime('%Y-%m-%d %I:%M %p') if p[3] else '' }}
                   </span>
                 </div>
                 <div class="timeline-sub">
                   {{ p[1] or (lang == 'es' and "Pago" or "Payment") }}
+                  {% if p[4] and not is_public_view %}
+                    — <span class="muted">{{ p[4]|title }}</span>
+                  {% endif %}
+                  {% if p[5] and not is_public_view %}
+                    — <span class="muted">{{ p[5]|title }}</span>
+                  {% endif %}
                   {% if p[2] %} — <span class="muted">{{ p[2] }}</span>{% endif %}
                 </div>
               </div>
@@ -1227,12 +1452,17 @@
           {% if lang == 'es' %}Portal de cliente{% else %}Client Portal{% endif %}
         </div>
         {% if can_pay %}
-        <div class="trust-pill">
-          {% if lang == 'es' %}Pago en línea{% else %}Online Payment{% endif %}
-        </div>
-        <div class="trust-pill">
-          {% if lang == 'es' %}Checkout seguro{% else %}Secure Checkout{% endif %}
-        </div>
+          <div class="trust-pill">
+            {% if lang == 'es' %}Pago en línea{% else %}Online Payment{% endif %}
+          </div>
+          <div class="trust-pill">
+            {% if lang == 'es' %}Checkout seguro{% else %}Secure Checkout{% endif %}
+          </div>
+        {% endif %}
+        {% if not is_public_view and has_views %}
+          <div class="trust-pill">
+            {% if lang == 'es' %}Factura vista{% else %}Invoice viewed{% endif %}
+          </div>
         {% endif %}
       </div>
 
@@ -1242,6 +1472,12 @@
             Este portal conserva el resumen de la factura, el historial de actividad y el registro de pagos para tus archivos.
           {% else %}
             This portal keeps the invoice summary, activity history, and payment record available for your records.
+          {% endif %}
+        {% elif is_partial %}
+          {% if lang == 'es' %}
+            Esta factura tiene pagos registrados y un saldo restante pendiente. El cliente puede volver a este enlace para completar el pago.
+          {% else %}
+            This invoice has payments recorded and a remaining balance due. The client can return to this link to complete the payment.
           {% endif %}
         {% else %}
           {% if lang == 'es' %}

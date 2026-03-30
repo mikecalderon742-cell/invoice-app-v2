@@ -14,6 +14,13 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% set total_paid_safe = total_paid if total_paid is defined and total_paid is not none else 0 %}
+{% set balance_safe = balance if balance is defined and balance is not none else (amount - total_paid_safe) %}
+{% set percent_paid_safe = percent_paid if percent_paid is defined and percent_paid is not none else ((total_paid_safe / amount * 100) if amount and amount > 0 else 0) %}
+{% set payment_summary_safe = payment_summary if payment_summary is defined and payment_summary else none %}
+{% set is_partially_paid = total_paid_safe > 0 and balance_safe > 0 %}
+{% set is_paid_in_full = balance_safe <= 0 %}
+{% set due_date_safe = due_date if due_date is defined else none %}
 
 <style>
     .payment-shell {
@@ -130,6 +137,88 @@
         overflow-x: auto;
     }
 
+    .payment-progress-shell {
+        margin-top: 18px;
+        display: grid;
+        gap: 8px;
+    }
+
+    .payment-progress-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 13px;
+        opacity: 0.86;
+    }
+
+    .payment-progress-bar {
+        width: 100%;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(148,163,184,0.18);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .payment-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-light));
+        min-width: 0;
+        transition: width 180ms ease;
+    }
+
+    .payment-callout {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(148,163,184,0.16);
+        background: rgba(15,23,42,0.03);
+        font-size: 13px;
+        line-height: 1.65;
+    }
+
+    body.dark .payment-callout {
+        background: rgba(15,23,42,0.42);
+        border-color: rgba(148,163,184,0.18);
+    }
+
+    .payment-inline-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .payment-checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(148,163,184,0.16);
+        background: rgba(15,23,42,0.025);
+    }
+
+    body.dark .payment-checkbox-row {
+        background: rgba(15,23,42,0.34);
+        border-color: rgba(148,163,184,0.18);
+    }
+
+    .payment-checkbox-row input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+    }
+
+    .payment-checkbox-row label {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
     @media (max-width: 920px) {
         .payment-layout {
             grid-template-columns: 1fr;
@@ -141,6 +230,10 @@
         .payment-form-card,
         .payment-side-card {
             padding: 22px 18px;
+        }
+
+        .payment-inline-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -199,6 +292,48 @@
                 {% endif %}
             </div>
         </div>
+
+        <div class="payment-progress-shell">
+            <div class="payment-progress-top">
+                <span>
+                    {% if lang == 'es' %}
+                        Progreso de pago
+                    {% else %}
+                        Payment progress
+                    {% endif %}
+                </span>
+                <strong>{{ "{:.1f}".format(percent_paid_safe) }}%</strong>
+            </div>
+            <div class="payment-progress-bar">
+                <div class="payment-progress-fill" style="width: {{ 100 if percent_paid_safe > 100 else percent_paid_safe }}%;"></div>
+            </div>
+        </div>
+
+        {% if is_paid_in_full %}
+            <div class="payment-callout">
+                {% if lang == 'es' %}
+                    Esta factura ya aparece como pagada por completo. Aun así, puedes revisar el historial de pagos más abajo.
+                {% else %}
+                    This invoice already appears fully paid. You can still review the payment history below.
+                {% endif %}
+            </div>
+        {% elif is_partially_paid %}
+            <div class="payment-callout">
+                {% if lang == 'es' %}
+                    Ya existe al menos un pago parcial registrado. El siguiente pago puede aplicarse al saldo restante de <strong>${{ "{:,.2f}".format(balance_safe) }}</strong>.
+                {% else %}
+                    At least one partial payment has already been recorded. The next payment can be applied toward the remaining balance of <strong>${{ "{:,.2f}".format(balance_safe) }}</strong>.
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="payment-callout">
+                {% if lang == 'es' %}
+                    Este será el primer pago registrado para esta factura.
+                {% else %}
+                    This will be the first recorded payment for this invoice.
+                {% endif %}
+            </div>
+        {% endif %}
     </section>
 
     {% if feedback_message %}
@@ -237,6 +372,7 @@
                             type="number"
                             step="0.01"
                             min="0"
+                            {% if balance_safe > 0 %}max="{{ "%.2f"|format(balance_safe) }}"{% endif %}
                             id="amount"
                             name="amount"
                             placeholder="{% if lang == 'es' %}Ej. 250.00{% else %}e.g. 250.00{% endif %}"
@@ -244,16 +380,37 @@
                         >
                     </div>
 
-                    <div class="payment-field">
-                        <label for="method">
-                            {% if lang == 'es' %}Método de pago{% else %}Payment Method{% endif %}
+                    <div class="payment-inline-grid">
+                        <div class="payment-field">
+                            <label for="method">
+                                {% if lang == 'es' %}Método de pago{% else %}Payment Method{% endif %}
+                            </label>
+                            <input
+                                type="text"
+                                id="method"
+                                name="method"
+                                placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia bancaria{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
+                            >
+                        </div>
+
+                        <div class="payment-field">
+                            <label for="payment_date">
+                                {% if lang == 'es' %}Fecha del pago{% else %}Payment Date{% endif %}
+                            </label>
+                            <input
+                                type="date"
+                                id="payment_date"
+                                name="payment_date"
+                                value="{{ now().strftime('%Y-%m-%d') if now else '' }}"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="payment-checkbox-row">
+                        <input type="checkbox" id="is_deposit" name="is_deposit" value="1">
+                        <label for="is_deposit">
+                            {% if lang == 'es' %}Marcar como depósito / pago inicial{% else %}Mark as deposit / initial payment{% endif %}
                         </label>
-                        <input
-                            type="text"
-                            id="method"
-                            name="method"
-                            placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia bancaria{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
-                        >
                     </div>
 
                     <div class="payment-field">
@@ -305,14 +462,14 @@
                     <div class="snap-label">
                         {% if lang == 'es' %}Pagado hasta ahora{% else %}Paid So Far{% endif %}
                     </div>
-                    <div class="snap-value">${{ "{:,.2f}".format(total_paid) }}</div>
+                    <div class="snap-value">${{ "{:,.2f}".format(total_paid_safe) }}</div>
                 </div>
 
                 <div class="snap-item">
                     <div class="snap-label">
                         {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
                     </div>
-                    <div class="snap-value">${{ "{:,.2f}".format(balance) }}</div>
+                    <div class="snap-value">${{ "{:,.2f}".format(balance_safe) }}</div>
                 </div>
 
                 <div class="snap-item">
@@ -320,6 +477,22 @@
                         {% if lang == 'es' %}Estado actual{% else %}Current Status{% endif %}
                     </div>
                     <div class="snap-value">{{ status }}</div>
+                </div>
+
+                {% if due_date_safe %}
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Fecha de vencimiento{% else %}Due Date{% endif %}
+                    </div>
+                    <div class="snap-value">{{ due_date_safe.strftime('%Y-%m-%d') }}</div>
+                </div>
+                {% endif %}
+
+                <div class="snap-item">
+                    <div class="snap-label">
+                        {% if lang == 'es' %}Progreso{% else %}Progress{% endif %}
+                    </div>
+                    <div class="snap-value">{{ "{:.1f}".format(percent_paid_safe) }}%</div>
                 </div>
             </div>
 

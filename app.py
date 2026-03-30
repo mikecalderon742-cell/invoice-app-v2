@@ -16,6 +16,7 @@ from email.message import EmailMessage
 from functools import wraps
 
 import base64
+import hashlib
 import io
 import logging
 import os
@@ -39,6 +40,21 @@ DEFAULT_BUSINESS_NAME = "BillBeam"
 DEFAULT_BRAND_COLOR = "#020617"
 DEFAULT_ACCENT_COLOR = "#3A8BFF"
 ALLOWED_STATUSES = {"Sent", "Paid", "Overdue"}
+
+PUBLIC_VIEW_DEDUPE_MINUTES = int(os.environ.get("PUBLIC_VIEW_DEDUPE_MINUTES", "30"))
+DEFAULT_TAX_RESERVE_PERCENT = 25.0
+
+PAYMENT_METHOD_LABELS = {
+    "stripe": "Stripe",
+    "card": "Card",
+    "cash": "Cash",
+    "check": "Check",
+    "ach": "ACH",
+    "bank transfer": "Bank transfer",
+    "manual": "Manual entry",
+    "terminal": "Terminal",
+    "tap_to_pay": "Tap to Pay",
+}
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -127,6 +143,45 @@ def parse_float(value, default=0.0):
         return float(str(value).strip())
     except (TypeError, ValueError):
         return default
+
+
+def clean_percent(value, default=25.0):
+    pct = parse_float(value, default)
+    if pct < 0:
+        return 0.0
+    if pct > 100:
+        return 100.0
+    return pct
+
+
+def format_currency(amount):
+    try:
+        return f"${float(amount or 0):,.2f}"
+    except (TypeError, ValueError):
+        return "$0.00"
+
+
+def normalize_method_label(method: str) -> str:
+    raw = (method or "").strip()
+    if not raw:
+        return "Manual entry"
+    return PAYMENT_METHOD_LABELS.get(raw.lower(), raw)
+
+
+def normalize_public_client_key(request_obj, token: str) -> str:
+    ip = (request_obj.headers.get("X-Forwarded-For") or request_obj.remote_addr or "").split(",")[0].strip()
+    ua = request_obj.headers.get("User-Agent", "") or ""
+    basis = f"{token}|{ip}|{ua[:160]}"
+    return hashlib.sha256(basis.encode("utf-8")).hexdigest()
+
+
+def short_datetime(dt):
+    if not dt:
+        return ""
+    try:
+        return dt.strftime("%Y-%m-%d %I:%M %p")
+    except Exception:
+        return ""
 
 
 def money_to_cents(amount: float) -> int:
@@ -424,12 +479,27 @@ def init_db():
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_id INTEGER;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS user_id INTEGER;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS stripe_last_payment_intent_id TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS first_viewed_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_viewed_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS view_count INTEGER DEFAULT 0;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_reminder_sent_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_collection_action_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_payment_recorded_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS tax_reserve_percent NUMERIC;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_terms_label TEXT;")
+    cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS collect_in_person_enabled BOOLEAN DEFAULT FALSE;")
 
     cursor.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INTEGER;")
     cursor.execute("ALTER TABLE business_profile ADD COLUMN IF NOT EXISTS user_id INTEGER;")
 
     cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;")
     cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_checkout_session_id TEXT;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_source TEXT;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_status TEXT;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS occurred_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS recorded_by_user_id INTEGER;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS is_deposit BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS is_final_payment BOOLEAN DEFAULT FALSE;")
 
     cursor.execute(
         """
@@ -456,6 +526,18 @@ def init_db():
         """
         CREATE INDEX IF NOT EXISTS invoice_events_invoice_created_idx
         ON invoice_events(invoice_id, created_at DESC);
+        """
+    )
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS invoices_last_viewed_idx
+        ON invoices(last_viewed_at DESC);
+        """
+    )
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS invoices_last_reminder_idx
+        ON invoices(last_reminder_sent_at DESC);
         """
     )
 
@@ -486,17 +568,40 @@ def update_overdue_statuses():
     cursor = conn.cursor()
     cursor.execute(
         """
-        UPDATE invoices
-        SET status = 'Overdue'
-        WHERE status NOT IN ('Paid', 'Overdue')
-          AND due_date IS NOT NULL
-          AND due_date < %s;
-        """,
-        (now_local(),),
+        SELECT
+            i.id,
+            i.amount,
+            i.status,
+            i.due_date,
+            COALESCE(SUM(CASE WHEN COALESCE(p.payment_status, 'succeeded') != 'failed' THEN p.amount ELSE 0 END), 0) AS total_paid
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id
+        GROUP BY i.id, i.amount, i.status, i.due_date
+        """
     )
-    conn.commit()
+    rows = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    for invoice_id, amount, status, due_date, total_paid in rows:
+        amount = float(amount or 0)
+        total_paid = float(total_paid or 0)
+        balance = max(amount - total_paid, 0.0)
+
+        if balance <= 0.0001:
+            new_status = "Paid"
+        elif due_date and due_date < now_local():
+            new_status = "Overdue"
+        else:
+            new_status = "Sent"
+
+        if status != new_status:
+            conn2 = get_db_connection()
+            cur2 = conn2.cursor()
+            cur2.execute("UPDATE invoices SET status = %s WHERE id = %s", (new_status, invoice_id))
+            conn2.commit()
+            cur2.close()
+            conn2.close()
 
 
 def log_invoice_event(invoice_id: int, event_type: str, title: str, details: str = "", visibility: str = "private"):
@@ -729,6 +834,350 @@ def get_invoice_by_public_token(token: str):
         "total_paid": total_paid,
         "balance": balance,
         "invoice_number": invoice_number,
+    }
+
+
+def get_invoice_payment_summary(invoice_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            i.amount,
+            i.status,
+            i.due_date,
+            i.invoice_number,
+            COALESCE(SUM(CASE WHEN COALESCE(p.payment_status, 'succeeded') != 'failed' THEN p.amount ELSE 0 END), 0) AS total_paid,
+            COUNT(p.id) FILTER (WHERE COALESCE(p.payment_status, 'succeeded') != 'failed') AS payment_count,
+            MAX(COALESCE(p.occurred_at, p.created_at)) FILTER (WHERE COALESCE(p.payment_status, 'succeeded') != 'failed') AS last_payment_at
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id
+        WHERE i.id = %s
+        GROUP BY i.id, i.amount, i.status, i.due_date, i.invoice_number
+        """,
+        (invoice_id,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return None
+
+    amount_total, status, due_date, invoice_number, total_paid, payment_count, last_payment_at = row
+    amount_total = float(amount_total or 0)
+    total_paid = float(total_paid or 0)
+    balance = max(amount_total - total_paid, 0.0)
+    percent_paid = round((total_paid / amount_total) * 100, 1) if amount_total > 0 else 0.0
+
+    return {
+        "amount_total": amount_total,
+        "status": status or "Sent",
+        "due_date": due_date,
+        "invoice_number": invoice_number,
+        "total_paid": total_paid,
+        "balance": balance,
+        "payment_count": int(payment_count or 0),
+        "last_payment_at": last_payment_at,
+        "percent_paid": percent_paid,
+        "is_paid_in_full": amount_total > 0 and balance <= 0.0001,
+        "is_partially_paid": total_paid > 0 and balance > 0.0001,
+        "is_unpaid": total_paid <= 0.0001,
+        "is_overdue": bool(due_date and due_date < now_local() and balance > 0.0001),
+    }
+
+
+def derive_invoice_display_status(invoice_row_or_summary):
+    if not invoice_row_or_summary:
+        return "Sent"
+
+    balance = float(invoice_row_or_summary.get("balance") or 0)
+    total_paid = float(invoice_row_or_summary.get("total_paid") or 0)
+    due_date = invoice_row_or_summary.get("due_date")
+
+    if balance <= 0.0001:
+        return "Paid"
+    if due_date and due_date < now_local():
+        return "Overdue"
+    if total_paid > 0:
+        return "Sent"
+    return "Sent"
+
+
+def sync_invoice_status(invoice_id: int):
+    summary = get_invoice_payment_summary(invoice_id)
+    if not summary:
+        return None
+
+    new_status = derive_invoice_display_status(summary)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT status, invoice_number FROM invoices WHERE id = %s", (invoice_id,))
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        conn.close()
+        return summary
+
+    old_status, invoice_number = row
+    invoice_number = invoice_number or f"#{invoice_id}"
+
+    if old_status != new_status:
+        cur.execute("UPDATE invoices SET status = %s WHERE id = %s", (new_status, invoice_id))
+        conn.commit()
+        log_invoice_event(
+            invoice_id=invoice_id,
+            event_type="status_changed",
+            title="Status updated",
+            details=f"Invoice {invoice_number} status changed from {old_status or 'Sent'} to {new_status}.",
+            visibility="both",
+        )
+    else:
+        conn.commit()
+
+    cur.close()
+    conn.close()
+
+    summary["status"] = new_status
+    return summary
+
+
+def get_invoice_view_summary(invoice_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT first_viewed_at, last_viewed_at, COALESCE(view_count, 0)
+        FROM invoices
+        WHERE id = %s
+        """,
+        (invoice_id,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return {
+            "first_viewed_at": None,
+            "last_viewed_at": None,
+            "view_count": 0,
+            "has_been_viewed": False,
+            "never_viewed": True,
+        }
+
+    first_viewed_at, last_viewed_at, view_count = row
+    view_count = int(view_count or 0)
+    has_been_viewed = bool(view_count > 0 or first_viewed_at or last_viewed_at)
+
+    return {
+        "first_viewed_at": first_viewed_at,
+        "last_viewed_at": last_viewed_at,
+        "view_count": view_count,
+        "has_been_viewed": has_been_viewed,
+        "never_viewed": not has_been_viewed,
+    }
+
+
+def should_record_public_invoice_view(invoice_id: int, token: str):
+    session_key = f"invoice_viewed:{invoice_id}:{token}"
+    now_ts = datetime.utcnow().timestamp()
+    previous = session.get(session_key)
+
+    if previous:
+        try:
+            previous = float(previous)
+            if (now_ts - previous) < (PUBLIC_VIEW_DEDUPE_MINUTES * 60):
+                return False
+        except Exception:
+            pass
+
+    session[session_key] = now_ts
+    session.modified = True
+    return True
+
+
+def record_public_invoice_view(invoice_id: int, token: str):
+    if not should_record_public_invoice_view(invoice_id, token):
+        return False
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT invoice_number, COALESCE(view_count, 0)
+        FROM invoices
+        WHERE id = %s
+        """,
+        (invoice_id,),
+    )
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        conn.close()
+        return False
+
+    invoice_number, current_count = row
+    invoice_number = invoice_number or f"#{invoice_id}"
+    now_dt = now_local()
+
+    cur.execute(
+        """
+        UPDATE invoices
+        SET first_viewed_at = COALESCE(first_viewed_at, %s),
+            last_viewed_at = %s,
+            view_count = COALESCE(view_count, 0) + 1
+        WHERE id = %s
+        """,
+        (now_dt, now_dt, invoice_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    view_summary = get_invoice_view_summary(invoice_id)
+    log_invoice_event(
+        invoice_id=invoice_id,
+        event_type="invoice_viewed",
+        title="Invoice viewed",
+        details=f"Public invoice {invoice_number} was opened. Total views: {view_summary['view_count']}.",
+        visibility="private",
+    )
+    return True
+
+
+def get_invoice_collection_recommendation(status: str, payment_summary: dict, view_summary: dict, last_reminder_sent_at=None):
+    if not payment_summary:
+        return ""
+
+    if payment_summary.get("is_paid_in_full"):
+        return "Paid in full."
+
+    if payment_summary.get("is_partially_paid") and payment_summary.get("balance", 0) > 0:
+        return "Partial payment received. Best next step: follow up on the remaining balance."
+
+    if payment_summary.get("is_overdue") and not view_summary.get("has_been_viewed"):
+        return "Overdue and not yet viewed. Best next step: resend or remind the client."
+
+    if payment_summary.get("is_overdue") and view_summary.get("has_been_viewed"):
+        return "Viewed and overdue. Best next step: send a professional overdue reminder."
+
+    if view_summary.get("view_count", 0) >= 1 and payment_summary.get("balance", 0) > 0:
+        return "Viewed but unpaid. Best next step: send a reminder."
+
+    if not view_summary.get("has_been_viewed"):
+        return "Sent but not yet viewed. Best next step: follow up gently."
+
+    if last_reminder_sent_at:
+        return "Reminder already sent. Monitor before sending another one."
+
+    return "Open invoice. Monitor and follow up if needed."
+
+
+def get_dashboard_receivables_metrics(user_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            i.id,
+            i.amount,
+            i.created_at,
+            i.due_date,
+            COALESCE(i.view_count, 0),
+            COALESCE(SUM(CASE WHEN COALESCE(p.payment_status, 'succeeded') != 'failed' THEN p.amount ELSE 0 END), 0) AS total_paid
+        FROM invoices i
+        LEFT JOIN payments p ON p.invoice_id = i.id
+        WHERE i.user_id = %s
+        GROUP BY i.id, i.amount, i.created_at, i.due_date, i.view_count
+        """,
+        (user_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    now = now_local()
+    month_start = datetime(now.year, now.month, 1)
+    next_month = (month_start + timedelta(days=32)).replace(day=1)
+
+    outstanding_receivables = 0.0
+    overdue_receivables = 0.0
+    amount_outstanding_this_month = 0.0
+    viewed_but_unpaid_count = 0
+    sent_not_viewed_count = 0
+    paid_invoice_count = 0
+    unpaid_invoice_count = 0
+    payment_day_samples = []
+
+    for invoice_id, amount, created_at, due_date, view_count, total_paid in rows:
+        amount = float(amount or 0)
+        total_paid = float(total_paid or 0)
+        balance = max(amount - total_paid, 0.0)
+
+        if balance > 0:
+            outstanding_receivables += balance
+            unpaid_invoice_count += 1
+
+        if due_date and due_date < now and balance > 0:
+            overdue_receivables += balance
+
+        if created_at and month_start <= created_at < next_month and balance > 0:
+            amount_outstanding_this_month += balance
+
+        if view_count and balance > 0:
+            viewed_but_unpaid_count += 1
+
+        if not view_count and balance > 0:
+            sent_not_viewed_count += 1
+
+        if balance <= 0.0001:
+            paid_invoice_count += 1
+            summary = get_invoice_payment_summary(invoice_id)
+            if created_at and summary and summary.get("last_payment_at"):
+                delta = (summary["last_payment_at"] - created_at).days
+                if delta >= 0:
+                    payment_day_samples.append(delta)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM payments p
+        JOIN invoices i ON i.id = p.invoice_id
+        WHERE i.user_id = %s
+          AND COALESCE(p.payment_status, 'succeeded') != 'failed'
+          AND COALESCE(p.occurred_at, p.created_at) >= %s
+          AND COALESCE(p.occurred_at, p.created_at) < %s
+        """,
+        (user_id, month_start, next_month),
+    )
+    amount_collected_this_month = float(cur.fetchone()[0] or 0)
+    cur.close()
+    conn.close()
+
+    total_closed = paid_invoice_count + unpaid_invoice_count
+    collection_rate = round((paid_invoice_count / total_closed) * 100, 1) if total_closed > 0 else 0.0
+    avg_days_to_payment = round(sum(payment_day_samples) / len(payment_day_samples), 1) if payment_day_samples else None
+
+    reserve_pct = clean_percent(os.environ.get("DEFAULT_TAX_RESERVE_PERCENT"), DEFAULT_TAX_RESERVE_PERCENT)
+    suggested_tax_reserve = round(amount_collected_this_month * (reserve_pct / 100.0), 2)
+    revenue_after_reserve = round(amount_collected_this_month - suggested_tax_reserve, 2)
+
+    return {
+        "outstanding_receivables": round(outstanding_receivables, 2),
+        "overdue_receivables": round(overdue_receivables, 2),
+        "amount_collected_this_month": round(amount_collected_this_month, 2),
+        "amount_outstanding_this_month": round(amount_outstanding_this_month, 2),
+        "viewed_but_unpaid_count": viewed_but_unpaid_count,
+        "sent_not_viewed_count": sent_not_viewed_count,
+        "collection_rate": collection_rate,
+        "avg_days_to_payment": avg_days_to_payment,
+        "tax_reserve_percent": reserve_pct,
+        "suggested_tax_reserve": suggested_tax_reserve,
+        "revenue_after_reserve": revenue_after_reserve,
     }
 
 
@@ -2383,6 +2832,8 @@ def invoices_page():
 
     filtered_count = len(invoices)
 
+    dashboard_metrics = get_dashboard_receivables_metrics(user_id)
+
     return render_template(
         "invoices.html",
         invoices=invoices,
@@ -2409,6 +2860,7 @@ def invoices_page():
         item_labels=item_labels,
         item_totals=item_totals,
         item_counts=item_counts,
+        dashboard_metrics=dashboard_metrics,
     )
 
 
@@ -2670,7 +3122,7 @@ def add_payment(invoice_id):
 
     cursor.execute(
         """
-        SELECT id, client, amount, status, invoice_number
+        SELECT id, client, amount, status, invoice_number, due_date, client_id
         FROM invoices
         WHERE id = %s AND user_id = %s
         """,
@@ -2683,71 +3135,170 @@ def add_payment(invoice_id):
         conn.close()
         return "Invoice not found", 404
 
-    invoice_id_db, client_name, amount, status, invoice_number = invoice
-    amount_float = float(amount)
+    invoice_id_db, client_name, amount, status, invoice_number, due_date, client_id = invoice
+    amount_float = float(amount or 0)
     inv_label = invoice_number or f"#{invoice_id_db}"
 
     feedback_message = None
     feedback_type = None
 
+    payment_summary = get_invoice_payment_summary(invoice_id_db) or {}
+    existing_balance = float(payment_summary.get("balance") or 0)
+
     if request.method == "POST":
         pay_amount = parse_float(request.form.get("amount"), default=0.0)
         method = (request.form.get("method") or "").strip()
         note = (request.form.get("note") or "").strip()
+        payment_date_raw = (request.form.get("payment_date") or "").strip()
+        is_deposit = (request.form.get("is_deposit") or "").strip().lower() in ("1", "true", "yes", "on")
+
+        occurred_at = now_local()
+        if payment_date_raw:
+            try:
+                occurred_at = datetime.strptime(payment_date_raw, "%Y-%m-%d")
+            except ValueError:
+                occurred_at = now_local()
 
         if pay_amount <= 0:
             feedback_message = "Payment amount must be greater than zero."
             feedback_type = "error"
+        elif existing_balance <= 0.0001:
+            feedback_message = "This invoice is already paid in full."
+            feedback_type = "error"
+        elif pay_amount > (existing_balance + 0.009):
+            feedback_message = f"Payment exceeds the remaining balance of {format_currency(existing_balance)}."
+            feedback_type = "error"
         else:
             cursor.execute(
                 """
-                INSERT INTO payments (invoice_id, amount, method, note)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO payments (
+                    invoice_id,
+                    amount,
+                    method,
+                    note,
+                    payment_source,
+                    payment_status,
+                    occurred_at,
+                    recorded_by_user_id,
+                    is_deposit,
+                    is_final_payment
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
-                (invoice_id_db, pay_amount, method or None, note or None),
+                (
+                    invoice_id_db,
+                    pay_amount,
+                    method or None,
+                    note or None,
+                    "manual",
+                    "succeeded",
+                    occurred_at,
+                    user_id,
+                    bool(is_deposit),
+                    False,
+                ),
             )
 
             cursor.execute(
-                "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
-                (invoice_id_db,),
+                """
+                UPDATE invoices
+                SET last_payment_recorded_at = %s,
+                    last_collection_action_at = %s
+                WHERE id = %s
+                """,
+                (occurred_at, now_local(), invoice_id_db),
             )
-            total_paid = float(cursor.fetchone()[0] or 0)
-
-            if total_paid >= amount_float:
-                cursor.execute(
-                    "UPDATE invoices SET status = 'Paid' WHERE id = %s",
-                    (invoice_id_db,),
-                )
 
             conn.commit()
 
+            payment_summary = sync_invoice_status(invoice_id_db) or get_invoice_payment_summary(invoice_id_db) or {}
+            total_paid = float(payment_summary.get("total_paid") or 0)
+            balance = float(payment_summary.get("balance") or 0)
+
+            method_label = normalize_method_label(method)
+            details = f"Recorded payment of {format_currency(pay_amount)} via {method_label}."
+            if note:
+                details += f" Note: {note}"
+
             log_invoice_event(
                 invoice_id=invoice_id_db,
-                event_type="payment_added",
+                event_type="manual_payment_added",
                 title="Payment recorded",
-                details=f"Recorded payment of ${pay_amount:,.2f} via {method or 'manual entry'}.",
+                details=details,
                 visibility="both",
             )
 
-            feedback_message = f"Recorded payment of ${pay_amount:,.2f} on invoice {inv_label}."
+            if balance > 0.0001:
+                log_invoice_event(
+                    invoice_id=invoice_id_db,
+                    event_type="partial_payment_received",
+                    title="Partial payment received",
+                    details=f"Total paid is now {format_currency(total_paid)}. Remaining balance: {format_currency(balance)}.",
+                    visibility="both",
+                )
+            else:
+                log_invoice_event(
+                    invoice_id=invoice_id_db,
+                    event_type="final_payment_received",
+                    title="Final payment received",
+                    details=f"Invoice {inv_label} is now paid in full.",
+                    visibility="both",
+                )
+
+            cursor.execute(
+                """
+                SELECT c.email
+                FROM invoices i
+                LEFT JOIN clients c ON i.client_id = c.id
+                WHERE i.id = %s
+                """,
+                (invoice_id_db,),
+            )
+            email_row = cursor.fetchone()
+            client_email = email_row[0] if email_row else None
+
+            if client_email and plan_allows("pro"):
+                if balance > 0.0001:
+                    send_invoice_notification_email(invoice_id_db, client_email, "partial_payment_confirmation")
+                else:
+                    send_invoice_notification_email(invoice_id_db, client_email, "paid_in_full_confirmation")
+
+            if balance > 0.0001:
+                feedback_message = (
+                    f"Recorded payment of {format_currency(pay_amount)} on invoice {inv_label}. "
+                    f"Remaining balance: {format_currency(balance)}."
+                )
+            else:
+                feedback_message = f"Recorded final payment. Invoice {inv_label} is now paid in full."
+
             feedback_type = "success"
+
+    payment_summary = get_invoice_payment_summary(invoice_id_db) or {}
+    status = derive_invoice_display_status(payment_summary)
 
     cursor.execute(
         """
-        SELECT amount, method, note, created_at
+        SELECT
+            amount,
+            method,
+            note,
+            COALESCE(occurred_at, created_at),
+            COALESCE(payment_source, 'manual'),
+            COALESCE(payment_status, 'succeeded')
         FROM payments
         WHERE invoice_id = %s
-        ORDER BY created_at DESC
+        ORDER BY COALESCE(occurred_at, created_at) DESC, id DESC
         """,
         (invoice_id_db,),
     )
     payments = cursor.fetchall()
 
-    total_paid = sum(float(p[0]) for p in payments)
-    balance = max(amount_float - total_paid, 0.0)
-
     cursor.close()
     conn.close()
+
+    total_paid = float(payment_summary.get("total_paid") or 0)
+    balance = float(payment_summary.get("balance") or 0)
+    percent_paid = float(payment_summary.get("percent_paid") or 0)
 
     return render_template(
         "add_payment.html",
@@ -2757,9 +3308,12 @@ def add_payment(invoice_id):
         status=status,
         invoice_number=invoice_number,
         inv_label=inv_label,
+        due_date=due_date,
         payments=payments,
         total_paid=total_paid,
         balance=balance,
+        percent_paid=percent_paid,
+        payment_summary=payment_summary,
         feedback_message=feedback_message,
         feedback_type=feedback_type,
     )
@@ -2862,6 +3416,8 @@ def update(invoice_id):
         details=f"Invoice {invoice_number} was updated.",
         visibility="private",
     )
+
+    sync_invoice_status(invoice_id)
 
     return redirect("/invoices")
 
@@ -3308,6 +3864,7 @@ def public_invoice(token):
 
     if client_name_from_client:
         client_name = client_name_from_client
+        record_public_invoice_view(invoice_id, token)
 
     amount_float = float(amount)
     inv_label = invoice_number or f"#{invoice_id}"
@@ -3325,19 +3882,27 @@ def public_invoice(token):
 
     cursor.execute(
         """
-        SELECT amount, method, note, created_at
+        SELECT
+            amount,
+            method,
+            note,
+            COALESCE(occurred_at, created_at),
+            COALESCE(payment_source, 'manual'),
+            COALESCE(payment_status, 'succeeded')
         FROM payments
         WHERE invoice_id = %s
-        ORDER BY created_at DESC
+        ORDER BY COALESCE(occurred_at, created_at) DESC, id DESC
         """,
         (invoice_id,),
     )
     payments = cursor.fetchall()
 
-    total_paid = sum(float(p[0]) for p in payments)
-    balance = max(amount_float - total_paid, 0.0)
-
-    paid_at = payments[0][3] if payments else None
+    payment_summary = get_invoice_payment_summary(invoice_id) or {}
+    total_paid = float(payment_summary.get("total_paid") or 0)
+    balance = float(payment_summary.get("balance") or 0)
+    percent_paid = float(payment_summary.get("percent_paid") or 0)
+    paid_at = payment_summary.get("last_payment_at")
+    view_summary = get_invoice_view_summary(invoice_id)
 
     if amount_float > 0 and total_paid >= amount_float and status != "Paid":
         try:
@@ -3351,7 +3916,7 @@ def public_invoice(token):
         except Exception as e:
             logger.warning("[PublicInvoice] Failed safety sync for invoice %s: %s", invoice_id, e)
 
-    is_paid_in_full = amount_float > 0 and total_paid >= amount_float
+    is_paid_in_full = payment_summary.get("is_paid_in_full", False)
     if is_paid_in_full:
         status = "Paid"
         balance = 0.0
@@ -3386,6 +3951,15 @@ def public_invoice(token):
         public_token=token,
         signature_data=signature_data,
         invoice_events=invoice_events,
+        percent_paid=percent_paid,
+        payment_summary=payment_summary,
+        view_summary=view_summary,
+        collection_recommendation=get_invoice_collection_recommendation(
+            status,
+            payment_summary,
+            view_summary,
+            None,
+        ),
     )
 
 
@@ -3461,17 +4035,37 @@ def invoice_detail(invoice_id):
 
     cursor.execute(
         """
-        SELECT amount, method, note, created_at
+        SELECT
+            amount,
+            method,
+            note,
+            COALESCE(occurred_at, created_at),
+            COALESCE(payment_source, 'manual'),
+            COALESCE(payment_status, 'succeeded')
         FROM payments
         WHERE invoice_id = %s
-        ORDER BY created_at DESC
+        ORDER BY COALESCE(occurred_at, created_at) DESC, id DESC
         """,
         (invoice_id,),
     )
     payments = cursor.fetchall()
 
-    total_paid = sum(float(p[0]) for p in payments)
-    balance = max(amount_float - total_paid, 0.0)
+    payment_summary = get_invoice_payment_summary(invoice_id) or {}
+    total_paid = float(payment_summary.get("total_paid") or 0)
+    balance = float(payment_summary.get("balance") or 0)
+    percent_paid = float(payment_summary.get("percent_paid") or 0)
+    view_summary = get_invoice_view_summary(invoice_id)
+
+    cursor.execute(
+        """
+        SELECT last_reminder_sent_at
+        FROM invoices
+        WHERE id = %s
+        """,
+        (invoice_id,),
+    )
+    reminder_row = cursor.fetchone()
+    last_reminder_sent_at = reminder_row[0] if reminder_row else None
 
     cursor.close()
     conn.close()
@@ -3501,12 +4095,60 @@ def invoice_detail(invoice_id):
         public_token=None,
         signature_data=signature_data,
         invoice_events=invoice_events,
+        paid_at=payment_summary.get("last_payment_at"),
+        percent_paid=percent_paid,
+        payment_summary=payment_summary,
+        view_summary=view_summary,
+        last_reminder_sent_at=last_reminder_sent_at,
+        collection_recommendation=get_invoice_collection_recommendation(
+            status,
+            payment_summary,
+            view_summary,
+            last_reminder_sent_at,
+        ),
     )
 
 
 # -------------------------
 # EMAIL
 # -------------------------
+def mark_invoice_last_emailed(invoice_id: int, to_email: str, is_reminder: bool = False):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        now_dt = now_local()
+
+        if is_reminder:
+            cur.execute(
+                """
+                UPDATE invoices
+                SET last_emailed_at = %s,
+                    last_emailed_to = %s,
+                    last_reminder_sent_at = %s,
+                    last_collection_action_at = %s
+                WHERE id = %s
+                """,
+                (now_dt, to_email, now_dt, now_dt, invoice_id),
+            )
+        else:
+            cur.execute(
+                """
+                UPDATE invoices
+                SET last_emailed_at = %s,
+                    last_emailed_to = %s
+                WHERE id = %s
+                """,
+                (now_dt, to_email, invoice_id),
+            )
+
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        logger.exception("Failed to update invoice email timestamps for invoice_id=%s", invoice_id)
+    finally:
+        cur.close()
+        conn.close()
+
 def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes: bytes, filename: str):
     api_key = os.environ.get("RESEND_API_KEY")
     resend_from = os.environ.get("RESEND_FROM")
@@ -3567,7 +4209,7 @@ def send_email_via_resend(to_email: str, subject: str, body_text: str, pdf_bytes
         return False, f"Error sending via Resend: {e}"
 
 
-def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: str):
+def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: str, email_type: str = "invoice"):
     pdf_bytes, err = generate_invoice_pdf_bytes(invoice_id)
     if err:
         return False, err
@@ -3583,21 +4225,17 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             filename=filename,
         )
         if success:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute(
-                "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
-                (now_local(), to_email, invoice_id),
-            )
-            conn.commit()
-            cur.close()
-            conn.close()
+            is_reminder = email_type == "reminder"
+            mark_invoice_last_emailed(invoice_id, to_email, is_reminder=is_reminder)
+
+            event_type = "reminder_sent" if is_reminder else "invoice_emailed"
+            event_title = "Reminder sent" if is_reminder else "Invoice emailed"
 
             log_invoice_event(
                 invoice_id=invoice_id,
-                event_type="invoice_emailed",
-                title="Invoice emailed",
-                details=f"Invoice emailed to {to_email}.",
+                event_type=event_type,
+                title=event_title,
+                details=f"{event_title} to {to_email}.",
                 visibility="private",
             )
             return True, None
@@ -3643,29 +4281,170 @@ https://billbeam.app
             if smtp_user and smtp_password:
                 server.login(smtp_user, smtp_password)
             server.send_message(msg)
-
     except Exception as e:
         return False, f"Error sending email (connection or SMTP error): {e}"
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE invoices SET last_emailed_at = %s, last_emailed_to = %s WHERE id = %s",
-        (now_local(), to_email, invoice_id),
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+    is_reminder = email_type == "reminder"
+    mark_invoice_last_emailed(invoice_id, to_email, is_reminder=is_reminder)
+
+    event_type = "reminder_sent" if is_reminder else "invoice_emailed"
+    event_title = "Reminder sent" if is_reminder else "Invoice emailed"
 
     log_invoice_event(
         invoice_id=invoice_id,
-        event_type="invoice_emailed",
-        title="Invoice emailed",
-        details=f"Invoice emailed to {to_email}.",
+        event_type=event_type,
+        title=event_title,
+        details=f"{event_title} to {to_email}.",
         visibility="private",
     )
 
     return True, None
+
+
+def build_invoice_email_defaults(invoice_id: int, email_type: str = "invoice"):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            i.id,
+            i.client,
+            i.amount,
+            i.created_at,
+            i.status,
+            i.invoice_number,
+            i.due_date,
+            i.last_emailed_at,
+            i.last_emailed_to,
+            i.last_reminder_sent_at,
+            c.email,
+            i.public_token
+        FROM invoices i
+        LEFT JOIN clients c ON i.client_id = c.id
+        WHERE i.id = %s
+        """,
+        (invoice_id,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return None
+
+    (
+        invoice_id_db,
+        client_name,
+        amount,
+        created_at,
+        status,
+        invoice_number,
+        due_date,
+        last_emailed_at,
+        last_emailed_to,
+        last_reminder_sent_at,
+        client_email,
+        public_token_db,
+    ) = row
+
+    profile = get_business_profile()
+    business_name = profile["business_name"] or DEFAULT_BUSINESS_NAME
+    amount_float = float(amount or 0)
+    inv_label = invoice_number or f"#{invoice_id_db}"
+
+    token = public_token_db or get_or_create_public_token(invoice_id_db)
+    base_url = APP_BASE_URL or request.url_root.rstrip("/")
+    public_url = f"{base_url}/public/{token}"
+
+    payment_summary = get_invoice_payment_summary(invoice_id_db) or {}
+    balance = float(payment_summary.get("balance") or 0)
+    total_paid = float(payment_summary.get("total_paid") or 0)
+
+    default_to_email = last_emailed_to or client_email or ""
+
+    if email_type == "reminder":
+        subject = f"Friendly reminder: Invoice {inv_label} from {business_name}"
+        if payment_summary.get("is_overdue"):
+            subject = f"Payment reminder: Invoice {inv_label} is overdue"
+        if total_paid > 0 and balance > 0:
+            subject = f"Remaining balance reminder: Invoice {inv_label}"
+
+        message = (
+            f"Hi {client_name},\n\n"
+            f"This is a friendly reminder regarding invoice {inv_label} from {business_name}.\n"
+            f"Original invoice total: {format_currency(amount_float)}\n"
+            f"Total paid so far: {format_currency(total_paid)}\n"
+            f"Remaining balance: {format_currency(balance)}\n"
+            + (f"Due date: {due_date.strftime('%Y-%m-%d')}\n" if due_date else "")
+            + f"\nYou can view and pay the invoice here:\n{public_url}\n\n"
+            + "Please let us know if you have any questions.\n\n"
+            + f"— {business_name}"
+        )
+    elif email_type == "partial_payment_confirmation":
+        subject = f"Payment received for invoice {inv_label}"
+        message = (
+            f"Hi {client_name},\n\n"
+            f"We received your payment for invoice {inv_label}.\n"
+            f"Invoice total: {format_currency(amount_float)}\n"
+            f"Total paid so far: {format_currency(total_paid)}\n"
+            f"Remaining balance: {format_currency(balance)}\n"
+            f"\nYou can view the invoice anytime here:\n{public_url}\n\n"
+            f"Thank you.\n\n— {business_name}"
+        )
+    elif email_type == "paid_in_full_confirmation":
+        subject = f"Invoice {inv_label} paid in full"
+        message = (
+            f"Hi {client_name},\n\n"
+            f"Thank you. Invoice {inv_label} has been paid in full.\n"
+            f"Amount received: {format_currency(total_paid or amount_float)}\n"
+            f"\nYou can view the invoice here:\n{public_url}\n\n"
+            f"We appreciate your business.\n\n— {business_name}"
+        )
+    else:
+        subject = f"Invoice {inv_label} from {business_name}"
+        message = (
+            f"Hi {client_name},\n\n"
+            f"Please find attached your invoice {inv_label} for {format_currency(amount_float)} from {business_name}.\n"
+            + (f"Due date: {due_date.strftime('%Y-%m-%d')}\n" if due_date else "")
+            + f"\nYou can also view this invoice online here:\n{public_url}\n\n"
+            + "Thank you for your business.\n\n"
+            + f"— {business_name}"
+        )
+
+    return {
+        "invoice_id": invoice_id_db,
+        "client_name": client_name,
+        "amount": amount_float,
+        "created_at": created_at,
+        "status": status,
+        "invoice_number": invoice_number,
+        "inv_label": inv_label,
+        "due_date": due_date,
+        "last_emailed_at": last_emailed_at,
+        "last_emailed_to": last_emailed_to,
+        "last_reminder_sent_at": last_reminder_sent_at,
+        "client_email": client_email,
+        "public_url": public_url,
+        "public_token": token,
+        "default_to_email": default_to_email,
+        "default_subject": subject,
+        "default_message": message,
+        "payment_summary": payment_summary,
+    }
+
+
+def send_invoice_notification_email(invoice_id: int, to_email: str, email_type: str):
+    defaults = build_invoice_email_defaults(invoice_id, email_type=email_type)
+    if not defaults or not to_email:
+        return False, "Missing invoice email defaults or recipient."
+
+    return send_invoice_email(
+        invoice_id=invoice_id,
+        to_email=to_email,
+        subject=defaults["default_subject"],
+        body_text=defaults["default_message"],
+        email_type=email_type,
+    )
 
 
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
@@ -3792,6 +4571,89 @@ def send_email_view(invoice_id):
     )
 
 
+@app.route("/send-reminder/<int:invoice_id>", methods=["GET", "POST"])
+@login_required
+def send_reminder_view(invoice_id):
+    if not plan_allows("pro"):
+        return render_template(
+            "upgrade_gate.html",
+            title="Upgrade to send reminders",
+            reason="Professional reminder workflows are available on the Pro plan and above.",
+            required_plan="pro",
+            plans=PLAN_DEFINITIONS,
+        )
+
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id FROM invoices WHERE id = %s AND user_id = %s",
+        (invoice_id, user_id),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        return "Invoice not found", 404
+
+    defaults = build_invoice_email_defaults(invoice_id, email_type="reminder")
+    if not defaults:
+        return "Invoice not found", 404
+
+    feedback_message = None
+    feedback_type = None
+
+    if request.method == "POST":
+        to_email = (request.form.get("to_email") or "").strip()
+        subject = request.form.get("subject") or defaults["default_subject"]
+        message_body = request.form.get("message") or defaults["default_message"]
+
+        if not to_email:
+            feedback_message = "Recipient email is required."
+            feedback_type = "error"
+        else:
+            success, err = send_invoice_email(
+                invoice_id,
+                to_email,
+                subject,
+                message_body,
+                email_type="reminder",
+            )
+            if success:
+                feedback_message = f"Reminder sent for invoice {defaults['inv_label']}."
+                feedback_type = "success"
+                defaults["default_to_email"] = to_email
+            else:
+                feedback_message = err or "Failed to send reminder."
+                feedback_type = "error"
+
+    return render_template(
+        "send_email.html",
+        invoice_id=defaults["invoice_id"],
+        client_name=defaults["client_name"],
+        amount=defaults["amount"],
+        created_at=defaults["created_at"],
+        status=defaults["status"],
+        invoice_number=defaults["invoice_number"],
+        inv_label=defaults["inv_label"],
+        due_date=defaults["due_date"],
+        last_emailed_at=defaults["last_emailed_at"],
+        last_emailed_to=defaults["last_emailed_to"],
+        default_to_email=defaults["default_to_email"],
+        default_subject=defaults["default_subject"],
+        default_message=defaults["default_message"],
+        feedback_message=feedback_message,
+        feedback_type=feedback_type,
+        public_url=defaults["public_url"],
+        email_mode="reminder",
+        payment_summary=defaults["payment_summary"],
+        lang=request.args.get("lang", "en"),
+    )
+
+
 # -------------------------
 # AI HELPERS
 # -------------------------
@@ -3839,12 +4701,19 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
 
     growth_pct = round((monthly_revenue / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
 
+    dashboard_metrics = get_dashboard_receivables_metrics(user_id)
+
     return (
         f"Total invoices: {total_invoices}, "
         f"total revenue: ${total_revenue:,.2f}, "
         f"this month revenue: ${monthly_revenue:,.2f} "
         f"({growth_pct}% of all-time), "
-        f"status counts → Paid: {paid_count}, Sent: {sent_count}, Overdue: {overdue_count}."
+        f"status counts → Paid: {paid_count}, Sent: {sent_count}, Overdue: {overdue_count}. "
+        f"Outstanding receivables: ${dashboard_metrics['outstanding_receivables']:,.2f}, "
+        f"overdue receivables: ${dashboard_metrics['overdue_receivables']:,.2f}, "
+        f"viewed but unpaid: {dashboard_metrics['viewed_but_unpaid_count']}, "
+        f"sent not viewed: {dashboard_metrics['sent_not_viewed_count']}, "
+        f"suggested tax reserve this month: ${dashboard_metrics['suggested_tax_reserve']:,.2f}."
     )
 
 
@@ -4077,9 +4946,12 @@ def _record_invoice_payment_from_checkout_session(session_obj):
                 method,
                 note,
                 stripe_payment_intent_id,
-                stripe_checkout_session_id
+                stripe_checkout_session_id,
+                payment_source,
+                payment_status,
+                occurred_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 invoice_id,
@@ -4088,6 +4960,9 @@ def _record_invoice_payment_from_checkout_session(session_obj):
                 "Stripe Checkout",
                 payment_intent_id,
                 checkout_session_id,
+                "stripe",
+                "succeeded",
+                now_local(),
             ),
         )
 
@@ -4110,31 +4985,63 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             )
             total_paid = float(cur.fetchone()[0] or 0)
 
-            if inv_total > 0 and total_paid >= inv_total:
-                cur.execute("UPDATE invoices SET status = 'Paid' WHERE id = %s", (invoice_id,))
-                logger.info(
-                    "[Stripe] Invoice %s marked Paid (paid=%s total=%s)",
-                    invoice_id,
-                    total_paid,
-                    inv_total,
-                )
-            else:
-                logger.info(
-                    "[Stripe] Partial payment invoice %s paid=%s total=%s",
-                    invoice_id,
-                    total_paid,
-                    inv_total,
-                )
+            cur.execute(
+                """
+                UPDATE invoices
+                SET last_payment_recorded_at = %s,
+                    last_collection_action_at = %s
+                WHERE id = %s
+                """,
+                (now_local(), now_local(), invoice_id),
+            )
 
             conn.commit()
+            summary = sync_invoice_status(invoice_id) or get_invoice_payment_summary(invoice_id) or {}
+            balance = float(summary.get("balance") or 0)
+            total_paid_now = float(summary.get("total_paid") or 0)
 
             log_invoice_event(
                 invoice_id=invoice_id,
                 event_type="stripe_payment",
                 title="Online payment received",
-                details=f"Stripe payment received for invoice {invoice_number}: ${amount_paid:,.2f}.",
+                details=f"Stripe payment received for invoice {invoice_number}: {format_currency(amount_paid)}.",
                 visibility="both",
             )
+
+            if balance > 0.0001:
+                log_invoice_event(
+                    invoice_id=invoice_id,
+                    event_type="partial_payment_received",
+                    title="Partial payment received",
+                    details=f"Total paid is now {format_currency(total_paid_now)}. Remaining balance: {format_currency(balance)}.",
+                    visibility="both",
+                )
+            else:
+                log_invoice_event(
+                    invoice_id=invoice_id,
+                    event_type="final_payment_received",
+                    title="Final payment received",
+                    details=f"Invoice {invoice_number} is now paid in full.",
+                    visibility="both",
+                )
+
+            cur.execute(
+                """
+                SELECT c.email
+                FROM invoices i
+                LEFT JOIN clients c ON i.client_id = c.id
+                WHERE i.id = %s
+                """,
+                (invoice_id,),
+            )
+            email_row = cur.fetchone()
+            client_email = email_row[0] if email_row else None
+
+            if client_email:
+                if balance > 0.0001:
+                    send_invoice_notification_email(invoice_id, client_email, "partial_payment_confirmation")
+                else:
+                    send_invoice_notification_email(invoice_id, client_email, "paid_in_full_confirmation")
         else:
             conn.commit()
 
