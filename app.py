@@ -1144,7 +1144,7 @@ def get_dashboard_receivables_metrics(user_id: int):
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT COALESCE(SUM(amount), 0)
+        SELECT COALESCE(SUM(p.amount), 0)
         FROM payments p
         JOIN invoices i ON i.id = p.invoice_id
         WHERE i.user_id = %s
