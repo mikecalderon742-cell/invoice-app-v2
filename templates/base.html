@@ -151,6 +151,32 @@
         font-weight: 600;
     }
 
+    .nav-menu-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        margin-left: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.30);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.82);
+        color: #0f172a;
+        font-size: 18px;
+        line-height: 1;
+        box-shadow: none;
+        flex: 0 0 auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.dark .nav-menu-btn {
+        background: rgba(15,23,42,0.82);
+        color: #e5e7eb;
+        border-color: rgba(148,163,184,0.45);
+    }
+
     .sidebar-header {
         padding: 0 24px 14px;
         margin-bottom: 8px;
@@ -287,6 +313,14 @@
             flex-direction: column;
             gap: 8px;
         }
+
+        body.android-webview #hamburgerBtn {
+            display: none !important;
+        }
+
+        body.android-webview .nav-menu-btn {
+            display: inline-flex !important;
+        }
     }
 
     @media (max-width: 560px) {
@@ -297,36 +331,7 @@
         .sidebar-header h3 {
             font-size: 17px;
         }
-
-    #hamburgerBtn {
-        position: fixed;
-        top: 14px;
-        left: 12px;
-        z-index: 3001;
-        width: 44px;
-        height: 44px;
-        padding: 10px;
-        border: 0;
-        background: transparent;
-        appearance: none;
-        -webkit-appearance: none;
-        touch-action: manipulation;
-        pointer-events: auto;
-        cursor: pointer;
     }
-
-    #hamburgerBtn span {
-        pointer-events: none;
-    }
-
-    #sidebar {
-        z-index: 3000;
-    }
-
-    #overlay {
-        z-index: 2999;
-    }
-    
     </style>
 </head>
 
@@ -373,11 +378,11 @@
     </svg>
 </div>
 
-<button id="hamburgerBtn" class="hamburger" aria-label="Open navigation" type="button">
+<div id="hamburgerBtn" class="hamburger" aria-label="Open navigation" role="button" tabindex="0">
     <span></span>
     <span></span>
     <span></span>
-</button>
+</div>
 
 <div id="sidebar" class="sidebar" {% if is_public_view %}style="display:none;"{% endif %}>
     <div class="sidebar-header">
@@ -464,6 +469,10 @@
         <span class="logo nav-brand-text">
             {{ business_profile.business_name or "BillBeam" }}
         </span>
+
+        {% if not is_public_view %}
+        <button id="navMenuBtn" class="nav-menu-btn" type="button" aria-label="Open navigation">☰</button>
+        {% endif %}
     </div>
 
     <div class="nav-right">
@@ -756,6 +765,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.body.classList.remove("fade-out");
 
+    const ua = navigator.userAgent || "";
+    const isAndroid = /Android/i.test(ua);
+    const isWebView = /wv|Version\/[\d.]+.*Chrome\/[\d.]+ Mobile/i.test(ua) || /; wv\)/i.test(ua);
+    if (isAndroid && isWebView) {
+        document.body.classList.add("android-webview");
+    }
+
     const hero = document.querySelector(".hero");
     window.addEventListener("scroll", () => {
         if (hero) {
@@ -800,22 +816,25 @@ document.addEventListener("DOMContentLoaded", function () {
     setTheme(savedTheme);
 
     const hamburger = document.getElementById("hamburgerBtn");
+    const navMenuBtn = document.getElementById("navMenuBtn");
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("overlay");
 
     function openSidebar() {
-        if (!sidebar || !overlay || !hamburger) return;
+        if (!sidebar || !overlay) return;
         sidebar.classList.add("active");
         overlay.classList.add("active");
-        hamburger.classList.add("active");
+        if (hamburger) hamburger.classList.add("active");
+        if (navMenuBtn) navMenuBtn.classList.add("active");
         document.body.style.overflow = "hidden";
     }
 
     function closeSidebar() {
-        if (!sidebar || !overlay || !hamburger) return;
+        if (!sidebar || !overlay) return;
         sidebar.classList.remove("active");
         overlay.classList.remove("active");
-        hamburger.classList.remove("active");
+        if (hamburger) hamburger.classList.remove("active");
+        if (navMenuBtn) navMenuBtn.classList.remove("active");
         document.body.style.overflow = "";
     }
 
@@ -834,17 +853,29 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (hamburger && sidebar && overlay) {
-        hamburger.addEventListener("click", toggleSidebar, { passive: false });
-        hamburger.addEventListener("touchstart", toggleSidebar, { passive: false });
-
-        hamburger.addEventListener("keydown", (e) => {
+        hamburger.addEventListener("click", toggleSidebar);
+        hamburger.addEventListener("keypress", (e) => {
             if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 toggleSidebar(e);
             }
         });
+    }
 
+    if (navMenuBtn && sidebar && overlay) {
+        navMenuBtn.addEventListener("click", toggleSidebar);
+        navMenuBtn.addEventListener("touchend", toggleSidebar, { passive: false });
+        navMenuBtn.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleSidebar(e);
+            }
+        });
+    }
+
+    if (overlay) {
         overlay.addEventListener("click", closeSidebar);
-        overlay.addEventListener("touchstart", closeSidebar, { passive: true });
+        overlay.addEventListener("touchend", closeSidebar, { passive: true });
     }
 
     const modal = document.getElementById("welcomeModal");
