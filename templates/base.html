@@ -151,32 +151,6 @@
         font-weight: 600;
     }
 
-    .nav-menu-btn {
-        display: none;
-        align-items: center;
-        justify-content: center;
-        width: 38px;
-        height: 38px;
-        padding: 0;
-        margin-left: 8px;
-        border: 1px solid rgba(148, 163, 184, 0.30);
-        border-radius: 10px;
-        background: rgba(255,255,255,0.82);
-        color: #0f172a;
-        font-size: 18px;
-        line-height: 1;
-        box-shadow: none;
-        flex: 0 0 auto;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    body.dark .nav-menu-btn {
-        background: rgba(15,23,42,0.82);
-        color: #e5e7eb;
-        border-color: rgba(148,163,184,0.45);
-    }
-
     .sidebar-header {
         padding: 0 24px 14px;
         margin-bottom: 8px;
@@ -312,14 +286,6 @@
         .footer-contact-row {
             flex-direction: column;
             gap: 8px;
-        }
-
-        body.android-webview #hamburgerBtn {
-            display: none !important;
-        }
-
-        body.android-webview .nav-menu-btn {
-            display: inline-flex !important;
         }
     }
 
@@ -469,10 +435,6 @@
         <span class="logo nav-brand-text">
             {{ business_profile.business_name or "BillBeam" }}
         </span>
-
-        {% if not is_public_view %}
-        <button id="navMenuBtn" class="nav-menu-btn" type="button" aria-label="Open navigation">☰</button>
-        {% endif %}
     </div>
 
     <div class="nav-right">
@@ -763,14 +725,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    document.body.classList.remove("fade-out");
-
-    const ua = navigator.userAgent || "";
-    const isAndroid = /Android/i.test(ua);
-    const isWebView = /wv|Version\/[\d.]+.*Chrome\/[\d.]+ Mobile/i.test(ua) || /; wv\)/i.test(ua);
-    if (isAndroid && isWebView) {
-        document.body.classList.add("android-webview");
-    }
+    document.body.classList.remove("fade-out");13
 
     const hero = document.querySelector(".hero");
     window.addEventListener("scroll", () => {
@@ -816,66 +771,48 @@ document.addEventListener("DOMContentLoaded", function () {
     setTheme(savedTheme);
 
     const hamburger = document.getElementById("hamburgerBtn");
-    const navMenuBtn = document.getElementById("navMenuBtn");
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("overlay");
 
     function openSidebar() {
-        if (!sidebar || !overlay) return;
+        if (!sidebar || !overlay || !hamburger) return;
         sidebar.classList.add("active");
         overlay.classList.add("active");
-        if (hamburger) hamburger.classList.add("active");
-        if (navMenuBtn) navMenuBtn.classList.add("active");
+        hamburger.classList.add("active");
         document.body.style.overflow = "hidden";
     }
 
     function closeSidebar() {
-        if (!sidebar || !overlay) return;
+        if (!sidebar || !overlay || !hamburger) return;
         sidebar.classList.remove("active");
         overlay.classList.remove("active");
-        if (hamburger) hamburger.classList.remove("active");
-        if (navMenuBtn) navMenuBtn.classList.remove("active");
+        hamburger.classList.remove("active");
         document.body.style.overflow = "";
     }
 
-    function toggleSidebar(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        if (!sidebar) return;
-        const isActive = sidebar.classList.contains("active");
-        if (isActive) {
-            closeSidebar();
-        } else {
-            openSidebar();
-        }
-    }
-
     if (hamburger && sidebar && overlay) {
-        hamburger.addEventListener("click", toggleSidebar);
+        hamburger.addEventListener("click", () => {
+            const isActive = sidebar.classList.contains("active");
+            if (isActive) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
         hamburger.addEventListener("keypress", (e) => {
             if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                toggleSidebar(e);
+                const isActive = sidebar.classList.contains("active");
+                if (isActive) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
             }
         });
-    }
 
-    if (navMenuBtn && sidebar && overlay) {
-        navMenuBtn.addEventListener("click", toggleSidebar);
-        navMenuBtn.addEventListener("touchend", toggleSidebar, { passive: false });
-        navMenuBtn.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                toggleSidebar(e);
-            }
-        });
-    }
-
-    if (overlay) {
         overlay.addEventListener("click", closeSidebar);
-        overlay.addEventListener("touchend", closeSidebar, { passive: true });
     }
 
     const modal = document.getElementById("welcomeModal");
