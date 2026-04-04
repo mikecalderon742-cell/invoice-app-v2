@@ -3130,11 +3130,11 @@ body.dark .doodle {
 
 .autism-ribbon {
     position: fixed;
-    right: 14px;
-    bottom: 84px;
+    left: 14px;
+    bottom: 20px;
     width: 28px;
     height: 28px;
-    z-index: 1400;
+    z-index: 1200;
     pointer-events: none;
     opacity: 0.88;
     background-image: url('/static/autism_ribbon.png');
@@ -3151,8 +3151,8 @@ body.dark .autism-ribbon {
 
 @media (max-width: 768px) {
     .autism-ribbon {
-        right: 12px;
-        bottom: 78px;
+        left: 12px;
+        bottom: 18px;
         width: 24px;
         height: 24px;
         opacity: 0.82;
@@ -3161,8 +3161,8 @@ body.dark .autism-ribbon {
 
 @media (max-width: 520px) {
     .autism-ribbon {
-        right: 10px;
-        bottom: 74px;
+        left: 10px;
+        bottom: 16px;
         width: 22px;
         height: 22px;
     }
