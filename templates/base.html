@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 {% set lang = request.args.get('lang', 'en') %}
+{% set current_plan_key = user_plan or 'free' %}
+{% set is_simple_plan = current_plan_key == 'simple' %}
+{% set can_collect_payments_here = can_collect_payments_current if can_collect_payments_current is defined else (current_plan_key in ['pro', 'enterprise']) %}
+{% set can_use_ai_here = can_use_ai_current if can_use_ai_current is defined else (current_plan_key in ['pro', 'enterprise']) %}
 <html lang="{{ lang or 'en' }}">
 <head>
     <meta charset="UTF-8">
@@ -374,7 +378,11 @@
         <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}Configuración{% else %}Settings{% endif %}
         </a>
+        {% if can_collect_payments_here %}
         <a href="/settings{% if lang %}?lang={{ lang }}#payments-payouts{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}Pagos y retiros{% else %}Payments & Payouts{% endif %}
+        </a>
+        {% endif %}
             {% if lang == 'es' %}Pagos y retiros{% else %}Payments & Payouts{% endif %}
         </a>
         <a href="/billing/manage{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
@@ -454,10 +462,16 @@
                 <span class="nav-user-pill">
                     <span class="nav-user-pill-text">{{ current_user.email }}</span>
                     <span class="plan-badge">
-                        {% if user_plan == 'enterprise' %}
+                        {% if current_plan_key == 'free' %}
+                            Free
+                        {% elif current_plan_key == 'simple' %}
+                            Simple
+                        {% elif current_plan_key == 'pro' %}
+                            Pro
+                        {% elif current_plan_key == 'enterprise' %}
                             {% if lang == 'es' %}Business{% else %}Business{% endif %}
                         {% else %}
-                            {{ user_plan|capitalize }}
+                            {{ current_plan_key|capitalize }}
                         {% endif %}
                     </span>
                 </span>
@@ -466,9 +480,11 @@
                     {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
                 </a>
 
+                {% if can_collect_payments_here %}
                 <a href="/settings{% if lang %}?lang={{ lang }}#payments-payouts{% endif %}" class="nav-primary-link">
                     {% if lang == 'es' %}Pagos{% else %}Payments{% endif %}
                 </a>
+                {% endif %}
 
                 <div class="lang-toggle">
                     <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
@@ -502,15 +518,25 @@
 <div class="public-top-banner">
     <div class="public-top-banner-inner">
         <span>
-            {% if lang == 'es' %}
-                <strong>Enlace seguro de factura.</strong> Esta vista está diseñada para revisar la factura, descargar el PDF y completar el pago si está disponible.
+            {% if show_pay_button %}
+                {% if lang == 'es' %}
+                    <strong>Enlace seguro de factura.</strong> Esta vista está diseñada para revisar la factura, descargar el PDF y completar el pago si está disponible.
+                {% else %}
+                    <strong>Secure invoice link.</strong> This view is designed for reviewing the invoice, downloading the PDF, and completing payment if available.
+                {% endif %}
             {% else %}
-                <strong>Secure invoice link.</strong> This view is designed for reviewing the invoice, downloading the PDF, and completing payment if available.
+                {% if lang == 'es' %}
+                    <strong>Enlace seguro de factura.</strong> Esta vista está diseñada para revisar la factura o el recibo y descargar el PDF para tus registros.
+                {% else %}
+                    <strong>Secure invoice link.</strong> This view is designed for reviewing the invoice or receipt and downloading the PDF for your records.
+                {% endif %}
             {% endif %}
         </span>
     </div>
 </div>
 {% endif %}
+
+<div class="autism-ribbon" aria-hidden="true"></div>
 
 <div class="container">
     {% if is_public_view %}
@@ -672,7 +698,7 @@
     </div>
 </div>
 
-{% if not is_public_view %}
+{% if not is_public_view and can_use_ai_here %}
 <div id="aiHelper" class="ai-helper">
     <button id="aiHelperToggle" class="ai-helper-toggle" type="button" aria-label="{% if lang == 'es' %}Abrir asistente BillBeam{% else %}Open BillBeam Assistant{% endif %}">
         💬
@@ -725,7 +751,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    document.body.classList.remove("fade-out");13
+    document.body.classList.remove("fade-out");
 
     const hero = document.querySelector(".hero");
     window.addEventListener("scroll", () => {

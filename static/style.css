@@ -588,6 +588,14 @@ body.dark textarea::placeholder {
 }
 
 /* =========================
+   ANCHOR OFFSET HELPERS
+   ========================= */
+
+#payments-payouts {
+    scroll-margin-top: 90px;
+}
+
+/* =========================
    FORM SHELL / GLASS
    ========================= */
 
@@ -2323,6 +2331,37 @@ body.dark .public-stamp-svg {
 }
 
 /* =========================
+   SETTINGS / PROFILE SUPPORT
+   ========================= */
+
+.settings-shell,
+.settings-grid,
+.payment-shell-grid,
+.field-grid,
+.field-row-2,
+.defaults-grid,
+.security-grid {
+    min-width: 0;
+}
+
+.settings-card,
+.settings-form-shell,
+.payment-kpi,
+.payment-check,
+.brand-preview-card,
+.swatch-row {
+    min-width: 0;
+}
+
+.payment-account-id,
+.swatch-code,
+.brand-preview-name,
+.brand-preview-stat strong {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* =========================
    PREVIEW / CHECKLIST / LEGAL / GENERIC CONTENT
    ========================= */
 
@@ -3086,6 +3125,75 @@ body.dark .doodle {
 }
 
 /* =========================
+   AUTISM AWARENESS RIBBON
+   ========================= */
+
+.autism-ribbon {
+    position: fixed;
+    right: 14px;
+    bottom: 84px;
+    width: 28px;
+    height: 28px;
+    z-index: 1400;
+    pointer-events: none;
+    opacity: 0.88;
+    background-image: url('/static/autism_ribbon.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.20));
+}
+
+body.dark .autism-ribbon {
+    opacity: 0.92;
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.50));
+}
+
+@media (max-width: 768px) {
+    .autism-ribbon {
+        right: 12px;
+        bottom: 78px;
+        width: 24px;
+        height: 24px;
+        opacity: 0.82;
+    }
+}
+
+@media (max-width: 520px) {
+    .autism-ribbon {
+        right: 10px;
+        bottom: 74px;
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* =========================
+   ACTION STACKS / ROW TOOLS
+   ========================= */
+
+.actions-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.actions-stack .btn {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .actions-stack {
+        width: 100%;
+    }
+
+    .actions-stack .btn {
+        width: 100%;
+    }
+}
+
+/* =========================
    SMALL COMPONENTS
    ========================= */
 
@@ -3326,6 +3434,22 @@ body.dark .inline-success {
     .navbar {
         padding: 14px 16px 14px 46px;
         gap: 10px;
+        min-height: 58px;
+    }
+
+    .nav-left {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .nav-brand-text,
+    .logo.nav-brand-text {
+        display: inline-block;
+        min-width: 0;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .nav-right {
@@ -3527,7 +3651,27 @@ body.dark .inline-success {
     .charts-row,
     .charts-grid,
     .checklist-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr;    .public-status-row,
+
+    .public-glance,
+    .summary-actions,
+    .payment-actions,
+    .quick-actions {
+        width: 100%;
+    }
+
+    .public-glance,
+    .snapshot,
+    .payment-kpi-grid,
+    .field-row-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .payment-actions .btn,
+    .summary-actions .btn,
+    .quick-actions .btn {
+        width: 100%;
+    }
     }
 
     .search-bar.modern form,

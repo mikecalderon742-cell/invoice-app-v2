@@ -28,6 +28,9 @@
 {% set details_submitted = payment_setup.details_submitted if payment_setup.details_submitted is defined else payment_setup.get('details_submitted') %}
 {% set last_status_sync = payment_setup.last_status_sync if payment_setup.last_status_sync is defined else payment_setup.get('last_status_sync') %}
 {% set onboarded_at = payment_setup.onboarded_at if payment_setup.onboarded_at is defined else payment_setup.get('onboarded_at') %}
+{% set is_free_plan = current_plan == 'free' %}
+{% set is_simple_plan = current_plan == 'simple' %}
+{% set can_collect_payments_here = can_collect_payments_current if can_collect_payments_current is defined else (current_plan in ['pro', 'enterprise']) %}
 
 <style>
   .settings-shell {
@@ -689,6 +692,24 @@
         </div>
     {% endif %}
 
+    {% if is_simple_plan %}
+        <div class="settings-feedback info">
+            {% if lang == 'es' %}
+                Estás usando el plan Simple. Este plan está diseñado para facturas, PDFs, enlaces públicos de solo vista y marcado manual como pagada. La configuración de pagos con Stripe no es necesaria en este nivel.
+            {% else %}
+                You’re on the Simple plan. This plan is designed for invoices, PDFs, view-only public links, and manual paid marking. Stripe payment setup is not required on this tier.
+            {% endif %}
+        </div>
+    {% elif is_free_plan %}
+        <div class="settings-feedback info">
+            {% if lang == 'es' %}
+                El plan gratis está pensado para empezar. Si luego quieres correos, PDFs y un flujo de facturas más completo, puedes subir a Simple o Pro.
+            {% else %}
+                The free plan is designed for getting started. If you later want invoice emails, PDFs, and a fuller invoice workflow, you can upgrade to Simple or Pro.
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="settings-form-shell fade-in-up">
         <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
             <input type="hidden" name="form_type" value="profile">
@@ -944,56 +965,102 @@
             </div>
         </form>
 
-        <div class="settings-card payments-card">
+        <div class="settings-card payments-card"> id="payments-payouts">
             <h2>
-                {% if lang == 'es' %}Pagos y depósitos{% else %}Payments & Payouts{% endif %}
+                {% if can_collect_payments_here %}
+                    {% if lang == 'es' %}Pagos y depósitos{% else %}Payments & Payouts{% endif %}
+                {% else %}
+                    {% if lang == 'es' %}Plan y flujo de cobro{% else %}Plan & Payment Flow{% endif %}
+                {% endif %}
             </h2>
             <div class="settings-card-sub">
-                {% if lang == 'es' %}
-                    Conecta tu cuenta de Stripe para que tus clientes puedan pagarte y tus fondos se dirijan a tu propia cuenta.
+                {% if can_collect_payments_here %}
+                    {% if lang == 'es' %}
+                        Conecta tu cuenta de Stripe para que tus clientes puedan pagarte y tus fondos se dirijan a tu propia cuenta.
+                    {% else %}
+                        Connect your Stripe account so clients can pay you and funds can route to your own account.
+                    {% endif %}
+                {% elif is_simple_plan %}
+                    {% if lang == 'es' %}
+                        El plan Simple está pensado para creación de facturas y recibos sin pagos en línea. Aquí puedes confirmar que tu flujo actual no requiere Stripe Connect.
+                    {% else %}
+                        The Simple plan is built for invoice and receipt creation without online payments. Here you can confirm that your current workflow does not require Stripe Connect.
+                    {% endif %}
                 {% else %}
-                    Connect your Stripe account so clients can pay you and funds can route to your own account.
+                    {% if lang == 'es' %}
+                        Tu plan actual no requiere configuración de cobros en línea. Cuando quieras desbloquear pagos con Stripe, puedes subir a Pro.
+                    {% else %}
+                        Your current plan does not require online payment setup. When you want to unlock Stripe payments, you can move up to Pro.
+                    {% endif %}
                 {% endif %}
             </div>
 
             <div class="payment-shell-grid">
                 <div class="payment-status-stack">
-                    {% if connect_ready %}
-                        <div class="payment-status-banner ready">
-                            <strong>
-                                {% if lang == 'es' %}Tu cuenta está lista{% else %}Your account is ready{% endif %}
-                            </strong>
-                            <div>
-                                {% if lang == 'es' %}
-                                    Tu cuenta de Stripe parece configurada para aceptar cobros y recibir depósitos. Puedes administrar los detalles directamente desde Stripe.
-                                {% else %}
-                                    Your Stripe account appears ready to accept charges and receive payouts. You can manage details directly from Stripe.
-                                {% endif %}
+                    {% if can_collect_payments_here %}
+                        {% if connect_ready %}
+                            <div class="payment-status-banner ready">
+                                <strong>
+                                    {% if lang == 'es' %}Tu cuenta está lista{% else %}Your account is ready{% endif %}
+                                </strong>
+                                <div>
+                                    {% if lang == 'es' %}
+                                        Tu cuenta de Stripe parece configurada para aceptar cobros y recibir depósitos. Puedes administrar los detalles directamente desde Stripe.
+                                    {% else %}
+                                        Your Stripe account appears ready to accept charges and receive payouts. You can manage details directly from Stripe.
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                    {% elif connect_connected %}
-                        <div class="payment-status-banner pending">
+                        {% elif connect_connected %}
+                            <div class="payment-status-banner pending">
+                                <strong>
+                                    {% if lang == 'es' %}Configuración en progreso{% else %}Setup in progress{% endif %}
+                                </strong>
+                                <div>
+                                    {% if lang == 'es' %}
+                                        Ya existe una cuenta conectada, pero todavía faltan uno o más pasos para dejarla completamente lista.
+                                    {% else %}
+                                        A connected account exists, but one or more steps still need to be completed before it is fully ready.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="payment-status-banner info">
+                                <strong>
+                                    {% if lang == 'es' %}Conecta tu Stripe{% else %}Connect your Stripe{% endif %}
+                                </strong>
+                                <div>
+                                    {% if lang == 'es' %}
+                                        Puedes conectar tu propia cuenta de Stripe desde aquí para preparar cobros y depósitos sin cambiar el resto de tu flujo.
+                                    {% else %}
+                                        You can connect your own Stripe account here to prepare payments and payouts without changing the rest of your workflow.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% elif is_simple_plan %}
+                        <div class="payment-status-banner info">
                             <strong>
-                                {% if lang == 'es' %}Configuración en progreso{% else %}Setup in progress{% endif %}
+                                {% if lang == 'es' %}Simple no requiere Stripe Connect{% else %}Simple does not require Stripe Connect{% endif %}
                             </strong>
                             <div>
                                 {% if lang == 'es' %}
-                                    Ya existe una cuenta conectada, pero todavía faltan uno o más pasos para dejarla completamente lista.
+                                    Tu plan actual está enfocado en facturas, recibos, PDFs y enlaces públicos de solo vista. No necesitas conectar Stripe para usar este flujo.
                                 {% else %}
-                                    A connected account exists, but one or more steps still need to be completed before it is fully ready.
+                                    Your current plan is focused on invoices, receipts, PDFs, and view-only public links. You do not need to connect Stripe to use this workflow.
                                 {% endif %}
                             </div>
                         </div>
                     {% else %}
                         <div class="payment-status-banner info">
                             <strong>
-                                {% if lang == 'es' %}Conecta tu Stripe{% else %}Connect your Stripe{% endif %}
+                                {% if lang == 'es' %}Los pagos en línea están reservados para Pro{% else %}Online payments are reserved for Pro{% endif %}
                             </strong>
                             <div>
                                 {% if lang == 'es' %}
-                                    Puedes conectar tu propia cuenta de Stripe desde aquí para preparar cobros y depósitos sin cambiar el resto de tu flujo.
+                                    Cuando quieras activar cobros con Stripe y depósitos a tu propia cuenta, puedes subir a Pro desde la página de precios.
                                 {% else %}
-                                    You can connect your own Stripe account here to prepare payments and payouts without changing the rest of your workflow.
+                                    When you want to enable Stripe payments and payouts to your own account, you can upgrade to Pro from the pricing page.
                                 {% endif %}
                             </div>
                         </div>
@@ -1005,7 +1072,15 @@
                                 {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
                             </div>
                             <div class="payment-kpi-value">
-                                {{ current_plan|capitalize }}
+                                {% if current_plan == 'free' %}
+                                    {% if lang == 'es' %}Free{% else %}Free{% endif %}
+                                {% elif current_plan == 'simple' %}
+                                    Simple
+                                {% elif current_plan == 'pro' %}
+                                    Pro
+                                {% else %}
+                                    Enterprise
+                                {% endif %}
                             </div>
                         </div>
 
@@ -1027,10 +1102,12 @@
                                 {% if lang == 'es' %}Cobros habilitados{% else %}Charges enabled{% endif %}
                             </div>
                             <div class="payment-kpi-value">
-                                {% if charges_enabled %}
+                                {% if can_collect_payments_here and charges_enabled %}
                                     {% if lang == 'es' %}Listo{% else %}Ready{% endif %}
-                                {% else %}
+                                {% elif can_collect_payments_here %}
                                     {% if lang == 'es' %}Pendiente{% else %}Pending{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}No aplica{% else %}Not used{% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -1040,16 +1117,18 @@
                                 {% if lang == 'es' %}Depósitos habilitados{% else %}Payouts enabled{% endif %}
                             </div>
                             <div class="payment-kpi-value">
-                                {% if payouts_enabled %}
+                                {% if can_collect_payments_here and payouts_enabled %}
                                     {% if lang == 'es' %}Listo{% else %}Ready{% endif %}
-                                {% else %}
+                                {% elif can_collect_payments_here %}
                                     {% if lang == 'es' %}Pendiente{% else %}Pending{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}No aplica{% else %}Not used{% endif %}
                                 {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    {% if connect_account_id %}
+                    {% if can_collect_payments_here and connect_account_id %}
                         <div class="payment-account-id">
                             <strong>
                                 {% if lang == 'es' %}ID de cuenta Stripe:{% else %}Stripe account ID:{% endif %}
@@ -1073,63 +1152,151 @@
                     {% endif %}
 
                     <div class="payment-actions">
-                        <a href="{{ url_for('connect_payment_account', lang=lang) }}" class="btn btn-brand">
-                            {% if connect_connected %}
-                                {% if lang == 'es' %}Completar configuración{% else %}Complete Setup{% endif %}
-                            {% else %}
-                                {% if lang == 'es' %}Conectar Stripe{% else %}Connect Stripe{% endif %}
-                            {% endif %}
-                        </a>
+                        {% if can_collect_payments_here %}
+                            <a href="{{ url_for('connect_payment_account', lang=lang) }}" class="btn btn-brand">
+                                {% if connect_connected %}
+                                    {% if lang == 'es' %}Completar configuración{% else %}Complete Setup{% endif %}
+                                {% else %}
+                                    {% if lang == 'es' %}Conectar Stripe{% else %}Connect Stripe{% endif %}
+                                {% endif %}
+                            </a>
 
-                        {% if connect_connected %}
-                            <a href="{{ url_for('payment_account_dashboard', lang=lang) }}" class="btn btn-secondary">
-                                {% if lang == 'es' %}Abrir panel de Stripe{% else %}Open Stripe Dashboard{% endif %}
+                            {% if connect_connected %}
+                                <a href="{{ url_for('payment_account_dashboard', lang=lang) }}" class="btn btn-secondary">
+                                    {% if lang == 'es' %}Abrir panel de Stripe{% else %}Open Stripe Dashboard{% endif %}
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                                {% if lang == 'es' %}Ver planes{% else %}View Plans{% endif %}
                             </a>
                         {% endif %}
                     </div>
                 </div>
 
                 <div class="payment-checklist">
-                    <div class="payment-check">
-                        <div class="payment-check-mark">1</div>
-                        <div>
-                            {% if lang == 'es' %}
-                                Conecta tu propia cuenta de Stripe para mantener una experiencia profesional de cobros y depósitos.
-                            {% else %}
-                                Connect your own Stripe account to keep a professional payment and payout experience.
-                            {% endif %}
+                    {% if can_collect_payments_here %}
+                        <div class="payment-check">
+                            <div class="payment-check-mark">1</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Conecta tu propia cuenta de Stripe para mantener una experiencia profesional de cobros y depósitos.
+                                {% else %}
+                                    Connect your own Stripe account to keep a professional payment and payout experience.
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="payment-check">
-                        <div class="payment-check-mark">2</div>
-                        <div>
-                            {% if lang == 'es' %}
-                                Completa cualquier verificación pendiente en Stripe para activar cobros y depósitos.
-                            {% else %}
-                                Complete any remaining verification steps in Stripe to enable charges and payouts.
-                            {% endif %}
+                        <div class="payment-check">
+                            <div class="payment-check-mark">2</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Completa cualquier verificación pendiente en Stripe para activar cobros y depósitos.
+                                {% else %}
+                                    Complete any remaining verification steps in Stripe to enable charges and payouts.
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="payment-check">
-                        <div class="payment-check-mark">3</div>
-                        <div>
-                            {% if lang == 'es' %}
-                                Cuando la cuenta esté lista, BillBeam podrá dirigir el flujo de pagos de facturas hacia tu propia cuenta.
-                            {% else %}
-                                Once the account is ready, BillBeam can route invoice-payment flows to your own account.
-                            {% endif %}
+                        <div class="payment-check">
+                            <div class="payment-check-mark">3</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Cuando la cuenta esté lista, BillBeam podrá dirigir el flujo de pagos de facturas hacia tu propia cuenta.
+                                {% else %}
+                                    Once the account is ready, BillBeam can route invoice-payment flows to your own account.
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
+                    {% elif is_simple_plan %}
+                        <div class="payment-check">
+                            <div class="payment-check-mark">1</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Crea y envía facturas profesionales sin configurar pagos en línea.
+                                {% else %}
+                                    Create and send professional invoices without setting up online payments.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="payment-check">
+                            <div class="payment-check-mark">2</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Usa enlaces públicos de solo vista y descarga PDFs para compartir facturas o recibos.
+                                {% else %}
+                                    Use view-only public links and PDF downloads to share invoices or receipts.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="payment-check">
+                            <div class="payment-check-mark">3</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Marca facturas como pagadas manualmente cuando solo necesites registrar un cobro ya realizado.
+                                {% else %}
+                                    Mark invoices paid manually when you only need to record a payment that already happened.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="payment-check">
+                            <div class="payment-check-mark">1</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Empieza con el flujo básico de BillBeam mientras defines cómo quieres cobrar a futuro.
+                                {% else %}
+                                    Start with BillBeam’s basic workflow while you decide how you want to collect payments later.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="payment-check">
+                            <div class="payment-check-mark">2</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Cuando necesites emails, PDFs y más flujo operativo, puedes subir a Simple.
+                                {% else %}
+                                    When you need emails, PDFs, and a fuller workflow, you can upgrade to Simple.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="payment-check">
+                            <div class="payment-check-mark">3</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Cuando quieras cobros con Stripe y depósitos a tu cuenta, puedes subir a Pro.
+                                {% else %}
+                                    When you want Stripe payments and payouts to your account, you can upgrade to Pro.
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="settings-note" style="margin-top:16px;">
-                {% if lang == 'es' %}
-                    Importante: esta sección prepara tu cuenta de Stripe sin romper la lógica que ya funciona en tu app. La idea es darte más valor, no complicar lo que ya sirve.
+                {% if can_collect_payments_here %}
+                    {% if lang == 'es' %}
+                        Importante: esta sección prepara tu cuenta de Stripe sin romper la lógica que ya funciona en tu app. La idea es darte más valor, no complicar lo que ya sirve.
+                    {% else %}
+                        Important: this section prepares your Stripe account without breaking logic that already works in your app. The goal is to add value, not complicate what is already working.
+                    {% endif %}
+                {% elif is_simple_plan %}
+                    {% if lang == 'es' %}
+                        Importante: tu plan Simple está diseñado para ser más limpio y directo. No necesitas Stripe Connect para crear facturas, enviar PDFs y registrar recibos manualmente.
+                    {% else %}
+                        Important: your Simple plan is designed to stay cleaner and more direct. You do not need Stripe Connect to create invoices, send PDFs, and record receipts manually.
+                    {% endif %}
                 {% else %}
-                    Important: this section prepares your Stripe account without breaking logic that already works in your app. The goal is to add value, not complicate what is already working.
+                    {% if lang == 'es' %}
+                        Importante: puedes seguir usando BillBeam sin configurar pagos en línea. Cuando quieras más funciones, puedes subir de plan sin rehacer tu flujo actual.
+                    {% else %}
+                        Important: you can keep using BillBeam without configuring online payments. When you want more features, you can upgrade plans without rebuilding your current workflow.
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

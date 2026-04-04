@@ -74,15 +74,25 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+
+APPLE_IAP_SIMPLE_PRODUCT_ID = os.environ.get("APPLE_IAP_SIMPLE_PRODUCT_ID", "app.billbeam.simple.monthly")
 APPLE_IAP_PRO_PRODUCT_ID = os.environ.get("APPLE_IAP_PRO_PRODUCT_ID", "app.billbeam.pro.monthly")
 APPLE_IAP_ENTERPRISE_PRODUCT_ID = os.environ.get("APPLE_IAP_ENTERPRISE_PRODUCT_ID", "app.billbeam.business.monthly")
+
+STRIPE_PRICE_SIMPLE = (
+    os.environ.get("STRIPE_PRICE_SIMPLE")
+    or os.environ.get("STRIPE_PRICE_SIMPLE_MONTHLY")
+)
+
 STRIPE_PRICE_PRO = os.environ.get("STRIPE_PRICE_PRO") or os.environ.get("STRIPE_PRICE_PRO_MONTHLY")
+
 STRIPE_PRICE_ENTERPRISE = (
     os.environ.get("STRIPE_PRICE_ENTERPRISE")
     or os.environ.get("STRIPE_PRICE_BUSINESS")
     or os.environ.get("STRIPE_PRICE_ENTERPRISE_MONTHLY")
     or os.environ.get("STRIPE_PRICE_BUSINESS_MONTHLY")
 )
+
 STRIPE_CURRENCY = (os.environ.get("STRIPE_CURRENCY") or "usd").lower()
 
 APP_BASE_URL = (os.environ.get("APP_BASE_URL") or "").rstrip("/")
@@ -193,6 +203,9 @@ def normalize_plan_key(plan_value: str) -> str:
     aliases = {
         "starter": "free",
         "free": "free",
+        "simple": "simple",
+        "receipt": "simple",
+        "receipts": "simple",
         "pro": "pro",
         "business": "enterprise",
         "studio": "enterprise",
@@ -203,6 +216,8 @@ def normalize_plan_key(plan_value: str) -> str:
 
 def get_price_id_for_plan(plan_key: str):
     plan_key = normalize_plan_key(plan_key)
+    if plan_key == "simple":
+        return STRIPE_PRICE_SIMPLE
     if plan_key == "pro":
         return STRIPE_PRICE_PRO
     if plan_key == "enterprise":
@@ -216,6 +231,9 @@ def get_plan_for_apple_product_id(product_id: str):
     if not product_id:
         return None
 
+    if product_id == APPLE_IAP_SIMPLE_PRODUCT_ID:
+        return "simple"
+
     if product_id == APPLE_IAP_PRO_PRODUCT_ID:
         return "pro"
 
@@ -223,6 +241,38 @@ def get_plan_for_apple_product_id(product_id: str):
         return "enterprise"
 
     return None
+
+
+def resolve_plan_key(user_or_plan=None) -> str:
+    if isinstance(user_or_plan, dict):
+        return normalize_plan_key(user_or_plan.get("plan") or "free")
+    if isinstance(user_or_plan, str):
+        return normalize_plan_key(user_or_plan)
+    return normalize_plan_key(get_plan_for_current_user())
+
+
+def is_simple(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) == "simple"
+
+
+def can_email_invoices(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) in ("simple", "pro", "enterprise")
+
+
+def can_collect_payments(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
+
+
+def can_use_ai(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
+
+
+def can_use_advanced_dashboard(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
+
+
+def can_use_collections(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
 
 
 # -------------------------
@@ -256,14 +306,34 @@ PLAN_DEFINITIONS = {
             "Up to 3 invoices / month",
             "Single invoice template",
             "Basic dashboard",
-            "Connect your own Stripe account",
         ],
         "features_es": [
             "Hasta 3 facturas al mes",
             "Una sola plantilla de factura",
             "Panel básico",
-            "Conecta tu propia cuenta de Stripe",
         ],
+    },
+    "simple": {
+        "name_en": "Simple",
+        "name_es": "Simple",
+        "price_label": "$9.99 / month",
+        "tagline_en": "For users who already got paid and just need invoices and receipts.",
+        "tagline_es": "Para usuarios que ya cobraron y solo necesitan facturas y recibos.",
+        "features_en": [
+            "Unlimited invoices",
+            "Email delivery + PDFs",
+            "Public invoice links (view only)",
+            "Mark invoices as paid manually",
+            "No Stripe payment setup required",
+        ],
+        "features_es": [
+            "Facturas ilimitadas",
+            "Envío por email + PDFs",
+            "Enlaces públicos de factura (solo vista)",
+            "Marcar facturas como pagadas manualmente",
+            "No requiere configuración de pagos con Stripe",
+        ],
+        "recommended": True,
     },
     "pro": {
         "name_en": "Pro",
@@ -272,20 +342,21 @@ PLAN_DEFINITIONS = {
         "tagline_en": "For freelancers and small businesses who invoice regularly.",
         "tagline_es": "Para freelancers y pequeños negocios que facturan con frecuencia.",
         "features_en": [
-            "Unlimited invoices",
-            "Multiple invoice templates",
-            "Email delivery + PDFs",
+            "Everything in Simple",
+            "Stripe payments",
             "Public invoice links & Pay Now",
+            "Advanced dashboard insights",
             "BillBeam Assistant",
+            "Reminder workflows",
         ],
         "features_es": [
-            "Facturas ilimitadas",
-            "Múltiples plantillas de factura",
-            "Envío por email + PDFs",
+            "Todo lo incluido en Simple",
+            "Pagos con Stripe",
             "Enlaces públicos de factura y botón Pagar ahora",
+            "Panel avanzado con métricas",
             "BillBeam Assistant",
+            "Flujos de recordatorio",
         ],
-        "recommended": True,
     },
     "enterprise": {
         "name_en": "Studio",
@@ -311,10 +382,11 @@ PLAN_DEFINITIONS = {
 PLAN_LEVELS = {
     "free": 1,
     "starter": 1,
-    "pro": 2,
-    "business": 3,
-    "studio": 3,
-    "enterprise": 3,
+    "simple": 2,
+    "pro": 3,
+    "business": 4,
+    "studio": 4,
+    "enterprise": 4,
 }
 
 
@@ -702,6 +774,98 @@ def get_or_create_public_token(invoice_id: int) -> str:
     cursor.close()
     conn.close()
     return token
+
+
+# -------------------------
+# INVOICE PAYMENT / STATUS HELPERS
+# -------------------------
+def mark_invoice_paid(invoice_id: int, user_id: int, note: str = "Marked as paid manually."):
+    payment_summary = get_invoice_payment_summary(invoice_id)
+    if not payment_summary:
+        return False, "Invoice not found."
+
+    balance = float(payment_summary.get("balance") or 0)
+
+    if balance <= 0.0001:
+        sync_invoice_status(invoice_id)
+        return True, None
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        occurred_at = now_local()
+
+        cur.execute(
+            """
+            INSERT INTO payments (
+                invoice_id,
+                amount,
+                method,
+                note,
+                payment_source,
+                payment_status,
+                occurred_at,
+                recorded_by_user_id,
+                is_deposit,
+                is_final_payment
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                invoice_id,
+                balance,
+                "manual",
+                note,
+                "manual",
+                "succeeded",
+                occurred_at,
+                user_id,
+                False,
+                True,
+            ),
+        )
+
+        cur.execute(
+            """
+            UPDATE invoices
+            SET last_payment_recorded_at = %s,
+                last_collection_action_at = %s
+            WHERE id = %s
+            """,
+            (occurred_at, occurred_at, invoice_id),
+        )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed to mark invoice %s as paid manually: %s", invoice_id, e)
+        return False, "Failed to mark invoice as paid."
+    finally:
+        cur.close()
+        conn.close()
+
+    summary = sync_invoice_status(invoice_id) or get_invoice_payment_summary(invoice_id) or {}
+    total_paid_now = float(summary.get("total_paid") or 0)
+
+    log_invoice_event(
+        invoice_id=invoice_id,
+        event_type="manual_payment_added",
+        title="Payment recorded",
+        details=f"Invoice was marked as paid manually. Total paid is now {format_currency(total_paid_now)}.",
+        visibility="both",
+    )
+
+    log_invoice_event(
+        invoice_id=invoice_id,
+        event_type="final_payment_received",
+        title="Final payment received",
+        details="Invoice is now paid in full.",
+        visibility="both",
+    )
+
+    return True, None
 
 
 # -------------------------
@@ -1623,6 +1787,12 @@ def inject_current_user_ctx():
         "app_name": APP_NAME,
         "ai_notice_enabled": AI_NOTICE_ENABLED,
         "payment_setup": payment_setup,
+        "is_simple_plan": is_simple(user),
+        "can_email_invoices_current": can_email_invoices(user),
+        "can_collect_payments_current": can_collect_payments(user),
+        "can_use_ai_current": can_use_ai(user),
+        "can_use_advanced_dashboard_current": can_use_advanced_dashboard(user),
+        "can_use_collections_current": can_use_collections(user),
     }
 
 
@@ -1769,7 +1939,7 @@ def pricing():
         "pricing.html",
         plans=plans,
         user_plan=user_plan,
-        is_pro=(user_plan == "pro"),
+        is_pro=(user_plan in ("pro", "enterprise")),
         stripe_publishable_key=STRIPE_PUBLISHABLE_KEY,
         lang=lang,
     )
@@ -1957,6 +2127,8 @@ def create_checkout_session():
 
     price_id = get_price_id_for_plan(normalized_plan)
     if not price_id:
+        if normalized_plan == "simple":
+            return jsonify({"error": "Missing STRIPE_PRICE_SIMPLE or STRIPE_PRICE_SIMPLE_MONTHLY configuration"}), 500
         if normalized_plan == "enterprise":
             return jsonify({"error": "Missing STRIPE_PRICE_ENTERPRISE / STRIPE_PRICE_BUSINESS configuration"}), 500
         return jsonify({"error": "Missing STRIPE_PRICE_PRO or STRIPE_PRICE_PRO_MONTHLY"}), 500
@@ -2004,7 +2176,7 @@ def create_public_invoice_pay_session(token):
         return jsonify({"error": "Invoice not found."}), 404
 
     owner_plan = get_user_plan_by_user_id(inv["user_id"])
-    if PLAN_LEVELS.get(owner_plan, 0) < PLAN_LEVELS.get("pro", 0):
+    if not can_collect_payments(owner_plan):
         return jsonify({"error": "Pay Now is not enabled for this invoice."}), 403
 
     if inv["status"] == "Paid" or inv["balance"] <= 0:
@@ -2255,6 +2427,9 @@ def connect_payment_account():
     if not user_id:
         return redirect(url_for("login", lang=lang))
 
+    if not can_collect_payments(user):
+        return redirect(url_for("settings", payments_unavailable=1, lang=lang))
+
     if not STRIPE_SECRET_KEY:
         logger.warning("[StripeConnect] STRIPE_SECRET_KEY is not configured")
         return redirect(url_for("settings", payments_error=1, lang=lang))
@@ -2288,6 +2463,8 @@ def payment_account_dashboard():
     lang = normalize_lang(request.args.get("lang", "en"))
     user = get_current_user()
     user_id = user.get("id")
+    if not can_collect_payments(user):
+        return redirect(url_for("settings", payments_unavailable=1, lang=lang))
     payment_setup = sync_stripe_connect_status_for_user(user_id)
     account_id = payment_setup.get("stripe_connect_account_id")
 
@@ -2832,7 +3009,7 @@ def invoices_page():
 
     filtered_count = len(invoices)
 
-    dashboard_metrics = get_dashboard_receivables_metrics(user_id)
+    dashboard_metrics = get_dashboard_receivables_metrics(user_id) if can_use_advanced_dashboard(current_user) else None
 
     return render_template(
         "invoices.html",
@@ -3446,6 +3623,30 @@ def update_status(invoice_id, new_status):
 
     invoice_number = existing[0] or f"#{invoice_id}"
 
+    c.close()
+    conn.close()
+
+    if new_status == "Paid":
+        success, err = mark_invoice_paid(
+            invoice_id=invoice_id,
+            user_id=user_id,
+            note="Marked as paid manually from invoice status control.",
+        )
+        if not success:
+            return err or "Failed to mark invoice as paid.", 400
+
+        log_invoice_event(
+            invoice_id=invoice_id,
+            event_type="status_changed",
+            title="Status updated",
+            details=f"Invoice {invoice_number} status changed to Paid.",
+            visibility="both",
+        )
+        return redirect("/invoices")
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
     c.execute(
         "UPDATE invoices SET status = %s WHERE id = %s AND user_id = %s",
         (new_status, invoice_id, user_id),
@@ -3903,6 +4104,8 @@ def public_invoice(token):
     percent_paid = float(payment_summary.get("percent_paid") or 0)
     paid_at = payment_summary.get("last_payment_at")
     view_summary = get_invoice_view_summary(invoice_id)
+    owner_plan = get_user_plan_by_user_id(get_invoice_by_public_token(token)["user_id"]) if get_invoice_by_public_token(token) else "free"
+    show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001 and not is_paid_in_full
 
     if amount_float > 0 and total_paid >= amount_float and status != "Paid":
         try:
@@ -3954,6 +4157,8 @@ def public_invoice(token):
         percent_paid=percent_paid,
         payment_summary=payment_summary,
         view_summary=view_summary,
+        show_pay_button=show_pay_button,
+        owner_plan=owner_plan,
         collection_recommendation=get_invoice_collection_recommendation(
             status,
             payment_summary,
@@ -4055,6 +4260,8 @@ def invoice_detail(invoice_id):
     balance = float(payment_summary.get("balance") or 0)
     percent_paid = float(payment_summary.get("percent_paid") or 0)
     view_summary = get_invoice_view_summary(invoice_id)
+    owner_plan = get_user_plan_by_user_id(user_id)
+    show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001
 
     cursor.execute(
         """
@@ -4100,6 +4307,8 @@ def invoice_detail(invoice_id):
         payment_summary=payment_summary,
         view_summary=view_summary,
         last_reminder_sent_at=last_reminder_sent_at,
+        show_pay_button=show_pay_button,
+        owner_plan=owner_plan,
         collection_recommendation=get_invoice_collection_recommendation(
             status,
             payment_summary,
@@ -4450,12 +4659,12 @@ def send_invoice_notification_email(invoice_id: int, to_email: str, email_type: 
 @app.route("/send-email/<int:invoice_id>", methods=["GET", "POST"])
 @login_required
 def send_email_view(invoice_id):
-    if not plan_allows("pro"):
+    if not can_email_invoices(get_current_user()):
         return render_template(
             "upgrade_gate.html",
             title="Upgrade to email invoices",
-            reason="Email delivery with PDF attachments is available on the Pro plan and above.",
-            required_plan="pro",
+            reason="Email delivery with PDF attachments is available on the Simple plan and above.",
+            required_plan="simple",
             plans=PLAN_DEFINITIONS,
         )
 
@@ -4574,7 +4783,7 @@ def send_email_view(invoice_id):
 @app.route("/send-reminder/<int:invoice_id>", methods=["GET", "POST"])
 @login_required
 def send_reminder_view(invoice_id):
-    if not plan_allows("pro"):
+    if not can_use_collections(get_current_user()):
         return render_template(
             "upgrade_gate.html",
             title="Upgrade to send reminders",
@@ -4722,6 +4931,9 @@ def get_ai_kpi_summary_for_user(user_id: int) -> str:
 def ai_helper():
     if not ai_client or not OPENAI_API_KEY:
         return {"error": "AI helper is not configured on the server."}, 500
+
+    if not can_use_ai(get_current_user()):
+        return {"error": "AI helper is available on the Pro plan and above."}, 403
 
     data = request.get_json() or {}
     question = (data.get("question") or "").strip()

@@ -30,6 +30,12 @@
 {% set tax_reserve_percent = metrics.tax_reserve_percent if metrics.tax_reserve_percent is defined else 25 %}
 {% set suggested_tax_reserve = metrics.suggested_tax_reserve if metrics.suggested_tax_reserve is defined else 0 %}
 {% set revenue_after_reserve = metrics.revenue_after_reserve if metrics.revenue_after_reserve is defined else 0 %}
+{% set is_free_plan = user_plan == 'free' %}
+{% set is_simple_plan = user_plan == 'simple' %}
+{% set has_advanced_dashboard = can_use_advanced_dashboard_current if can_use_advanced_dashboard_current is defined else (user_plan in ['pro', 'enterprise']) %}
+{% set can_collect_payments_here = can_collect_payments_current if can_collect_payments_current is defined else (user_plan in ['pro', 'enterprise']) %}
+{% set can_use_collections_here = can_use_collections_current if can_use_collections_current is defined else (user_plan in ['pro', 'enterprise']) %}
+{% set can_email_here = can_email_invoices_current if can_email_invoices_current is defined else (user_plan in ['simple', 'pro', 'enterprise']) %}
 
 <style>
   .dashboard-topbar {
@@ -677,28 +683,54 @@
     </div>
 </div>
 
-{% if user_plan == 'free' %}
+{% if is_free_plan %}
 <div class="dashboard-upgrade-strip">
     <div class="dashboard-upgrade-strip-top">
         <div>
             <strong>
                 {% if lang == 'es' %}
-                    Desbloquea más velocidad con Pro
+                    Desbloquea más capacidad con Simple o Pro
                 {% else %}
-                    Unlock more speed with Pro
+                    Unlock more capability with Simple or Pro
                 {% endif %}
             </strong>
             <div class="dashboard-upgrade-strip-copy">
                 {% if lang == 'es' %}
-                    Activa correos con PDF, enlaces públicos de factura, pagos en línea y un flujo más profesional para cobrar más rápido.
+                    Actualiza a Simple para enviar facturas por correo, descargar PDFs y usar enlaces públicos sin pagos en línea. Actualiza a Pro si también quieres cobros con Stripe, recordatorios y panel avanzado.
                 {% else %}
-                    Turn on invoice emails with PDFs, public invoice links, online payments, and a more professional flow to get paid faster.
+                    Upgrade to Simple for invoice emails, PDFs, and public links without online payments. Upgrade to Pro if you also want Stripe payments, reminders, and the advanced dashboard.
                 {% endif %}
             </div>
         </div>
         <div class="quick-actions">
             <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
                 {% if lang == 'es' %}Ver planes{% else %}View Plans{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+{% elif is_simple_plan %}
+<div class="dashboard-upgrade-strip">
+    <div class="dashboard-upgrade-strip-top">
+        <div>
+            <strong>
+                {% if lang == 'es' %}
+                    Estás usando Simple
+                {% else %}
+                    You’re using Simple
+                {% endif %}
+            </strong>
+            <div class="dashboard-upgrade-strip-copy">
+                {% if lang == 'es' %}
+                    Tu flujo actual está optimizado para facturas, recibos, PDFs y marcado manual como pagada. Si luego quieres cobros con Stripe, recordatorios y métricas más avanzadas, puedes subir a Pro.
+                {% else %}
+                    Your current workflow is optimized for invoices, receipts, PDFs, and manual paid marking. If you later want Stripe payments, reminders, and more advanced metrics, you can move up to Pro.
+                {% endif %}
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                {% if lang == 'es' %}Comparar planes{% else %}Compare Plans{% endif %}
             </a>
         </div>
     </div>
@@ -872,6 +904,8 @@
         </div>
 
     </div>
+
+    {% if has_advanced_dashboard %}
 
     <div class="dashboard-cards collections">
 
@@ -1109,29 +1143,35 @@
         </div>
     </div>
 
-        <div class="status-item paid">
-            {% if lang == 'es' %}
-                Pagadas: {{ status_distribution["Paid"] }}
-            {% else %}
-                Paid: {{ status_distribution["Paid"] }}
-            {% endif %}
-        </div>
-        <div class="status-item sent">
-            {% if lang == 'es' %}
-                Enviadas: {{ status_distribution["Sent"] }}
-            {% else %}
-                Sent: {{ status_distribution["Sent"] }}
-            {% endif %}
-        </div>
-        <div class="status-item draft">
-            {% if lang == 'es' %}
-                Vencidas: {{ status_distribution["Overdue"] }}
-            {% else %}
-                Overdue: {{ status_distribution["Overdue"] }}
-            {% endif %}
+    {% endif %}
+
+    <div class="status-summary">
+        <div class="quick-actions" style="gap:12px;">
+            <div class="status-item paid">
+                {% if lang == 'es' %}
+                    Pagadas: {{ status_distribution["Paid"] }}
+                {% else %}
+                    Paid: {{ status_distribution["Paid"] }}
+                {% endif %}
+            </div>
+            <div class="status-item sent">
+                {% if lang == 'es' %}
+                    Enviadas: {{ status_distribution["Sent"] }}
+                {% else %}
+                    Sent: {{ status_distribution["Sent"] }}
+                {% endif %}
+            </div>
+            <div class="status-item draft">
+                {% if lang == 'es' %}
+                    Vencidas: {{ status_distribution["Overdue"] }}
+                {% else %}
+                    Overdue: {{ status_distribution["Overdue"] }}
+                {% endif %}
+            </div>
         </div>
     </div>
 
+    {% if has_advanced_dashboard %}
     <div class="charts-row">
 
         <div class="chart-card brand-accent">
@@ -1319,6 +1359,35 @@
         </div>
 
     </div>
+    {% endif %}
+
+    {% if is_simple_plan %}
+    <div class="dashboard-upgrade-strip" style="margin-top: 0;">
+        <div class="dashboard-upgrade-strip-top">
+            <div>
+                <strong>
+                    {% if lang == 'es' %}
+                        Vista optimizada para Simple
+                    {% else %}
+                        Optimized for Simple
+                    {% endif %}
+                </strong>
+                <div class="dashboard-upgrade-strip-copy">
+                    {% if lang == 'es' %}
+                        Este panel está enfocado en crear facturas, enviar PDFs, compartir enlaces y marcar facturas como pagadas manualmente. Los cobros en línea, recordatorios y analíticas avanzadas están reservados para Pro.
+                    {% else %}
+                        This dashboard is focused on creating invoices, sending PDFs, sharing links, and marking invoices paid manually. Online payments, reminders, and advanced analytics are reserved for Pro.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Ver Pro{% else %}See Pro{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="table-wrapper">
         <div class="table-section-header">
@@ -1410,6 +1479,9 @@
                     {% endif %}
 
                     {% set safe_balance = invoice_balance if invoice_balance > 0 else 0 %}
+                    {% set row_can_collect_payments = can_collect_payments_here %}
+                    {% set row_can_use_collections = can_use_collections_here %}
+                    {% set row_can_email = can_email_here %}
                     <tr class="
                         {% if invoice_status == 'Paid' %}row-paid
                         {% elif invoice_status == 'Overdue' %}row-overdue
@@ -1537,40 +1609,46 @@
 
                         <td>
                             <div class="actions-stack">
-    <a class="btn btn-brand" href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Ver{% else %}View{% endif %}
-    </a>
+                                <a class="btn btn-brand" href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Ver{% else %}View{% endif %}
+                                </a>
 
-    <a class="btn btn-secondary" href="/history-pdf/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        PDF
-    </a>
+                                <a class="btn btn-secondary" href="/history-pdf/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    PDF
+                                </a>
 
-    <a class="btn btn-edit" href="/edit/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
-    </a>
+                                <a class="btn btn-edit" href="/edit/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
+                                </a>
 
-    {% if invoice_status != "Paid" %}
-        <a class="btn btn-success" href="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Registrar pago{% else %}Add Payment{% endif %}
-        </a>
+                                {% if invoice_status != "Paid" and row_can_collect_payments %}
+                                    <a class="btn btn-success" href="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                        {% if lang == 'es' %}Registrar pago{% else %}Add Payment{% endif %}
+                                    </a>
+                                {% endif %}
 
-        <a class="btn btn-secondary" href="/send-reminder/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Recordar{% else %}Reminder{% endif %}
-        </a>
+                                {% if invoice_status != "Paid" and row_can_use_collections %}
+                                    <a class="btn btn-secondary" href="/send-reminder/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                        {% if lang == 'es' %}Recordar{% else %}Reminder{% endif %}
+                                    </a>
+                                {% endif %}
 
-        <a class="btn btn-success" href="/update-status/{{ invoice_id }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
-            {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
-        </a>
-    {% endif %}
+                                {% if invoice_status != "Paid" %}
+                                    <a class="btn btn-success" href="/update-status/{{ invoice_id }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
+                                        {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
+                                    </a>
+                                {% endif %}
 
-    <a class="btn btn-info" href="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
-    </a>
+                                {% if row_can_email %}
+                                    <a class="btn btn-info" href="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                        {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
+                                    </a>
+                                {% endif %}
 
-    <a class="btn btn-danger" href="/delete/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-        {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
-    </a>
-</div>
+                                <a class="btn btn-danger" href="/delete/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
+                                    {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

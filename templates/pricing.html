@@ -222,6 +222,20 @@
     background: radial-gradient(circle, rgba(59,130,246,0.18), transparent 68%);
   }
 
+  .pricing-simple {
+    transform: translateY(-6px);
+    background:
+      linear-gradient(180deg, rgba(240,253,250,0.98), rgba(204,251,241,0.94));
+    border-color: rgba(13,148,136,0.22);
+    box-shadow:
+      0 30px 72px rgba(13,148,136,0.14),
+      0 0 0 1px rgba(13,148,136,0.08);
+  }
+
+  .pricing-simple::after {
+    background: radial-gradient(circle, rgba(20,184,166,0.26), transparent 68%);
+  }
+
   .pricing-pro {
     transform: translateY(-6px);
     background:
@@ -252,6 +266,15 @@
     box-shadow:
       0 24px 60px rgba(2,6,23,0.86),
       0 0 0 1px rgba(255,255,255,0.03) inset;
+  }
+
+  body.dark .pricing-simple {
+    background:
+      linear-gradient(180deg, rgba(8,30,30,0.99), rgba(6,18,23,0.96));
+    border-color: rgba(45,212,191,0.28);
+    box-shadow:
+      0 34px 78px rgba(2,6,23,0.94),
+      0 0 0 1px rgba(45,212,191,0.10);
   }
 
   body.dark .pricing-pro {
@@ -305,6 +328,12 @@
     color: transparent;
   }
 
+  .pricing-simple .pricing-name {
+    background: linear-gradient(90deg, #0f766e, #14b8a6);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
   .pricing-pro .pricing-name {
     background: linear-gradient(90deg, #1d4ed8, #f59e0b);
     -webkit-background-clip: text;
@@ -319,6 +348,12 @@
 
   body.dark .pricing-free .pricing-name {
     background: linear-gradient(90deg, #f8fafc, #93c5fd);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  body.dark .pricing-simple .pricing-name {
+    background: linear-gradient(90deg, #ccfbf1, #5eead4);
     -webkit-background-clip: text;
     color: transparent;
   }
@@ -692,9 +727,9 @@
       </h1>
       <div class="pricing-subcopy">
         {% if lang == 'es' %}
-          Empieza gratis y actualiza cuando quieras más capacidad, envíos por correo, enlaces públicos, pagos más profesionales y una experiencia de facturación más potente.
+          Empieza gratis, actualiza a Simple si solo necesitas crear facturas y recibos, o elige Pro cuando quieras pagos con Stripe, automatización más avanzada y una operación más potente.
         {% else %}
-          Start free and upgrade when you want more capacity, email sending, public invoice links, more professional payment tools, and a stronger invoicing workflow.
+          Start free, upgrade to Simple if you only need invoices and receipts, or choose Pro when you want Stripe payments, more advanced automation, and a stronger operation.
         {% endif %}
       </div>
     </div>
@@ -762,19 +797,19 @@
 
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
-        {% if lang == 'es' %}Actualización simple{% else %}Simple upgrade{% endif %}
+        {% if lang == 'es' %}Plan Simple{% else %}Simple plan{% endif %}
       </div>
       <div class="pricing-hero-value" id="billingMethodHeroValue">
-        {% if lang == 'es' %}Stripe seguro{% else %}Secure Stripe checkout{% endif %}
+        {% if lang == 'es' %}Facturas y recibos{% else %}Invoices and receipts{% endif %}
       </div>
     </div>
 
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
-        {% if lang == 'es' %}Operación profesional{% else %}Professional operations{% endif %}
+        {% if lang == 'es' %}Plan Pro{% else %}Pro plan{% endif %}
       </div>
       <div class="pricing-hero-value">
-        {% if lang == 'es' %}Más control de pagos{% else %}More payment control{% endif %}
+        {% if lang == 'es' %}Pagos y automatización{% else %}Payments and automation{% endif %}
       </div>
     </div>
   </div>
@@ -782,7 +817,7 @@
   <div class="pricing-grid">
     {% for key, plan in plans.items() %}
       <div class="pricing-card
-        {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
+        {% if key == 'free' %}pricing-free{% elif key == 'simple' %}pricing-simple{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
         {% if key == user_plan %} pricing-current{% endif %}
       ">
         <div class="pricing-card-header">
@@ -799,7 +834,7 @@
                 <span class="pricing-pill current">
                   {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
                 </span>
-              {% elif plan.recommended %}
+              {% elif key == 'simple' %}
                 <span class="pricing-pill recommended">
                   {% if lang == 'es' %}Más popular{% else %}Most popular{% endif %}
                 </span>
@@ -821,35 +856,68 @@
           {% endfor %}
         </ul>
 
-        {% if key == 'pro' %}
+        {% if key == 'simple' %}
           <div class="pricing-ai-callout">
             <strong>
               {% if lang == 'es' %}
-                Incluye BillBeam Assistant:
+                Ideal para recibos y facturas simples:
               {% else %}
-                Includes BillBeam Assistant:
+                Ideal for simple invoices and receipts:
               {% endif %}
             </strong>
             <ul>
               <li>
                 {% if lang == 'es' %}
-                  Explica tu panel en lenguaje sencillo.
+                  Crea facturas y recibos sin configurar cobros con Stripe.
                 {% else %}
-                  Explain your dashboard in plain language.
+                  Create invoices and receipts without setting up Stripe collections.
                 {% endif %}
               </li>
               <li>
                 {% if lang == 'es' %}
-                  Ayuda a redactar notas y recordatorios de facturas.
+                  Envía PDFs y comparte enlaces públicos solo para vista.
                 {% else %}
-                  Help draft invoice notes and reminders.
+                  Send PDFs and share public view-only invoice links.
                 {% endif %}
               </li>
               <li>
                 {% if lang == 'es' %}
-                  Sugiere seguimientos para clientes con facturas vencidas.
+                  Marca facturas como pagadas manualmente para tus registros.
                 {% else %}
-                  Suggest follow-ups for overdue clients.
+                  Mark invoices as paid manually for your records.
+                {% endif %}
+              </li>
+            </ul>
+          </div>
+        {% elif key == 'pro' %}
+          <div class="pricing-ai-callout">
+            <strong>
+              {% if lang == 'es' %}
+                Incluye pagos y herramientas más avanzadas:
+              {% else %}
+                Includes payments and more advanced tools:
+              {% endif %}
+            </strong>
+            <ul>
+              <li>
+                {% if lang == 'es' %}
+                  Cobra facturas en línea con Stripe.
+                {% else %}
+                  Collect invoice payments online with Stripe.
+                {% endif %}
+              </li>
+              <li>
+                {% if lang == 'es' %}
+                  Usa BillBeam Assistant y métricas más avanzadas.
+                {% else %}
+                  Use BillBeam Assistant and more advanced reporting.
+                {% endif %}
+              </li>
+              <li>
+                {% if lang == 'es' %}
+                  Envía recordatorios y mejora tu flujo de cobro.
+                {% else %}
+                  Send reminders and improve your collection workflow.
                 {% endif %}
               </li>
             </ul>
@@ -890,11 +958,11 @@
         {% endif %}
 
         <div class="pricing-cta">
-          {% if key == user_plan and key == 'pro' %}
-            <a href="/manage-subscription{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact" id="manageSubscriptionBtn">
+          {% if key == user_plan and key in ['simple', 'pro'] %}
+            <a href="/manage-subscription{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact" id="{% if key == 'pro' %}manageSubscriptionBtn{% endif %}">
               {% if lang == 'es' %}Administrar suscripción{% else %}Manage Subscription{% endif %}
             </a>
-            <span class="pricing-note" id="manageSubscriptionNote">
+            <span class="pricing-note" {% if key == 'pro' %}id="manageSubscriptionNote"{% endif %}>
               {% if lang == 'es' %}
                 Actualiza tu método de pago, cambia tu plan o cancela tu suscripción desde Stripe.
               {% else %}
@@ -922,8 +990,21 @@
               {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
             </span>
 
-          {% elif key == 'pro' and user_plan != 'pro' and user_plan != 'enterprise' %}
-            <button type="button" class="btn btn-brand btn-compact" id="upgradeProBtn">
+          {% elif key == 'simple' and user_plan == 'free' %}
+            <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="simple" id="upgradeSimpleBtn">
+              {% if lang == 'es' %}Actualizar a Simple{% else %}Upgrade to Simple{% endif %}
+            </button>
+
+            <span class="pricing-note" id="upgradeSimpleNote">
+              {% if lang == 'es' %}
+                Activa Simple en segundos con Stripe.
+              {% else %}
+                Turn on Simple in seconds with Stripe.
+              {% endif %}
+            </span>
+
+          {% elif key == 'pro' and user_plan not in ['pro', 'enterprise'] %}
+            <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="pro" id="upgradeProBtn">
               {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
             </button>
 
@@ -996,13 +1077,13 @@
 
     <div class="pricing-trust-card">
       <div class="pricing-trust-title">
-        {% if lang == 'es' %}Más velocidad{% else %}More speed{% endif %}
+        {% if lang == 'es' %}Más flexibilidad{% else %}More flexibility{% endif %}
       </div>
       <div class="pricing-trust-copy">
         {% if lang == 'es' %}
-          Envía más rápido, comparte enlaces públicos y reduce trabajo manual.
+          Usa Simple si solo necesitas facturas y recibos, o Pro si también quieres cobrar en línea y automatizar más.
         {% else %}
-          Send faster, share public links, and reduce manual busywork.
+          Use Simple if you only need invoices and receipts, or Pro if you also want to collect payments online and automate more.
         {% endif %}
       </div>
     </div>
@@ -1034,22 +1115,24 @@
   <div class="pricing-subscription-disclosure">
     {% if lang == 'es' %}
       Detalles de suscripción:
-      <br>• BillBeam Pro es una suscripción mensual auto-renovable
+      <br>• BillBeam Simple y BillBeam Pro son suscripciones mensuales auto-renovables
       <br>• Duración: 1 mes
-      <br>• Precio: $19.99 al mes
-      <br>• El pago se cargará a tu cuenta de Apple ID al confirmar la compra
-      <br>• La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual
+      <br>• Precio de Simple: $9.99 al mes
+      <br>• Precio de Pro: $19.99 al mes
+      <br>• En iPhone, el pago se cargará a tu cuenta de Apple ID al confirmar la compra
+      <br>• Las suscripciones se renuevan automáticamente a menos que se cancelen al menos 24 horas antes del final del período actual
       <br>• Política de privacidad:
       <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver política de privacidad</a>
       <br>• Términos de uso:
       <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver términos de uso</a>
     {% else %}
       Subscription details:
-      <br>• BillBeam Pro is a monthly auto-renewing subscription
+      <br>• BillBeam Simple and BillBeam Pro are monthly auto-renewing subscriptions
       <br>• Length: 1 month
-      <br>• Price: $19.99 per month
-      <br>• Payment will be charged to your Apple ID account at confirmation of purchase
-      <br>• Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period
+      <br>• Simple price: $9.99 per month
+      <br>• Pro price: $19.99 per month
+      <br>• On iPhone, payment will be charged to your Apple ID account at confirmation of purchase
+      <br>• Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period
       <br>• Privacy Policy:
       <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">View Privacy Policy</a>
       <br>• Terms of Use:
@@ -1079,10 +1162,13 @@ document.addEventListener("DOMContentLoaded", function () {
     return nativePurchaseAvailable() || nativeRestoreAvailable();
   }
 
+  const upgradeButtons = document.querySelectorAll(".upgradePlanBtn");
   const upgradeBtn = document.getElementById("upgradeProBtn");
+  const simpleUpgradeBtn = document.getElementById("upgradeSimpleBtn");
   const restoreBtn = document.getElementById("restorePurchasesBtn");
   const restoreWrap = document.getElementById("nativeRestoreWrap");
   const upgradeNote = document.getElementById("upgradeProNote");
+  const simpleUpgradeNote = document.getElementById("upgradeSimpleNote");
   const nativeHint = document.getElementById("nativeUpgradeHint");
   const nativeAlert = document.getElementById("nativeBillingAlert");
   const billingMethodHeroValue = document.getElementById("billingMethodHeroValue");
@@ -1109,10 +1195,17 @@ document.addEventListener("DOMContentLoaded", function () {
     nativeAlert.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  function resetUpgradeButton() {
-    if (!upgradeBtn) return;
-    upgradeBtn.disabled = false;
-    upgradeBtn.textContent = "{{ 'Actualizar a Pro' if lang == 'es' else 'Upgrade to Pro' }}";
+  function resetUpgradeButtons() {
+    upgradeButtons.forEach(function (btn) {
+      btn.disabled = false;
+      const plan = btn.dataset.plan || "pro";
+
+      if (plan === "simple") {
+        btn.textContent = "{{ 'Actualizar a Simple' if lang == 'es' else 'Upgrade to Simple' }}";
+      } else {
+        btn.textContent = "{{ 'Actualizar a Pro' if lang == 'es' else 'Upgrade to Pro' }}";
+      }
+    });
   }
 
   function applyNativeUIState() {
@@ -1124,6 +1217,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (upgradeNote) {
       upgradeNote.textContent = "{{ 'Activa Pro con la suscripción integrada de Apple dentro de la app para iPhone.' if lang == 'es' else 'Activate Pro with Apple’s built-in subscription flow inside the iPhone app.' }}";
+    }
+
+    if (simpleUpgradeNote) {
+      simpleUpgradeNote.textContent = "{{ 'Simple se activa con Stripe en web. La compra integrada de Apple en iPhone está pensada para Pro.' if lang == 'es' else 'Simple activates with Stripe on web. Apple in-app purchase on iPhone is intended for Pro.' }}";
     }
 
     if (nativeHint) {
@@ -1154,17 +1251,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  async function startStripeCheckout() {
-    if (!upgradeBtn) return;
+  async function startStripeCheckout(plan, clickedButton) {
+    if (!clickedButton) return;
 
-    upgradeBtn.disabled = true;
-    upgradeBtn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
+    clickedButton.disabled = true;
+    clickedButton.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
 
     try {
       const resp = await fetch("/create-checkout-session?lang={{ lang }}", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        body: JSON.stringify({ plan: plan })
       });
 
       const data = await resp.json();
@@ -1173,11 +1270,11 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = data.url;
       } else {
         alert(data.error || "{{ 'No se pudo iniciar el checkout.' if lang == 'es' else 'Could not start checkout.' }}");
-        resetUpgradeButton();
+        resetUpgradeButtons();
       }
     } catch (e) {
       alert("{{ 'Error de red al iniciar el checkout.' if lang == 'es' else 'Network error starting checkout.' }}");
-      resetUpgradeButton();
+      resetUpgradeButtons();
     }
   }
 
@@ -1189,7 +1286,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "warn",
         "{{ 'La compra integrada de Apple aún no está disponible en esta pantalla. Cierra y vuelve a abrir la app e inténtalo de nuevo.' if lang == 'es' else 'Apple in-app purchase is not ready on this screen yet. Close and reopen the app, then try again.' }}"
       );
-      resetUpgradeButton();
+      resetUpgradeButtons();
       return;
     }
 
@@ -1200,15 +1297,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
   applyNativeUIState();
 
-  if (upgradeBtn) {
-    upgradeBtn.addEventListener("click", async function () {
-      if (isNativeIOSApp()) {
+  upgradeButtons.forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      const plan = btn.dataset.plan || "pro";
+
+      if (plan === "pro" && isNativeIOSApp()) {
         startNativePurchase();
       } else {
-        await startStripeCheckout();
+        await startStripeCheckout(plan, btn);
       }
     });
-  }
+  });
 
   if (restoreBtn) {
     restoreBtn.addEventListener("click", function () {
@@ -1236,7 +1335,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:purchase-pending", function () {
-    resetUpgradeButton();
+    resetUpgradeButtons();
     showNativeAlert(
       "info",
       "{{ 'Tu compra está pendiente de aprobación o confirmación. Apple terminará el proceso cuando esté lista.' if lang == 'es' else 'Your purchase is pending approval or confirmation. Apple will finish the process when it is ready.' }}"
@@ -1244,7 +1343,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:purchase-cancelled", function () {
-    resetUpgradeButton();
+    resetUpgradeButtons();
     showNativeAlert(
       "warn",
       "{{ 'La compra fue cancelada.' if lang == 'es' else 'The purchase was cancelled.' }}"
@@ -1252,7 +1351,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:purchase-error", function (event) {
-    resetUpgradeButton();
+    resetUpgradeButtons();
     const message = event.detail && event.detail.message
       ? event.detail.message
       : "{{ 'No se pudo completar la compra integrada.' if lang == 'es' else 'Could not complete the in-app purchase.' }}";
@@ -1260,7 +1359,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:purchase-success", function () {
-    resetUpgradeButton();
+    resetUpgradeButtons();
     showNativeAlert(
       "success",
       "{{ 'Compra completada. El siguiente paso es sincronizar el acceso Pro con tu cuenta BillBeam en el servidor.' if lang == 'es' else 'Purchase completed. The next step is syncing Pro access with your BillBeam account on the server.' }}"
@@ -1268,7 +1367,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("billbeam:restore-finished", function () {
-    resetUpgradeButton();
+    resetUpgradeButtons();
     showNativeAlert(
       "success",
       "{{ 'La restauración terminó. Si tu suscripción sigue activa, el siguiente paso es sincronizarla con tu cuenta BillBeam.' if lang == 'es' else 'Restore finished. If your subscription is still active, the next step is syncing it to your BillBeam account.' }}"

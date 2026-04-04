@@ -9,10 +9,18 @@
 {% endblock %}
 
 {% block meta_description %}
-  {% if lang == 'es' %}
-    Revisa la factura {{ inv_label }}, descarga el PDF y completa el pago de forma segura con {{ business_profile.business_name or "BillBeam" }}.
+  {% if show_pay_button %}
+    {% if lang == 'es' %}
+      Revisa la factura {{ inv_label }}, descarga el PDF y completa el pago de forma segura con {{ business_profile.business_name or "BillBeam" }}.
+    {% else %}
+      Review invoice {{ inv_label }}, download the PDF, and complete payment securely with {{ business_profile.business_name or "BillBeam" }}.
+    {% endif %}
   {% else %}
-    Review invoice {{ inv_label }}, download the PDF, and complete payment securely with {{ business_profile.business_name or "BillBeam" }}.
+    {% if lang == 'es' %}
+      Revisa la factura {{ inv_label }}, descarga el PDF y guarda esta factura o recibo con {{ business_profile.business_name or "BillBeam" }}.
+    {% else %}
+      Review invoice {{ inv_label }}, download the PDF, and keep this invoice or receipt from {{ business_profile.business_name or "BillBeam" }} for your records.
+    {% endif %}
   {% endif %}
 {% endblock %}
 
@@ -23,10 +31,11 @@
 {% set is_partial = (payment_summary and payment_summary.get("is_partially_paid")) or (total_paid > 0 and balance > 0) %}
 {% set has_views = view_summary and view_summary.get("has_been_viewed") %}
 {% set view_count_safe = view_summary.get("view_count", 0) if view_summary else 0 %}
-{% set can_pay = (not is_paid) and (balance and balance > 0) and public_token %}
+{% set can_pay = show_pay_button if show_pay_button is defined else ((not is_paid) and (balance and balance > 0) and public_token) %}
 {% set payment_pct = percent_paid if percent_paid is defined and percent_paid is not none else 0 %}
 {% set last_viewed_at = view_summary.get("last_viewed_at") if view_summary else None %}
 {% set first_viewed_at = view_summary.get("first_viewed_at") if view_summary else None %}
+{% set is_simple_plan = owner_plan == "simple" if owner_plan is defined else false %}
 
 <style>
   .public-portal {
@@ -966,21 +975,28 @@
         {% else %}
           <span class="status-note">
             {% if is_public_view %}
-              {% if lang == 'es' %}
-                Este es un enlace seguro. Guárdalo en privado.
+              {% if can_pay %}
+                {% if lang == 'es' %}
+                  Este es un enlace seguro. Guárdalo en privado.
+                {% else %}
+                  This is a secure link. Keep it private.
+                {% endif %}
               {% else %}
-                This is a secure link. Keep it private.
+                {% if lang == 'es' %}
+                  Este enlace es solo para revisar la factura o el recibo y descargar el PDF.
+                {% else %}
+                  This link is for reviewing the invoice or receipt and downloading the PDF.
+                {% endif %}
               {% endif %}
             {% else %}
               {% if lang == 'es' %}
-                Vista interna para seguimiento y cobro.
+                Vista interna para seguimiento y operaciones.
               {% else %}
-                Internal view for operations and collections.
+                Internal view for operations and tracking.
               {% endif %}
             {% endif %}
           </span>
         {% endif %}
-      </div>
 
       <div class="public-glance">
         <div class="glance-card">
@@ -1090,21 +1106,39 @@
 
         <div class="summary-actions">
           {% if is_public_view %}
-            <button
-              class="btn btn-brand btn-pay"
-              id="payNowBtn"
-              {% if not can_pay %}disabled{% endif %}
-              data-token="{{ public_token or '' }}"
-              title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
-            >
-              {% if is_paid %}
-                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
-              {% elif balance <= 0 %}
-                {% if lang == 'es' %}Sin saldo{% else %}No balance{% endif %}
-              {% else %}
-                {% if lang == 'es' %}Pagar ahora{% else %}Pay Now{% endif %}
-              {% endif %}
-            </button>
+            {% if can_pay %}
+              <button
+                class="btn btn-brand btn-pay"
+                id="payNowBtn"
+                {% if not can_pay %}disabled{% endif %}
+                data-token="{{ public_token or '' }}"
+                title="{% if can_pay %}{% else %}{% if lang == 'es' %}No hay saldo pendiente{% else %}No balance due{% endif %}{% endif %}"
+              >
+                {% if is_paid %}
+                  {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+                {% elif balance <= 0 %}
+                  {% if lang == 'es' %}Sin saldo{% else %}No balance{% endif %}
+                {% else %}
+                  {% if lang == 'es' %}Pagar ahora{% else %}Pay Now{% endif %}
+                {% endif %}
+              </button>
+            {% else %}
+              <div class="summary-safe-note">
+                {% if is_simple_plan %}
+                  {% if lang == 'es' %}
+                    Esta factura está en modo solo registro. Puedes revisarla y descargar el PDF para tus archivos.
+                  {% else %}
+                    This invoice is in records-only mode. You can review it and download the PDF for your files.
+                  {% endif %}
+                {% else %}
+                  {% if lang == 'es' %}
+                    No hay saldo pendiente en esta factura.
+                  {% else %}
+                    There is no remaining balance due on this invoice.
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endif %}
           {% else %}
             <div class="summary-safe-note">
               {% if lang == 'es' %}
@@ -1130,16 +1164,32 @@
               Thank you. This invoice has been fully settled.
             {% endif %}
           {% elif is_partial %}
-            {% if lang == 'es' %}
-              Ya se recibió parte del pago. El saldo restante sigue disponible aquí.
+            {% if can_pay %}
+              {% if lang == 'es' %}
+                Ya se recibió parte del pago. El saldo restante sigue disponible aquí.
+              {% else %}
+                Part of the invoice has already been paid. The remaining balance is still available here.
+              {% endif %}
             {% else %}
-              Part of the invoice has already been paid. The remaining balance is still available here.
+              {% if lang == 'es' %}
+                Ya hay un pago parcial registrado en esta factura.
+              {% else %}
+                A partial payment has already been recorded on this invoice.
+              {% endif %}
             {% endif %}
           {% else %}
-            {% if lang == 'es' %}
-              ¿Tienes dudas? Escríbenos a <strong>{{ business_profile.email or "tu negocio" }}</strong>.
+            {% if is_simple_plan %}
+              {% if lang == 'es' %}
+                Esta vista está pensada para revisar la factura o guardarla como recibo para tus registros.
+              {% else %}
+                This view is designed for reviewing the invoice or keeping it as a receipt for your records.
+              {% endif %}
             {% else %}
-              Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>.
+              {% if lang == 'es' %}
+                ¿Tienes dudas? Escríbenos a <strong>{{ business_profile.email or "tu negocio" }}</strong>.
+              {% else %}
+                Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>.
+              {% endif %}
             {% endif %}
           {% endif %}
         </div>
@@ -1474,16 +1524,32 @@
             This portal keeps the invoice summary, activity history, and payment record available for your records.
           {% endif %}
         {% elif is_partial %}
-          {% if lang == 'es' %}
-            Esta factura tiene pagos registrados y un saldo restante pendiente. El cliente puede volver a este enlace para completar el pago.
+          {% if can_pay %}
+            {% if lang == 'es' %}
+              Esta factura tiene pagos registrados y un saldo restante pendiente. El cliente puede volver a este enlace para completar el pago.
+            {% else %}
+              This invoice has payments recorded and a remaining balance due. The client can return to this link to complete the payment.
+            {% endif %}
           {% else %}
-            This invoice has payments recorded and a remaining balance due. The client can return to this link to complete the payment.
+            {% if lang == 'es' %}
+              Esta factura tiene pagos registrados y todavía conserva su historial para tus archivos.
+            {% else %}
+              This invoice has recorded payments and still keeps its history available for your records.
+            {% endif %}
           {% endif %}
         {% else %}
-          {% if lang == 'es' %}
-            Puedes revisar la factura, descargar el PDF y completar el pago aquí cuando esté disponible. Si tienes preguntas sobre esta factura, usa el correo de contacto mostrado arriba.
+          {% if can_pay %}
+            {% if lang == 'es' %}
+              Puedes revisar la factura, descargar el PDF y completar el pago aquí cuando esté disponible. Si tienes preguntas sobre esta factura, usa el correo de contacto mostrado arriba.
+            {% else %}
+              You can review the invoice, download the PDF, and complete payment here when available. If you have questions about this invoice, use the contact email shown above.
+            {% endif %}
           {% else %}
-            You can review the invoice, download the PDF, and complete payment here when available. If you have questions about this invoice, use the contact email shown above.
+            {% if lang == 'es' %}
+              Puedes revisar la factura y descargar el PDF desde este portal. Si tienes preguntas sobre esta factura o recibo, usa el correo de contacto mostrado arriba.
+            {% else %}
+              You can review the invoice and download the PDF from this portal. If you have questions about this invoice or receipt, use the contact email shown above.
+            {% endif %}
           {% endif %}
         {% endif %}
       </div>
