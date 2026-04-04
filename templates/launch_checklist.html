@@ -11,9 +11,9 @@
 
 {% block meta_description %}
   {% if lang == 'es' %}
-    Checklist interna de lanzamiento para revisar calidad, legal, pagos, activos de marketing y tareas post-lanzamiento de BillBeam.
+    Checklist interna de lanzamiento para revisar producto, suscripciones, App Store, pagos, marketing, calidad y tareas posteriores al release de BillBeam.
   {% else %}
-    Internal launch checklist for reviewing quality, legal, payments, marketing assets, and post-launch tasks for BillBeam.
+    Internal launch checklist for reviewing product readiness, subscriptions, App Store, payments, marketing, quality, and post-release tasks for BillBeam.
   {% endif %}
 {% endblock %}
 
@@ -318,21 +318,21 @@
       <div class="launch-title-wrap">
         <h1>
           {% if lang == 'es' %}
-            Checklist de lanzamiento de BillBeam
+            Checklist actual de lanzamiento de BillBeam
           {% else %}
-            BillBeam Launch Checklist
+            BillBeam Current Launch Checklist
           {% endif %}
         </h1>
         <p>
           {% if lang == 'es' %}
-            Una vista rápida de lo que queda por cerrar antes del lanzamiento: calidad, legal, cobros, activos de marketing y tareas posteriores al release.
+            Esta checklist ahora refleja la etapa real del producto: app terminada visualmente, planes y suscripciones actualizados, pagos alineados y enfoque puesto en TestFlight, revisión de Apple y salida pública más sólida.
           {% else %}
-            A quick view of what still needs to be closed before launch: quality, legal, payments, marketing assets, and post-release follow-through.
+            This checklist now reflects the real stage of the product: visual work largely finished, plans and subscriptions updated, payments aligned, and focus shifted to TestFlight, Apple review, and a stronger public release.
           {% endif %}
         </p>
       </div>
 
-      <div class="launch-version">v1.0</div>
+      <div class="launch-version">v2.0</div>
     </div>
   </header>
 
@@ -342,7 +342,7 @@
         {% if lang == 'es' %}Meta{% else %}Goal{% endif %}
       </div>
       <div class="launch-strip-value">
-        {% if lang == 'es' %}Lanzar con confianza{% else %}Launch with confidence{% endif %}
+        {% if lang == 'es' %}Enviar y lanzar con confianza{% else %}Submit and launch with confidence{% endif %}
       </div>
     </div>
 
@@ -351,7 +351,7 @@
         {% if lang == 'es' %}Prioridad{% else %}Priority{% endif %}
       </div>
       <div class="launch-strip-value">
-        {% if lang == 'es' %}Legal + cobros + UX{% else %}Legal + payments + UX{% endif %}
+        {% if lang == 'es' %}TestFlight + Apple + pagos{% else %}TestFlight + Apple + payments{% endif %}
       </div>
     </div>
 
@@ -360,7 +360,7 @@
         {% if lang == 'es' %}Enfoque{% else %}Focus{% endif %}
       </div>
       <div class="launch-strip-value">
-        {% if lang == 'es' %}Claridad y confianza{% else %}Clarity and trust{% endif %}
+        {% if lang == 'es' %}Estabilidad, claridad y aprobación{% else %}Stability, clarity, and approval{% endif %}
       </div>
     </div>
 
@@ -369,7 +369,7 @@
         {% if lang == 'es' %}Estado{% else %}Status{% endif %}
       </div>
       <div class="launch-strip-value">
-        {% if lang == 'es' %}Recta final{% else %}Final stretch{% endif %}
+        {% if lang == 'es' %}Última recta{% else %}Final stretch{% endif %}
       </div>
     </div>
   </div>
@@ -377,109 +377,148 @@
   <div class="launch-grid">
 
     <section class="launch-card">
-      <h2>0. {% if lang == 'es' %}Estabilidad y pulido{% else %}Stability & polish{% endif %}</h2>
+      <h2>1. {% if lang == 'es' %}Producto y presentación{% else %}Product and presentation{% endif %}</h2>
       <div class="launch-card-sub">
         {% if lang == 'es' %}
-          Lo esencial de experiencia, visual, respuesta y flujo general del producto.
+          Lo visual y estructural principal que ya debía quedar bien antes de pasar a la etapa Apple/TestFlight.
         {% else %}
-          The essential experience, visual, responsiveness, and core flow quality checks.
+          The main visual and structural work that needed to be solid before moving fully into Apple/TestFlight work.
         {% endif %}
       </div>
       <ul class="launch-list">
-        <li><span class="launch-mark done">✓</span><span>Signature canvas & PDF output feel right</span></li>
-        <li><span class="launch-mark done">✓</span><span>All screens responsive (mobile, tablet, desktop)</span></li>
-        <li><span class="launch-mark done">✓</span><span>Charts readable on small screens</span></li>
-        <li><span class="launch-mark done">✓</span><span>No obvious 500 errors in normal flows</span></li>
-        <li><span class="launch-mark done">✓</span><span>All main buttons visible & centered</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Sidebar, navegación y layout general corregidos{% else %}Sidebar, navigation, and general layout corrected{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Pricing, settings, public invoice, dashboard, changelog y checklist actualizados{% else %}Pricing, settings, public invoice, dashboard, changelog, and checklist updated{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Ribbon de concientización sobre autismo integrado{% else %}Autism awareness ribbon integrated{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Vista móvil y visual general revisadas{% else %}Mobile view and overall visual polish reviewed{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Últimos problemas visuales importantes ya corregidos{% else %}Final major visual issues already corrected{% endif %}</span></li>
       </ul>
     </section>
 
     <section class="launch-card">
-      <h2>1. {% if lang == 'es' %}Experiencia bilingüe{% else %}Bilingual experience{% endif %}</h2>
+      <h2>2. {% if lang == 'es' %}Planes y suscripciones{% else %}Plans and subscriptions{% endif %}</h2>
       <div class="launch-card-sub">
         {% if lang == 'es' %}
-          Verifica consistencia de idioma y presentación para usuarios EN/ES.
+          La nueva estructura de producto y precios debe quedar consistente entre la app, Stripe y Apple.
         {% else %}
-          Verify consistent language and presentation for EN/ES users.
+          The new product and pricing structure needs to stay consistent across the app, Stripe, and Apple.
         {% endif %}
       </div>
       <ul class="launch-list">
-        <li><span class="launch-mark done">✓</span><span>EN/ES toggle wired on all main routes</span></li>
-        <li><span class="launch-mark done">✓</span><span>App copy translated where it matters most</span></li>
-        <li><span class="launch-mark done">✓</span><span>Email templates tested in English and Spanish</span></li>
-        <li><span class="launch-mark done">✓</span><span>Public invoice portal looks strong in both languages</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Nuevo plan Simple añadido a la app{% else %}New Simple plan added to the app{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Precios actualizados para reflejar la estructura nueva{% else %}Pricing updated to reflect the new structure{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Stripe actualizado con los nuevos precios/subscripciones{% else %}Stripe updated with the new prices/subscriptions{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Apple IAP keys añadidas en Render{% else %}Apple IAP keys added into Render{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Verificar en pruebas que la app usa exactamente los productos correctos{% else %}Verify in testing that the app uses the exact correct Apple products{% endif %}</span></li>
       </ul>
     </section>
 
     <section class="launch-card">
-      <h2>2. {% if lang == 'es' %}Legal, confianza y cumplimiento{% else %}Legal, trust & compliance{% endif %}</h2>
+      <h2>3. {% if lang == 'es' %}Pagos y pruebas reales{% else %}Payments and real testing{% endif %}</h2>
       <div class="launch-card-sub">
         {% if lang == 'es' %}
-          Lo que debe estar especialmente sólido antes de revisión legal y lanzamiento público.
+          Esta es la parte más importante antes de volver a subir build: confirmar que nada esencial se rompió.
         {% else %}
-          What must be especially solid before legal review and public launch.
+          This is the most important stage before uploading the next build: confirming that nothing essential broke.
         {% endif %}
       </div>
       <ul class="launch-list">
-        <li><span class="launch-mark todo">⬜</span><span>Privacy Policy drafted and attorney-ready</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Terms of Service drafted and attorney-ready</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>AI / assistant notice and disclosure page drafted</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Billing / cancellation / subscription terms documented</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Footer legal links added across app and landing</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Attorney review pass completed</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Crear cuenta nueva y probar registro/login limpio{% else %}Create a new account and test clean register/login flow{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Probar upgrade web con Stripe de principio a fin{% else %}Test web Stripe upgrade flow end to end{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Probar flujo Apple dentro del wrapper/iPhone{% else %}Test Apple purchase flow inside the wrapper/iPhone app{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Verificar que el plan correcto aparece en la cuenta después de pagar{% else %}Verify the correct plan appears on the account after purchase{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Confirmar que los botones de upgrade no dan errores de red ni rutas rotas{% else %}Confirm upgrade buttons no longer show network errors or broken routes{% endif %}</span></li>
       </ul>
     </section>
 
     <section class="launch-card">
-      <h2>3. {% if lang == 'es' %}Pagos, correo y dominio{% else %}Payments, email & domain{% endif %}</h2>
+      <h2>4. {% if lang == 'es' %}Checklist de flujo principal{% else %}Core flow checklist{% endif %}</h2>
       <div class="launch-card-sub">
         {% if lang == 'es' %}
-          Infraestructura visible al cliente y reputación operativa de la app.
+          Antes de TestFlight final, BillBeam debe sentirse estable en sus movimientos más importantes.
         {% else %}
-          Customer-visible infrastructure and operational trust signals.
+          Before final TestFlight submission, BillBeam should feel stable in its most important user flows.
         {% endif %}
       </div>
       <ul class="launch-list">
-        <li><span class="launch-mark todo">⬜</span><span>Stripe checkout fully tested end to end</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Webhook behavior verified in test and production-like flows</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Resend / SMTP sender identity verified on real domain</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Support email inbox confirmed and monitored</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>APP_BASE_URL / domain / SSL all verified</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Crear factura{% else %}Create invoice{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Previsualizar factura{% else %}Preview invoice{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Guardar factura{% else %}Save invoice{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Descargar PDF{% else %}Download PDF{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Enviar por email{% else %}Send by email{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Abrir factura pública{% else %}Open public invoice{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Registrar pago manual{% else %}Add manual payment{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Revisar settings, branding y seguridad{% else %}Review settings, branding, and security{% endif %}</span></li>
       </ul>
     </section>
 
     <section class="launch-card">
-      <h2>4. {% if lang == 'es' %}Día de lanzamiento{% else %}Launch day{% endif %}</h2>
+      <h2>5. {% if lang == 'es' %}Xcode, build y TestFlight{% else %}Xcode, build, and TestFlight{% endif %}</h2>
       <div class="launch-card-sub">
         {% if lang == 'es' %}
-          Materiales públicos, presentación del producto y coordinación del anuncio.
+          Una vez que las pruebas locales salgan bien, este es el siguiente paso natural.
         {% else %}
-          Public assets, product presentation, and announcement coordination.
+          Once local and live checks look good, this is the natural next stage.
         {% endif %}
       </div>
       <ul class="launch-list">
-        <li><span class="launch-mark todo">⬜</span><span>Create Product Hunt listing assets</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Short Loom walkthrough of the app</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Screenshots for landing + socials</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Draft announcement posts (X, Threads, LinkedIn)</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Decide launch day & time</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Subir versión y build number en Xcode{% else %}Increase version and build number in Xcode{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Crear nuevo archive{% else %}Create new archive{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Subir build nueva a App Store Connect{% else %}Upload the new build to App Store Connect{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Esperar procesamiento de TestFlight{% else %}Wait for TestFlight processing{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Probar la build real en iPhone antes de enviar a revisión{% else %}Test the real build on iPhone before submitting for review{% endif %}</span></li>
       </ul>
     </section>
 
     <section class="launch-card">
-      <h2>5. {% if lang == 'es' %}Después del lanzamiento{% else %}Post-launch{% endif %}</h2>
+      <h2>6. {% if lang == 'es' %}App Store y revisión{% else %}App Store and review{% endif %}</h2>
       <div class="launch-card-sub">
         {% if lang == 'es' %}
-          Lo necesario para aprender rápido y convertir uso real en mejoras concretas.
+          Lo necesario para evitar confusión durante la revisión y aumentar posibilidades de aprobación limpia.
         {% else %}
-          What you need to learn quickly and turn real usage into concrete improvements.
+          What needs to be buttoned up to reduce confusion during review and improve the chance of a clean approval.
         {% endif %}
       </div>
       <ul class="launch-list">
-        <li><span class="launch-mark todo">⬜</span><span>Add simple feedback form / link</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Track first 10–20 users & their use cases</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Capture testimonials & friction points</span></li>
-        <li><span class="launch-mark todo">⬜</span><span>Decide the next one big thing after launch</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Confirmar que las suscripciones activas en App Store Connect son las correctas{% else %}Confirm the active subscriptions in App Store Connect are the correct ones{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Añadir cualquier screenshot necesario para suscripciones si Apple lo exige{% else %}Add any required subscription screenshot if Apple requires it{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Revisar descripción, pricing language y metadata final{% else %}Review description, pricing language, and final metadata{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Enviar build actualizada a revisión{% else %}Submit the updated build for review{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Tener lista una explicación simple por si Apple pregunta sobre planes o pagos{% else %}Have a simple explanation ready in case Apple asks about plans or payments{% endif %}</span></li>
+      </ul>
+    </section>
+
+    <section class="launch-card">
+      <h2>7. {% if lang == 'es' %}Legal, confianza y soporte{% else %}Legal, trust, and support{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          La app ya se ve seria. Ahora esta parte debe respaldar esa imagen públicamente.
+        {% else %}
+          The app now looks serious. This layer needs to support that image publicly.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Páginas legales ya presentes en la app{% else %}Legal pages already present in the app{% endif %}</span></li>
+        <li><span class="launch-mark done">✓</span><span>{% if lang == 'es' %}Footer y enlaces legales visibles{% else %}Footer and legal links visible{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Hacer revisión final de copy legal y de suscripción{% else %}Do a final review of legal and subscription copy{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Confirmar inboxes de soporte/legal activas{% else %}Confirm support/legal inboxes are active{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Tener respuesta lista para primeros usuarios o review questions{% else %}Have a response ready for early users or review questions{% endif %}</span></li>
+      </ul>
+    </section>
+
+    <section class="launch-card">
+      <h2>8. {% if lang == 'es' %}Después de aprobación{% else %}After approval{% endif %}</h2>
+      <div class="launch-card-sub">
+        {% if lang == 'es' %}
+          Lo que sigue una vez que BillBeam quede aprobado y publicado.
+        {% else %}
+          What comes next once BillBeam is approved and publicly live.
+        {% endif %}
+      </div>
+      <ul class="launch-list">
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Verificar compra real o sandbox final en producción{% else %}Verify real or final sandbox purchase behavior in production{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Monitorear registros de errores y reportes de usuarios{% else %}Monitor error logs and early user reports{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Recoger feedback sobre plan Simple vs planes más altos{% else %}Collect feedback on the Simple plan versus higher plans{% endif %}</span></li>
+        <li><span class="launch-mark todo">⬜</span><span>{% if lang == 'es' %}Definir el siguiente gran update con calma{% else %}Define the next major update carefully{% endif %}</span></li>
       </ul>
     </section>
 
@@ -491,18 +530,18 @@
     </strong>
     <p>
       {% if lang == 'es' %}
-        La siguiente fase crítica es cerrar el paquete legal y de confianza: privacidad, términos, aviso de IA, política de cobros/suscripción y enlaces legales visibles en toda la app.
+        El enfoque correcto ahora es: probar flujos reales con la app ya actualizada, confirmar compras y planes, luego subir nueva build en Xcode, pasar por TestFlight y enviar esa versión limpia a Apple.
       {% else %}
-        The next critical phase is closing the legal and trust package: privacy, terms, AI notice, billing/subscription policy, and visible legal links across the app.
+        The right focus now is: test the real flows with the updated app, confirm purchases and plan behavior, then upload a fresh Xcode build, pass through TestFlight, and submit that clean version to Apple.
       {% endif %}
     </p>
   </div>
 
   <div class="launch-footer">
     {% if lang == 'es' %}
-      ¿Quieres añadir algo más? Este archivo ya está preparado para crecer como checklist interna de lanzamiento y operación.
+      Esta checklist ya está alineada con tu etapa actual. Lo más importante ya no es rehacer páginas: es validar, subir build nueva y cerrar el ciclo con Apple correctamente.
     {% else %}
-      Want to add more? This file is already structured to grow as your internal launch and operations checklist.
+      This checklist is now aligned with your actual stage. The most important work is no longer rebuilding pages — it is validating flows, uploading the next build, and closing the loop with Apple properly.
     {% endif %}
   </div>
 

@@ -11,9 +11,9 @@
 
 {% block meta_description %}
   {% if lang == 'es' %}
-    Sigue la evolución de BillBeam con un resumen de mejoras recientes en facturación, paneles y experiencia del producto.
+    Sigue la evolución de BillBeam con un resumen de mejoras recientes en planes, facturación, pagos, experiencia del cliente y estabilidad del producto.
   {% else %}
-    Follow BillBeam’s evolution with a running summary of recent improvements to invoicing, dashboards, and product experience.
+    Follow BillBeam’s evolution with a running summary of recent improvements to plans, invoicing, payments, client experience, and product stability.
   {% endif %}
 {% endblock %}
 
@@ -343,16 +343,16 @@
     <div class="changelog-title-wrap">
       <h1>
         {% if lang == 'es' %}
-          Cómo ha ido evolucionando BillBeam
+          Cómo está evolucionando BillBeam
         {% else %}
-          How BillBeam is evolving over time
+          How BillBeam is evolving
         {% endif %}
       </h1>
       <div class="changelog-subcopy">
         {% if lang == 'es' %}
-          Un resumen continuo de mejoras recientes en el creador de facturas, el panel, la experiencia del cliente y el asistente dentro de la app.
+          Un resumen claro de las mejoras más recientes en planes, facturación, cobros, experiencia del cliente, estabilidad y presentación general del producto.
         {% else %}
-          A running summary of recent improvements to the invoice creator, dashboard, client experience, and in-app assistant.
+          A clear running summary of recent improvements across plans, invoicing, collections, client experience, stability, and the overall product presentation.
         {% endif %}
       </div>
     </div>
@@ -370,7 +370,7 @@
         {% if lang == 'es' %}Dirección{% else %}Direction{% endif %}
       </div>
       <div class="changelog-hero-value">
-        {% if lang == 'es' %}Más claridad y velocidad{% else %}More clarity and speed{% endif %}
+        {% if lang == 'es' %}Más claridad y mejor posicionamiento{% else %}More clarity and stronger positioning{% endif %}
       </div>
     </div>
 
@@ -379,7 +379,7 @@
         {% if lang == 'es' %}Producto{% else %}Product{% endif %}
       </div>
       <div class="changelog-hero-value">
-        {% if lang == 'es' %}Facturación moderna{% else %}Modern invoicing{% endif %}
+        {% if lang == 'es' %}Facturación flexible para más tipos de usuario{% else %}More flexible invoicing for more user types{% endif %}
       </div>
     </div>
 
@@ -388,7 +388,7 @@
         {% if lang == 'es' %}Estado{% else %}Status{% endif %}
       </div>
       <div class="changelog-hero-value">
-        {% if lang == 'es' %}Mejorando constantemente{% else %}Actively improving{% endif %}
+        {% if lang == 'es' %}Lanzamiento más sólido y pulido{% else %}More polished and launch-ready{% endif %}
       </div>
     </div>
   </div>
@@ -402,16 +402,16 @@
           <div>
             <h2>
               {% if lang == 'es' %}
-                v2.1 — BillBeam Assistant y nueva landing
+                v2.4 — Nuevo plan Simple, mejoras de suscripción y pulido final
               {% else %}
-                v2.1 — BillBeam Assistant and new landing
+                v2.4 — New Simple plan, subscription improvements, and launch polish
               {% endif %}
             </h2>
             <p class="changelog-date">
               {% if lang == 'es' %}
-                Lanzado en 2026
+                Lanzado recientemente
               {% else %}
-                Shipped in 2026
+                Recently shipped
               {% endif %}
             </p>
           </div>
@@ -422,15 +422,17 @@
 
         <ul>
           {% if lang == 'es' %}
-            <li>Nuevo asistente de IA dentro del panel, accesible desde la parte inferior derecha.</li>
-            <li>Respuestas en inglés o español según el idioma de la interfaz.</li>
-            <li>Landing pública y marketing más claros para freelancers y pequeños estudios.</li>
-            <li>Mejoras visuales en modo oscuro y en el tema de marca por defecto.</li>
+            <li>Se añadió un nuevo <strong>Plan Simple</strong> para usuarios que solo necesitan crear facturas y recibos sin activar cobros en línea.</li>
+            <li>La estructura de planes ahora distingue mejor entre usuarios que solo documentan pagos y usuarios que necesitan una experiencia completa de cobro.</li>
+            <li>Se mejoró la consistencia entre web, Stripe y Apple para que los productos de suscripción y precios queden mejor alineados.</li>
+            <li>Se pulió la experiencia visual de la app antes del envío, incluyendo navegación, sidebar, pricing, estados y detalles generales de presentación.</li>
+            <li>Se añadió el detalle visual del ribbon de concientización sobre autismo de forma sutil y consistente en la experiencia.</li>
           {% else %}
-            <li>New in-app AI assistant accessible from the bottom-right of the dashboard.</li>
-            <li>Answers in English or Spanish based on the interface language.</li>
-            <li>Clearer public landing and marketing for freelancers and small studios.</li>
-            <li>Visual polish to dark mode and the default brand theme.</li>
+            <li>Added a new <strong>Simple Plan</strong> for users who only need invoices and receipts without turning on online payments.</li>
+            <li>The plan structure now better separates users who just need payment records from users who need a full payment-collection workflow.</li>
+            <li>Improved consistency across web, Stripe, and Apple so subscription products and pricing are better aligned.</li>
+            <li>Polished the app experience before submission, including navigation, sidebar behavior, pricing presentation, status handling, and overall visual consistency.</li>
+            <li>Added the autism awareness ribbon as a subtle, consistent product detail across the experience.</li>
           {% endif %}
         </ul>
       </article>
@@ -440,9 +442,102 @@
           <div>
             <h2>
               {% if lang == 'es' %}
-                v2.0 — Panel de métricas y vista pública de facturas
+                v2.3 — Experiencia pública de factura y seguimiento interno mejorados
               {% else %}
-                v2.0 — Analytics dashboard and public invoice view
+                v2.3 — Improved public invoice experience and stronger internal tracking
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado en 2026{% else %}Shipped in 2026{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Se mejoró la vista pública de la factura para que el cliente vea una experiencia más clara, profesional y confiable.</li>
+            <li>Se reforzó la lógica de pagos parciales, saldo pendiente, pago total y estados visibles dentro de la app.</li>
+            <li>Se mejoró el historial de eventos y pagos para que el negocio tenga más contexto operativo por factura.</li>
+            <li>Se fortaleció la separación entre vista pública del cliente y vista interna del negocio.</li>
+          {% else %}
+            <li>Improved the public invoice page so clients see a clearer, more professional, and more trustworthy experience.</li>
+            <li>Strengthened the handling of partial payments, remaining balance, paid-in-full state, and visible invoice statuses.</li>
+            <li>Improved invoice event history and payment history so businesses have better operational context per invoice.</li>
+            <li>Made the separation between the public client view and the internal business view stronger and cleaner.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v2.2 — Dashboard más útil, más señales de cobro y mejor estructura operativa
+              {% else %}
+                v2.2 — More useful dashboard, stronger collection signals, and better operational structure
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado en 2026{% else %}Shipped in 2026{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Se añadieron métricas más útiles para seguir facturas vistas, impagas, vencidas y pendientes de seguimiento.</li>
+            <li>Se mejoró la lectura del dashboard para que el usuario entienda mejor qué cobrar, cuándo insistir y dónde está el riesgo.</li>
+            <li>Se añadieron señales más claras para diferenciar facturas vistas, parcialmente pagadas y con recordatorios enviados.</li>
+            <li>Se reforzó la base para una experiencia de cobro más seria sin romper el flujo de facturación que ya funcionaba.</li>
+          {% else %}
+            <li>Added more useful metrics for tracking viewed, unpaid, overdue, and follow-up-worthy invoices.</li>
+            <li>Improved dashboard readability so users can better understand what to collect, when to follow up, and where risk is building.</li>
+            <li>Added clearer signals for viewed invoices, partial payments, and reminder activity.</li>
+            <li>Strengthened the foundation for a more serious collections experience without breaking the invoicing flow that was already working.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v2.1 — BillBeam Assistant, marketing más claro y mejoras de experiencia
+              {% else %}
+                v2.1 — BillBeam Assistant, clearer marketing, and product-experience improvements
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado en 2026{% else %}Shipped in 2026{% endif %}
+            </p>
+          </div>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Se añadió BillBeam Assistant dentro de la app para ayudar con facturas, panel, lenguaje y flujo de trabajo.</li>
+            <li>Se mejoró la experiencia bilingüe para que el producto responda con más claridad en inglés y español.</li>
+            <li>Se ajustó la presentación pública del producto para explicar mejor qué hace BillBeam y para quién está diseñado.</li>
+            <li>Se mejoraron varios detalles visuales en el modo oscuro, branding y consistencia general.</li>
+          {% else %}
+            <li>Added BillBeam Assistant inside the app to help with invoices, dashboard understanding, language, and workflow questions.</li>
+            <li>Improved the bilingual experience so the product responds more clearly in both English and Spanish.</li>
+            <li>Refined the public-facing product presentation to explain more clearly what BillBeam does and who it is built for.</li>
+            <li>Improved dark mode, branding details, and overall visual consistency in multiple areas.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
+                v2.0 — Facturas públicas, mejores pagos y un producto más completo
+              {% else %}
+                v2.0 — Public invoices, stronger payment handling, and a more complete product
               {% endif %}
             </h2>
             <p class="changelog-date">
@@ -453,73 +548,15 @@
 
         <ul>
           {% if lang == 'es' %}
-            <li>KPIs clave en el historial de facturas: ingresos, pagadas, vencidas y ticket promedio.</li>
-            <li>Gráficas de ingresos mensuales y diarios para detectar tendencias rápidamente.</li>
-            <li>Enlaces públicos para que tus clientes vean la factura y descarguen el PDF.</li>
-            <li>Estado “Vencida” automático según la fecha límite de pago.</li>
+            <li>Se añadieron enlaces públicos de factura para compartir una factura fuera de la app.</li>
+            <li>Se mejoró la descarga de PDF y la experiencia de envío por correo.</li>
+            <li>Se añadieron mejores bases para pagos, registros manuales y estados de factura más útiles.</li>
+            <li>BillBeam empezó a sentirse más como una herramienta real de operación y no solo un generador de PDFs.</li>
           {% else %}
-            <li>Key KPIs in invoice history: revenue, paid vs overdue, and average invoice size.</li>
-            <li>Monthly and daily revenue charts to spot trends quickly.</li>
-            <li>Public invoice links so clients can view and download PDFs in the browser.</li>
-            <li>Automatic overdue status once invoices pass their due date.</li>
-          {% endif %}
-        </ul>
-      </article>
-
-      <article class="changelog-item">
-        <div class="changelog-item-header">
-          <div>
-            <h2>
-              {% if lang == 'es' %}
-                v1.5 — Gestión de clientes y pagos parciales
-              {% else %}
-                v1.5 — Clients and partial payments
-              {% endif %}
-            </h2>
-            <p class="changelog-date">
-              {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
-            </p>
-          </div>
-        </div>
-
-        <ul>
-          {% if lang == 'es' %}
-            <li>Sección de clientes para guardar y reutilizar datos de contacto.</li>
-            <li>Registro de pagos parciales con método y notas por factura.</li>
-            <li>Cálculo automático del saldo pendiente en cada factura.</li>
-          {% else %}
-            <li>Clients section to store and reuse contact details.</li>
-            <li>Partial payment tracking with method and notes per invoice.</li>
-            <li>Automatic remaining balance calculation on each invoice.</li>
-          {% endif %}
-        </ul>
-      </article>
-
-      <article class="changelog-item">
-        <div class="changelog-item-header">
-          <div>
-            <h2>
-              {% if lang == 'es' %}
-                v1.0 — Creador de facturas minimalista
-              {% else %}
-                v1.0 — Minimalist invoice creator
-              {% endif %}
-            </h2>
-            <p class="changelog-date">
-              {% if lang == 'es' %}Lanzado en 2024{% else %}Shipped in 2024{% endif %}
-            </p>
-          </div>
-        </div>
-
-        <ul>
-          {% if lang == 'es' %}
-            <li>Flujo simple para crear facturas con cliente, conceptos e importe total.</li>
-            <li>Descarga de PDF lista para enviar a clientes.</li>
-            <li>Historial básico de facturas en una sola vista.</li>
-          {% else %}
-            <li>Simple invoice creation flow with client, line items, and totals.</li>
-            <li>PDF download ready to send to clients.</li>
-            <li>Basic invoice history in a single view.</li>
+            <li>Added public invoice links so invoices can be shared outside the app.</li>
+            <li>Improved PDF downloads and invoice email delivery.</li>
+            <li>Added stronger foundations for payments, manual payment recording, and more useful invoice states.</li>
+            <li>BillBeam started to feel more like a real operating tool and less like just a PDF generator.</li>
           {% endif %}
         </ul>
       </article>
@@ -534,26 +571,26 @@
         </div>
         <ul>
           {% if lang == 'es' %}
-            <li>Más claridad en el panel y el flujo de facturas.</li>
-            <li>Más profesionalismo en la experiencia del cliente.</li>
-            <li>Más ayuda dentro de la app con BillBeam Assistant.</li>
+            <li>BillBeam ahora sirve mejor a más de un tipo de usuario.</li>
+            <li>La experiencia de factura, pago y seguimiento está más alineada con el producto real.</li>
+            <li>El producto se siente más pulido, más claro y más listo para lanzarse con confianza.</li>
           {% else %}
-            <li>More clarity in the dashboard and invoice flow.</li>
-            <li>More professionalism in the client experience.</li>
-            <li>More in-app help through BillBeam Assistant.</li>
+            <li>BillBeam now serves more than one type of invoicing user more clearly.</li>
+            <li>The invoice, payment, and follow-up experience is more aligned with the real product.</li>
+            <li>The app feels more polished, clearer, and more ready to launch with confidence.</li>
           {% endif %}
         </ul>
       </section>
 
       <section class="changelog-side-card">
         <h3>
-          {% if lang == 'es' %}Qué suele venir después{% else %}What usually comes next{% endif %}
+          {% if lang == 'es' %}Lo que más cambió{% else %}What changed the most{% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
-            Las ideas futuras suelen empezar como mejoras pequeñas de claridad, automatización o experiencia visual antes de convertirse en funciones completas.
+            BillBeam dejó de sentirse como un solo plan genérico y pasó a tener una estructura de producto más clara: una experiencia simple para facturación y recibos, y una experiencia más completa para cobros, seguimiento y operaciones más profesionales.
           {% else %}
-            Future ideas often begin as smaller improvements to clarity, automation, or visual polish before becoming full product features.
+            BillBeam moved away from feeling like one generic plan and into a clearer product structure: a simpler experience for invoices and receipts, and a fuller experience for payments, follow-up, and more professional operations.
           {% endif %}
         </p>
       </section>
@@ -564,9 +601,9 @@
         </strong>
         <p>
           {% if lang == 'es' %}
-            BillBeam está evolucionando para sentirse más rápido, más limpio y más útil para freelancers, pequeños equipos y estudios que quieren cobrar con menos fricción.
+            El objetivo de BillBeam sigue siendo el mismo: ayudarte a facturar con menos fricción, verte más profesional y tener más claridad sobre tu negocio sin complicar lo que ya funciona.
           {% else %}
-            BillBeam is evolving to feel faster, cleaner, and more useful for freelancers, lean teams, and studios who want to get paid with less friction.
+            BillBeam’s goal remains the same: help you invoice with less friction, look more professional, and gain more clarity about your business without complicating what already works.
           {% endif %}
         </p>
       </section>
@@ -577,9 +614,9 @@
 
   <div class="changelog-footer">
     {% if lang == 'es' %}
-      ¿Quieres ver qué viene después? Las próximas ideas suelen empezar como notas aquí antes de llegar al producto.
+      Este registro refleja la dirección actual del producto: más claridad, más estabilidad y una mejor experiencia tanto para quien factura como para quien recibe la factura.
     {% else %}
-      Want to see what comes next? Future ideas usually start as notes here before they ship into the product.
+      This changelog reflects the product’s current direction: more clarity, more stability, and a better experience for both the person sending the invoice and the person receiving it.
     {% endif %}
   </div>
 
