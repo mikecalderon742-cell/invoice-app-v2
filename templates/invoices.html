@@ -595,10 +595,18 @@
   .actions-stack {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
   }
 
   .actions-stack .btn {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    min-height: 34px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
@@ -651,6 +659,19 @@
     .table-scroll {
       padding-left: 16px;
       padding-right: 16px;
+    }
+
+    .actions-stack {
+      gap: 6px;
+    }
+
+    .actions-stack .btn {
+      width: auto !important;
+      flex: 0 0 auto !important;
+      padding: 6px 10px;
+      font-size: 11px;
+      min-height: 32px;
+      border-radius: 999px;
     }
   }
 </style>
