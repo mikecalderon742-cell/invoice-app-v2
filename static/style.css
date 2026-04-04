@@ -1659,7 +1659,24 @@ body.dark .hamburger span {
     color: #f3f4f6;
     font-weight: 500;
     text-decoration: none;
+    background: transparent;
+    box-shadow: none;
+    filter: none;
     transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: #374151;
+    box-shadow: none;
+    filter: none;
+    padding-left: 32px;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    color: #ffffff;
+    box-shadow: none;
+    filter: none;
 }
 
 .sidebar-link:hover {
