@@ -3165,8 +3165,8 @@ body.dark .doodle {
     position: fixed;
     left: 14px;
     bottom: 20px;
-    width: 28px;
-    height: 28px;
+    width: 70px;
+    height: 70px;
     z-index: 1200;
     pointer-events: none;
     opacity: 0.88;
