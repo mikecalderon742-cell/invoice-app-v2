@@ -3170,7 +3170,7 @@ body.dark .doodle {
     z-index: 1200;
     pointer-events: none;
     opacity: 0.88;
-    background-image: url("/static/gold-infinity.png");
+    background-image: url("/static/gold-infinity-final.png");
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
