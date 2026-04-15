@@ -29,14 +29,20 @@
 <style>
   .create-shell {
     display: grid;
-    gap: 22px;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .create-shell,
+  .create-shell * {
+    min-width: 0;
   }
 
   .create-hero {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-    gap: 22px;
-    align-items: stretch;
+    grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.85fr);
+    gap: 18px;
+    align-items: start;
   }
 
   .create-hero-panel,
@@ -64,9 +70,10 @@
   .create-hero-panel {
     position: relative;
     overflow: hidden;
-    padding: 28px;
+    padding: 24px;
     border-radius: 30px;
     isolation: isolate;
+    min-height: auto;
     background:
       radial-gradient(circle at 12% 18%, rgba(125, 211, 252, 0.30), transparent 24%),
       radial-gradient(circle at 82% 18%, rgba(59, 130, 246, 0.28), transparent 24%),
@@ -78,7 +85,7 @@
       0 16px 40px rgba(21, 27, 84, 0.20),
       inset 0 1px 0 rgba(255,255,255,0.24);
     transform: translateZ(0);
-    will-change: box-shadow;
+    will-change: auto;
     backface-visibility: hidden;
   }
 
@@ -192,7 +199,7 @@
     margin: 0;
     max-width: 780px;
     font-family: "Space Grotesk", sans-serif;
-    font-size: clamp(34px, 5vw, 52px);
+    font-size: clamp(34px, 4.4vw, 52px);
     line-height: 0.95;
     letter-spacing: -0.045em;
     color: #ffffff;
@@ -270,6 +277,7 @@
     font-weight: 700;
     line-height: 1.2;
     color: #ffffff;
+    word-break: break-word;
   }
 
   @keyframes billbeamHeroFloat {
@@ -294,9 +302,10 @@
   }
 
   .create-side-panel {
-    padding: 22px;
+    padding: 20px;
     display: grid;
-    gap: 18px;
+    gap: 16px;
+    align-self: start;
   }
 
   .side-card-title {
@@ -352,13 +361,14 @@
   }
 
   .create-form-shell {
-    padding: 22px;
+    padding: 20px;
+    overflow: visible;
   }
 
   .invoice-layout-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 22px;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
+    gap: 18px;
     align-items: start;
   }
 
@@ -384,11 +394,12 @@
   }
 
   .form-section {
-    margin-top: 22px;
-    padding: 20px;
+    margin-top: 18px;
+    padding: 18px;
     border-radius: 22px;
     background: rgba(15,23,42,0.03);
     border: 1px solid rgba(148,163,184,0.15);
+    overflow: visible;
   }
 
   body.dark .form-section {
@@ -440,6 +451,7 @@
   .field-group {
     display: grid;
     gap: 6px;
+    min-width: 0;
   }
 
   .field-group label {
@@ -480,6 +492,7 @@
     border-radius: 16px;
     padding: 12px;
     background: rgba(255,255,255,0.5);
+    overflow: visible;
   }
 
   body.dark .signature-shell {
@@ -509,16 +522,18 @@
 
   .create-summary-side {
     display: grid;
-    gap: 16px;
+    gap: 14px;
     position: static;
     top: auto;
+    min-width: 0;
   }
 
   .summary-side-card {
     border-radius: 22px;
-    padding: 18px;
+    padding: 16px;
     background: rgba(15,23,42,0.03);
     border: 1px solid rgba(148,163,184,0.15);
+    min-width: 0;
   }
 
   body.dark .summary-side-card {
@@ -607,6 +622,7 @@
       linear-gradient(135deg, rgba(15,23,42,0.03), rgba(255,255,255,0.72));
     border: 1px solid rgba(148,163,184,0.16);
     box-shadow: 0 16px 34px rgba(15,23,42,0.05);
+    min-width: 0;
   }
 
   body.dark .services-shortcut-side {
@@ -700,6 +716,26 @@
   .services-shortcut-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  #signature-pad {
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    background: #020617;
+    border-radius: 8px;
+    touch-action: none !important;
+    pointer-events: auto !important;
+  }
+
+  @media (min-width: 1200px) {
+    .create-hero {
+      grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.85fr);
+    }
+
+    .invoice-layout-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 400px);
+    }
   }
 
   @media (max-width: 1100px) {
@@ -885,6 +921,7 @@
           <div class="hero-mini-card">
             <div class="hero-mini-label">
               {% if lang == 'es' %}Portal{% elif lang == 'zh' %}门户{% else %}Portal{% endif %}
+            </div>
             <div class="hero-mini-value">
               {% if lang == 'es' %}Listo para cliente{% elif lang == 'zh' %}可供客户查看{% else %}Client-ready{% endif %}
             </div>
@@ -1277,7 +1314,6 @@
                 id="signature-pad"
                 width="600"
                 height="200"
-                style="width:100%;max-width:100%;display:block;background:#020617;border-radius:8px;touch-action:auto;"
               ></canvas>
 
               <div class="signature-toolbar">
