@@ -3839,3 +3839,353 @@ a[href^="mailto:"] {
         display: none !important;
     }
 }
+
+/* =========================================================
+   BILLBEAM SAFE LAUNCH PATCH
+   Targeted fixes only
+   - desktop invoice/home layout breathing room
+   - shorter hero behavior on larger screens
+   - signature pad touch safety
+   - light-mode language toggle visibility
+   - mobile floating button overlap reduction
+   - sticky/overflow safety for sidebar/content
+   ========================================================= */
+
+/* =========================
+   LIGHT MODE LANGUAGE TOGGLE FIX
+   ========================= */
+
+body:not(.dark) .lang-toggle {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(148, 163, 184, 0.46);
+}
+
+body:not(.dark) .lang-toggle a,
+body:not(.dark) .lang-pill {
+    color: #334155;
+    opacity: 0.96;
+}
+
+body:not(.dark) .lang-toggle a:hover,
+body:not(.dark) .lang-pill:hover {
+    color: #0f172a;
+    opacity: 1;
+}
+
+body:not(.dark) .lang-toggle a.active,
+body:not(.dark) .lang-pill.active {
+    color: #ffffff;
+    opacity: 1;
+}
+
+.nav-right .lang-toggle {
+    flex-wrap: nowrap;
+    max-width: 100%;
+}
+
+.nav-right .lang-toggle a,
+.nav-right .lang-pill {
+    min-width: 34px;
+}
+
+/* =========================
+   GENERAL WIDTH / OVERFLOW SAFETY
+   ========================= */
+
+.container,
+.form-wrapper,
+.page-card,
+.legal-card,
+.invoice-preview-card,
+.preview-sidebar,
+.public-hero-left,
+.public-hero-right,
+.public-card,
+.chart-card,
+.checklist-card,
+.insight-card,
+.card {
+    min-width: 0;
+}
+
+.main,
+.main-content,
+.container,
+.form-wrapper,
+.page-card,
+.legal-card {
+    overflow: visible;
+}
+
+.sidebar {
+    -webkit-overflow-scrolling: touch;
+}
+
+body.sidebar-open {
+    overflow: hidden;
+}
+
+/* =========================
+   DESKTOP / TABLET BREATHING ROOM
+   ========================= */
+
+@media (min-width: 992px) {
+    .container {
+        max-width: min(1320px, calc(100vw - 48px));
+    }
+
+    .hero {
+        gap: 24px;
+        padding: 46px 32px;
+        align-items: flex-start;
+        margin-bottom: 30px;
+    }
+
+    .hero-left,
+    .hero-right {
+        min-width: 0;
+    }
+
+    .hero-left {
+        flex: 1 1 0;
+    }
+
+    .hero-right {
+        flex: 0 1 320px;
+        justify-content: flex-start;
+        align-self: stretch;
+    }
+
+    .hero-left h1 {
+        font-size: clamp(34px, 3.6vw, 52px);
+        line-height: 1.06;
+        margin-bottom: 12px;
+    }
+
+    .hero-left p {
+        font-size: 17px;
+        margin-bottom: 18px;
+        max-width: 760px;
+    }
+
+    .mock-card {
+        width: min(300px, 100%);
+    }
+}
+
+/* =========================
+   CREATE-INVOICE / DASHBOARD LAYOUT RESCUE
+   These selectors are intentionally broad but still page-layout scoped.
+   They only apply if those wrappers exist.
+   ========================= */
+
+@media (min-width: 992px) {
+    .dashboard-grid,
+    .dashboard-layout,
+    .home-dashboard-grid,
+    .create-invoice-grid,
+    .create-invoice-layout,
+    .invoice-builder-grid,
+    .invoice-create-grid,
+    .builder-layout,
+    .content-with-rail,
+    .content-with-sidebar,
+    .two-column-layout,
+    .page-grid,
+    .content-grid {
+        align-items: start;
+    }
+
+    .dashboard-grid > *,
+    .dashboard-layout > *,
+    .home-dashboard-grid > *,
+    .create-invoice-grid > *,
+    .create-invoice-layout > *,
+    .invoice-builder-grid > *,
+    .invoice-create-grid > *,
+    .builder-layout > *,
+    .content-with-rail > *,
+    .content-with-sidebar > *,
+    .two-column-layout > *,
+    .page-grid > *,
+    .content-grid > * {
+        min-width: 0;
+    }
+}
+
+@media (min-width: 1200px) {
+    .dashboard-grid,
+    .dashboard-layout,
+    .home-dashboard-grid,
+    .create-invoice-grid,
+    .create-invoice-layout,
+    .invoice-builder-grid,
+    .invoice-create-grid,
+    .builder-layout,
+    .content-with-rail,
+    .content-with-sidebar,
+    .two-column-layout,
+    .page-grid,
+    .content-grid {
+        gap: 24px;
+    }
+}
+
+/* =========================
+   FORM / CARD COMPRESSION SAFETY
+   ========================= */
+
+.form-wrapper .btn,
+.form-wrapper button,
+.form-wrapper input,
+.form-wrapper select,
+.form-wrapper textarea,
+.page-card .btn,
+.page-card button,
+.card .btn,
+.card button {
+    max-width: 100%;
+}
+
+.form-actions {
+    align-items: stretch;
+}
+
+.form-actions .btn,
+.form-actions button {
+    max-width: 100%;
+}
+
+/* =========================
+   SIGNATURE PAD TOUCH SAFETY
+   ========================= */
+
+.signature-pad,
+.signature-wrapper,
+.signature-container,
+.signature-canvas-wrap,
+.signature-field,
+.client-signature {
+    position: relative;
+    overflow: visible;
+    min-width: 0;
+}
+
+.signature-pad canvas,
+.signature-wrapper canvas,
+.signature-container canvas,
+.signature-canvas-wrap canvas,
+.signature-field canvas,
+.client-signature canvas,
+canvas.signature-canvas {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+    pointer-events: auto !important;
+    touch-action: none !important;
+    -ms-touch-action: none !important;
+    -webkit-user-select: none;
+    user-select: none;
+    border-radius: 16px;
+}
+
+/* =========================
+   TABLE / LINE ITEM SAFETY
+   Keeps desktop readable and prevents accidental squeeze behavior
+   ========================= */
+
+.create-form-shell,
+.create-form-shell .table-wrapper,
+.create-form-shell .modern-table,
+.create-form-shell .modern-table tr,
+.create-form-shell .modern-table td {
+    min-width: 0;
+}
+
+@media (min-width: 901px) {
+    .create-form-shell .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .create-form-shell .modern-table {
+        width: 100%;
+        min-width: 720px;
+    }
+}
+
+/* =========================
+   MOBILE CONTENT / FLOATING CONTROL CLEARANCE
+   Prevents chat and plus buttons from covering form controls
+   ========================= */
+
+@media (max-width: 768px) {
+    .container {
+        padding-bottom: 130px;
+    }
+
+    .ai-helper {
+        right: 14px;
+        bottom: 104px;
+    }
+
+    .floating-btn {
+        right: 14px;
+        bottom: 24px;
+    }
+
+    .ai-helper-panel {
+        max-height: min(420px, 58vh);
+    }
+
+    .lang-toggle a,
+    .lang-pill {
+        padding: 4px 9px;
+        font-size: 11px;
+        opacity: 1;
+    }
+}
+
+/* =========================
+   SMALL-SCREEN NAV / USER PILL SAFETY
+   ========================= */
+
+@media (max-width: 768px) {
+    .nav-user-pill,
+    .client-view-pill {
+        max-width: 100%;
+    }
+
+    .nav-user-pill span:first-child {
+        max-width: 100%;
+    }
+}
+
+/* =========================
+   HERO TIGHTENING ON MID-SIZE DESKTOPS
+   ========================= */
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .hero {
+        padding: 40px 28px;
+    }
+
+    .hero-left h1 {
+        font-size: clamp(30px, 3.2vw, 42px);
+    }
+
+    .hero-left p {
+        font-size: 16px;
+    }
+}
+
+/* =========================
+   PUBLIC / PREVIEW GRID SAFETY
+   ========================= */
+
+.public-hero > *,
+.public-grid > *,
+.invoice-preview-shell > *,
+.invoice-section.two-col > *,
+.snapshot > * {
+    min-width: 0;
+}
