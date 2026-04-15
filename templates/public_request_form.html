@@ -21,6 +21,53 @@
 {% endblock %}
 
 {% block content %}
+<style>
+  .request-service-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .request-service-grid,
+  .request-service-grid * {
+    min-width: 0;
+  }
+
+  .request-service-card .card-body,
+  .request-service-side .card-body {
+    min-width: 0;
+  }
+
+  .request-service-form .form-control {
+    width: 100%;
+  }
+
+  .request-service-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .request-service-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .request-service-actions {
+      flex-direction: column;
+    }
+
+    .request-service-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
 <div class="page-shell">
     <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
         <div>
@@ -57,8 +104,8 @@
         </div>
     </div>
 
-    <div style="display:grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr); gap:20px;">
-        <div class="card">
+    <div class="request-service-grid">
+        <div class="card request-service-card">
             <div class="card-body">
                 {% if error %}
                 <div style="margin-bottom:16px; padding:12px 14px; border-radius:14px; background:rgba(239,68,68,0.10); border:1px solid rgba(239,68,68,0.20); color:#b91c1c;">
@@ -66,7 +113,7 @@
                 </div>
                 {% endif %}
 
-                <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}">
+                <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}" class="request-service-form">
                     <div style="display:grid; gap:14px;">
                         <div class="form-group">
                             <label for="client_name"><strong>
@@ -162,7 +209,7 @@
                                       placeholder="{% if lang == 'es' %}Comparte cualquier detalle útil para el negocio{% elif lang == 'zh' %}填写对商家有帮助的补充说明{% else %}Share any useful details for the business{% endif %}">{{ form_data.request_details }}</textarea>
                         </div>
 
-                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+                        <div class="request-service-actions">
                             <button type="submit" class="btn btn-primary">
                                 {% if lang == 'es' %}
                                     Enviar solicitud
@@ -188,7 +235,7 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card request-service-side">
             <div class="card-body" style="display:grid; gap:16px;">
                 <div>
                     <h3 style="margin:0 0 8px 0;">{{ service.name }}</h3>
