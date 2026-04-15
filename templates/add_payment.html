@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Registrar pago · BillBeam{% else %}Record Payment · BillBeam{% endif %}
+    {% if lang == 'es' %}
+        Registrar pago · BillBeam
+    {% elif lang == 'zh' %}
+        记录付款 · BillBeam
+    {% else %}
+        Record Payment · BillBeam
+    {% endif %}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Registra pagos manuales en BillBeam y mantén el saldo de tus facturas actualizado con claridad.
+    {% elif lang == 'zh' %}
+        在 BillBeam 中记录手动付款，并清晰地保持发票余额最新。
     {% else %}
         Record manual payments in BillBeam and keep invoice balances accurate and up to date.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 {% set total_paid_safe = total_paid if total_paid is defined and total_paid is not none else 0 %}
 {% set balance_safe = balance if balance is defined and balance is not none else (amount - total_paid_safe) %}
 {% set percent_paid_safe = percent_paid if percent_paid is defined and percent_paid is not none else ((total_paid_safe / amount * 100) if amount and amount > 0 else 0) %}
@@ -30,7 +41,8 @@
 
     .payment-hero-card,
     .payment-form-card,
-    .payment-side-card {
+    .payment-side-card,
+    .payment-services-strip {
         border-radius: 26px;
         background: rgba(255,255,255,0.78);
         border: 1px solid rgba(15,23,42,0.06);
@@ -42,7 +54,8 @@
 
     body.dark .payment-hero-card,
     body.dark .payment-form-card,
-    body.dark .payment-side-card {
+    body.dark .payment-side-card,
+    body.dark .payment-services-strip {
         background: rgba(2,6,23,0.76);
         border-color: rgba(148,163,184,0.18);
         box-shadow:
@@ -60,6 +73,69 @@
 
     .payment-side-card {
         padding: 28px 24px;
+    }
+
+    .payment-services-strip {
+        padding: 18px 20px;
+        background:
+            radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+            radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+            linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+    }
+
+    body.dark .payment-services-strip {
+        background:
+            radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+            radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+            linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+    }
+
+    .payment-services-strip-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .payment-services-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: rgba(15,23,42,0.05);
+        border: 1px solid rgba(148,163,184,0.18);
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    body.dark .payment-services-kicker {
+        background: rgba(15,23,42,0.54);
+        border-color: rgba(148,163,184,0.16);
+        color: #f8fafc;
+    }
+
+    .payment-services-title {
+        margin: 0 0 6px;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+    }
+
+    .payment-services-copy {
+        font-size: 13px;
+        line-height: 1.7;
+        color: #475569;
+        max-width: 760px;
+    }
+
+    body.dark .payment-services-copy {
+        color: #cbd5e1;
     }
 
     .payment-layout {
@@ -228,7 +304,8 @@
     @media (max-width: 720px) {
         .payment-hero-card,
         .payment-form-card,
-        .payment-side-card {
+        .payment-side-card,
+        .payment-services-strip {
             padding: 22px 18px;
         }
 
@@ -243,15 +320,30 @@
         <div class="table-section-header" style="align-items:flex-start; margin-bottom:18px;">
             <div>
                 <div class="page-eyebrow">
-                    {% if lang == 'es' %}Pagos y conciliación{% else %}Payments & reconciliation{% endif %}
+                    {% if lang == 'es' %}
+                        Pagos y conciliación
+                    {% elif lang == 'zh' %}
+                        付款与对账
+                    {% else %}
+                        Payments & reconciliation
+                    {% endif %}
                 </div>
                 <h1 style="margin:0 0 8px 0;">
-                    {% if lang == 'es' %}Registrar pago{% else %}Record Payment{% endif %}
+                    {% if lang == 'es' %}
+                        Registrar pago
+                    {% elif lang == 'zh' %}
+                        记录付款
+                    {% else %}
+                        Record Payment
+                    {% endif %}
                 </h1>
                 <p style="margin:0; max-width:760px; font-size:15px; line-height:1.6;">
                     {% if lang == 'es' %}
                         Añade un pago manual para mantener esta factura al día. BillBeam actualizará el total pagado,
                         el saldo pendiente y, cuando corresponda, el estado de la factura.
+                    {% elif lang == 'zh' %}
+                        添加一笔手动付款以保持这张发票最新。BillBeam 会更新已付款总额、
+                        剩余余额，并在适当时自动更新发票状态。
                     {% else %}
                         Add a manual payment to keep this invoice current. BillBeam will update the total paid,
                         remaining balance, and invoice status when appropriate.
@@ -261,10 +353,22 @@
 
             <div class="quick-actions">
                 <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Ver factura{% else %}View Invoice{% endif %}
+                    {% if lang == 'es' %}
+                        Ver factura
+                    {% elif lang == 'zh' %}
+                        查看发票
+                    {% else %}
+                        View Invoice
+                    {% endif %}
                 </a>
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
+                    {% if lang == 'es' %}
+                        Volver a facturas
+                    {% elif lang == 'zh' %}
+                        返回发票历史
+                    {% else %}
+                        Back to Invoices
+                    {% endif %}
                 </a>
             </div>
         </div>
@@ -273,6 +377,8 @@
             <div class="status-item sent">
                 {% if lang == 'es' %}
                     Factura <strong>{{ inv_label }}</strong>
+                {% elif lang == 'zh' %}
+                    发票 <strong>{{ inv_label }}</strong>
                 {% else %}
                     Invoice <strong>{{ inv_label }}</strong>
                 {% endif %}
@@ -280,6 +386,8 @@
             <div class="status-item paid">
                 {% if lang == 'es' %}
                     Cliente: <strong>{{ client_name }}</strong>
+                {% elif lang == 'zh' %}
+                    客户: <strong>{{ client_name }}</strong>
                 {% else %}
                     Client: <strong>{{ client_name }}</strong>
                 {% endif %}
@@ -287,6 +395,8 @@
             <div class="status-item draft">
                 {% if lang == 'es' %}
                     Estado: <strong>{{ status }}</strong>
+                {% elif lang == 'zh' %}
+                    状态: <strong>{{ status }}</strong>
                 {% else %}
                     Status: <strong>{{ status }}</strong>
                 {% endif %}
@@ -298,6 +408,8 @@
                 <span>
                     {% if lang == 'es' %}
                         Progreso de pago
+                    {% elif lang == 'zh' %}
+                        付款进度
                     {% else %}
                         Payment progress
                     {% endif %}
@@ -313,6 +425,8 @@
             <div class="payment-callout">
                 {% if lang == 'es' %}
                     Esta factura ya aparece como pagada por completo. Aun así, puedes revisar el historial de pagos más abajo.
+                {% elif lang == 'zh' %}
+                    这张发票已显示为全额支付。您仍然可以在下方查看付款历史。
                 {% else %}
                     This invoice already appears fully paid. You can still review the payment history below.
                 {% endif %}
@@ -321,6 +435,8 @@
             <div class="payment-callout">
                 {% if lang == 'es' %}
                     Ya existe al menos un pago parcial registrado. El siguiente pago puede aplicarse al saldo restante de <strong>${{ "{:,.2f}".format(balance_safe) }}</strong>.
+                {% elif lang == 'zh' %}
+                    此发票已至少记录过一笔部分付款。下一笔付款可用于剩余余额 <strong>${{ "{:,.2f}".format(balance_safe) }}</strong>。
                 {% else %}
                     At least one partial payment has already been recorded. The next payment can be applied toward the remaining balance of <strong>${{ "{:,.2f}".format(balance_safe) }}</strong>.
                 {% endif %}
@@ -329,11 +445,58 @@
             <div class="payment-callout">
                 {% if lang == 'es' %}
                     Este será el primer pago registrado para esta factura.
+                {% elif lang == 'zh' %}
+                    这将是此发票记录的第一笔付款。
                 {% else %}
                     This will be the first recorded payment for this invoice.
                 {% endif %}
             </div>
         {% endif %}
+    </section>
+
+    <section class="payment-services-strip fade-in-up">
+        <div class="payment-services-strip-top">
+            <div>
+                <div class="payment-services-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Cobro profesional
+                    {% elif lang == 'zh' %}
+                        ✨ 专业收款
+                    {% else %}
+                        ✨ Professional collection
+                    {% endif %}
+                </div>
+                <h3 class="payment-services-title">
+                    {% if lang == 'es' %}
+                        Cada pago registrado hace que BillBeam se sienta más completo y más valioso
+                    {% elif lang == 'zh' %}
+                        每一笔记录的付款都会让 BillBeam 显得更完整、更有价值
+                    {% else %}
+                        Every recorded payment makes BillBeam feel more complete and more valuable
+                    {% endif %}
+                </h3>
+                <div class="payment-services-copy">
+                    {% if lang == 'es' %}
+                        Mantener pagos, saldos y estados actualizados mejora tu operación diaria y le da a tu negocio una experiencia mucho más seria y organizada.
+                    {% elif lang == 'zh' %}
+                        持续更新付款、余额和状态，能改善您的日常运营，并让您的业务体验看起来更专业、更有条理。
+                    {% else %}
+                        Keeping payments, balances, and statuses updated improves daily operations and gives your business a much more serious and organized experience.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Abrir servicios
+                    {% elif lang == 'zh' %}
+                        打开服务页面
+                    {% else %}
+                        Open Services
+                    {% endif %}
+                </a>
+            </div>
+        </div>
     </section>
 
     {% if feedback_message %}
@@ -349,11 +512,19 @@
             <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px; padding:0;">
                 <div>
                     <h2 style="margin:0 0 6px 0;">
-                        {% if lang == 'es' %}Nuevo pago{% else %}New Payment{% endif %}
+                        {% if lang == 'es' %}
+                            Nuevo pago
+                        {% elif lang == 'zh' %}
+                            新付款
+                        {% else %}
+                            New Payment
+                        {% endif %}
                     </h2>
                     <p style="margin:0; font-size:14px; opacity:0.82; line-height:1.6;">
                         {% if lang == 'es' %}
                             Usa este formulario para registrar efectivo, transferencia bancaria, tarjeta u otro pago manual.
+                        {% elif lang == 'zh' %}
+                            使用此表单记录现金、银行转账、刷卡或其他任何手动付款。
                         {% else %}
                             Use this form to record cash, bank transfer, card, or any other manual payment.
                         {% endif %}
@@ -366,7 +537,13 @@
 
                     <div class="payment-field">
                         <label for="amount">
-                            {% if lang == 'es' %}Importe del pago *{% else %}Payment Amount *{% endif %}
+                            {% if lang == 'es' %}
+                                Importe del pago *
+                            {% elif lang == 'zh' %}
+                                付款金额 *
+                            {% else %}
+                                Payment Amount *
+                            {% endif %}
                         </label>
                         <input
                             type="number"
@@ -375,7 +552,7 @@
                             {% if balance_safe > 0 %}max="{{ "%.2f"|format(balance_safe) }}"{% endif %}
                             id="amount"
                             name="amount"
-                            placeholder="{% if lang == 'es' %}Ej. 250.00{% else %}e.g. 250.00{% endif %}"
+                            placeholder="{% if lang == 'es' %}Ej. 250.00{% elif lang == 'zh' %}例如：250.00{% else %}e.g. 250.00{% endif %}"
                             required
                         >
                     </div>
@@ -383,19 +560,31 @@
                     <div class="payment-inline-grid">
                         <div class="payment-field">
                             <label for="method">
-                                {% if lang == 'es' %}Método de pago{% else %}Payment Method{% endif %}
+                                {% if lang == 'es' %}
+                                    Método de pago
+                                {% elif lang == 'zh' %}
+                                    付款方式
+                                {% else %}
+                                    Payment Method
+                                {% endif %}
                             </label>
                             <input
                                 type="text"
                                 id="method"
                                 name="method"
-                                placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia bancaria{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
+                                placeholder="{% if lang == 'es' %}Ej. Efectivo, Tarjeta, Transferencia bancaria{% elif lang == 'zh' %}例如：现金、刷卡、银行转账{% else %}e.g. Cash, Card, Bank Transfer{% endif %}"
                             >
                         </div>
 
                         <div class="payment-field">
                             <label for="payment_date">
-                                {% if lang == 'es' %}Fecha del pago{% else %}Payment Date{% endif %}
+                                {% if lang == 'es' %}
+                                    Fecha del pago
+                                {% elif lang == 'zh' %}
+                                    付款日期
+                                {% else %}
+                                    Payment Date
+                                {% endif %}
                             </label>
                             <input
                                 type="date"
@@ -409,19 +598,31 @@
                     <div class="payment-checkbox-row">
                         <input type="checkbox" id="is_deposit" name="is_deposit" value="1">
                         <label for="is_deposit">
-                            {% if lang == 'es' %}Marcar como depósito / pago inicial{% else %}Mark as deposit / initial payment{% endif %}
+                            {% if lang == 'es' %}
+                                Marcar como depósito / pago inicial
+                            {% elif lang == 'zh' %}
+                                标记为订金 / 首付款
+                            {% else %}
+                                Mark as deposit / initial payment
+                            {% endif %}
                         </label>
                     </div>
 
                     <div class="payment-field">
                         <label for="note">
-                            {% if lang == 'es' %}Nota interna{% else %}Internal Note{% endif %}
+                            {% if lang == 'es' %}
+                                Nota interna
+                            {% elif lang == 'zh' %}
+                                内部备注
+                            {% else %}
+                                Internal Note
+                            {% endif %}
                         </label>
                         <textarea
                             id="note"
                             name="note"
                             rows="4"
-                            placeholder="{% if lang == 'es' %}Número de referencia, pago parcial, detalles de conciliación, etc.{% else %}Reference number, partial payment details, reconciliation notes, etc.{% endif %}"
+                            placeholder="{% if lang == 'es' %}Número de referencia, pago parcial, detalles de conciliación, etc.{% elif lang == 'zh' %}参考编号、部分付款说明、对账细节等。{% else %}Reference number, partial payment details, reconciliation notes, etc.{% endif %}"
                         ></textarea>
                     </div>
                 </div>
@@ -429,6 +630,8 @@
                 <div class="payment-help">
                     {% if lang == 'es' %}
                         Consejo: añade una nota breve si este pago fue parcial, si tiene número de referencia o si necesitas contexto para revisarlo después.
+                    {% elif lang == 'zh' %}
+                        提示：如果这是部分付款、带有参考编号，或您以后需要查看上下文，请添加简短备注。
                     {% else %}
                         Tip: add a short note if this was a partial payment, includes a reference number, or needs context for later review.
                     {% endif %}
@@ -436,10 +639,22 @@
 
                 <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
                     <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                        {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                        {% if lang == 'es' %}
+                            Cancelar
+                        {% elif lang == 'zh' %}
+                            取消
+                        {% else %}
+                            Cancel
+                        {% endif %}
                     </a>
                     <button type="submit" class="btn btn-success">
-                        {% if lang == 'es' %}Guardar pago{% else %}Save Payment{% endif %}
+                        {% if lang == 'es' %}
+                            Guardar pago
+                        {% elif lang == 'zh' %}
+                            保存付款
+                        {% else %}
+                            Save Payment
+                        {% endif %}
                     </button>
                 </div>
             </form>
@@ -447,34 +662,64 @@
 
         <aside class="payment-side-card fade-in-up">
             <h2 style="margin:0 0 14px 0;">
-                {% if lang == 'es' %}Resumen de factura{% else %}Invoice Snapshot{% endif %}
+                {% if lang == 'es' %}
+                    Resumen de factura
+                {% elif lang == 'zh' %}
+                    发票摘要
+                {% else %}
+                    Invoice Snapshot
+                {% endif %}
             </h2>
 
             <div class="snapshot" style="grid-template-columns:1fr; gap:10px;">
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Importe total{% else %}Invoice Total{% endif %}
+                        {% if lang == 'es' %}
+                            Importe total
+                        {% elif lang == 'zh' %}
+                            发票总额
+                        {% else %}
+                            Invoice Total
+                        {% endif %}
                     </div>
                     <div class="snap-value">${{ "{:,.2f}".format(amount) }}</div>
                 </div>
 
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Pagado hasta ahora{% else %}Paid So Far{% endif %}
+                        {% if lang == 'es' %}
+                            Pagado hasta ahora
+                        {% elif lang == 'zh' %}
+                            已支付金额
+                        {% else %}
+                            Paid So Far
+                        {% endif %}
                     </div>
                     <div class="snap-value">${{ "{:,.2f}".format(total_paid_safe) }}</div>
                 </div>
 
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Saldo pendiente{% else %}Balance Due{% endif %}
+                        {% if lang == 'es' %}
+                            Saldo pendiente
+                        {% elif lang == 'zh' %}
+                            待支付余额
+                        {% else %}
+                            Balance Due
+                        {% endif %}
                     </div>
                     <div class="snap-value">${{ "{:,.2f}".format(balance_safe) }}</div>
                 </div>
 
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Estado actual{% else %}Current Status{% endif %}
+                        {% if lang == 'es' %}
+                            Estado actual
+                        {% elif lang == 'zh' %}
+                            当前状态
+                        {% else %}
+                            Current Status
+                        {% endif %}
                     </div>
                     <div class="snap-value">{{ status }}</div>
                 </div>
@@ -482,7 +727,13 @@
                 {% if due_date_safe %}
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Fecha de vencimiento{% else %}Due Date{% endif %}
+                        {% if lang == 'es' %}
+                            Fecha de vencimiento
+                        {% elif lang == 'zh' %}
+                            到期日
+                        {% else %}
+                            Due Date
+                        {% endif %}
                     </div>
                     <div class="snap-value">{{ due_date_safe.strftime('%Y-%m-%d') }}</div>
                 </div>
@@ -490,7 +741,13 @@
 
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Progreso{% else %}Progress{% endif %}
+                        {% if lang == 'es' %}
+                            Progreso
+                        {% elif lang == 'zh' %}
+                            进度
+                        {% else %}
+                            Progress
+                        {% endif %}
                     </div>
                     <div class="snap-value">{{ "{:.1f}".format(percent_paid_safe) }}%</div>
                 </div>
@@ -499,6 +756,8 @@
             <div class="payment-snapshot-note">
                 {% if lang == 'es' %}
                     Cuando el total pagado alcance o supere el importe de la factura, BillBeam marcará la factura como pagada automáticamente.
+                {% elif lang == 'zh' %}
+                    当已付款总额达到或超过发票金额时，BillBeam 会自动将该发票标记为已支付。
                 {% else %}
                     When the total paid reaches or exceeds the invoice amount, BillBeam will automatically mark the invoice as paid.
                 {% endif %}
@@ -511,11 +770,19 @@
             <div class="table-section-header">
                 <div>
                     <h2>
-                        {% if lang == 'es' %}Historial de pagos{% else %}Payment History{% endif %}
+                        {% if lang == 'es' %}
+                            Historial de pagos
+                        {% elif lang == 'zh' %}
+                            付款记录
+                        {% else %}
+                            Payment History
+                        {% endif %}
                     </h2>
                     <p>
                         {% if lang == 'es' %}
                             Revisa todos los pagos registrados para esta factura en orden descendente.
+                        {% elif lang == 'zh' %}
+                            按时间倒序查看此发票的所有已记录付款。
                         {% else %}
                             Review every recorded payment for this invoice in reverse chronological order.
                         {% endif %}
@@ -524,6 +791,8 @@
                 <div class="table-meta">
                     {% if lang == 'es' %}
                         {{ payments|length }} pago{{ '' if payments|length == 1 else 's' }}
+                    {% elif lang == 'zh' %}
+                        {{ payments|length }} 笔付款
                     {% else %}
                         {{ payments|length }} payment{{ '' if payments|length == 1 else 's' }}
                     {% endif %}
@@ -534,10 +803,42 @@
                 <table class="modern-table">
                     <thead>
                         <tr>
-                            <th>{% if lang == 'es' %}Importe{% else %}Amount{% endif %}</th>
-                            <th>{% if lang == 'es' %}Método{% else %}Method{% endif %}</th>
-                            <th>{% if lang == 'es' %}Nota{% else %}Note{% endif %}</th>
-                            <th>{% if lang == 'es' %}Registrado{% else %}Recorded{% endif %}</th>
+                            <th>
+                                {% if lang == 'es' %}
+                                    Importe
+                                {% elif lang == 'zh' %}
+                                    金额
+                                {% else %}
+                                    Amount
+                                {% endif %}
+                            </th>
+                            <th>
+                                {% if lang == 'es' %}
+                                    Método
+                                {% elif lang == 'zh' %}
+                                    方式
+                                {% else %}
+                                    Method
+                                {% endif %}
+                            </th>
+                            <th>
+                                {% if lang == 'es' %}
+                                    Nota
+                                {% elif lang == 'zh' %}
+                                    备注
+                                {% else %}
+                                    Note
+                                {% endif %}
+                            </th>
+                            <th>
+                                {% if lang == 'es' %}
+                                    Registrado
+                                {% elif lang == 'zh' %}
+                                    记录时间
+                                {% else %}
+                                    Recorded
+                                {% endif %}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

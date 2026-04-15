@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Editar factura{% else %}Edit Invoice{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+    {% if lang == 'es' %}
+        Editar factura
+    {% elif lang == 'zh' %}
+        编辑发票
+    {% else %}
+        Edit Invoice
+    {% endif %}
+    • {{ business_profile.business_name or "BillBeam" }}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Edita una factura existente en BillBeam y actualiza el cliente, los conceptos y los importes antes de reenviarla o descargarla.
+    {% elif lang == 'zh' %}
+        在 BillBeam 中编辑现有发票，并在重新发送或下载之前更新客户、项目和金额。
     {% else %}
         Edit an existing invoice in BillBeam and update the client, line items, and amounts before resending or downloading it.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .edit-shell {
@@ -58,6 +70,7 @@
     color: #94a3b8;
   }
 
+  .edit-services-strip,
   .edit-main-card {
     border-radius: 26px;
     background: rgba(255,255,255,0.82);
@@ -66,15 +79,82 @@
       0 22px 52px rgba(15,23,42,0.055),
       0 0 0 1px rgba(15,23,42,0.015);
     backdrop-filter: blur(12px);
-    padding: 24px;
   }
 
+  body.dark .edit-services-strip,
   body.dark .edit-main-card {
     background: rgba(15,23,42,0.78);
     border-color: rgba(148,163,184,0.16);
     box-shadow:
       0 24px 56px rgba(2,6,23,0.82),
       0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .edit-services-strip {
+    padding: 18px 20px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+  }
+
+  body.dark .edit-services-strip {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+  }
+
+  .edit-services-strip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .edit-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  body.dark .edit-services-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .edit-services-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .edit-services-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .edit-services-copy {
+    color: #cbd5e1;
+  }
+
+  .edit-main-card {
+    padding: 24px;
   }
 
   .edit-status-banner {
@@ -304,6 +384,8 @@
             <h1>
                 {% if lang == 'es' %}
                     Editar factura #{{ invoice_id }}
+                {% elif lang == 'zh' %}
+                    编辑发票 #{{ invoice_id }}
                 {% else %}
                     Edit Invoice #{{ invoice_id }}
                 {% endif %}
@@ -311,6 +393,8 @@
             <div class="edit-subcopy">
                 {% if lang == 'es' %}
                     Actualiza el nombre del cliente y los conceptos antes de guardar los cambios.
+                {% elif lang == 'zh' %}
+                    在保存更改之前，更新客户名称和发票项目。
                 {% else %}
                     Update the client name and line items before saving your changes.
                 {% endif %}
@@ -319,11 +403,68 @@
 
         <div class="quick-actions">
             <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Ver factura{% else %}View Invoice{% endif %}
+                {% if lang == 'es' %}
+                    Ver factura
+                {% elif lang == 'zh' %}
+                    查看发票
+                {% else %}
+                    View Invoice
+                {% endif %}
             </a>
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+                {% if lang == 'es' %}
+                    Volver al historial
+                {% elif lang == 'zh' %}
+                    返回发票历史
+                {% else %}
+                    Back to Invoices
+                {% endif %}
             </a>
+        </div>
+    </div>
+
+    <div class="edit-services-strip fade-in-up">
+        <div class="edit-services-strip-top">
+            <div>
+                <div class="edit-services-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Servicios
+                    {% elif lang == 'zh' %}
+                        ✨ 服务
+                    {% else %}
+                        ✨ Services
+                    {% endif %}
+                </div>
+                <h3 class="edit-services-title">
+                    {% if lang == 'es' %}
+                        Mantén tus servicios alineados mientras editas
+                    {% elif lang == 'zh' %}
+                        在编辑时保持您的服务内容一致
+                    {% else %}
+                        Keep your services aligned while editing
+                    {% endif %}
+                </h3>
+                <div class="edit-services-copy">
+                    {% if lang == 'es' %}
+                        Si estás actualizando precios o descripciones, revisa también tu página de Servicios para mantener una experiencia consistente entre tus facturas y tu portal del cliente.
+                    {% elif lang == 'zh' %}
+                        如果您正在更新价格或描述，也请查看您的服务页面，以便在发票和客户门户之间保持一致的体验。
+                    {% else %}
+                        If you are updating pricing or descriptions, check your Services page as well so your invoices and client portal stay consistent.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Abrir servicios
+                    {% elif lang == 'zh' %}
+                        打开服务页面
+                    {% else %}
+                        Open Services
+                    {% endif %}
+                </a>
+            </div>
         </div>
     </div>
 
@@ -331,11 +472,19 @@
         <div class="edit-status-banner">
             <div>
                 <div class="edit-status-kicker">
-                    {% if lang == 'es' %}Edición en curso{% else %}Editing in progress{% endif %}
+                    {% if lang == 'es' %}
+                        Edición en curso
+                    {% elif lang == 'zh' %}
+                        正在编辑
+                    {% else %}
+                        Editing in progress
+                    {% endif %}
                 </div>
                 <div class="edit-status-copy">
                     {% if lang == 'es' %}
                         Factura <strong>#{{ invoice_id }}</strong>. Revisa cuidadosamente los importes antes de guardar.
+                    {% elif lang == 'zh' %}
+                        发票 <strong>#{{ invoice_id }}</strong>。保存之前请仔细检查所有金额。
                     {% else %}
                         Invoice <strong>#{{ invoice_id }}</strong>. Review all amounts carefully before saving.
                     {% endif %}
@@ -345,6 +494,8 @@
             <div class="edit-status-side">
                 {% if lang == 'es' %}
                     Los cambios reemplazarán los conceptos actuales.
+                {% elif lang == 'zh' %}
+                    保存后将替换当前的发票项目。
                 {% else %}
                     Saving will replace the current line items.
                 {% endif %}
@@ -354,11 +505,23 @@
         <form method="POST" action="/update/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" id="editInvoiceForm">
             <section class="edit-section">
                 <h2>
-                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                    {% if lang == 'es' %}
+                        Cliente
+                    {% elif lang == 'zh' %}
+                        客户
+                    {% else %}
+                        Client
+                    {% endif %}
                 </h2>
 
                 <label for="client" class="edit-label">
-                    {% if lang == 'es' %}Nombre del cliente{% else %}Client Name{% endif %}
+                    {% if lang == 'es' %}
+                        Nombre del cliente
+                    {% elif lang == 'zh' %}
+                        客户名称
+                    {% else %}
+                        Client Name
+                    {% endif %}
                 </label>
                 <input
                     id="client"
@@ -366,7 +529,7 @@
                     name="client"
                     value="{{ client }}"
                     required
-                    placeholder="{% if lang == 'es' %}Ej. Acme Studio{% else %}e.g. Acme Studio{% endif %}"
+                    placeholder="{% if lang == 'es' %}Ej. Acme Studio{% elif lang == 'zh' %}例如：Acme Studio{% else %}e.g. Acme Studio{% endif %}"
                 >
             </section>
 
@@ -374,11 +537,19 @@
                 <div class="edit-toolbar">
                     <div>
                         <h2>
-                            {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
+                            {% if lang == 'es' %}
+                                Conceptos
+                            {% elif lang == 'zh' %}
+                                项目
+                            {% else %}
+                                Line Items
+                            {% endif %}
                         </h2>
                         <p class="edit-section-sub">
                             {% if lang == 'es' %}
                                 Ajusta descripciones e importes. Puedes añadir o quitar filas según sea necesario.
+                            {% elif lang == 'zh' %}
+                                调整描述和金额。您可以根据需要添加或删除行。
                             {% else %}
                                 Update descriptions and amounts. You can add or remove rows as needed.
                             {% endif %}
@@ -386,7 +557,13 @@
                     </div>
 
                     <button type="button" id="addLineItemBtn" class="btn btn-secondary">
-                        {% if lang == 'es' %}+ Añadir concepto{% else %}+ Add line item{% endif %}
+                        {% if lang == 'es' %}
+                            + Añadir concepto
+                        {% elif lang == 'zh' %}
+                            + 添加项目
+                        {% else %}
+                            + Add line item
+                        {% endif %}
                     </button>
                 </div>
 
@@ -396,13 +573,31 @@
                             <thead>
                                 <tr>
                                     <th>
-                                        {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                                        {% if lang == 'es' %}
+                                            Descripción
+                                        {% elif lang == 'zh' %}
+                                            描述
+                                        {% else %}
+                                            Description
+                                        {% endif %}
                                     </th>
                                     <th style="width:190px;">
-                                        {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                                        {% if lang == 'es' %}
+                                            Importe
+                                        {% elif lang == 'zh' %}
+                                            金额
+                                        {% else %}
+                                            Amount
+                                        {% endif %}
                                     </th>
                                     <th style="width:72px; text-align:center;">
-                                        {% if lang == 'es' %}Quitar{% else %}Remove{% endif %}
+                                        {% if lang == 'es' %}
+                                            Quitar
+                                        {% elif lang == 'zh' %}
+                                            移除
+                                        {% else %}
+                                            Remove
+                                        {% endif %}
                                     </th>
                                 </tr>
                             </thead>
@@ -415,7 +610,7 @@
                                                 type="text"
                                                 name="description"
                                                 value="{{ item[0] }}"
-                                                placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                                                placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% elif lang == 'zh' %}服务或产品描述{% else %}Service or product description{% endif %}"
                                                 required
                                             >
                                         </td>
@@ -431,7 +626,7 @@
                                             >
                                         </td>
                                         <td style="text-align:center;">
-                                            <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                                            <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% elif lang == 'zh' %}移除项目{% else %}Remove line item{% endif %}">
                                                 ✕
                                             </button>
                                         </td>
@@ -443,7 +638,7 @@
                                             <input
                                                 type="text"
                                                 name="description"
-                                                placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                                                placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% elif lang == 'zh' %}服务或产品描述{% else %}Service or product description{% endif %}"
                                                 required
                                             >
                                         </td>
@@ -458,7 +653,7 @@
                                             >
                                         </td>
                                         <td style="text-align:center;">
-                                            <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                                            <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% elif lang == 'zh' %}移除项目{% else %}Remove line item{% endif %}">
                                                 ✕
                                             </button>
                                         </td>
@@ -473,6 +668,8 @@
                     <div class="edit-tip">
                         {% if lang == 'es' %}
                             Consejo: deja al menos un concepto válido con importe mayor que cero.
+                        {% elif lang == 'zh' %}
+                            提示：请至少保留一个有效项目，并确保金额大于零。
                         {% else %}
                             Tip: keep at least one valid line item with an amount greater than zero.
                         {% endif %}
@@ -480,7 +677,13 @@
 
                     <div class="edit-total-box">
                         <span class="edit-total-label">
-                            {% if lang == 'es' %}Total actualizado{% else %}Updated Total{% endif %}
+                            {% if lang == 'es' %}
+                                Total actualizado
+                            {% elif lang == 'zh' %}
+                                更新后的总额
+                            {% else %}
+                                Updated Total
+                            {% endif %}
                         </span>
                         <span id="invoiceTotalPreview">$0.00</span>
                     </div>
@@ -489,10 +692,22 @@
 
             <div class="edit-actions">
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                    {% if lang == 'es' %}
+                        Cancelar
+                    {% elif lang == 'zh' %}
+                        取消
+                    {% else %}
+                        Cancel
+                    {% endif %}
                 </a>
                 <button type="submit" class="btn btn-brand">
-                    {% if lang == 'es' %}Guardar cambios{% else %}Save Changes{% endif %}
+                    {% if lang == 'es' %}
+                        Guardar cambios
+                    {% elif lang == 'zh' %}
+                        保存更改
+                    {% else %}
+                        Save Changes
+                    {% endif %}
                 </button>
             </div>
         </form>
@@ -513,7 +728,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <input
                     type="text"
                     name="description"
-                    placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% else %}Service or product description{% endif %}"
+                    placeholder="{% if lang == 'es' %}Descripción del servicio o producto{% elif lang == 'zh' %}服务或产品描述{% else %}Service or product description{% endif %}"
                     required
                 >
             </td>
@@ -528,7 +743,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 >
             </td>
             <td style="text-align:center;">
-                <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% else %}Remove line item{% endif %}">
+                <button type="button" class="btn-remove-row" aria-label="{% if lang == 'es' %}Quitar concepto{% elif lang == 'zh' %}移除项目{% else %}Remove line item{% endif %}">
                     ✕
                 </button>
             </td>

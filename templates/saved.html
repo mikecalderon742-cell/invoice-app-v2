@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Factura guardada{% else %}Invoice Saved{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+    {% if lang == 'es' %}
+        Factura guardada
+    {% elif lang == 'zh' %}
+        发票已保存
+    {% else %}
+        Invoice Saved
+    {% endif %}
+    • {{ business_profile.business_name or "BillBeam" }}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Confirmación de factura guardada correctamente en BillBeam.
+    {% elif lang == 'zh' %}
+        您的发票已在 BillBeam 中成功保存。
     {% else %}
         Confirmation that your invoice was successfully saved in BillBeam.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .saved-shell {
@@ -58,6 +70,7 @@
     color: #94a3b8;
   }
 
+  .saved-services-strip,
   .saved-main-card {
     border-radius: 26px;
     background: rgba(255,255,255,0.82);
@@ -66,15 +79,82 @@
       0 22px 52px rgba(15,23,42,0.055),
       0 0 0 1px rgba(15,23,42,0.015);
     backdrop-filter: blur(12px);
-    padding: 24px;
   }
 
+  body.dark .saved-services-strip,
   body.dark .saved-main-card {
     background: rgba(15,23,42,0.78);
     border-color: rgba(148,163,184,0.16);
     box-shadow:
       0 24px 56px rgba(2,6,23,0.82),
       0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .saved-services-strip {
+    padding: 18px 20px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+  }
+
+  body.dark .saved-services-strip {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+  }
+
+  .saved-services-strip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .saved-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  body.dark .saved-services-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .saved-services-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .saved-services-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .saved-services-copy {
+    color: #cbd5e1;
+  }
+
+  .saved-main-card {
+    padding: 24px;
   }
 
   .saved-success-banner {
@@ -210,6 +290,8 @@
             <h1>
                 {% if lang == 'es' %}
                     Factura guardada con éxito
+                {% elif lang == 'zh' %}
+                    发票已成功保存
                 {% else %}
                     Invoice Saved Successfully
                 {% endif %}
@@ -217,6 +299,8 @@
             <div class="saved-subcopy">
                 {% if lang == 'es' %}
                     Tu factura ya forma parte de tu historial y está lista para revisarse, descargarse o enviarse.
+                {% elif lang == 'zh' %}
+                    您的发票现已进入历史记录，并可随时查看、下载或发送。
                 {% else %}
                     Your invoice is now part of your history and ready to review, download, or send.
                 {% endif %}
@@ -225,23 +309,88 @@
 
         <div class="quick-actions">
             <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                {% if lang == 'es' %}
+                    Nueva factura
+                {% elif lang == 'zh' %}
+                    新建发票
+                {% else %}
+                    New Invoice
+                {% endif %}
             </a>
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Ir al historial{% else %}Go to Invoices{% endif %}
+                {% if lang == 'es' %}
+                    Ir al historial
+                {% elif lang == 'zh' %}
+                    前往发票历史
+                {% else %}
+                    Go to Invoices
+                {% endif %}
             </a>
+        </div>
+    </div>
+
+    <div class="saved-services-strip fade-in-up">
+        <div class="saved-services-strip-top">
+            <div>
+                <div class="saved-services-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Servicios
+                    {% elif lang == 'zh' %}
+                        ✨ 服务
+                    {% else %}
+                        ✨ Services
+                    {% endif %}
+                </div>
+                <h3 class="saved-services-title">
+                    {% if lang == 'es' %}
+                        Tu factura ya está guardada dentro de un flujo más premium
+                    {% elif lang == 'zh' %}
+                        您的发票现已保存到更高级完整的工作流程中
+                    {% else %}
+                        Your invoice is now saved inside a more premium workflow
+                    {% endif %}
+                </h3>
+                <div class="saved-services-copy">
+                    {% if lang == 'es' %}
+                        Ahora puedes seguir mejorando la experiencia de tu negocio con servicios organizados, mejor branding y una presentación más sólida para tus clientes.
+                    {% elif lang == 'zh' %}
+                        现在，您可以通过更有条理的服务管理、更好的品牌展示以及更专业的客户呈现方式，继续提升业务体验。
+                    {% else %}
+                        You can now keep improving your business experience with organized services, stronger branding, and a more polished presentation for your clients.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Abrir servicios
+                    {% elif lang == 'zh' %}
+                        打开服务页面
+                    {% else %}
+                        Open Services
+                    {% endif %}
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="saved-main-card fade-in-up">
         <div class="saved-success-banner">
             <div class="saved-pill">
-                {% if lang == 'es' %}Guardado correctamente{% else %}Saved successfully{% endif %}
+                {% if lang == 'es' %}
+                    Guardado correctamente
+                {% elif lang == 'zh' %}
+                    已成功保存
+                {% else %}
+                    Saved successfully
+                {% endif %}
             </div>
 
             <h2>
                 {% if lang == 'es' %}
                     Tu factura ya está lista en BillBeam
+                {% elif lang == 'zh' %}
+                    您的发票现已在 BillBeam 中准备就绪
                 {% else %}
                     Your invoice is now live in BillBeam
                 {% endif %}
@@ -250,6 +399,8 @@
             <p>
                 {% if lang == 'es' %}
                     Ya puedes volver al historial para verla, descargar el PDF, registrar pagos o enviarla al cliente cuando quieras.
+                {% elif lang == 'zh' %}
+                    您现在可以返回发票历史查看它、下载 PDF、记录付款，或在准备好时发送给客户。
                 {% else %}
                     You can now return to your invoice history to view it, download the PDF, record payments, or send it to your client whenever you’re ready.
                 {% endif %}
@@ -259,7 +410,13 @@
         <div class="saved-stat-grid">
             <div class="saved-stat-card">
                 <div class="saved-stat-label">
-                    {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+                    {% if lang == 'es' %}
+                        Factura
+                    {% elif lang == 'zh' %}
+                        发票
+                    {% else %}
+                        Invoice
+                    {% endif %}
                 </div>
                 <div class="saved-stat-value">
                     {{ inv_label or ('#' ~ invoice_id) }}
@@ -268,7 +425,13 @@
 
             <div class="saved-stat-card">
                 <div class="saved-stat-label">
-                    {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+                    {% if lang == 'es' %}
+                        Cliente
+                    {% elif lang == 'zh' %}
+                        客户
+                    {% else %}
+                        Client
+                    {% endif %}
                 </div>
                 <div class="saved-stat-value">
                     {{ client_name or client or "—" }}
@@ -277,7 +440,13 @@
 
             <div class="saved-stat-card">
                 <div class="saved-stat-label">
-                    {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                    {% if lang == 'es' %}
+                        Importe
+                    {% elif lang == 'zh' %}
+                        金额
+                    {% else %}
+                        Amount
+                    {% endif %}
                 </div>
                 <div class="saved-stat-value">
                     ${{ "{:,.2f}".format(amount|float) if amount is not none else "0.00" }}
@@ -289,6 +458,8 @@
             <div class="saved-next-title">
                 {% if lang == 'es' %}
                     Siguientes pasos recomendados
+                {% elif lang == 'zh' %}
+                    建议的下一步
                 {% else %}
                     Recommended next steps
                 {% endif %}
@@ -298,6 +469,8 @@
                 <li>
                     {% if lang == 'es' %}
                         Revisa la factura en tu historial antes de enviarla.
+                    {% elif lang == 'zh' %}
+                        在发送之前，先在历史记录中检查这张发票。
                     {% else %}
                         Review the invoice in your history before sending it.
                     {% endif %}
@@ -305,6 +478,8 @@
                 <li>
                     {% if lang == 'es' %}
                         Descarga el PDF si quieres archivarlo o compartirlo manualmente.
+                    {% elif lang == 'zh' %}
+                        如果您想存档或手动分享，请先下载 PDF。
                     {% else %}
                         Download the PDF if you want to archive or share it manually.
                     {% endif %}
@@ -312,6 +487,8 @@
                 <li>
                     {% if lang == 'es' %}
                         Si usas Pro, envíala por correo directamente desde BillBeam.
+                    {% elif lang == 'zh' %}
+                        如果您使用的是 Pro，可以直接从 BillBeam 通过邮件发送。
                     {% else %}
                         If you’re on Pro, send it by email directly from BillBeam.
                     {% endif %}
@@ -321,13 +498,31 @@
 
         <div class="saved-actions">
             <a href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Abrir factura{% else %}Open Invoice{% endif %}
+                {% if lang == 'es' %}
+                    Abrir factura
+                {% elif lang == 'zh' %}
+                    打开发票
+                {% else %}
+                    Open Invoice
+                {% endif %}
             </a>
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Ver historial{% else %}View Invoice History{% endif %}
+                {% if lang == 'es' %}
+                    Ver historial
+                {% elif lang == 'zh' %}
+                    查看历史
+                {% else %}
+                    View Invoice History
+                {% endif %}
             </a>
             <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Crear otra{% else %}Create Another{% endif %}
+                {% if lang == 'es' %}
+                    Crear otra
+                {% elif lang == 'zh' %}
+                    再创建一张
+                {% else %}
+                    Create Another
+                {% endif %}
             </a>
         </div>
     </div>

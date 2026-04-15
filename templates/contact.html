@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Contacto{% else %}Contact{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+    {% if lang == 'es' %}
+        Contacto
+    {% elif lang == 'zh' %}
+        联系我们
+    {% else %}
+        Contact
+    {% endif %} • {{ business_profile.business_name or "BillBeam" }}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Ponte en contacto con BillBeam para soporte general, preguntas comerciales, comentarios del producto o asuntos legales.
+    {% elif lang == 'zh' %}
+        联系 BillBeam 以获取一般支持、商业咨询、产品反馈或法律相关帮助。
     {% else %}
         Contact BillBeam for general support, business inquiries, product feedback, or legal matters.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
 .contact-shell {
@@ -289,17 +300,13 @@ body.dark .contact-side-note {
 <div class="contact-shell">
 
     <section class="contact-hero fade-in-up">
-        <div class="contact-eyebrow">
-            {% if lang == 'es' %}
-                BillBeam
-            {% else %}
-                BillBeam
-            {% endif %}
-        </div>
+        <div class="contact-eyebrow">BillBeam</div>
 
         <h1>
             {% if lang == 'es' %}
                 Contacto
+            {% elif lang == 'zh' %}
+                联系我们
             {% else %}
                 Contact
             {% endif %}
@@ -308,6 +315,8 @@ body.dark .contact-side-note {
         <p class="contact-lead">
             {% if lang == 'es' %}
                 Si necesitas ayuda, quieres compartir comentarios o tienes una consulta relacionada con tu cuenta, BillBeam o temas legales, este es el mejor punto de partida.
+            {% elif lang == 'zh' %}
+                如果你需要帮助、想分享反馈，或有与账户、BillBeam 本身或法律事项相关的问题，这里是最好的起点。
             {% else %}
                 If you need help, want to share feedback, or have a question related to your account, BillBeam, or legal matters, this is the best place to start.
             {% endif %}
@@ -315,13 +324,31 @@ body.dark .contact-side-note {
 
         <div class="contact-trust-row">
             <div class="contact-trust-pill">
-                {% if lang == 'es' %}Soporte claro{% else %}Clear support{% endif %}
+                {% if lang == 'es' %}
+                    Soporte claro
+                {% elif lang == 'zh' %}
+                    清晰支持
+                {% else %}
+                    Clear support
+                {% endif %}
             </div>
             <div class="contact-trust-pill">
-                {% if lang == 'es' %}Respuesta humana{% else %}Human response{% endif %}
+                {% if lang == 'es' %}
+                    Respuesta humana
+                {% elif lang == 'zh' %}
+                    人工回复
+                {% else %}
+                    Human response
+                {% endif %}
             </div>
             <div class="contact-trust-pill">
-                {% if lang == 'es' %}Canal oficial{% else %}Official channel{% endif %}
+                {% if lang == 'es' %}
+                    Canal oficial
+                {% elif lang == 'zh' %}
+                    官方渠道
+                {% else %}
+                    Official channel
+                {% endif %}
             </div>
         </div>
     </section>
@@ -332,6 +359,8 @@ body.dark .contact-side-note {
             <h2 class="contact-section-title">
                 {% if lang == 'es' %}
                     ¿Cómo podemos ayudarte?
+                {% elif lang == 'zh' %}
+                    我们可以如何帮助你？
                 {% else %}
                     How can we help?
                 {% endif %}
@@ -340,6 +369,8 @@ body.dark .contact-side-note {
             <p class="contact-copy">
                 {% if lang == 'es' %}
                     Para recibir ayuda más rápido, incluye una breve descripción de tu consulta, la dirección de correo asociada a tu cuenta y, si corresponde, capturas de pantalla, el número de factura o el mensaje de error que viste.
+                {% elif lang == 'zh' %}
+                    为了更快获得帮助，请附上你的问题简要说明、与你账户关联的邮箱地址，以及在适用时提供截图、发票编号或你看到的错误信息。
                 {% else %}
                     To get help faster, include a short description of your request, the email address tied to your account, and, when relevant, screenshots, the invoice number, or the error message you saw.
                 {% endif %}
@@ -351,6 +382,8 @@ body.dark .contact-side-note {
                     <h3>
                         {% if lang == 'es' %}
                             Soporte general
+                        {% elif lang == 'zh' %}
+                            一般支持
                         {% else %}
                             General support
                         {% endif %}
@@ -358,6 +391,8 @@ body.dark .contact-side-note {
                     <p>
                         {% if lang == 'es' %}
                             Para preguntas sobre cuentas, facturas, pagos, enlaces públicos, errores del producto y ayuda de uso.
+                        {% elif lang == 'zh' %}
+                            适用于账户、发票、付款、公开链接、产品错误以及使用帮助等问题。
                         {% else %}
                             For questions about accounts, invoices, payments, public links, product errors, and usage help.
                         {% endif %}
@@ -368,6 +403,8 @@ body.dark .contact-side-note {
                     <h3>
                         {% if lang == 'es' %}
                             Comentarios del producto
+                        {% elif lang == 'zh' %}
+                            产品反馈
                         {% else %}
                             Product feedback
                         {% endif %}
@@ -375,6 +412,8 @@ body.dark .contact-side-note {
                     <p>
                         {% if lang == 'es' %}
                             Para ideas, solicitudes de funciones, mejoras del flujo de trabajo y comentarios sobre la experiencia general.
+                        {% elif lang == 'zh' %}
+                            适用于新想法、功能请求、工作流程优化以及整体使用体验反馈。
                         {% else %}
                             For ideas, feature requests, workflow improvements, and feedback on the overall experience.
                         {% endif %}
@@ -385,6 +424,8 @@ body.dark .contact-side-note {
                     <h3>
                         {% if lang == 'es' %}
                             Asuntos legales o de privacidad
+                        {% elif lang == 'zh' %}
+                            法律或隐私事务
                         {% else %}
                             Legal or privacy matters
                         {% endif %}
@@ -392,6 +433,8 @@ body.dark .contact-side-note {
                     <p>
                         {% if lang == 'es' %}
                             Para solicitudes relacionadas con privacidad, términos, uso aceptable, eliminación de cuenta o consultas formales.
+                        {% elif lang == 'zh' %}
+                            适用于隐私、条款、可接受使用、账户删除或正式咨询相关请求。
                         {% else %}
                             For requests related to privacy, terms, acceptable use, account deletion, or formal inquiries.
                         {% endif %}
@@ -403,6 +446,8 @@ body.dark .contact-side-note {
             <div class="contact-tip">
                 {% if lang == 'es' %}
                     Consejo: si tu consulta está relacionada con una factura específica, incluir el número de factura y una breve explicación del problema suele acelerar la respuesta.
+                {% elif lang == 'zh' %}
+                    提示：如果你的问题与某张具体发票有关，附上发票编号和简短的问题说明，通常会让回复更快。
                 {% else %}
                     Tip: if your request relates to a specific invoice, including the invoice number and a short explanation of the issue usually speeds things up.
                 {% endif %}
@@ -413,6 +458,8 @@ body.dark .contact-side-note {
             <h2 class="contact-side-title">
                 {% if lang == 'es' %}
                     Detalles de contacto
+                {% elif lang == 'zh' %}
+                    联系方式
                 {% else %}
                     Contact details
                 {% endif %}
@@ -422,7 +469,13 @@ body.dark .contact-side-note {
 
                 <div class="contact-email">
                     <div class="contact-meta-label">
-                        {% if lang == 'es' %}Correo de contacto{% else %}Contact email{% endif %}
+                        {% if lang == 'es' %}
+                            Correo de contacto
+                        {% elif lang == 'zh' %}
+                            联系邮箱
+                        {% else %}
+                            Contact email
+                        {% endif %}
                     </div>
                     <div class="contact-meta-value">
                         <a href="mailto:support@billbeam.app">
@@ -433,11 +486,19 @@ body.dark .contact-side-note {
 
                 <div>
                     <div class="contact-meta-label">
-                        {% if lang == 'es' %}Tiempo de respuesta{% else %}Response time{% endif %}
+                        {% if lang == 'es' %}
+                            Tiempo de respuesta
+                        {% elif lang == 'zh' %}
+                            回复时间
+                        {% else %}
+                            Response time
+                        {% endif %}
                     </div>
                     <div class="contact-meta-value">
                         {% if lang == 'es' %}
                             Normalmente respondemos dentro de 24 horas hábiles.
+                        {% elif lang == 'zh' %}
+                            我们通常会在 24 个工作小时内回复。
                         {% else %}
                             We typically respond within 24 business hours.
                         {% endif %}
@@ -446,13 +507,43 @@ body.dark .contact-side-note {
 
                 <div>
                     <div class="contact-meta-label">
-                        {% if lang == 'es' %}Páginas relacionadas{% else %}Related pages{% endif %}
+                        {% if lang == 'es' %}
+                            Páginas relacionadas
+                        {% elif lang == 'zh' %}
+                            相关页面
+                        {% else %}
+                            Related pages
+                        {% endif %}
                     </div>
                     <div class="contact-links">
-                        <a href="/support?lang={{ lang }}">{% if lang == 'es' %}Soporte{% else %}Support{% endif %}</a>
+                        <a href="/support?lang={{ lang }}">
+                            {% if lang == 'es' %}
+                                Soporte
+                            {% elif lang == 'zh' %}
+                                支持
+                            {% else %}
+                                Support
+                            {% endif %}
+                        </a>
                         <a href="/faq?lang={{ lang }}">FAQ</a>
-                        <a href="/privacy?lang={{ lang }}">{% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}</a>
-                        <a href="/terms?lang={{ lang }}">{% if lang == 'es' %}Términos{% else %}Terms{% endif %}</a>
+                        <a href="/privacy?lang={{ lang }}">
+                            {% if lang == 'es' %}
+                                Privacidad
+                            {% elif lang == 'zh' %}
+                                隐私政策
+                            {% else %}
+                                Privacy
+                            {% endif %}
+                        </a>
+                        <a href="/terms?lang={{ lang }}">
+                            {% if lang == 'es' %}
+                                Términos
+                            {% elif lang == 'zh' %}
+                                条款
+                            {% else %}
+                                Terms
+                            {% endif %}
+                        </a>
                     </div>
                 </div>
 
@@ -461,6 +552,8 @@ body.dark .contact-side-note {
             <div class="contact-side-note">
                 {% if lang == 'es' %}
                     Usa este canal para preguntas relacionadas con BillBeam. Para temas delicados o formales, incluir el contexto adecuado desde el primer mensaje suele ayudar mucho.
+                {% elif lang == 'zh' %}
+                    请使用此渠道处理与 BillBeam 相关的问题。对于敏感或正式事务，在第一条消息中提供完整背景通常会有很大帮助。
                 {% else %}
                     Use this channel for BillBeam-related questions. For sensitive or formal matters, including the right context in your first message usually helps a lot.
                 {% endif %}

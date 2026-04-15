@@ -3,6 +3,8 @@
 {% block title %}
   {% if lang == 'es' %}
     Precios · {{ business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    定价 · {{ business_profile.business_name or "BillBeam" }}
   {% else %}
     Pricing · {{ business_profile.business_name or "BillBeam" }}
   {% endif %}
@@ -11,13 +13,18 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Explora los planes de BillBeam y elige la mejor opción para tu flujo de facturación.
+  {% elif lang == 'zh' %}
+    浏览 BillBeam 方案并选择最适合您开票流程的计划。
   {% else %}
     Explore BillBeam plans and choose the best option for your invoicing workflow.
   {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .pricing-page {
@@ -165,7 +172,7 @@
 
   .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 22px;
     align-items: stretch;
   }
@@ -191,8 +198,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.02));
+    background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.02));
     opacity: 0.9;
   }
 
@@ -214,8 +220,7 @@
   }
 
   .pricing-free {
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.97), rgba(241,245,249,0.95));
+    background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(241,245,249,0.95));
   }
 
   .pricing-free::after {
@@ -224,8 +229,7 @@
 
   .pricing-simple {
     transform: translateY(-6px);
-    background:
-      linear-gradient(180deg, rgba(240,253,250,0.98), rgba(204,251,241,0.94));
+    background: linear-gradient(180deg, rgba(240,253,250,0.98), rgba(204,251,241,0.94));
     border-color: rgba(13,148,136,0.22);
     box-shadow:
       0 30px 72px rgba(13,148,136,0.14),
@@ -238,8 +242,7 @@
 
   .pricing-pro {
     transform: translateY(-6px);
-    background:
-      linear-gradient(180deg, rgba(239,246,255,0.98), rgba(219,234,254,0.94));
+    background: linear-gradient(180deg, rgba(239,246,255,0.98), rgba(219,234,254,0.94));
     border-color: rgba(59,130,246,0.22);
     box-shadow:
       0 30px 72px rgba(37,99,235,0.16),
@@ -251,8 +254,7 @@
   }
 
   .pricing-enterprise {
-    background:
-      linear-gradient(180deg, rgba(248,250,252,0.98), rgba(226,232,240,0.94));
+    background: linear-gradient(180deg, rgba(248,250,252,0.98), rgba(226,232,240,0.94));
   }
 
   .pricing-enterprise::after {
@@ -260,8 +262,7 @@
   }
 
   body.dark .pricing-free {
-    background:
-      linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.94));
+    background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.94));
     border-color: rgba(148,163,184,0.16);
     box-shadow:
       0 24px 60px rgba(2,6,23,0.86),
@@ -269,8 +270,7 @@
   }
 
   body.dark .pricing-simple {
-    background:
-      linear-gradient(180deg, rgba(8,30,30,0.99), rgba(6,18,23,0.96));
+    background: linear-gradient(180deg, rgba(8,30,30,0.99), rgba(6,18,23,0.96));
     border-color: rgba(45,212,191,0.28);
     box-shadow:
       0 34px 78px rgba(2,6,23,0.94),
@@ -278,8 +278,7 @@
   }
 
   body.dark .pricing-pro {
-    background:
-      linear-gradient(180deg, rgba(15,23,42,0.99), rgba(10,19,40,0.96));
+    background: linear-gradient(180deg, rgba(15,23,42,0.99), rgba(10,19,40,0.96));
     border-color: rgba(96,165,250,0.34);
     box-shadow:
       0 34px 78px rgba(2,6,23,0.94),
@@ -287,8 +286,7 @@
   }
 
   body.dark .pricing-enterprise {
-    background:
-      linear-gradient(180deg, rgba(17,24,39,0.98), rgba(2,6,23,0.94));
+    background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(2,6,23,0.94));
     border-color: rgba(148,163,184,0.16);
     box-shadow:
       0 24px 60px rgba(2,6,23,0.86),
@@ -705,15 +703,27 @@
     color: #93c5fd;
   }
 
+  @media (max-width: 1180px) {
+    .pricing-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   @media (max-width: 1020px) {
-    .pricing-grid,
     .pricing-hero-strip,
     .pricing-trust-row {
       grid-template-columns: 1fr;
     }
 
-    .pricing-pro {
+    .pricing-pro,
+    .pricing-simple {
       transform: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .pricing-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -723,20 +733,34 @@
   <div class="pricing-topbar">
     <div class="pricing-title-wrap">
       <h1>
-        {% if lang == 'es' %}Elige tu plan{% else %}Choose your plan{% endif %}
+        {% if lang == 'es' %}
+          Elige tu plan
+        {% elif lang == 'zh' %}
+          选择您的方案
+        {% else %}
+          Choose your plan
+        {% endif %}
       </h1>
       <div class="pricing-subcopy">
         {% if lang == 'es' %}
-          Empieza gratis, actualiza a Simple si solo necesitas crear facturas y recibos, o elige Pro cuando quieras pagos con Stripe, automatización más avanzada y una operación más potente.
+          Empieza gratis, sube a Simple si solo necesitas crear facturas y recibos, elige Pro cuando quieras pagos con Stripe y más automatización, o usa Enterprise cuando quieras una experiencia más seria y más completa.
+        {% elif lang == 'zh' %}
+          免费开始；如果您只需要创建发票和收据，可升级到 Simple；当您需要 Stripe 付款和更多自动化时，可选择 Pro；当您想要更完整、更专业的体验时，可使用 Enterprise。
         {% else %}
-          Start free, upgrade to Simple if you only need invoices and receipts, or choose Pro when you want Stripe payments, more advanced automation, and a stronger operation.
+          Start free, move up to Simple if you only need invoices and receipts, choose Pro when you want Stripe payments and more automation, or use Enterprise when you want a more serious and complete experience.
         {% endif %}
       </div>
     </div>
 
     <div class="quick-actions">
       <a href="{{ url_for('invoices_page') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
-        {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
+        {% if lang == 'es' %}
+          Volver al panel
+        {% elif lang == 'zh' %}
+          返回面板
+        {% else %}
+          Back to Dashboard
+        {% endif %}
       </a>
     </div>
   </div>
@@ -747,6 +771,8 @@
     <div class="pricing-alert success">
       {% if lang == 'es' %}
         🎉 Tu actualización fue exitosa. ¡Bienvenido a Pro!
+      {% elif lang == 'zh' %}
+        🎉 您已升级成功，欢迎使用 Pro！
       {% else %}
         🎉 Your upgrade was successful. Welcome to Pro!
       {% endif %}
@@ -755,6 +781,8 @@
     <div class="pricing-alert warn">
       {% if lang == 'es' %}
         Actualización cancelada. Puedes intentarlo de nuevo en cualquier momento.
+      {% elif lang == 'zh' %}
+        升级已取消。您可以随时再次尝试。
       {% else %}
         Upgrade canceled. You can try again any time.
       {% endif %}
@@ -763,6 +791,8 @@
     <div class="pricing-alert warn">
       {% if lang == 'es' %}
         No encontramos una suscripción activa para administrar.
+      {% elif lang == 'zh' %}
+        我们未找到可管理的有效订阅。
       {% else %}
         We could not find an active subscription to manage.
       {% endif %}
@@ -771,6 +801,8 @@
     <div class="pricing-alert warn">
       {% if lang == 'es' %}
         No pudimos cargar tu información de facturación.
+      {% elif lang == 'zh' %}
+        我们无法加载您的账单信息。
       {% else %}
         We could not load your billing information.
       {% endif %}
@@ -779,6 +811,8 @@
     <div class="pricing-alert warn">
       {% if lang == 'es' %}
         No se pudo abrir el portal de suscripción. Inténtalo de nuevo.
+      {% elif lang == 'zh' %}
+        无法打开订阅管理页面。请再试一次。
       {% else %}
         We could not open the subscription portal. Please try again.
       {% endif %}
@@ -788,28 +822,64 @@
   <div class="pricing-hero-strip">
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
-        {% if lang == 'es' %}Inicio rápido{% else %}Fast start{% endif %}
+        {% if lang == 'es' %}
+          Inicio rápido
+        {% elif lang == 'zh' %}
+          快速开始
+        {% else %}
+          Fast start
+        {% endif %}
       </div>
       <div class="pricing-hero-value">
-        {% if lang == 'es' %}Comienza gratis{% else %}Start free{% endif %}
+        {% if lang == 'es' %}
+          Comienza gratis
+        {% elif lang == 'zh' %}
+          免费开始
+        {% else %}
+          Start free
+        {% endif %}
       </div>
     </div>
 
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
-        {% if lang == 'es' %}Plan Simple{% else %}Simple plan{% endif %}
+        {% if lang == 'es' %}
+          Plan Simple
+        {% elif lang == 'zh' %}
+          Simple 方案
+        {% else %}
+          Simple plan
+        {% endif %}
       </div>
       <div class="pricing-hero-value" id="billingMethodHeroValue">
-        {% if lang == 'es' %}Facturas y recibos{% else %}Invoices and receipts{% endif %}
+        {% if lang == 'es' %}
+          Facturas y recibos
+        {% elif lang == 'zh' %}
+          发票与收据
+        {% else %}
+          Invoices and receipts
+        {% endif %}
       </div>
     </div>
 
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
-        {% if lang == 'es' %}Plan Pro{% else %}Pro plan{% endif %}
+        {% if lang == 'es' %}
+          Plan Pro
+        {% elif lang == 'zh' %}
+          Pro 方案
+        {% else %}
+          Pro plan
+        {% endif %}
       </div>
       <div class="pricing-hero-value">
-        {% if lang == 'es' %}Pagos y automatización{% else %}Payments and automation{% endif %}
+        {% if lang == 'es' %}
+          Pagos y automatización
+        {% elif lang == 'zh' %}
+          付款与自动化
+        {% else %}
+          Payments and automation
+        {% endif %}
       </div>
     </div>
   </div>
@@ -832,15 +902,43 @@
 
               {% if key == user_plan %}
                 <span class="pricing-pill current">
-                  {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                  {% if lang == 'es' %}
+                    Plan actual
+                  {% elif lang == 'zh' %}
+                    当前方案
+                  {% else %}
+                    Current plan
+                  {% endif %}
                 </span>
               {% elif key == 'simple' %}
                 <span class="pricing-pill recommended">
-                  {% if lang == 'es' %}Más popular{% else %}Most popular{% endif %}
+                  {% if lang == 'es' %}
+                    Más popular
+                  {% elif lang == 'zh' %}
+                    最受欢迎
+                  {% else %}
+                    Most popular
+                  {% endif %}
+                </span>
+              {% elif key == 'pro' %}
+                <span class="pricing-pill recommended">
+                  {% if lang == 'es' %}
+                    Más potente
+                  {% elif lang == 'zh' %}
+                    更强大
+                  {% else %}
+                    More powerful
+                  {% endif %}
                 </span>
               {% elif key == 'enterprise' %}
                 <span class="pricing-pill recommended">
-                  {% if lang == 'es' %}Más control{% else %}More control{% endif %}
+                  {% if lang == 'es' %}
+                    Más completo
+                  {% elif lang == 'zh' %}
+                    更完整
+                  {% else %}
+                    More complete
+                  {% endif %}
                 </span>
               {% endif %}
             </div>
@@ -860,15 +958,19 @@
           <div class="pricing-ai-callout">
             <strong>
               {% if lang == 'es' %}
-                Ideal para recibos y facturas simples:
+                Ideal para facturación simple:
+              {% elif lang == 'zh' %}
+                适合简单开票：
               {% else %}
-                Ideal for simple invoices and receipts:
+                Ideal for simple invoicing:
               {% endif %}
             </strong>
             <ul>
               <li>
                 {% if lang == 'es' %}
                   Crea facturas y recibos sin configurar cobros con Stripe.
+                {% elif lang == 'zh' %}
+                  无需设置 Stripe 即可创建发票和收据。
                 {% else %}
                   Create invoices and receipts without setting up Stripe collections.
                 {% endif %}
@@ -876,6 +978,8 @@
               <li>
                 {% if lang == 'es' %}
                   Envía PDFs y comparte enlaces públicos solo para vista.
+                {% elif lang == 'zh' %}
+                  发送 PDF，并分享仅供查看的公开发票链接。
                 {% else %}
                   Send PDFs and share public view-only invoice links.
                 {% endif %}
@@ -883,6 +987,8 @@
               <li>
                 {% if lang == 'es' %}
                   Marca facturas como pagadas manualmente para tus registros.
+                {% elif lang == 'zh' %}
+                  为您的记录手动将发票标记为已支付。
                 {% else %}
                   Mark invoices as paid manually for your records.
                 {% endif %}
@@ -893,15 +999,19 @@
           <div class="pricing-ai-callout">
             <strong>
               {% if lang == 'es' %}
-                Incluye pagos y herramientas más avanzadas:
+                Incluye pagos y más herramientas:
+              {% elif lang == 'zh' %}
+                包含付款和更多工具：
               {% else %}
-                Includes payments and more advanced tools:
+                Includes payments and more tools:
               {% endif %}
             </strong>
             <ul>
               <li>
                 {% if lang == 'es' %}
                   Cobra facturas en línea con Stripe.
+                {% elif lang == 'zh' %}
+                  使用 Stripe 在线收取发票付款。
                 {% else %}
                   Collect invoice payments online with Stripe.
                 {% endif %}
@@ -909,6 +1019,8 @@
               <li>
                 {% if lang == 'es' %}
                   Usa BillBeam Assistant y métricas más avanzadas.
+                {% elif lang == 'zh' %}
+                  使用 BillBeam Assistant 和更高级的数据指标。
                 {% else %}
                   Use BillBeam Assistant and more advanced reporting.
                 {% endif %}
@@ -916,6 +1028,8 @@
               <li>
                 {% if lang == 'es' %}
                   Envía recordatorios y mejora tu flujo de cobro.
+                {% elif lang == 'zh' %}
+                  发送提醒并改善您的收款流程。
                 {% else %}
                   Send reminders and improve your collection workflow.
                 {% endif %}
@@ -926,31 +1040,39 @@
           <div class="pricing-ai-callout">
             <strong>
               {% if lang == 'es' %}
-                Diseñado para operaciones más serias:
+                Diseñado para mayor valor operativo:
+              {% elif lang == 'zh' %}
+                为更高运营价值而设计：
               {% else %}
-                Built for more serious operations:
+                Built for stronger operational value:
               {% endif %}
             </strong>
             <ul>
               <li>
                 {% if lang == 'es' %}
-                  Configura una cuenta Stripe profesional para administrar pagos.
+                  Más valor para negocios que quieren que la app se sienta como una verdadera herramienta profesional.
+                {% elif lang == 'zh' %}
+                  为希望让应用更像真正专业工具的企业提供更高价值。
                 {% else %}
-                  Set up a professional Stripe account connection to manage payments.
+                  More value for businesses that want the app to feel like a true professional tool.
                 {% endif %}
               </li>
               <li>
                 {% if lang == 'es' %}
-                  Separa mejor tu suscripción de BillBeam y el cobro de facturas a clientes.
+                  Una experiencia más premium para operaciones, cobros y organización.
+                {% elif lang == 'zh' %}
+                  为运营、收款和组织带来更高级的体验。
                 {% else %}
-                  Better separate your BillBeam subscription from client invoice payments.
+                  A more premium experience for operations, collections, and organization.
                 {% endif %}
               </li>
               <li>
                 {% if lang == 'es' %}
-                  Prepara tu flujo para reportes y herramientas más avanzadas.
+                  El nivel más completo de BillBeam.
+                {% elif lang == 'zh' %}
+                  BillBeam 中最完整的方案。
                 {% else %}
-                  Prepare your workflow for more advanced reporting and operational tools.
+                  The most complete BillBeam tier.
                 {% endif %}
               </li>
             </ul>
@@ -960,11 +1082,19 @@
         <div class="pricing-cta">
           {% if key == user_plan and key in ['simple', 'pro'] %}
             <a href="/manage-subscription{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact" id="{% if key == 'pro' %}manageSubscriptionBtn{% endif %}">
-              {% if lang == 'es' %}Administrar suscripción{% else %}Manage Subscription{% endif %}
+              {% if lang == 'es' %}
+                Administrar suscripción
+              {% elif lang == 'zh' %}
+                管理订阅
+              {% else %}
+                Manage Subscription
+              {% endif %}
             </a>
             <span class="pricing-note" {% if key == 'pro' %}id="manageSubscriptionNote"{% endif %}>
               {% if lang == 'es' %}
                 Actualiza tu método de pago, cambia tu plan o cancela tu suscripción desde Stripe.
+              {% elif lang == 'zh' %}
+                通过 Stripe 更新付款方式、更换方案或取消订阅。
               {% else %}
                 Update your payment method, switch plans, or cancel your subscription from Stripe.
               {% endif %}
@@ -972,32 +1102,60 @@
 
           {% elif key == user_plan and key == 'enterprise' %}
             <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
-              {% if lang == 'es' %}Ir a configuración{% else %}Go to Settings{% endif %}
+              {% if lang == 'es' %}
+                Ir a configuración
+              {% elif lang == 'zh' %}
+                前往设置
+              {% else %}
+                Go to Settings
+              {% endif %}
             </a>
             <span class="pricing-note">
               {% if lang == 'es' %}
-                Gestiona tu marca, seguridad y configuración profesional de pagos desde ajustes.
+                Gestiona tu marca, seguridad y configuración profesional desde ajustes.
+              {% elif lang == 'zh' %}
+                在设置中管理您的品牌、安全和专业配置。
               {% else %}
-                Manage your branding, security, and professional payment setup from settings.
+                Manage your branding, security, and professional setup from settings.
               {% endif %}
             </span>
 
           {% elif key == user_plan %}
             <span class="badge paid">
-              {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+              {% if lang == 'es' %}
+                Plan actual
+              {% elif lang == 'zh' %}
+                当前方案
+              {% else %}
+                Current plan
+              {% endif %}
             </span>
             <span class="pricing-note">
-              {% if lang == 'es' %}Ya estás en este plan.{% else %}You’re already on this plan.{% endif %}
+              {% if lang == 'es' %}
+                Ya estás en este plan.
+              {% elif lang == 'zh' %}
+                您当前已在此方案中。
+              {% else %}
+                You’re already on this plan.
+              {% endif %}
             </span>
 
           {% elif key == 'simple' and user_plan == 'free' %}
             <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="simple" id="upgradeSimpleBtn">
-              {% if lang == 'es' %}Actualizar a Simple{% else %}Upgrade to Simple{% endif %}
+              {% if lang == 'es' %}
+                Actualizar a Simple
+              {% elif lang == 'zh' %}
+                升级到 Simple
+              {% else %}
+                Upgrade to Simple
+              {% endif %}
             </button>
 
             <span class="pricing-note" id="upgradeSimpleNote">
               {% if lang == 'es' %}
                 Activa Simple en segundos con Stripe.
+              {% elif lang == 'zh' %}
+                通过 Stripe 在几秒内开通 Simple。
               {% else %}
                 Turn on Simple in seconds with Stripe.
               {% endif %}
@@ -1005,18 +1163,32 @@
 
           {% elif key == 'pro' and user_plan not in ['pro', 'enterprise'] %}
             <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="pro" id="upgradeProBtn">
-              {% if lang == 'es' %}Actualizar a Pro{% else %}Upgrade to Pro{% endif %}
+              {% if lang == 'es' %}
+                Actualizar a Pro
+              {% elif lang == 'zh' %}
+                升级到 Pro
+              {% else %}
+                Upgrade to Pro
+              {% endif %}
             </button>
 
             <div class="pricing-helper-actions" id="nativeRestoreWrap">
               <button type="button" class="btn btn-secondary btn-compact" id="restorePurchasesBtn">
-                {% if lang == 'es' %}Restaurar compras{% else %}Restore Purchases{% endif %}
+                {% if lang == 'es' %}
+                  Restaurar compras
+                {% elif lang == 'zh' %}
+                  恢复购买
+                {% else %}
+                  Restore Purchases
+                {% endif %}
               </button>
             </div>
 
             <span class="pricing-note" id="upgradeProNote">
               {% if lang == 'es' %}
                 Activa Pro en segundos con Stripe.
+              {% elif lang == 'zh' %}
+                通过 Stripe 在几秒内开通 Pro。
               {% else %}
                 Turn on Pro in seconds with Stripe.
               {% endif %}
@@ -1025,18 +1197,48 @@
             <div class="pricing-native-note" id="nativeUpgradeHint" style="display:none;">
               {% if lang == 'es' %}
                 Dentro de la app para iPhone, la actualización usa la compra integrada de Apple.
+              {% elif lang == 'zh' %}
+                在 iPhone 应用内，升级会使用 Apple 的应用内购买。
               {% else %}
                 Inside the iPhone app, upgrading uses Apple’s in-app purchase flow.
               {% endif %}
             </div>
 
+          {% elif key == 'enterprise' and user_plan != 'enterprise' %}
+            <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="enterprise" id="upgradeEnterpriseBtn">
+              {% if lang == 'es' %}
+                Actualizar a Enterprise
+              {% elif lang == 'zh' %}
+                升级到 Enterprise
+              {% else %}
+                Upgrade to Enterprise
+              {% endif %}
+            </button>
+            <span class="pricing-note" id="upgradeEnterpriseNote">
+              {% if lang == 'es' %}
+                Sube al nivel más completo de BillBeam con Stripe.
+              {% elif lang == 'zh' %}
+                通过 Stripe 升级到 BillBeam 最完整的方案。
+              {% else %}
+                Move up to BillBeam’s most complete tier with Stripe.
+              {% endif %}
+            </span>
+
           {% elif key == 'free' %}
             <span class="badge draft">
-              {% if lang == 'es' %}Incluido{% else %}Included{% endif %}
+              {% if lang == 'es' %}
+                Incluido
+              {% elif lang == 'zh' %}
+                已包含
+              {% else %}
+                Included
+              {% endif %}
             </span>
             <span class="pricing-note">
               {% if lang == 'es' %}
                 Perfecto si estás empezando.
+              {% elif lang == 'zh' %}
+                非常适合刚开始使用时。
               {% else %}
                 Perfect if you’re just getting started.
               {% endif %}
@@ -1046,13 +1248,21 @@
             <a href="mailto:support@billbeam.app"
                class="btn btn-secondary btn-compact"
                style="width:auto;display:inline-flex;align-items:center;justify-content:center;">
-              {% if lang == 'es' %}Contactar ventas{% else %}Contact sales{% endif %}
+              {% if lang == 'es' %}
+                Contactar soporte
+              {% elif lang == 'zh' %}
+                联系支持团队
+              {% else %}
+                Contact support
+              {% endif %}
             </a>
             <span class="pricing-note">
               {% if lang == 'es' %}
-                Este nivel está pensado para una operación más avanzada y una configuración de pagos más profesional.
+                Este nivel está pensado para quienes quieren el BillBeam más completo.
+              {% elif lang == 'zh' %}
+                该级别适合想要获得最完整 BillBeam 体验的用户。
               {% else %}
-                This tier is built for a more advanced operation and a more professional payment setup.
+                This tier is for users who want the most complete BillBeam experience.
               {% endif %}
             </span>
           {% endif %}
@@ -1064,11 +1274,19 @@
   <div class="pricing-trust-row">
     <div class="pricing-trust-card">
       <div class="pricing-trust-title">
-        {% if lang == 'es' %}Más claridad{% else %}More clarity{% endif %}
+        {% if lang == 'es' %}
+          Más claridad
+        {% elif lang == 'zh' %}
+          更清晰
+        {% else %}
+          More clarity
+        {% endif %}
       </div>
       <div class="pricing-trust-copy">
         {% if lang == 'es' %}
           Facturas, estados y seguimiento en una experiencia más limpia y profesional.
+        {% elif lang == 'zh' %}
+          发票、状态和跟进都集中在更干净、更专业的体验中。
         {% else %}
           Invoices, statuses, and follow-up in one cleaner, more professional experience.
         {% endif %}
@@ -1077,26 +1295,42 @@
 
     <div class="pricing-trust-card">
       <div class="pricing-trust-title">
-        {% if lang == 'es' %}Más flexibilidad{% else %}More flexibility{% endif %}
+        {% if lang == 'es' %}
+          Más flexibilidad
+        {% elif lang == 'zh' %}
+          更灵活
+        {% else %}
+          More flexibility
+        {% endif %}
       </div>
       <div class="pricing-trust-copy">
         {% if lang == 'es' %}
-          Usa Simple si solo necesitas facturas y recibos, o Pro si también quieres cobrar en línea y automatizar más.
+          Usa Simple si solo necesitas facturas y recibos, Pro si quieres cobrar en línea, o Enterprise si quieres el BillBeam más completo.
+        {% elif lang == 'zh' %}
+          如果您只需要发票和收据，可使用 Simple；如果您希望在线收款，可选择 Pro；如果您希望获得最完整的 BillBeam，可选择 Enterprise。
         {% else %}
-          Use Simple if you only need invoices and receipts, or Pro if you also want to collect payments online and automate more.
+          Use Simple if you only need invoices and receipts, Pro if you want online payments, or Enterprise if you want the most complete BillBeam.
         {% endif %}
       </div>
     </div>
 
     <div class="pricing-trust-card">
       <div class="pricing-trust-title">
-        {% if lang == 'es' %}Más control{% else %}More control{% endif %}
+        {% if lang == 'es' %}
+          Más valor
+        {% elif lang == 'zh' %}
+          更高价值
+        {% else %}
+          More value
+        {% endif %}
       </div>
       <div class="pricing-trust-copy">
         {% if lang == 'es' %}
-          Administra tu suscripción y prepara una configuración de pagos más profesional cuando tu negocio lo necesite.
+          Cada nivel agrega una experiencia más seria para que BillBeam empiece a sentirse como una verdadera herramienta profesional.
+        {% elif lang == 'zh' %}
+          每个层级都会增加更专业的体验，让 BillBeam 更像真正的商业工具。
         {% else %}
-          Manage your subscription and prepare for a more professional payment setup as your business grows.
+          Each tier adds a more serious experience so BillBeam starts to feel like a true professional tool.
         {% endif %}
       </div>
     </div>
@@ -1106,6 +1340,8 @@
     <div class="pricing-footer-note" id="pricingFooterBillingNote">
       {% if lang == 'es' %}
         Pagos y suscripciones procesados de forma segura por Stripe.
+      {% elif lang == 'zh' %}
+        付款和订阅均由 Stripe 安全处理。
       {% else %}
         Payments and subscriptions are securely processed by Stripe.
       {% endif %}
@@ -1115,23 +1351,38 @@
   <div class="pricing-subscription-disclosure">
     {% if lang == 'es' %}
       Detalles de suscripción:
-      <br>• BillBeam Simple y BillBeam Pro son suscripciones mensuales auto-renovables
+      <br>• BillBeam Simple, BillBeam Pro y BillBeam Enterprise son suscripciones mensuales auto-renovables
       <br>• Duración: 1 mes
       <br>• Precio de Simple: $9.99 al mes
       <br>• Precio de Pro: $19.99 al mes
-      <br>• En iPhone, el pago se cargará a tu cuenta de Apple ID al confirmar la compra
+      <br>• Precio de Enterprise: según el precio configurado en BillBeam
+      <br>• En iPhone, el pago se cargará a tu cuenta de Apple ID al confirmar la compra cuando aplique
       <br>• Las suscripciones se renuevan automáticamente a menos que se cancelen al menos 24 horas antes del final del período actual
       <br>• Política de privacidad:
       <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver política de privacidad</a>
       <br>• Términos de uso:
       <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver términos de uso</a>
+    {% elif lang == 'zh' %}
+      订阅详情：
+      <br>• BillBeam Simple、BillBeam Pro 和 BillBeam Enterprise 均为按月自动续订订阅
+      <br>• 时长：1 个月
+      <br>• Simple 价格：每月 $9.99
+      <br>• Pro 价格：每月 $19.99
+      <br>• Enterprise 价格：以 BillBeam 中配置的价格为准
+      <br>• 在 iPhone 上，适用时确认购买后将从您的 Apple ID 账户扣款
+      <br>• 除非在当前周期结束前至少 24 小时取消，否则订阅将自动续订
+      <br>• 隐私政策：
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">查看隐私政策</a>
+      <br>• 使用条款：
+      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">查看使用条款</a>
     {% else %}
       Subscription details:
-      <br>• BillBeam Simple and BillBeam Pro are monthly auto-renewing subscriptions
+      <br>• BillBeam Simple, BillBeam Pro, and BillBeam Enterprise are monthly auto-renewing subscriptions
       <br>• Length: 1 month
       <br>• Simple price: $9.99 per month
       <br>• Pro price: $19.99 per month
-      <br>• On iPhone, payment will be charged to your Apple ID account at confirmation of purchase
+      <br>• Enterprise price: based on the price configured in BillBeam
+      <br>• On iPhone, payment will be charged to your Apple ID account at confirmation of purchase when applicable
       <br>• Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period
       <br>• Privacy Policy:
       <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">View Privacy Policy</a>
@@ -1165,10 +1416,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const upgradeButtons = document.querySelectorAll(".upgradePlanBtn");
   const upgradeBtn = document.getElementById("upgradeProBtn");
   const simpleUpgradeBtn = document.getElementById("upgradeSimpleBtn");
+  const enterpriseUpgradeBtn = document.getElementById("upgradeEnterpriseBtn");
   const restoreBtn = document.getElementById("restorePurchasesBtn");
   const restoreWrap = document.getElementById("nativeRestoreWrap");
   const upgradeNote = document.getElementById("upgradeProNote");
   const simpleUpgradeNote = document.getElementById("upgradeSimpleNote");
+  const enterpriseUpgradeNote = document.getElementById("upgradeEnterpriseNote");
   const nativeHint = document.getElementById("nativeUpgradeHint");
   const nativeAlert = document.getElementById("nativeBillingAlert");
   const billingMethodHeroValue = document.getElementById("billingMethodHeroValue");
@@ -1201,9 +1454,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const plan = btn.dataset.plan || "pro";
 
       if (plan === "simple") {
-        btn.textContent = "{{ 'Actualizar a Simple' if lang == 'es' else 'Upgrade to Simple' }}";
+        btn.textContent = "{{ 'Actualizar a Simple' if lang == 'es' else ('升级到 Simple' if lang == 'zh' else 'Upgrade to Simple') }}";
+      } else if (plan === "enterprise") {
+        btn.textContent = "{{ 'Actualizar a Enterprise' if lang == 'es' else ('升级到 Enterprise' if lang == 'zh' else 'Upgrade to Enterprise') }}";
       } else {
-        btn.textContent = "{{ 'Actualizar a Pro' if lang == 'es' else 'Upgrade to Pro' }}";
+        btn.textContent = "{{ 'Actualizar a Pro' if lang == 'es' else ('升级到 Pro' if lang == 'zh' else 'Upgrade to Pro') }}";
       }
     });
   }
@@ -1212,15 +1467,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!isNativeIOSApp()) return;
 
     if (billingMethodHeroValue) {
-      billingMethodHeroValue.textContent = "{{ 'Compra integrada de Apple' if lang == 'es' else 'Apple in-app purchase' }}";
+      billingMethodHeroValue.textContent = "{{ 'Compra integrada de Apple' if lang == 'es' else ('Apple 应用内购买' if lang == 'zh' else 'Apple in-app purchase') }}";
     }
 
     if (upgradeNote) {
-      upgradeNote.textContent = "{{ 'Activa Pro con la suscripción integrada de Apple dentro de la app para iPhone.' if lang == 'es' else 'Activate Pro with Apple’s built-in subscription flow inside the iPhone app.' }}";
+      upgradeNote.textContent = "{{ 'Activa Pro con la suscripción integrada de Apple dentro de la app para iPhone.' if lang == 'es' else ('在 iPhone 应用内通过 Apple 内购开通 Pro。' if lang == 'zh' else 'Activate Pro with Apple’s built-in subscription flow inside the iPhone app.') }}";
     }
 
     if (simpleUpgradeNote) {
-      simpleUpgradeNote.textContent = "{{ 'Simple se activa con Stripe en web. La compra integrada de Apple en iPhone está pensada para Pro.' if lang == 'es' else 'Simple activates with Stripe on web. Apple in-app purchase on iPhone is intended for Pro.' }}";
+      simpleUpgradeNote.textContent = "{{ 'Simple se activa con Stripe en web. La compra integrada de Apple en iPhone está pensada para Pro.' if lang == 'es' else ('Simple 在网页端通过 Stripe 开通。iPhone 内购主要用于 Pro。' if lang == 'zh' else 'Simple activates with Stripe on web. Apple in-app purchase on iPhone is intended for Pro.') }}";
     }
 
     if (nativeHint) {
@@ -1232,7 +1487,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (pricingFooterBillingNote) {
-      pricingFooterBillingNote.textContent = "{{ 'Dentro de la app para iPhone, las suscripciones usan la compra integrada de Apple.' if lang == 'es' else 'Inside the iPhone app, subscriptions use Apple in-app purchase.' }}";
+      pricingFooterBillingNote.textContent = "{{ 'Dentro de la app para iPhone, las suscripciones usan la compra integrada de Apple.' if lang == 'es' else ('在 iPhone 应用内，订阅通过 Apple 应用内购买处理。' if lang == 'zh' else 'Inside the iPhone app, subscriptions use Apple in-app purchase.') }}";
     }
 
     if (manageSubscriptionBtn) {
@@ -1241,13 +1496,13 @@ document.addEventListener("DOMContentLoaded", function () {
         e.preventDefault();
         showNativeAlert(
           "info",
-          "{{ 'Las suscripciones de Apple se administran desde la configuración de tu Apple ID.' if lang == 'es' else 'Apple subscriptions are managed from your Apple ID subscription settings.' }}"
+          "{{ 'Las suscripciones de Apple se administran desde la configuración de tu Apple ID.' if lang == 'es' else ('Apple 订阅可在您的 Apple ID 订阅设置中管理。' if lang == 'zh' else 'Apple subscriptions are managed from your Apple ID subscription settings.') }}"
         );
       });
     }
 
     if (manageSubscriptionNote) {
-      manageSubscriptionNote.textContent = "{{ 'Las suscripciones compradas en iPhone se administran a través de Apple.' if lang == 'es' else 'Subscriptions purchased on iPhone are managed through Apple.' }}";
+      manageSubscriptionNote.textContent = "{{ 'Las suscripciones compradas en iPhone se administran a través de Apple.' if lang == 'es' else ('在 iPhone 上购买的订阅通过 Apple 管理。' if lang == 'zh' else 'Subscriptions purchased on iPhone are managed through Apple.') }}";
     }
   }
 
@@ -1255,7 +1510,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!clickedButton) return;
 
     clickedButton.disabled = true;
-    clickedButton.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
+    clickedButton.textContent = "{{ 'Redirigiendo...' if lang == 'es' else ('跳转中...' if lang == 'zh' else 'Redirecting...') }}";
 
     try {
       const resp = await fetch("/create-checkout-session?lang={{ lang }}", {
@@ -1269,11 +1524,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || "{{ 'No se pudo iniciar el checkout.' if lang == 'es' else 'Could not start checkout.' }}");
+        alert(data.error || "{{ 'No se pudo iniciar el checkout.' if lang == 'es' else ('无法启动结账流程。' if lang == 'zh' else 'Could not start checkout.') }}");
         resetUpgradeButtons();
       }
     } catch (e) {
-      alert("{{ 'Error de red al iniciar el checkout.' if lang == 'es' else 'Network error starting checkout.' }}");
+      alert("{{ 'Error de red al iniciar el checkout.' if lang == 'es' else ('启动结账流程时发生网络错误。' if lang == 'zh' else 'Network error starting checkout.') }}");
       resetUpgradeButtons();
     }
   }
@@ -1284,14 +1539,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!nativePurchaseAvailable()) {
       showNativeAlert(
         "warn",
-        "{{ 'La compra integrada de Apple aún no está disponible en esta pantalla. Cierra y vuelve a abrir la app e inténtalo de nuevo.' if lang == 'es' else 'Apple in-app purchase is not ready on this screen yet. Close and reopen the app, then try again.' }}"
+        "{{ 'La compra integrada de Apple aún no está disponible en esta pantalla. Cierra y vuelve a abrir la app e inténtalo de nuevo.' if lang == 'es' else ('此页面尚未准备好 Apple 应用内购买。请关闭并重新打开应用后再试。' if lang == 'zh' else 'Apple in-app purchase is not ready on this screen yet. Close and reopen the app, then try again.') }}"
       );
       resetUpgradeButtons();
       return;
     }
 
     upgradeBtn.disabled = true;
-    upgradeBtn.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else 'Opening Apple purchase...' }}";
+    upgradeBtn.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else ('正在打开 Apple 购买...' if lang == 'zh' else 'Opening Apple purchase...') }}";
     window.BillBeamNative.purchasePro();
   }
 
@@ -1314,14 +1569,14 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!nativeRestoreAvailable()) {
         showNativeAlert(
           "warn",
-          "{{ 'La restauración de compras no está disponible todavía en esta pantalla.' if lang == 'es' else 'Purchase restore is not available on this screen yet.' }}"
+          "{{ 'La restauración de compras no está disponible todavía en esta pantalla.' if lang == 'es' else ('此页面暂时无法恢复购买。' if lang == 'zh' else 'Purchase restore is not available on this screen yet.') }}"
         );
         return;
       }
 
       showNativeAlert(
         "info",
-        "{{ 'Intentando restaurar tus compras anteriores…' if lang == 'es' else 'Trying to restore your previous purchases…' }}"
+        "{{ 'Intentando restaurar tus compras anteriores…' if lang == 'es' else ('正在尝试恢复您之前的购买…' if lang == 'zh' else 'Trying to restore your previous purchases…') }}"
       );
 
       window.BillBeamNative.restorePurchases();
@@ -1331,14 +1586,14 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("billbeam:purchase-started", function () {
     if (!upgradeBtn) return;
     upgradeBtn.disabled = true;
-    upgradeBtn.textContent = "{{ 'Procesando compra...' if lang == 'es' else 'Processing purchase...' }}";
+    upgradeBtn.textContent = "{{ 'Procesando compra...' if lang == 'es' else ('正在处理购买...' if lang == 'zh' else 'Processing purchase...') }}";
   });
 
   window.addEventListener("billbeam:purchase-pending", function () {
     resetUpgradeButtons();
     showNativeAlert(
       "info",
-      "{{ 'Tu compra está pendiente de aprobación o confirmación. Apple terminará el proceso cuando esté lista.' if lang == 'es' else 'Your purchase is pending approval or confirmation. Apple will finish the process when it is ready.' }}"
+      "{{ 'Tu compra está pendiente de aprobación o confirmación. Apple terminará el proceso cuando esté lista.' if lang == 'es' else ('您的购买正在等待批准或确认。Apple 会在准备好后完成流程。' if lang == 'zh' else 'Your purchase is pending approval or confirmation. Apple will finish the process when it is ready.') }}"
     );
   });
 
@@ -1346,7 +1601,7 @@ document.addEventListener("DOMContentLoaded", function () {
     resetUpgradeButtons();
     showNativeAlert(
       "warn",
-      "{{ 'La compra fue cancelada.' if lang == 'es' else 'The purchase was cancelled.' }}"
+      "{{ 'La compra fue cancelada.' if lang == 'es' else ('购买已取消。' if lang == 'zh' else 'The purchase was cancelled.') }}"
     );
   });
 
@@ -1354,7 +1609,7 @@ document.addEventListener("DOMContentLoaded", function () {
     resetUpgradeButtons();
     const message = event.detail && event.detail.message
       ? event.detail.message
-      : "{{ 'No se pudo completar la compra integrada.' if lang == 'es' else 'Could not complete the in-app purchase.' }}";
+      : "{{ 'No se pudo completar la compra integrada.' if lang == 'es' else ('无法完成应用内购买。' if lang == 'zh' else 'Could not complete the in-app purchase.') }}";
     showNativeAlert("warn", message);
   });
 
@@ -1362,7 +1617,7 @@ document.addEventListener("DOMContentLoaded", function () {
     resetUpgradeButtons();
     showNativeAlert(
       "success",
-      "{{ 'Compra completada. El siguiente paso es sincronizar el acceso Pro con tu cuenta BillBeam en el servidor.' if lang == 'es' else 'Purchase completed. The next step is syncing Pro access with your BillBeam account on the server.' }}"
+      "{{ 'Compra completada. El siguiente paso es sincronizar el acceso Pro con tu cuenta BillBeam en el servidor.' if lang == 'es' else ('购买已完成。下一步是将 Pro 权限与您的 BillBeam 服务器账户同步。' if lang == 'zh' else 'Purchase completed. The next step is syncing Pro access with your BillBeam account on the server.') }}"
     );
   });
 
@@ -1370,7 +1625,7 @@ document.addEventListener("DOMContentLoaded", function () {
     resetUpgradeButtons();
     showNativeAlert(
       "success",
-      "{{ 'La restauración terminó. Si tu suscripción sigue activa, el siguiente paso es sincronizarla con tu cuenta BillBeam.' if lang == 'es' else 'Restore finished. If your subscription is still active, the next step is syncing it to your BillBeam account.' }}"
+      "{{ 'La restauración terminó. Si tu suscripción sigue activa, el siguiente paso es sincronizarla con tu cuenta BillBeam.' if lang == 'es' else ('恢复已完成。如果您的订阅仍有效，下一步是将其同步到您的 BillBeam 账户。' if lang == 'zh' else 'Restore finished. If your subscription is still active, the next step is syncing it to your BillBeam account.') }}"
     );
   });
 
@@ -1382,7 +1637,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (proActive) {
       showNativeAlert(
         "info",
-        "{{ 'Apple informa que esta cuenta tiene una suscripción Pro activa en el dispositivo. Falta sincronizar ese acceso con tu cuenta BillBeam del servidor.' if lang == 'es' else 'Apple reports that this device account has an active Pro subscription. The remaining step is syncing that access to your BillBeam server account.' }}"
+        "{{ 'Apple informa que esta cuenta tiene una suscripción Pro activa en el dispositivo. Falta sincronizar ese acceso con tu cuenta BillBeam del servidor.' if lang == 'es' else ('Apple 显示该设备账户拥有有效的 Pro 订阅。剩余步骤是将该权限同步到您的 BillBeam 服务器账户。' if lang == 'zh' else 'Apple reports that this device account has an active Pro subscription. The remaining step is syncing that access to your BillBeam server account.') }}"
       );
     }
   });

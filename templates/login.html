@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Iniciar sesión · BillBeam{% else %}Login · BillBeam{% endif %}
+    {% if lang == 'es' %}
+        Iniciar sesión · BillBeam
+    {% elif lang == 'zh' %}
+        登录 · BillBeam
+    {% else %}
+        Login · BillBeam
+    {% endif %}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Inicia sesión en BillBeam para crear facturas, gestionar clientes y dar seguimiento a pagos desde un solo lugar.
+    {% elif lang == 'zh' %}
+        登录 BillBeam，在一个地方创建发票、管理客户并跟踪付款。
     {% else %}
         Log in to BillBeam to create invoices, manage clients, and track payments from one place.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .auth-shell {
@@ -192,12 +203,20 @@
 
         <section class="auth-card fade-in-up">
             <div class="auth-eyebrow">
-                {% if lang == 'es' %}Acceso seguro{% else %}Secure access{% endif %}
+                {% if lang == 'es' %}
+                    Acceso seguro
+                {% elif lang == 'zh' %}
+                    安全访问
+                {% else %}
+                    Secure access
+                {% endif %}
             </div>
 
             <h1 class="auth-title">
                 {% if lang == 'es' %}
                     Inicia sesión en BillBeam
+                {% elif lang == 'zh' %}
+                    登录 BillBeam
                 {% else %}
                     Log in to BillBeam
                 {% endif %}
@@ -206,6 +225,8 @@
             <p class="page-lead auth-lead">
                 {% if lang == 'es' %}
                     Entra para crear facturas, revisar tu panel, enviar cobros y mantener tu flujo de caja bajo control.
+                {% elif lang == 'zh' %}
+                    登录后即可创建发票、查看仪表板、发送账单，并更好地掌控现金流。
                 {% else %}
                     Sign in to create invoices, review your dashboard, send billing emails, and keep cash flow under control.
                 {% endif %}
@@ -221,7 +242,13 @@
                 <div class="auth-form-grid">
                     <div class="auth-field">
                         <label for="email">
-                            {% if lang == 'es' %}Correo electrónico{% else %}Email address{% endif %}
+                            {% if lang == 'es' %}
+                                Correo electrónico
+                            {% elif lang == 'zh' %}
+                                电子邮箱
+                            {% else %}
+                                Email address
+                            {% endif %}
                         </label>
                         <input
                             id="email"
@@ -237,7 +264,13 @@
 
                     <div class="auth-field">
                         <label for="password">
-                            {% if lang == 'es' %}Contraseña{% else %}Password{% endif %}
+                            {% if lang == 'es' %}
+                                Contraseña
+                            {% elif lang == 'zh' %}
+                                密码
+                            {% else %}
+                                Password
+                            {% endif %}
                         </label>
                         <input
                             id="password"
@@ -245,28 +278,52 @@
                             name="password"
                             required
                             autocomplete="current-password"
-                            placeholder="{% if lang == 'es' %}Tu contraseña{% else %}Your password{% endif %}"
+                            placeholder="{% if lang == 'es' %}Tu contraseña{% elif lang == 'zh' %}你的密码{% else %}Your password{% endif %}"
                         >
                     </div>
                 </div>
 
                 <div class="auth-meta-row">
                     <a href="/password-reset-request{% if lang %}?lang={{ lang }}{% endif %}" class="auth-link-subtle">
-                        {% if lang == 'es' %}¿Olvidaste tu contraseña?{% else %}Forgot your password?{% endif %}
+                        {% if lang == 'es' %}
+                            ¿Olvidaste tu contraseña?
+                        {% elif lang == 'zh' %}
+                            忘记密码？
+                        {% else %}
+                            Forgot your password?
+                        {% endif %}
                     </a>
 
                     <span class="auth-micro">
-                        {% if lang == 'es' %}Acceso cifrado{% else %}Encrypted access{% endif %}
+                        {% if lang == 'es' %}
+                            Acceso cifrado
+                        {% elif lang == 'zh' %}
+                            加密访问
+                        {% else %}
+                            Encrypted access
+                        {% endif %}
                     </span>
                 </div>
 
                 <div class="form-actions auth-form-actions">
                     <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                        {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
+                        {% if lang == 'es' %}
+                            Crear cuenta
+                        {% elif lang == 'zh' %}
+                            创建账户
+                        {% else %}
+                            Create account
+                        {% endif %}
                     </a>
 
                     <button type="submit" class="btn btn-brand">
-                        {% if lang == 'es' %}Iniciar sesión{% else %}Log in{% endif %}
+                        {% if lang == 'es' %}
+                            Iniciar sesión
+                        {% elif lang == 'zh' %}
+                            登录
+                        {% else %}
+                            Log in
+                        {% endif %}
                     </button>
                 </div>
             </form>
@@ -274,6 +331,8 @@
             <div class="auth-highlight-box">
                 {% if lang == 'es' %}
                     Usa el mismo correo con el que registraste tu cuenta. Si tienes problemas para entrar, también puedes visitar Soporte o usar el restablecimiento de contraseña.
+                {% elif lang == 'zh' %}
+                    请使用注册账户时填写的邮箱。如果登录遇到问题，也可以前往支持页面或使用密码重置流程。
                 {% else %}
                     Use the same email address you registered with. If you run into trouble signing in, you can also visit Support or use the password reset flow.
                 {% endif %}
@@ -284,6 +343,8 @@
             <h2 style="font-size:18px; margin-bottom:10px;">
                 {% if lang == 'es' %}
                     Bienvenido de nuevo
+                {% elif lang == 'zh' %}
+                    欢迎回来
                 {% else %}
                     Welcome back
                 {% endif %}
@@ -292,6 +353,8 @@
             <p class="preview-tip" style="margin-bottom:16px;">
                 {% if lang == 'es' %}
                     Una vez dentro, podrás revisar facturas, registrar pagos, enviar PDFs y ver el estado de tu negocio desde un solo panel.
+                {% elif lang == 'zh' %}
+                    登录后，你可以在一个面板中查看发票、记录付款、发送 PDF，并掌握业务状态。
                 {% else %}
                     Once inside, you can review invoices, record payments, send PDFs, and see the health of your business from one dashboard.
                 {% endif %}
@@ -300,28 +363,64 @@
             <div class="auth-side-grid">
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
+                        {% if lang == 'es' %}
+                            Facturación
+                        {% elif lang == 'zh' %}
+                            开票
+                        {% else %}
+                            Billing
+                        {% endif %}
                     </div>
                     <div class="snap-value">
-                        {% if lang == 'es' %}Rápida y clara{% else %}Fast and clean{% endif %}
+                        {% if lang == 'es' %}
+                            Rápida y clara
+                        {% elif lang == 'zh' %}
+                            快速清晰
+                        {% else %}
+                            Fast and clean
+                        {% endif %}
                     </div>
                 </div>
 
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Seguimiento{% else %}Tracking{% endif %}
+                        {% if lang == 'es' %}
+                            Seguimiento
+                        {% elif lang == 'zh' %}
+                            跟踪
+                        {% else %}
+                            Tracking
+                        {% endif %}
                     </div>
                     <div class="snap-value">
-                        {% if lang == 'es' %}Pagadas, enviadas y vencidas{% else %}Paid, sent, and overdue{% endif %}
+                        {% if lang == 'es' %}
+                            Pagadas, enviadas y vencidas
+                        {% elif lang == 'zh' %}
+                            已付款、已发送和逾期
+                        {% else %}
+                            Paid, sent, and overdue
+                        {% endif %}
                     </div>
                 </div>
 
                 <div class="snap-item">
                     <div class="snap-label">
-                        {% if lang == 'es' %}Acceso{% else %}Access{% endif %}
+                        {% if lang == 'es' %}
+                            Acceso
+                        {% elif lang == 'zh' %}
+                            访问
+                        {% else %}
+                            Access
+                        {% endif %}
                     </div>
                     <div class="snap-value">
-                        {% if lang == 'es' %}Cuenta segura{% else %}Secure account{% endif %}
+                        {% if lang == 'es' %}
+                            Cuenta segura
+                        {% elif lang == 'zh' %}
+                            安全账户
+                        {% else %}
+                            Secure account
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -330,6 +429,8 @@
                 <li>
                     {% if lang == 'es' %}
                         Usa el mismo correo con el que registraste tu cuenta.
+                    {% elif lang == 'zh' %}
+                        请使用注册账户时的邮箱登录。
                     {% else %}
                         Use the same email address you registered with.
                     {% endif %}
@@ -337,6 +438,8 @@
                 <li>
                     {% if lang == 'es' %}
                         Si no recuerdas tu contraseña, usa el enlace de recuperación.
+                    {% elif lang == 'zh' %}
+                        如果你不记得密码，请使用重置链接。
                     {% else %}
                         If you do not remember your password, use the reset link.
                     {% endif %}
@@ -344,6 +447,8 @@
                 <li>
                     {% if lang == 'es' %}
                         ¿Nuevo en BillBeam? Crea tu cuenta y empieza gratis.
+                    {% elif lang == 'zh' %}
+                        第一次使用 BillBeam？创建账户即可免费开始。
                     {% else %}
                         New to BillBeam? Create your account and start free.
                     {% endif %}
@@ -352,13 +457,31 @@
 
             <div class="trust-row">
                 <div class="trust-pill">
-                    {% if lang == 'es' %}Inicio de sesión seguro{% else %}Secure sign-in{% endif %}
+                    {% if lang == 'es' %}
+                        Inicio de sesión seguro
+                    {% elif lang == 'zh' %}
+                        安全登录
+                    {% else %}
+                        Secure sign-in
+                    {% endif %}
                 </div>
                 <div class="trust-pill">
-                    {% if lang == 'es' %}Panel en tiempo real{% else %}Live dashboard{% endif %}
+                    {% if lang == 'es' %}
+                        Panel en tiempo real
+                    {% elif lang == 'zh' %}
+                        实时仪表板
+                    {% else %}
+                        Live dashboard
+                    {% endif %}
                 </div>
                 <div class="trust-pill">
-                    {% if lang == 'es' %}Facturas profesionales{% else %}Professional invoices{% endif %}
+                    {% if lang == 'es' %}
+                        Facturas profesionales
+                    {% elif lang == 'zh' %}
+                        专业发票
+                    {% else %}
+                        Professional invoices
+                    {% endif %}
                 </div>
             </div>
         </aside>

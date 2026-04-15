@@ -1,4 +1,4 @@
-/* ========================================================= 
+/* =========================================================
    BILLBEAM — CONSOLIDATED CORE STYLESHEET
    Full replacement for static/style.css
    Built to support:
@@ -49,6 +49,10 @@
     --radius-xl: 24px;
 
     --container-max: 1200px;
+
+    --ring: 0 0 0 4px rgba(58, 139, 255, 0.14);
+    --ring-dark: 0 0 0 4px rgba(96, 165, 250, 0.18);
+    --nav-height: 64px;
 }
 
 /* =========================
@@ -77,6 +81,8 @@ body {
 body {
     margin: 0;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
     color: var(--text-light);
     background:
         radial-gradient(circle at top left, rgba(58, 139, 255, 0.10), transparent 34%),
@@ -133,7 +139,12 @@ body::after {
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 70%);
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
+}
+
+::selection {
+    background: rgba(58, 139, 255, 0.18);
+    color: inherit;
 }
 
 a {
@@ -143,7 +154,26 @@ a {
 }
 
 a:hover {
-    opacity: 0.9;
+    opacity: 0.92;
+}
+
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+body.dark a:focus-visible,
+body.dark button:focus-visible,
+body.dark .btn:focus-visible,
+body.dark input:focus-visible,
+body.dark select:focus-visible,
+body.dark textarea:focus-visible {
+    box-shadow: var(--ring-dark);
 }
 
 img {
@@ -247,7 +277,7 @@ h1, h2, h3, h4 {
 }
 
 p {
-    line-height: 1.6;
+    line-height: 1.65;
 }
 
 .muted-text {
@@ -270,6 +300,7 @@ body.dark .muted-text {
     justify-content: space-between;
     align-items: center;
     gap: 18px;
+    min-height: var(--nav-height);
     padding: 14px 22px 14px 58px;
     background: rgba(255, 255, 255, 0.74);
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
@@ -446,6 +477,7 @@ button,
     font-size: 14px;
     font-weight: 700;
     font-family: inherit;
+    line-height: 1.2;
     background: var(--accent);
     color: #ffffff;
     border: 2px solid transparent;
@@ -458,6 +490,7 @@ button,
         opacity 0.18s ease;
     min-height: 42px;
     text-align: center;
+    white-space: normal;
 }
 
 button:hover,
@@ -483,6 +516,10 @@ button:disabled,
 .btn-brand {
     background: var(--accent-dark);
     color: #ffffff;
+}
+
+.btn-brand:hover {
+    background: #0f1442;
 }
 
 .btn-secondary {
@@ -566,7 +603,7 @@ select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(58, 139, 255, 0.14);
+    box-shadow: var(--ring);
 }
 
 textarea {
@@ -585,6 +622,12 @@ body.dark textarea {
 body.dark input::placeholder,
 body.dark textarea::placeholder {
     color: rgba(148, 163, 184, 0.84);
+}
+
+body.dark input:focus,
+body.dark select:focus,
+body.dark textarea:focus {
+    box-shadow: var(--ring-dark);
 }
 
 /* =========================
@@ -1693,16 +1736,6 @@ body.dark .hamburger span {
     color: #ffffff;
     box-shadow: none;
     filter: none;
-}
-
-.sidebar-link:hover {
-    background: #374151;
-    padding-left: 32px;
-}
-
-.sidebar-link.active {
-    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
-    color: #ffffff;
 }
 
 .overlay {
@@ -3079,6 +3112,11 @@ body.dark .footer-chip {
     opacity: 0.92;
 }
 
+.footer-links a {
+    position: relative;
+    z-index: 3;
+}
+
 .footer-links a:hover {
     text-decoration: underline;
 }
@@ -3167,17 +3205,13 @@ body.dark .doodle {
     bottom: 20px;
     width: 120px;
     height: 120px;
-    z-index: 9999;
+    z-index: 999;
     pointer-events: none;
     opacity: 0.95;
-
     background-image: url("/static/gold-infinity-final.png");
     background-repeat: no-repeat;
     background-position: center;
-
-    /* THIS is the key fix */
     background-size: 140%;
-
     filter: drop-shadow(0 10px 22px rgba(15, 23, 42, 0.25));
 }
 
@@ -3318,6 +3352,8 @@ body.dark .inline-success {
 .footer-contact-row > div {
     min-width: 0;
     max-width: 100%;
+    position: relative;
+    z-index: 2;
 }
 
 .footer-contact-row a {
@@ -3337,11 +3373,6 @@ body.dark .inline-success {
 .footer-contact-label {
     opacity: 0.72;
     margin-right: 4px;
-}
-
-.footer-contact-row > div {
-    position: relative;
-    z-index: 2;
 }
 
 .footer-email-link {
@@ -3688,8 +3719,10 @@ body.dark .inline-success {
     .charts-row,
     .charts-grid,
     .checklist-grid {
-        grid-template-columns: 1fr;    .public-status-row,
+        grid-template-columns: 1fr;
+    }
 
+    .public-status-row,
     .public-glance,
     .summary-actions,
     .payment-actions,
@@ -3706,20 +3739,15 @@ body.dark .inline-success {
 
     .payment-actions .btn,
     .summary-actions .btn,
-    .quick-actions .btn {
+    .quick-actions .btn,
+    .form-actions .btn {
         width: 100%;
-    }
     }
 
     .search-bar.modern form,
     .form-actions,
     .quick-actions,
     .status-summary {
-        width: 100%;
-    }
-
-    .form-actions .btn,
-    .quick-actions .btn {
         width: 100%;
     }
 
@@ -3800,14 +3828,14 @@ a[href^="mailto:"] {
 }
 
 @media (max-width: 900px) {
-  .bg-doodles,
-  .public-stamp-doodle,
-  #loader {
-    display: none !important;
-  }
+    .bg-doodles,
+    .public-stamp-doodle,
+    #loader {
+        display: none !important;
+    }
 
-  body::before,
-  body::after {
-    display: none !important;
-  }
+    body::before,
+    body::after {
+        display: none !important;
+    }
 }

@@ -4,6 +4,8 @@
 {% block title %}
 {% if lang == 'es' %}
 Prácticas de Seguridad · BillBeam
+{% elif lang == 'zh' %}
+安全实践 · BillBeam
 {% else %}
 Security Practices · BillBeam
 {% endif %}
@@ -12,6 +14,8 @@ Security Practices · BillBeam
 {% block meta_description %}
 {% if lang == 'es' %}
 Resumen general del enfoque de BillBeam para proteger información en su sitio web, aplicación móvil y servicios relacionados.
+{% elif lang == 'zh' %}
+BillBeam 在其网站、移动应用和相关服务中保护信息的一般做法概览。
 {% else %}
 A general overview of BillBeam’s approach to protecting information across its website, mobile application, and related services.
 {% endif %}
@@ -24,6 +28,8 @@ A general overview of BillBeam’s approach to protecting information across its
         <div class="legal-eyebrow">
             {% if lang == 'es' %}
                 Seguridad y protección de datos
+            {% elif lang == 'zh' %}
+                安全与数据保护
             {% else %}
                 Security and data protection
             {% endif %}
@@ -32,6 +38,8 @@ A general overview of BillBeam’s approach to protecting information across its
         <h1>
             {% if lang == 'es' %}
                 Prácticas de Seguridad
+            {% elif lang == 'zh' %}
+                安全实践
             {% else %}
                 Security Practices
             {% endif %}
@@ -40,6 +48,8 @@ A general overview of BillBeam’s approach to protecting information across its
         <p class="legal-lead">
             {% if lang == 'es' %}
                 BillBeam toma la seguridad de la información en serio. Esta página describe, en términos generales, cómo BillBeam aborda la protección de datos dentro de su sitio web, aplicación móvil y servicios relacionados.
+            {% elif lang == 'zh' %}
+                BillBeam 非常重视信息安全。本页从总体层面说明 BillBeam 如何在其网站、移动应用和相关服务中保护数据。
             {% else %}
                 BillBeam takes information security seriously. This page describes, in general terms, how BillBeam approaches data protection across its website, mobile application, and related services.
             {% endif %}
@@ -49,6 +59,8 @@ A general overview of BillBeam’s approach to protecting information across its
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Última actualización: {{ now().strftime("%B %Y") }}
+                {% elif lang == 'zh' %}
+                    最后更新：{{ now().strftime("%B %Y") }}
                 {% else %}
                     Last updated: {{ now().strftime("%B %Y") }}
                 {% endif %}
@@ -57,6 +69,8 @@ A general overview of BillBeam’s approach to protecting information across its
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Seguridad razonable y operativa
+                {% elif lang == 'zh' %}
+                    合理且实际的安全措施
                 {% else %}
                     Reasonable and operational security
                 {% endif %}
@@ -65,10 +79,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}1. Enfoque general{% else %}1. General Approach{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                1. Enfoque general
+            {% elif lang == 'zh' %}
+                1. 总体方法
+            {% else %}
+                1. General Approach
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam busca aplicar medidas administrativas, técnicas y operativas razonables para ayudar a proteger información contra acceso no autorizado, alteración, divulgación o destrucción.
+            {% elif lang == 'zh' %}
+                BillBeam 致力于采取合理的管理、技术和运营措施，以帮助防止信息遭到未经授权的访问、篡改、披露或破坏。
             {% else %}
                 BillBeam seeks to apply reasonable administrative, technical, and operational measures to help protect information against unauthorized access, alteration, disclosure, or destruction.
             {% endif %}
@@ -76,6 +100,8 @@ A general overview of BillBeam’s approach to protecting information across its
         <p>
             {% if lang == 'es' %}
                 Estas medidas pueden revisarse y mejorarse con el tiempo según cambian el producto, la infraestructura y los riesgos conocidos.
+            {% elif lang == 'zh' %}
+                随着产品、基础设施和已知风险的变化，这些措施可能会被持续审查并加以改进。
             {% else %}
                 These measures may be reviewed and improved over time as the product, infrastructure, and known risks evolve.
             {% endif %}
@@ -83,10 +109,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}2. Acceso a cuentas{% else %}2. Account Access{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                2. Acceso a cuentas
+            {% elif lang == 'zh' %}
+                2. 账户访问
+            {% else %}
+                2. Account Access
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 El acceso a cuentas depende de credenciales de autenticación. Los usuarios son responsables de mantener sus credenciales confidenciales y evitar compartirlas con terceros no autorizados.
+            {% elif lang == 'zh' %}
+                账户访问依赖认证凭据。用户有责任对其凭据保密，并避免与未经授权的第三方共享。
             {% else %}
                 Account access depends on authentication credentials. Users are responsible for keeping their credentials confidential and avoiding sharing them with unauthorized third parties.
             {% endif %}
@@ -94,10 +130,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}3. Seguridad en tránsito y proveedores{% else %}3. Security in Transit and Through Providers{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                3. Seguridad en tránsito y proveedores
+            {% elif lang == 'zh' %}
+                3. 传输安全与服务提供商
+            {% else %}
+                3. Security in Transit and Through Providers
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede depender de proveedores externos de infraestructura, hosting, procesamiento de pagos, correo electrónico y servicios técnicos relacionados. Cuando corresponda, la información puede transmitirse mediante conexiones protegidas por tecnologías estándar del sector.
+            {% elif lang == 'zh' %}
+                BillBeam 可能会依赖第三方基础设施、托管、支付处理、电子邮件和相关技术服务提供商。在适当情况下，信息可能会通过行业标准的受保护连接进行传输。
             {% else %}
                 BillBeam may rely on third-party providers for infrastructure, hosting, payment processing, email delivery, and related technical services. Where appropriate, information may be transmitted using industry-standard protected connections.
             {% endif %}
@@ -105,10 +151,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}4. Pagos{% else %}4. Payments{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                4. Pagos
+            {% elif lang == 'zh' %}
+                4. 支付
+            {% else %}
+                4. Payments
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Los pagos pueden procesarse mediante proveedores externos como Stripe. BillBeam no está diseñado para almacenar números completos de tarjetas de pago en sus propios sistemas.
+            {% elif lang == 'zh' %}
+                支付可能通过 Stripe 等第三方服务商处理。BillBeam 并非设计为在自身系统中存储完整的支付卡号。
             {% else %}
                 Payments may be processed through third-party providers such as Stripe. BillBeam is not designed to store full payment card numbers in its own systems.
             {% endif %}
@@ -116,10 +172,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}5. Acceso interno mínimo necesario{% else %}5. Internal Need-to-Know Access{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                5. Acceso interno mínimo necesario
+            {% elif lang == 'zh' %}
+                5. 内部最小必要访问
+            {% else %}
+                5. Internal Need-to-Know Access
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 El acceso interno a información debe limitarse, en la medida razonable, a personas, sistemas o proveedores que necesiten esa información para operar, mantener o dar soporte al Servicio.
+            {% elif lang == 'zh' %}
+                在合理范围内，内部对信息的访问应仅限于为运营、维护或支持服务而确有需要的人员、系统或服务提供商。
             {% else %}
                 Internal access to information should be limited, to the extent reasonable, to persons, systems, or providers who need that information to operate, maintain, or support the Service.
             {% endif %}
@@ -127,10 +193,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}6. Retención y eliminación{% else %}6. Retention and Deletion{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                6. Retención y eliminación
+            {% elif lang == 'zh' %}
+                6. 保留与删除
+            {% else %}
+                6. Retention and Deletion
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede conservar información mientras sea necesario para operar el Servicio, cumplir fines operativos razonables, resolver disputas, aplicar acuerdos o cumplir obligaciones legales.
+            {% elif lang == 'zh' %}
+                BillBeam 可能会在运营服务、实现合理运营目的、解决争议、执行协议或履行法律义务所必需的期间内保留信息。
             {% else %}
                 BillBeam may retain information as necessary to operate the Service, fulfill reasonable operational purposes, resolve disputes, enforce agreements, or comply with legal obligations.
             {% endif %}
@@ -138,6 +214,8 @@ A general overview of BillBeam’s approach to protecting information across its
         <p>
             {% if lang == 'es' %}
                 Cuando sea apropiado y posible, los datos podrán eliminarse o anonimizarse conforme a políticas internas o solicitudes válidas del usuario.
+            {% elif lang == 'zh' %}
+                在适当且可行的情况下，数据可能会根据内部政策或有效的用户请求被删除或匿名化。
             {% else %}
                 Where appropriate and feasible, data may be deleted or anonymized in accordance with internal policies or valid user requests.
             {% endif %}
@@ -145,10 +223,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}7. Respuesta ante incidentes{% else %}7. Incident Response{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                7. Respuesta ante incidentes
+            {% elif lang == 'zh' %}
+                7. 安全事件响应
+            {% else %}
+                7. Incident Response
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Si BillBeam detecta un incidente de seguridad, podrá investigar, contener, corregir y tomar medidas razonables según la naturaleza del incidente y la información disponible.
+            {% elif lang == 'zh' %}
+                如果 BillBeam 发现安全事件，可能会根据事件性质和可用信息进行调查、遏制、修复并采取合理措施。
             {% else %}
                 If BillBeam becomes aware of a security incident, it may investigate, contain, remediate, and take reasonable steps based on the nature of the incident and the information available.
             {% endif %}
@@ -156,6 +244,8 @@ A general overview of BillBeam’s approach to protecting information across its
         <p>
             {% if lang == 'es' %}
                 Cuando la ley aplicable lo exija, BillBeam podrá proporcionar avisos apropiados a usuarios o autoridades correspondientes.
+            {% elif lang == 'zh' %}
+                在适用法律要求的情况下，BillBeam 可能会向受影响用户或相关主管机构提供适当通知。
             {% else %}
                 Where required by applicable law, BillBeam may provide appropriate notice to affected users or relevant authorities.
             {% endif %}
@@ -163,10 +253,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}8. Limitaciones{% else %}8. Limitations{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                8. Limitaciones
+            {% elif lang == 'zh' %}
+                8. 限制说明
+            {% else %}
+                8. Limitations
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Ningún método de transmisión o almacenamiento electrónico puede garantizar seguridad absoluta. Aunque BillBeam busca aplicar medidas razonables, no puede garantizar que el Servicio será completamente inmune a incidentes de seguridad.
+            {% elif lang == 'zh' %}
+                没有任何传输或电子存储方式能够保证绝对安全。尽管 BillBeam 致力于采取合理防护措施，但无法保证服务完全不会受到安全事件影响。
             {% else %}
                 No method of transmission or electronic storage can guarantee absolute security. Although BillBeam seeks to apply reasonable safeguards, it cannot guarantee that the Service will be completely immune from security incidents.
             {% endif %}
@@ -174,20 +274,70 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}9. Responsabilidades del usuario{% else %}9. User Responsibilities{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                9. Responsabilidades del usuario
+            {% elif lang == 'zh' %}
+                9. 用户责任
+            {% else %}
+                9. User Responsibilities
+            {% endif %}
+        </h2>
         <ul>
-            <li>{% if lang == 'es' %}usar contraseñas seguras y mantenerlas confidenciales{% else %}use strong passwords and keep them confidential{% endif %}</li>
-            <li>{% if lang == 'es' %}cerrar sesión en dispositivos compartidos cuando corresponda{% else %}sign out on shared devices where appropriate{% endif %}</li>
-            <li>{% if lang == 'es' %}evitar compartir datos sensibles innecesarios en campos no destinados a ello{% else %}avoid sharing unnecessary sensitive data in fields not intended for it{% endif %}</li>
-            <li>{% if lang == 'es' %}contactar soporte si detectas actividad sospechosa{% else %}contact support if you notice suspicious activity{% endif %}</li>
+            <li>
+                {% if lang == 'es' %}
+                    usar contraseñas seguras y mantenerlas confidenciales
+                {% elif lang == 'zh' %}
+                    使用强密码并妥善保密
+                {% else %}
+                    use strong passwords and keep them confidential
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    cerrar sesión en dispositivos compartidos cuando corresponda
+                {% elif lang == 'zh' %}
+                    在共享设备上于适当情况下退出登录
+                {% else %}
+                    sign out on shared devices where appropriate
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    evitar compartir datos sensibles innecesarios en campos no destinados a ello
+                {% elif lang == 'zh' %}
+                    避免在非预期字段中填写不必要的敏感信息
+                {% else %}
+                    avoid sharing unnecessary sensitive data in fields not intended for it
+                {% endif %}
+            </li>
+            <li>
+                {% if lang == 'es' %}
+                    contactar soporte si detectas actividad sospechosa
+                {% elif lang == 'zh' %}
+                    如发现可疑活动，请联系支持团队
+                {% else %}
+                    contact support if you notice suspicious activity
+                {% endif %}
+            </li>
         </ul>
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}10. Cambios a esta página{% else %}10. Changes to This Page{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                10. Cambios a esta página
+            {% elif lang == 'zh' %}
+                10. 本页面的更新
+            {% else %}
+                10. Changes to This Page
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede actualizar esta página periódicamente para reflejar cambios razonables en el producto, infraestructura o enfoque de seguridad.
+            {% elif lang == 'zh' %}
+                BillBeam 可能会定期更新本页面，以反映产品、基础设施或安全策略中的合理变化。
             {% else %}
                 BillBeam may update this page periodically to reflect reasonable changes in the product, infrastructure, or security approach.
             {% endif %}
@@ -195,10 +345,20 @@ A general overview of BillBeam’s approach to protecting information across its
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}11. Contacto{% else %}11. Contact{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                11. Contacto
+            {% elif lang == 'zh' %}
+                11. 联系方式
+            {% else %}
+                11. Contact
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Si tienes preguntas relacionadas con seguridad o deseas reportar una posible vulnerabilidad o incidente, puedes contactar a través de la sección de ayuda o soporte dentro del Servicio.
+            {% elif lang == 'zh' %}
+                如果你有与安全相关的问题，或希望报告潜在漏洞或事件，可以通过服务内的帮助或支持渠道联系我们。
             {% else %}
                 If you have security-related questions or wish to report a possible vulnerability or incident, you may contact us through the help or support section within the Service.
             {% endif %}

@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 {% block title %}
   {% if lang == 'es' %}
     Acerca de BillBeam
+  {% elif lang == 'zh' %}
+    关于 BillBeam
   {% else %}
     About BillBeam
   {% endif %}
@@ -12,6 +17,8 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Conoce BillBeam, la app de facturación moderna creada para freelancers, estudios pequeños y equipos ágiles.
+  {% elif lang == 'zh' %}
+    了解 BillBeam，这是一款为自由职业者、小型工作室和轻量团队打造的现代发票应用。
   {% else %}
     Learn about BillBeam, the modern invoicing app built for freelancers, small studios, and lean teams.
   {% endif %}
@@ -352,6 +359,8 @@
       <h1>
         {% if lang == 'es' %}
           Acerca de BillBeam
+        {% elif lang == 'zh' %}
+          关于 BillBeam
         {% else %}
           About BillBeam
         {% endif %}
@@ -359,6 +368,8 @@
       <div class="about-subcopy">
         {% if lang == 'es' %}
           Una experiencia de facturación moderna creada para ayudarte a cobrar más rápido, trabajar con más claridad y presentar mejor tu negocio.
+        {% elif lang == 'zh' %}
+          一套现代发票体验，帮助你更快收款、更清晰工作，并以更专业的方式展示你的业务。
         {% else %}
           A modern invoicing experience built to help you get paid faster, work with more clarity, and present your business more professionally.
         {% endif %}
@@ -367,7 +378,13 @@
 
     <div class="quick-actions">
       <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+        {% if lang == 'es' %}
+          Ir al panel
+        {% elif lang == 'zh' %}
+          前往面板
+        {% else %}
+          Go to Dashboard
+        {% endif %}
       </a>
     </div>
   </div>
@@ -377,6 +394,8 @@
       <div class="about-kicker">
         {% if lang == 'es' %}
           Facturación moderna • BillBeam
+        {% elif lang == 'zh' %}
+          现代发票 • BillBeam
         {% else %}
           Modern invoicing • BillBeam
         {% endif %}
@@ -385,6 +404,8 @@
       <h2 class="about-hero-title">
         {% if lang == 'es' %}
           Tu panel de control para facturas rápidas y claras
+        {% elif lang == 'zh' %}
+          你的清晰高效发票控制中心
         {% else %}
           Your command center for clean, fast invoices
         {% endif %}
@@ -393,6 +414,8 @@
       <div class="about-hero-copy">
         {% if lang == 'es' %}
           BillBeam está diseñado para freelancers, agencias pequeñas y equipos ágiles que quieren enviar facturas claras sin pelear con hojas de cálculo pesadas o herramientas demasiado complejas. La meta es simple: ayudarte a cobrar más rápido y con menos fricción.
+        {% elif lang == 'zh' %}
+          BillBeam 专为自由职业者、小型工作室和轻量团队打造，适合那些希望发送清晰发票、又不想被笨重表格或复杂工具拖慢的人。目标很简单：帮助你更快收款，并减少流程摩擦。
         {% else %}
           BillBeam is built for freelancers, small agencies, and lean teams who want to send clear invoices without wrestling with bloated spreadsheets or overly complex tools. The goal is simple: help you get paid faster, with less friction.
         {% endif %}
@@ -401,28 +424,64 @@
       <div class="about-hero-points">
         <div class="about-point">
           <div class="about-point-label">
-            {% if lang == 'es' %}Enfoque{% else %}Focus{% endif %}
+            {% if lang == 'es' %}
+              Enfoque
+            {% elif lang == 'zh' %}
+              核心重点
+            {% else %}
+              Focus
+            {% endif %}
           </div>
           <div class="about-point-value">
-            {% if lang == 'es' %}Facturas claras{% else %}Clear invoices{% endif %}
+            {% if lang == 'es' %}
+              Facturas claras
+            {% elif lang == 'zh' %}
+              清晰发票
+            {% else %}
+              Clear invoices
+            {% endif %}
           </div>
         </div>
 
         <div class="about-point">
           <div class="about-point-label">
-            {% if lang == 'es' %}Meta{% else %}Goal{% endif %}
+            {% if lang == 'es' %}
+              Meta
+            {% elif lang == 'zh' %}
+              目标
+            {% else %}
+              Goal
+            {% endif %}
           </div>
           <div class="about-point-value">
-            {% if lang == 'es' %}Cobrar más rápido{% else %}Get paid faster{% endif %}
+            {% if lang == 'es' %}
+              Cobrar más rápido
+            {% elif lang == 'zh' %}
+              更快收款
+            {% else %}
+              Get paid faster
+            {% endif %}
           </div>
         </div>
 
         <div class="about-point">
           <div class="about-point-label">
-            {% if lang == 'es' %}Experiencia{% else %}Experience{% endif %}
+            {% if lang == 'es' %}
+              Experiencia
+            {% elif lang == 'zh' %}
+              体验
+            {% else %}
+              Experience
+            {% endif %}
           </div>
           <div class="about-point-value">
-            {% if lang == 'es' %}Simple y moderna{% else %}Simple and modern{% endif %}
+            {% if lang == 'es' %}
+              Simple y moderna
+            {% elif lang == 'zh' %}
+              简洁现代
+            {% else %}
+              Simple and modern
+            {% endif %}
           </div>
         </div>
       </div>
@@ -430,12 +489,20 @@
 
     <aside class="about-side-panel reveal">
       <h3>
-        {% if lang == 'es' %}Lo que BillBeam prioriza{% else %}What BillBeam prioritizes{% endif %}
+        {% if lang == 'es' %}
+          Lo que BillBeam prioriza
+        {% elif lang == 'zh' %}
+          BillBeam 最重视的内容
+        {% else %}
+          What BillBeam prioritizes
+        {% endif %}
       </h3>
 
       <div class="about-side-copy">
         {% if lang == 'es' %}
           BillBeam no intenta ser una herramienta para todo. Se enfoca en hacer la facturación más clara, rápida y menos frustrante.
+        {% elif lang == 'zh' %}
+          BillBeam 并不试图成为“无所不能的软件”。它专注于让发票流程更清晰、更快速、也更少令人烦躁。
         {% else %}
           BillBeam does not try to be everything software. It focuses on making invoicing clearer, faster, and less frustrating.
         {% endif %}
@@ -447,6 +514,8 @@
           <div>
             {% if lang == 'es' %}
               Menos fricción al crear y enviar facturas.
+            {% elif lang == 'zh' %}
+              减少创建和发送发票时的摩擦。
             {% else %}
               Less friction when creating and sending invoices.
             {% endif %}
@@ -458,6 +527,8 @@
           <div>
             {% if lang == 'es' %}
               Mejor claridad para ti y para tu cliente.
+            {% elif lang == 'zh' %}
+              为你和客户带来更清晰的体验。
             {% else %}
               Better clarity for both you and your client.
             {% endif %}
@@ -469,6 +540,8 @@
           <div>
             {% if lang == 'es' %}
               Una experiencia más profesional en cada paso.
+            {% elif lang == 'zh' %}
+              在每一步都提供更专业的体验。
             {% else %}
               A more professional experience at every step.
             {% endif %}
@@ -482,7 +555,13 @@
 
     <section class="about-section-card reveal">
       <h3>
-        {% if lang == 'es' %}Qué hace BillBeam bien{% else %}What BillBeam focuses on{% endif %}
+        {% if lang == 'es' %}
+          Qué hace BillBeam bien
+        {% elif lang == 'zh' %}
+          BillBeam 擅长什么
+        {% else %}
+          What BillBeam focuses on
+        {% endif %}
       </h3>
 
       <ul class="about-list">
@@ -491,6 +570,8 @@
           <span>
             {% if lang == 'es' %}
               Crear facturas en segundos con un flujo simple y visual.
+            {% elif lang == 'zh' %}
+              通过简单直观的流程在几秒内创建发票。
             {% else %}
               Create invoices in seconds with a streamlined visual flow.
             {% endif %}
@@ -501,6 +582,8 @@
           <span>
             {% if lang == 'es' %}
               Ver historial de facturas y pagos sin perderte entre pantallas.
+            {% elif lang == 'zh' %}
+              无需在过多页面之间切换，也能查看发票和付款历史。
             {% else %}
               See invoice and payment history without getting lost across too many screens.
             {% endif %}
@@ -511,6 +594,8 @@
           <span>
             {% if lang == 'es' %}
               Compartir enlaces públicos modernos de facturas con tus clientes.
+            {% elif lang == 'zh' %}
+              与客户分享现代化的公开发票页面。
             {% else %}
               Share modern public invoice pages with your clients.
             {% endif %}
@@ -521,6 +606,8 @@
           <span>
             {% if lang == 'es' %}
               Mantener un registro claro de pagos parciales y facturas vencidas.
+            {% elif lang == 'zh' %}
+              清楚记录部分付款和逾期发票。
             {% else %}
               Keep a clear record of partial payments and overdue invoices.
             {% endif %}
@@ -531,6 +618,8 @@
           <span>
             {% if lang == 'es' %}
               Recibir ayuda dentro de la app con BillBeam Assistant.
+            {% elif lang == 'zh' %}
+              需要时可在应用内获得 BillBeam Assistant 的帮助。
             {% else %}
               Get in-app guidance from BillBeam Assistant when you need it.
             {% endif %}
@@ -541,13 +630,21 @@
 
     <section class="about-section-card reveal">
       <h3>
-        {% if lang == 'es' %}Filosofía del producto{% else %}Product philosophy{% endif %}
+        {% if lang == 'es' %}
+          Filosofía del producto
+        {% elif lang == 'zh' %}
+          产品理念
+        {% else %}
+          Product philosophy
+        {% endif %}
       </h3>
       <p>
         {% if lang == 'es' %}
           En lugar de intentar ser “la herramienta para todo”, BillBeam se enfoca en hacer una cosa extremadamente bien: ayudarte a enviar facturas profesionales y dar seguimiento a pagos sin dolores de cabeza. La interfaz está pensada para ser rápida, minimalista y amigable incluso si no te consideras una persona técnica.
+        {% elif lang == 'zh' %}
+          BillBeam 并不是要成为“包办一切的软件”，而是专注把一件事做好：帮助你发送专业发票，并轻松跟踪付款。界面被设计成快速、简洁、友好，即使你并不擅长技术也能轻松上手。
         {% else %}
-          Instead of trying to be “everything software,” BillBeam focuses on doing one thing extremely well: helping you send professional invoices and track payments without headaches. The interface is designed to feel fast, minimal, and friendly even if you do not consider yourself a technical person.
+          Instead of trying to be everything software, BillBeam focuses on doing one thing extremely well: helping you send professional invoices and track payments without headaches. The interface is designed to feel fast, minimal, and friendly even if you do not consider yourself a technical person.
         {% endif %}
       </p>
     </section>
@@ -555,11 +652,19 @@
     <div class="about-values reveal">
       <div class="about-value-card">
         <div class="about-value-title">
-          {% if lang == 'es' %}Claridad{% else %}Clarity{% endif %}
+          {% if lang == 'es' %}
+            Claridad
+          {% elif lang == 'zh' %}
+            清晰
+          {% else %}
+            Clarity
+          {% endif %}
         </div>
         <div class="about-value-copy">
           {% if lang == 'es' %}
             Menos ruido, menos desorden y más enfoque en lo que realmente importa: cobrar.
+          {% elif lang == 'zh' %}
+            更少噪音、更少混乱，把重点放在真正重要的事情上：收款。
           {% else %}
             Less noise, less clutter, and more focus on what actually matters: getting paid.
           {% endif %}
@@ -568,11 +673,19 @@
 
       <div class="about-value-card">
         <div class="about-value-title">
-          {% if lang == 'es' %}Velocidad{% else %}Speed{% endif %}
+          {% if lang == 'es' %}
+            Velocidad
+          {% elif lang == 'zh' %}
+            速度
+          {% else %}
+            Speed
+          {% endif %}
         </div>
         <div class="about-value-copy">
           {% if lang == 'es' %}
             Un flujo rápido ayuda a crear, revisar y enviar facturas con menos trabajo manual.
+          {% elif lang == 'zh' %}
+            更快的流程意味着用更少的手动操作完成创建、检查和发送发票。
           {% else %}
             A fast workflow helps you create, review, and send invoices with less manual effort.
           {% endif %}
@@ -581,11 +694,19 @@
 
       <div class="about-value-card">
         <div class="about-value-title">
-          {% if lang == 'es' %}Confianza{% else %}Trust{% endif %}
+          {% if lang == 'es' %}
+            Confianza
+          {% elif lang == 'zh' %}
+            信任
+          {% else %}
+            Trust
+          {% endif %}
         </div>
         <div class="about-value-copy">
           {% if lang == 'es' %}
             Una experiencia visual más sólida hace que tu negocio se vea más profesional frente al cliente.
+          {% elif lang == 'zh' %}
+            更扎实的视觉体验能让你的业务在客户面前显得更加专业。
           {% else %}
             A stronger visual experience helps your business feel more professional to clients.
           {% endif %}
@@ -595,11 +716,19 @@
 
     <section class="about-section-card reveal">
       <h3>
-        {% if lang == 'es' %}Contacto y retroalimentación{% else %}Contact & feedback{% endif %}
+        {% if lang == 'es' %}
+          Contacto y retroalimentación
+        {% elif lang == 'zh' %}
+          联系与反馈
+        {% else %}
+          Contact & feedback
+        {% endif %}
       </h3>
       <p>
         {% if lang == 'es' %}
           ¿Tienes ideas, comentarios o encontraste un bug raro? BillBeam es un proyecto vivo y siempre mejorando. Tu feedback ayuda a priorizar qué construir después y cómo seguir puliendo la experiencia.
+        {% elif lang == 'zh' %}
+          有想法、建议，或者发现了奇怪的 bug？BillBeam 是一个持续演进的产品。你的反馈会帮助决定下一步优先构建什么，以及如何继续打磨体验。
         {% else %}
           Have ideas, feedback, or found a weird bug? BillBeam is a living product that is always improving. Your feedback helps prioritize what gets built next and how the experience keeps getting polished.
         {% endif %}
@@ -607,6 +736,8 @@
       <p style="margin-top: 12px;">
         {% if lang == 'es' %}
           Puedes enviar comentarios desde la sección de Ayuda dentro de la app o responder a cualquier correo de BillBeam.
+        {% elif lang == 'zh' %}
+          你可以通过应用内的帮助页面发送反馈，或直接回复任何一封 BillBeam 邮件。
         {% else %}
           You can send feedback from the Help section inside the app or by replying to any BillBeam email you receive.
         {% endif %}

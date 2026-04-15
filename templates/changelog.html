@@ -4,6 +4,8 @@
 {% block title %}
   {% if lang == 'es' %}
     Registro de cambios · BillBeam
+  {% elif lang == 'zh' %}
+    更新日志 · BillBeam
   {% else %}
     Changelog · BillBeam
   {% endif %}
@@ -12,6 +14,8 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Sigue la evolución de BillBeam con un resumen de mejoras recientes en planes, facturación, pagos, experiencia del cliente y estabilidad del producto.
+  {% elif lang == 'zh' %}
+    通过持续更新的摘要了解 BillBeam 在套餐、开票、支付、客户体验和产品稳定性方面的最新改进。
   {% else %}
     Follow BillBeam’s evolution with a running summary of recent improvements to plans, invoicing, payments, client experience, and product stability.
   {% endif %}
@@ -344,6 +348,8 @@
       <h1>
         {% if lang == 'es' %}
           Cómo está evolucionando BillBeam
+        {% elif lang == 'zh' %}
+          BillBeam 正在如何发展
         {% else %}
           How BillBeam is evolving
         {% endif %}
@@ -351,6 +357,8 @@
       <div class="changelog-subcopy">
         {% if lang == 'es' %}
           Un resumen claro de las mejoras más recientes en planes, facturación, cobros, experiencia del cliente, estabilidad y presentación general del producto.
+        {% elif lang == 'zh' %}
+          清晰概览 BillBeam 最近在套餐、开票、收款、客户体验、稳定性和整体产品呈现方面的改进。
         {% else %}
           A clear running summary of recent improvements across plans, invoicing, collections, client experience, stability, and the overall product presentation.
         {% endif %}
@@ -359,7 +367,13 @@
 
     <div class="quick-actions">
       <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+        {% if lang == 'es' %}
+          Ir al panel
+        {% elif lang == 'zh' %}
+          前往面板
+        {% else %}
+          Go to Dashboard
+        {% endif %}
       </a>
     </div>
   </div>
@@ -367,28 +381,64 @@
   <div class="changelog-hero-strip">
     <div class="changelog-hero-card">
       <div class="changelog-hero-label">
-        {% if lang == 'es' %}Dirección{% else %}Direction{% endif %}
+        {% if lang == 'es' %}
+          Dirección
+        {% elif lang == 'zh' %}
+          方向
+        {% else %}
+          Direction
+        {% endif %}
       </div>
       <div class="changelog-hero-value">
-        {% if lang == 'es' %}Más claridad y mejor posicionamiento{% else %}More clarity and stronger positioning{% endif %}
+        {% if lang == 'es' %}
+          Más claridad y mejor posicionamiento
+        {% elif lang == 'zh' %}
+          更清晰的定位与更强的方向感
+        {% else %}
+          More clarity and stronger positioning
+        {% endif %}
       </div>
     </div>
 
     <div class="changelog-hero-card">
       <div class="changelog-hero-label">
-        {% if lang == 'es' %}Producto{% else %}Product{% endif %}
+        {% if lang == 'es' %}
+          Producto
+        {% elif lang == 'zh' %}
+          产品
+        {% else %}
+          Product
+        {% endif %}
       </div>
       <div class="changelog-hero-value">
-        {% if lang == 'es' %}Facturación flexible para más tipos de usuario{% else %}More flexible invoicing for more user types{% endif %}
+        {% if lang == 'es' %}
+          Facturación flexible para más tipos de usuario
+        {% elif lang == 'zh' %}
+          更灵活的开票体验，适合更多类型用户
+        {% else %}
+          More flexible invoicing for more user types
+        {% endif %}
       </div>
     </div>
 
     <div class="changelog-hero-card">
       <div class="changelog-hero-label">
-        {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+        {% if lang == 'es' %}
+          Estado
+        {% elif lang == 'zh' %}
+          状态
+        {% else %}
+          Status
+        {% endif %}
       </div>
       <div class="changelog-hero-value">
-        {% if lang == 'es' %}Lanzamiento más sólido y pulido{% else %}More polished and launch-ready{% endif %}
+        {% if lang == 'es' %}
+          Lanzamiento más sólido y pulido
+        {% elif lang == 'zh' %}
+          更加完善并更接近正式发布
+        {% else %}
+          More polished and launch-ready
+        {% endif %}
       </div>
     </div>
   </div>
@@ -403,6 +453,8 @@
             <h2>
               {% if lang == 'es' %}
                 v2.4 — Nuevo plan Simple, mejoras de suscripción y pulido final
+              {% elif lang == 'zh' %}
+                v2.4 — 新增 Simple 套餐、订阅优化与发布前最终打磨
               {% else %}
                 v2.4 — New Simple plan, subscription improvements, and launch polish
               {% endif %}
@@ -410,13 +462,21 @@
             <p class="changelog-date">
               {% if lang == 'es' %}
                 Lanzado recientemente
+              {% elif lang == 'zh' %}
+                最近发布
               {% else %}
                 Recently shipped
               {% endif %}
             </p>
           </div>
           <span class="changelog-pill current">
-            {% if lang == 'es' %}Actual{% else %}Current{% endif %}
+            {% if lang == 'es' %}
+              Actual
+            {% elif lang == 'zh' %}
+              当前
+            {% else %}
+              Current
+            {% endif %}
           </span>
         </div>
 
@@ -427,6 +487,12 @@
             <li>Se mejoró la consistencia entre web, Stripe y Apple para que los productos de suscripción y precios queden mejor alineados.</li>
             <li>Se pulió la experiencia visual de la app antes del envío, incluyendo navegación, sidebar, pricing, estados y detalles generales de presentación.</li>
             <li>Se añadió el detalle visual del ribbon de concientización sobre autismo de forma sutil y consistente en la experiencia.</li>
+          {% elif lang == 'zh' %}
+            <li>新增 <strong>Simple 套餐</strong>，适合只需要创建发票和收据而不需要启用在线收款的用户。</li>
+            <li>套餐结构现在更清晰地区分仅记录付款的用户和需要完整收款流程的用户。</li>
+            <li>提升了 web、Stripe 与 Apple 之间的一致性，使订阅产品和价格更加统一。</li>
+            <li>在提交前对应用整体视觉体验进行了打磨，包括导航、侧边栏、定价页面、状态表现与整体呈现细节。</li>
+            <li>以低调且统一的方式加入了自闭症关怀丝带这一视觉细节。</li>
           {% else %}
             <li>Added a new <strong>Simple Plan</strong> for users who only need invoices and receipts without turning on online payments.</li>
             <li>The plan structure now better separates users who just need payment records from users who need a full payment-collection workflow.</li>
@@ -443,12 +509,20 @@
             <h2>
               {% if lang == 'es' %}
                 v2.3 — Experiencia pública de factura y seguimiento interno mejorados
+              {% elif lang == 'zh' %}
+                v2.3 — 公开发票体验优化与内部追踪增强
               {% else %}
                 v2.3 — Improved public invoice experience and stronger internal tracking
               {% endif %}
             </h2>
             <p class="changelog-date">
-              {% if lang == 'es' %}Lanzado en 2026{% else %}Shipped in 2026{% endif %}
+              {% if lang == 'es' %}
+                Lanzado en 2026
+              {% elif lang == 'zh' %}
+                发布于 2026 年
+              {% else %}
+                Shipped in 2026
+              {% endif %}
             </p>
           </div>
         </div>
@@ -459,6 +533,11 @@
             <li>Se reforzó la lógica de pagos parciales, saldo pendiente, pago total y estados visibles dentro de la app.</li>
             <li>Se mejoró el historial de eventos y pagos para que el negocio tenga más contexto operativo por factura.</li>
             <li>Se fortaleció la separación entre vista pública del cliente y vista interna del negocio.</li>
+          {% elif lang == 'zh' %}
+            <li>优化了公开发票页面，让客户看到更清晰、更专业、更值得信赖的体验。</li>
+            <li>加强了部分付款、剩余余额、全额支付和可见状态的处理逻辑。</li>
+            <li>改进了事件和付款历史记录，让每张发票拥有更完整的业务上下文。</li>
+            <li>进一步强化了客户端公开视图与商家内部视图之间的区分。</li>
           {% else %}
             <li>Improved the public invoice page so clients see a clearer, more professional, and more trustworthy experience.</li>
             <li>Strengthened the handling of partial payments, remaining balance, paid-in-full state, and visible invoice statuses.</li>
@@ -474,12 +553,20 @@
             <h2>
               {% if lang == 'es' %}
                 v2.2 — Dashboard más útil, más señales de cobro y mejor estructura operativa
+              {% elif lang == 'zh' %}
+                v2.2 — 更实用的仪表盘、更清晰的收款信号与更好的运营结构
               {% else %}
                 v2.2 — More useful dashboard, stronger collection signals, and better operational structure
               {% endif %}
             </h2>
             <p class="changelog-date">
-              {% if lang == 'es' %}Lanzado en 2026{% else %}Shipped in 2026{% endif %}
+              {% if lang == 'es' %}
+                Lanzado en 2026
+              {% elif lang == 'zh' %}
+                发布于 2026 年
+              {% else %}
+                Shipped in 2026
+              {% endif %}
             </p>
           </div>
         </div>
@@ -490,6 +577,11 @@
             <li>Se mejoró la lectura del dashboard para que el usuario entienda mejor qué cobrar, cuándo insistir y dónde está el riesgo.</li>
             <li>Se añadieron señales más claras para diferenciar facturas vistas, parcialmente pagadas y con recordatorios enviados.</li>
             <li>Se reforzó la base para una experiencia de cobro más seria sin romper el flujo de facturación que ya funcionaba.</li>
+          {% elif lang == 'zh' %}
+            <li>新增更实用的指标，用于跟踪已查看、未付款、逾期和需要跟进的发票。</li>
+            <li>改善了仪表盘可读性，让用户更容易看清该收什么款、何时跟进以及风险点在哪里。</li>
+            <li>增加了更清晰的信号，用于区分已查看发票、部分付款和已发送提醒的状态。</li>
+            <li>在不破坏原有开票流程的前提下，加强了更严肃的收款体验基础。</li>
           {% else %}
             <li>Added more useful metrics for tracking viewed, unpaid, overdue, and follow-up-worthy invoices.</li>
             <li>Improved dashboard readability so users can better understand what to collect, when to follow up, and where risk is building.</li>
@@ -505,12 +597,20 @@
             <h2>
               {% if lang == 'es' %}
                 v2.1 — BillBeam Assistant, marketing más claro y mejoras de experiencia
+              {% elif lang == 'zh' %}
+                v2.1 — BillBeam Assistant、更清晰的产品表达与体验优化
               {% else %}
                 v2.1 — BillBeam Assistant, clearer marketing, and product-experience improvements
               {% endif %}
             </h2>
             <p class="changelog-date">
-              {% if lang == 'es' %}Lanzado en 2026{% else %}Shipped in 2026{% endif %}
+              {% if lang == 'es' %}
+                Lanzado en 2026
+              {% elif lang == 'zh' %}
+                发布于 2026 年
+              {% else %}
+                Shipped in 2026
+              {% endif %}
             </p>
           </div>
         </div>
@@ -521,6 +621,11 @@
             <li>Se mejoró la experiencia bilingüe para que el producto responda con más claridad en inglés y español.</li>
             <li>Se ajustó la presentación pública del producto para explicar mejor qué hace BillBeam y para quién está diseñado.</li>
             <li>Se mejoraron varios detalles visuales en el modo oscuro, branding y consistencia general.</li>
+          {% elif lang == 'zh' %}
+            <li>在应用内加入了 BillBeam Assistant，用于帮助处理发票、仪表盘理解、措辞和工作流程问题。</li>
+            <li>优化了双语体验，使产品在英语和西班牙语中的表达更加清晰。</li>
+            <li>调整了产品对外展示方式，更清楚地说明 BillBeam 的作用以及适合哪些用户。</li>
+            <li>提升了暗色模式、品牌细节和整体视觉一致性。</li>
           {% else %}
             <li>Added BillBeam Assistant inside the app to help with invoices, dashboard understanding, language, and workflow questions.</li>
             <li>Improved the bilingual experience so the product responds more clearly in both English and Spanish.</li>
@@ -536,12 +641,20 @@
             <h2>
               {% if lang == 'es' %}
                 v2.0 — Facturas públicas, mejores pagos y un producto más completo
+              {% elif lang == 'zh' %}
+                v2.0 — 公开发票、更强的支付处理和更完整的产品体验
               {% else %}
                 v2.0 — Public invoices, stronger payment handling, and a more complete product
               {% endif %}
             </h2>
             <p class="changelog-date">
-              {% if lang == 'es' %}Lanzado en 2025{% else %}Shipped in 2025{% endif %}
+              {% if lang == 'es' %}
+                Lanzado en 2025
+              {% elif lang == 'zh' %}
+                发布于 2025 年
+              {% else %}
+                Shipped in 2025
+              {% endif %}
             </p>
           </div>
         </div>
@@ -552,6 +665,11 @@
             <li>Se mejoró la descarga de PDF y la experiencia de envío por correo.</li>
             <li>Se añadieron mejores bases para pagos, registros manuales y estados de factura más útiles.</li>
             <li>BillBeam empezó a sentirse más como una herramienta real de operación y no solo un generador de PDFs.</li>
+          {% elif lang == 'zh' %}
+            <li>新增公开发票链接，使发票可以在应用外部分享。</li>
+            <li>改进了 PDF 下载和发票邮件发送体验。</li>
+            <li>为支付、手动付款记录和更有用的发票状态打下了更强基础。</li>
+            <li>BillBeam 开始更像一款真正的业务工具，而不仅仅是 PDF 生成器。</li>
           {% else %}
             <li>Added public invoice links so invoices can be shared outside the app.</li>
             <li>Improved PDF downloads and invoice email delivery.</li>
@@ -567,13 +685,23 @@
 
       <section class="changelog-side-card">
         <div class="changelog-side-kicker">
-          {% if lang == 'es' %}Resumen{% else %}At a glance{% endif %}
+          {% if lang == 'es' %}
+            Resumen
+          {% elif lang == 'zh' %}
+            概览
+          {% else %}
+            At a glance
+          {% endif %}
         </div>
         <ul>
           {% if lang == 'es' %}
             <li>BillBeam ahora sirve mejor a más de un tipo de usuario.</li>
             <li>La experiencia de factura, pago y seguimiento está más alineada con el producto real.</li>
             <li>El producto se siente más pulido, más claro y más listo para lanzarse con confianza.</li>
+          {% elif lang == 'zh' %}
+            <li>BillBeam 现在能更好地服务多种类型的用户。</li>
+            <li>发票、支付和跟进体验与真实产品需求更加一致。</li>
+            <li>产品整体更加完善、更加清晰，也更适合自信发布。</li>
           {% else %}
             <li>BillBeam now serves more than one type of invoicing user more clearly.</li>
             <li>The invoice, payment, and follow-up experience is more aligned with the real product.</li>
@@ -584,11 +712,19 @@
 
       <section class="changelog-side-card">
         <h3>
-          {% if lang == 'es' %}Lo que más cambió{% else %}What changed the most{% endif %}
+          {% if lang == 'es' %}
+            Lo que más cambió
+          {% elif lang == 'zh' %}
+            最大变化
+          {% else %}
+            What changed the most
+          {% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
             BillBeam dejó de sentirse como un solo plan genérico y pasó a tener una estructura de producto más clara: una experiencia simple para facturación y recibos, y una experiencia más completa para cobros, seguimiento y operaciones más profesionales.
+          {% elif lang == 'zh' %}
+            BillBeam 不再像单一的通用套餐，而是形成了更清晰的产品结构：一套更简单的发票与收据体验，以及一套更完整的收款、跟进和专业运营体验。
           {% else %}
             BillBeam moved away from feeling like one generic plan and into a clearer product structure: a simpler experience for invoices and receipts, and a fuller experience for payments, follow-up, and more professional operations.
           {% endif %}
@@ -597,11 +733,19 @@
 
       <section class="changelog-highlight">
         <strong>
-          {% if lang == 'es' %}Nota de producto{% else %}Product note{% endif %}
+          {% if lang == 'es' %}
+            Nota de producto
+          {% elif lang == 'zh' %}
+            产品说明
+          {% else %}
+            Product note
+          {% endif %}
         </strong>
         <p>
           {% if lang == 'es' %}
             El objetivo de BillBeam sigue siendo el mismo: ayudarte a facturar con menos fricción, verte más profesional y tener más claridad sobre tu negocio sin complicar lo que ya funciona.
+          {% elif lang == 'zh' %}
+            BillBeam 的目标始终没有改变：帮助你以更少阻力完成开票，让业务看起来更专业，并在不增加复杂度的前提下获得更清晰的经营视角。
           {% else %}
             BillBeam’s goal remains the same: help you invoice with less friction, look more professional, and gain more clarity about your business without complicating what already works.
           {% endif %}
@@ -615,6 +759,8 @@
   <div class="changelog-footer">
     {% if lang == 'es' %}
       Este registro refleja la dirección actual del producto: más claridad, más estabilidad y una mejor experiencia tanto para quien factura como para quien recibe la factura.
+    {% elif lang == 'zh' %}
+      这份更新日志反映了产品当前方向：更清晰、更稳定，并为开票方和收票方都带来更好的体验。
     {% else %}
       This changelog reflects the product’s current direction: more clarity, more stability, and a better experience for both the person sending the invoice and the person receiving it.
     {% endif %}

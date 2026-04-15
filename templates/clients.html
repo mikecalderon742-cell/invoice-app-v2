@@ -1,12 +1,19 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Clientes · BillBeam{% else %}Clients · BillBeam{% endif %}
+    {% if lang == 'es' %}
+        Clientes · BillBeam
+    {% elif lang == 'zh' %}
+        客户 · BillBeam
+    {% else %}
+        Clients · BillBeam
+    {% endif %}
 {% endblock %}
-
 {% block meta_description %}
     {% if lang == 'es' %}
         Gestiona tus clientes en BillBeam, guarda datos de contacto y crea facturas más rápido.
+    {% elif lang == 'zh' %}
+        在 BillBeam 中管理您的客户，保存联系信息，并更快地创建发票。
     {% else %}
         Manage your clients in BillBeam, save contact details, and create invoices faster.
     {% endif %}
@@ -14,7 +21,10 @@
 
 {% block content %}
 
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
     .clients-shell {
@@ -129,6 +139,79 @@
         line-height: 1.7;
     }
 
+    .clients-services-strip {
+        border-radius: 24px;
+        padding: 18px 20px;
+        background:
+            radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+            radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+            linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+        border: 1px solid rgba(148,163,184,0.16);
+        box-shadow:
+            0 18px 42px rgba(15,23,42,0.05),
+            0 0 0 1px rgba(15,23,42,0.015);
+        backdrop-filter: blur(10px);
+    }
+
+    body.dark .clients-services-strip {
+        background:
+            radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+            radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+            linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+        border-color: rgba(148,163,184,0.18);
+        box-shadow:
+            0 20px 48px rgba(2,6,23,0.76),
+            0 0 0 1px rgba(59,130,246,0.06);
+    }
+
+    .clients-services-strip-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .clients-services-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: rgba(15,23,42,0.05);
+        border: 1px solid rgba(148,163,184,0.18);
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    body.dark .clients-services-kicker {
+        background: rgba(15,23,42,0.54);
+        border-color: rgba(148,163,184,0.16);
+        color: #f8fafc;
+    }
+
+    .clients-services-title {
+        margin: 0 0 6px;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+    }
+
+    .clients-services-copy {
+        font-size: 13px;
+        line-height: 1.7;
+        color: #475569;
+        max-width: 760px;
+    }
+
+    body.dark .clients-services-copy {
+        color: #cbd5e1;
+    }
+
     @media (max-width: 860px) {
         .clients-row-2,
         .clients-row-even {
@@ -150,7 +233,7 @@
         <div class="table-section-header" style="align-items:flex-start; margin-bottom:18px;">
             <div>
                 <div class="page-eyebrow">
-                    {% if lang == 'es' %}Relaciones con clientes{% else %}Client relationships{% endif %}
+                    {% if lang == 'es' %}Clientes{% elif lang == 'zh' %}客户{% else %}Clients{% endif %}
                 </div>
                 <h1 style="margin:0 0 8px 0;">
                     {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
@@ -159,6 +242,9 @@
                     {% if lang == 'es' %}
                         Guarda información de clientes una sola vez y reutilízala al crear nuevas facturas.
                         Esto hace que tu flujo de trabajo sea más rápido, más limpio y mucho más consistente.
+                    {% elif lang == 'zh' %}
+                        只需保存一次客户信息，之后在创建新发票时即可重复使用。
+                        这会让您的工作流程更快、更整洁，也更加一致。
                     {% else %}
                         Save client details once and reuse them every time you create a new invoice.
                         It keeps your workflow faster, cleaner, and much more consistent.
@@ -168,10 +254,10 @@
 
             <div class="quick-actions">
                 <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                    {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
+                    {% if lang == 'es' %}+ Nueva factura{% elif lang == 'zh' %}+ 新建发票{% else %}+ New Invoice{% endif %}
                 </a>
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+                    {% if lang == 'es' %}Historial de facturas{% elif lang == 'zh' %}发票历史{% else %}Invoice History{% endif %}
                 </a>
             </div>
         </div>
@@ -180,6 +266,8 @@
             <div class="status-item sent">
                 {% if lang == 'es' %}
                     {{ clients|length if clients else 0 }} cliente{{ '' if (clients|length if clients else 0) == 1 else 's' }} guardado{{ '' if (clients|length if clients else 0) == 1 else 's' }}
+                {% elif lang == 'zh' %}
+                    已保存 {{ clients|length if clients else 0 }} 位客户
                 {% else %}
                     {{ clients|length if clients else 0 }} saved client{{ '' if (clients|length if clients else 0) == 1 else 's' }}
                 {% endif %}
@@ -187,6 +275,8 @@
             <div class="status-item paid">
                 {% if lang == 'es' %}
                     Reutiliza contactos en nuevas facturas
+                {% elif lang == 'zh' %}
+                    在新发票中重复使用客户信息
                 {% else %}
                     Reuse contacts in new invoices
                 {% endif %}
@@ -194,9 +284,56 @@
             <div class="status-item draft">
                 {% if lang == 'es' %}
                     Menos escritura repetida
+                {% elif lang == 'zh' %}
+                    减少重复输入
                 {% else %}
                     Less repeated typing
                 {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="clients-services-strip fade-in-up">
+        <div class="clients-services-strip-top">
+            <div>
+                <div class="clients-services-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Servicios
+                    {% elif lang == 'zh' %}
+                        ✨ 服务
+                    {% else %}
+                        ✨ Services
+                    {% endif %}
+                </div>
+                <h3 class="clients-services-title">
+                    {% if lang == 'es' %}
+                        Mantén tus servicios listos junto a tus clientes
+                    {% elif lang == 'zh' %}
+                        让您的服务与客户信息一起保持就绪
+                    {% else %}
+                        Keep your services ready alongside your clients
+                    {% endif %}
+                </h3>
+                <div class="clients-services-copy">
+                    {% if lang == 'es' %}
+                        Organiza tus servicios, precios y descripciones desde tu página dedicada de Servicios para que crear facturas para tus clientes sea aún más rápido y profesional.
+                    {% elif lang == 'zh' %}
+                        在专属服务页面中整理您的服务、价格和描述，让为客户创建发票变得更快、更专业。
+                    {% else %}
+                        Organize your services, pricing, and descriptions from your dedicated Services page so creating invoices for your clients feels even faster and more professional.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Abrir servicios
+                    {% elif lang == 'zh' %}
+                        打开服务页面
+                    {% else %}
+                        Open Services
+                    {% endif %}
+                </a>
             </div>
         </div>
     </section>
@@ -205,14 +342,16 @@
         <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px; padding:0;">
             <div>
                 <h2 style="margin:0 0 6px 0;">
-                    {% if lang == 'es' %}Añadir nuevo cliente{% else %}Add New Client{% endif %}
+                    {% if lang == 'es' %}Añadir nuevo cliente{% elif lang == 'zh' %}添加新客户{% else %}Add New Client{% endif %}
                 </h2>
                 <p style="margin:0; font-size:14px; opacity:0.82; line-height:1.6;">
                     {% if lang == 'es' %}
-                        Añade los datos clave ahora para que crear facturas después sea cuestión de unos pocos clics.
-                    {% else %}
-                        Add the key details now so future invoices take just a few clicks.
-                    {% endif %}
+    Añade los datos clave ahora para que crear facturas después sea cuestión de unos pocos clics.
+{% elif lang == 'zh' %}
+    现在先填写关键资料，这样以后创建发票时只需几次点击。
+{% else %}
+    Add the key details now so future invoices take just a few clicks.
+{% endif %}
                 </p>
             </div>
         </div>
@@ -222,7 +361,7 @@
                 <div class="clients-row-2">
                     <div class="client-field">
                         <label for="name">
-                            {% if lang == 'es' %}Nombre del cliente *{% else %}Client Name *{% endif %}
+                            {% if lang == 'es' %}Nombre del cliente *{% elif lang == 'zh' %}客户名称 *{% else %}Client Name *{% endif %}
                         </label>
                         <input
                             type="text"
@@ -235,7 +374,7 @@
 
                     <div class="client-field">
                         <label for="email">
-                            {% if lang == 'es' %}Correo electrónico{% else %}Email{% endif %}
+                            {% if lang == 'es' %}Correo electrónico{% elif lang == 'zh' %}电子邮箱{% else %}Email{% endif %}
                         </label>
                         <input
                             type="email"
@@ -249,7 +388,7 @@
                 <div class="clients-row-even">
                     <div class="client-field">
                         <label for="company">
-                            {% if lang == 'es' %}Empresa{% else %}Company{% endif %}
+                            {% if lang == 'es' %}Empresa{% elif lang == 'zh' %}公司{% else %}Company{% endif %}
                         </label>
                         <input
                             type="text"
@@ -261,7 +400,7 @@
 
                     <div class="client-field">
                         <label for="phone">
-                            {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
+                            {% if lang == 'es' %}Teléfono{% elif lang == 'zh' %}电话{% else %}Phone{% endif %}
                         </label>
                         <input
                             type="text"
@@ -274,7 +413,7 @@
 
                 <div class="client-field">
                     <label for="address">
-                        {% if lang == 'es' %}Dirección{% else %}Address{% endif %}
+                        {% if lang == 'es' %}Dirección{% elif lang == 'zh' %}地址{% else %}Address{% endif %}
                     </label>
                     <input
                         type="text"
@@ -286,7 +425,7 @@
 
                 <div class="client-field">
                     <label for="notes">
-                        {% if lang == 'es' %}Notas internas{% else %}Internal Notes{% endif %}
+                        {% if lang == 'es' %}Notas internas{% elif lang == 'zh' %}内部备注{% else %}Internal Notes{% endif %}
                     </label>
                     <input
                         type="text"
@@ -307,7 +446,7 @@
 
             <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
                 <button type="submit" class="btn btn-brand">
-                    {% if lang == 'es' %}Añadir cliente{% else %}Add Client{% endif %}
+                    {% if lang == 'es' %}Añadir cliente{% elif lang == 'zh' %}添加客户{% else %}Add Client{% endif %}
                 </button>
             </div>
         </form>
@@ -318,14 +457,16 @@
             <div class="table-section-header">
                 <div>
                     <h2>
-                        {% if lang == 'es' %}Lista de clientes{% else %}Client List{% endif %}
+                        {% if lang == 'es' %}Lista de clientes{% elif lang == 'zh' %}客户列表{% else %}Client List{% endif %}
                     </h2>
                     <p>
                         {% if lang == 'es' %}
-                            Revisa tus contactos guardados y crea nuevas facturas con mayor rapidez.
-                        {% else %}
-                            Review your saved contacts and create new invoices faster.
-                        {% endif %}
+    Revisa tus contactos guardados y crea nuevas facturas con mayor rapidez.
+{% elif lang == 'zh' %}
+    查看已保存的客户信息，并更快地创建新发票。
+{% else %}
+    Review your saved contacts and create new invoices faster.
+{% endif %}
                     </p>
                 </div>
                 <div class="table-meta">
@@ -341,11 +482,11 @@
                 <table class="modern-table">
                     <thead>
                         <tr>
-                            <th>{% if lang == 'es' %}Cliente{% else %}Client{% endif %}</th>
+                            <th>{% if lang == 'es' %}Cliente{% elif lang == 'zh' %}客户{% else %}Client{% endif %}</th>
                             <th>Email</th>
-                            <th>{% if lang == 'es' %}Empresa{% else %}Company{% endif %}</th>
-                            <th>{% if lang == 'es' %}Creado{% else %}Created{% endif %}</th>
-                            <th>{% if lang == 'es' %}Acciones{% else %}Actions{% endif %}</th>
+                            <th>{% if lang == 'es' %}Empresa{% elif lang == 'zh' %}公司{% else %}Company{% endif %}</th>
+                            <th>{% if lang == 'es' %}Creado{% elif lang == 'zh' %}创建时间{% else %}Created{% endif %}</th>
+                            <th>{% if lang == 'es' %}Acciones{% elif lang == 'zh' %}操作{% else %}Actions{% endif %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -355,11 +496,13 @@
                                     <div class="client-name-block">
                                         <strong>{{ client[1] }}</strong>
                                         <span class="client-submeta">
-                                            {% if lang == 'es' %}
-                                                Cliente guardado
-                                            {% else %}
-                                                Saved contact
-                                            {% endif %}
+                        {% if lang == 'es' %}
+    Cliente guardado
+{% elif lang == 'zh' %}
+    已保存联系人
+{% else %}
+    Saved contact
+{% endif %}
                                         </span>
                                     </div>
                                 </td>
@@ -369,12 +512,12 @@
                                 <td class="action-buttons">
                                     <div class="clients-actions">
                                         <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-edit">
-                                            {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                                            {% if lang == 'es' %}Nueva factura{% elif lang == 'zh' %}新建发票{% else %}New Invoice{% endif %}
                                         </a>
                                         <a href="/clients/delete/{{ client[0] }}{% if lang %}?lang={{ lang }}{% endif %}"
                                            class="btn btn-danger"
-                                           onclick="return confirm('{% if lang == 'es' %}¿Eliminar este cliente? Esto no elimina sus facturas existentes, pero sí quitará este contacto guardado.{% else %}Delete this client? This will not delete existing invoices, but it will remove this saved contact.{% endif %}');">
-                                            {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+                                           onclick="return confirm('{% if lang == 'es' %}¿Eliminar este cliente? Esto no elimina sus facturas existentes, pero sí quitará este contacto guardado.{% elif lang == 'zh' %}要删除这位客户吗？这不会删除现有发票，但会移除这个已保存的联系人。{% else %}Delete this client? This will not delete existing invoices, but it will remove this saved contact.{% endif %}');">
+                                            {% if lang == 'es' %}Eliminar{% elif lang == 'zh' %}删除{% else %}Delete{% endif %}
                                         </a>
                                     </div>
                                 </td>
@@ -387,19 +530,22 @@
     {% else %}
         <section class="clients-empty-card fade-in-up">
             <h2 style="margin:0 0 10px 0;">
-                {% if lang == 'es' %}Todavía no hay clientes{% else %}No clients yet{% endif %}
+                {% if lang == 'es' %}Todavía no hay clientes{% elif lang == 'zh' %}还没有客户{% else %}No clients yet{% endif %}
             </h2>
             <p class="clients-empty-copy">
                 {% if lang == 'es' %}
-                    Guarda tu primer cliente arriba para empezar a reutilizar sus datos en futuras facturas.
-                    Una vez que tengas algunos contactos aquí, tu flujo de trabajo se sentirá mucho más rápido.
-                {% else %}
-                    Add your first client above to start reusing their details in future invoices.
-                    Once you have a few contacts here, your workflow will feel much faster.
-                {% endif %}
+    Guarda tu primer cliente arriba para empezar a reutilizar sus datos en futuras facturas.
+    Una vez que tengas algunos contactos aquí, tu flujo de trabajo se sentirá mucho más rápido.
+{% elif lang == 'zh' %}
+    在上方添加您的第一位客户，以便在未来的发票中重复使用这些资料。
+    一旦这里有了几个联系人，您的工作流程会快很多。
+{% else %}
+    Add your first client above to start reusing their details in future invoices.
+    Once you have a few contacts here, your workflow will feel much faster.
+{% endif %}
             </p>
             <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Ir a crear factura{% else %}Go to Create Invoice{% endif %}
+                {% if lang == 'es' %}Ir a crear factura{% elif lang == 'zh' %}前往创建发票{% else %}Go to Create Invoice{% endif %}
             </a>
         </section>
     {% endif %}

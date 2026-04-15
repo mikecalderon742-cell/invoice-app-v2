@@ -3,6 +3,8 @@
 {% block title %}
   {% if lang == 'es' %}
     Vista previa de factura · {{ business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    发票预览 · {{ business_name or "BillBeam" }}
   {% else %}
     Invoice Preview · {{ business_name or "BillBeam" }}
   {% endif %}
@@ -11,13 +13,18 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Revisa la vista previa de tu factura antes de guardarla en BillBeam.
+  {% elif lang == 'zh' %}
+    在 BillBeam 中保存之前，先检查您的发票预览。
   {% else %}
     Review your invoice preview before saving it in BillBeam.
   {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .preview-page {
@@ -25,7 +32,8 @@
     gap: 20px;
   }
 
-  .preview-banner {
+  .preview-banner,
+  .preview-services-strip {
     display: flex;
     align-items: flex-start;
     gap: 14px;
@@ -39,7 +47,8 @@
     backdrop-filter: blur(12px);
   }
 
-  body.dark .preview-banner {
+  body.dark .preview-banner,
+  body.dark .preview-services-strip {
     background: rgba(2,6,23,0.76);
     border-color: rgba(148,163,184,0.18);
     box-shadow:
@@ -76,6 +85,68 @@
   }
 
   body.dark .preview-banner p {
+    color: #cbd5e1;
+  }
+
+  .preview-services-strip {
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+  }
+
+  body.dark .preview-services-strip {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+  }
+
+  .preview-services-copy {
+    display: grid;
+    gap: 8px;
+    max-width: 760px;
+  }
+
+  .preview-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+  }
+
+  body.dark .preview-services-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .preview-services-title {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .preview-services-text {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .preview-services-text {
     color: #cbd5e1;
   }
 
@@ -147,6 +218,7 @@
     font-size: 30px;
     line-height: 0.98;
     letter-spacing: -0.04em;
+    word-break: break-word;
   }
 
   .preview-subtitle {
@@ -184,6 +256,7 @@
     font-size: 14px;
     font-weight: 700;
     line-height: 1.5;
+    word-break: break-word;
   }
 
   .invoice-section {
@@ -219,6 +292,7 @@
     font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.02em;
+    word-break: break-word;
   }
 
   .client-line {
@@ -226,6 +300,7 @@
     font-size: 14px;
     color: #475569;
     line-height: 1.6;
+    word-break: break-word;
   }
 
   body.dark .client-line {
@@ -237,6 +312,7 @@
     font-size: 13px;
     color: #64748b;
     line-height: 1.65;
+    word-break: break-word;
   }
 
   body.dark .client-notes {
@@ -262,6 +338,7 @@
   .preview-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 520px;
   }
 
   .preview-table th,
@@ -337,6 +414,7 @@
     font-size: 14px;
     line-height: 1.7;
     white-space: pre-wrap;
+    word-break: break-word;
   }
 
   .signature-preview-wrap {
@@ -484,9 +562,14 @@
       padding: 18px;
     }
 
-    .preview-banner {
+    .preview-banner,
+    .preview-services-strip {
       padding: 14px;
       flex-direction: column;
+    }
+
+    .preview-table {
+      min-width: 0;
     }
   }
 </style>
@@ -495,15 +578,55 @@
 
   <div class="preview-banner">
     <span class="preview-pill">
-      {% if lang == 'es' %}Solo vista previa{% else %}Preview only{% endif %}
+      {% if lang == 'es' %}
+        Solo vista previa
+      {% elif lang == 'zh' %}
+        仅预览
+      {% else %}
+        Preview only
+      {% endif %}
     </span>
     <p>
       {% if lang == 'es' %}
         Esta factura aún no se ha guardado. Revisa los detalles aquí y luego vuelve a la pestaña anterior para hacer cambios o guardar la versión final.
+      {% elif lang == 'zh' %}
+        这张发票尚未保存。请先在这里检查细节，然后返回上一页进行修改或保存最终版本。
       {% else %}
         This invoice has not been saved yet. Review the details here, then return to the previous tab to make changes or save the final version.
       {% endif %}
     </p>
+  </div>
+
+  <div class="preview-services-strip">
+    <div class="preview-services-copy">
+      <div class="preview-services-kicker">
+        {% if lang == 'es' %}
+          ✨ Revisión final
+        {% elif lang == 'zh' %}
+          ✨ 最终检查
+        {% else %}
+          ✨ Final review
+        {% endif %}
+      </div>
+      <h3 class="preview-services-title">
+        {% if lang == 'es' %}
+          Asegúrate de que esta factura se vea premium antes de guardarla
+        {% elif lang == 'zh' %}
+          在保存之前，确保这张发票看起来足够专业高级
+        {% else %}
+          Make sure this invoice feels premium before you save it
+        {% endif %}
+      </h3>
+      <p class="preview-services-text">
+        {% if lang == 'es' %}
+          Esta vista previa te ayuda a confirmar marca, claridad, importes y presentación general para que tu cliente vea una factura limpia y profesional desde el primer momento.
+        {% elif lang == 'zh' %}
+          此预览可帮助您确认品牌展示、清晰度、金额和整体呈现效果，让客户第一眼就看到一张干净专业的发票。
+        {% else %}
+          This preview helps you confirm branding, clarity, amounts, and overall presentation so your client sees a clean, professional invoice from the first moment.
+        {% endif %}
+      </p>
+    </div>
   </div>
 
   <div class="invoice-preview-shell">
@@ -521,6 +644,8 @@
             <p class="preview-subtitle">
               {% if lang == 'es' %}
                 Vista previa de resumen de factura
+              {% elif lang == 'zh' %}
+                发票摘要预览
               {% else %}
                 Invoice summary preview
               {% endif %}
@@ -531,13 +656,25 @@
         <div class="invoice-meta">
           <div>
             <span class="meta-label">
-              {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+              {% if lang == 'es' %}
+                Factura
+              {% elif lang == 'zh' %}
+                发票
+              {% else %}
+                Invoice
+              {% endif %}
             </span>
             <div class="meta-value">{{ invoice_label }}</div>
           </div>
           <div>
             <span class="meta-label">
-              {% if lang == 'es' %}Creada{% else %}Created{% endif %}
+              {% if lang == 'es' %}
+                Creada
+              {% elif lang == 'zh' %}
+                创建时间
+              {% else %}
+                Created
+              {% endif %}
             </span>
             <div class="meta-value">
               {{ created_at.strftime('%Y-%m-%d %I:%M %p') if created_at else '—' }}
@@ -545,7 +682,13 @@
           </div>
           <div>
             <span class="meta-label">
-              {% if lang == 'es' %}Vence{% else %}Due{% endif %}
+              {% if lang == 'es' %}
+                Vence
+              {% elif lang == 'zh' %}
+                到期日
+              {% else %}
+                Due
+              {% endif %}
             </span>
             <div class="meta-value">
               {{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}
@@ -557,7 +700,13 @@
       <section class="invoice-section two-col">
         <div>
           <h3 class="section-title">
-            {% if lang == 'es' %}Facturar a{% else %}Bill to{% endif %}
+            {% if lang == 'es' %}
+              Facturar a
+            {% elif lang == 'zh' %}
+              账单对象
+            {% else %}
+              Bill to
+            {% endif %}
           </h3>
           <p class="client-main">{{ client_name }}</p>
           {% if client_company %}
@@ -574,14 +723,27 @@
           {% endif %}
           {% if client_notes %}
             <p class="client-notes">
-              {% if lang == 'es' %}Notas:{% else %}Notes:{% endif %} {{ client_notes }}
+              {% if lang == 'es' %}
+                Notas:
+              {% elif lang == 'zh' %}
+                备注:
+              {% else %}
+                Notes:
+              {% endif %}
+              {{ client_notes }}
             </p>
           {% endif %}
         </div>
 
         <div class="business-contact">
           <h3 class="section-title">
-            {% if lang == 'es' %}De{% else %}From{% endif %}
+            {% if lang == 'es' %}
+              De
+            {% elif lang == 'zh' %}
+              开票方
+            {% else %}
+              From
+            {% endif %}
           </h3>
           <p class="client-main">{{ business_profile.business_name or business_name }}</p>
           {% if business_profile.email %}
@@ -601,7 +763,13 @@
 
       <section class="invoice-section">
         <h3 class="section-title">
-          {% if lang == 'es' %}Conceptos{% else %}Line items{% endif %}
+          {% if lang == 'es' %}
+            Conceptos
+          {% elif lang == 'zh' %}
+            项目
+          {% else %}
+            Line items
+          {% endif %}
         </h3>
 
         <div class="preview-table-wrapper">
@@ -609,10 +777,22 @@
             <thead>
               <tr>
                 <th>
-                  {% if lang == 'es' %}Descripción{% else %}Description{% endif %}
+                  {% if lang == 'es' %}
+                    Descripción
+                  {% elif lang == 'zh' %}
+                    描述
+                  {% else %}
+                    Description
+                  {% endif %}
                 </th>
                 <th style="width:180px; text-align:right;">
-                  {% if lang == 'es' %}Importe{% else %}Amount{% endif %}
+                  {% if lang == 'es' %}
+                    Importe
+                  {% elif lang == 'zh' %}
+                    金额
+                  {% else %}
+                    Amount
+                  {% endif %}
                 </th>
               </tr>
             </thead>
@@ -631,6 +811,8 @@
                   <td colspan="2" style="text-align:center; font-size:13px; opacity:0.7;">
                     {% if lang == 'es' %}
                       Todavía no hay conceptos. Agrega al menos uno antes de guardar.
+                    {% elif lang == 'zh' %}
+                      还没有项目。请至少添加一项后再保存。
                     {% else %}
                       No line items yet. Add at least one before saving.
                     {% endif %}
@@ -644,7 +826,13 @@
         <div class="preview-total-box">
           <div class="preview-total-row">
             <span>
-              {% if lang == 'es' %}Total{% else %}Total{% endif %}
+              {% if lang == 'es' %}
+                Total
+              {% elif lang == 'zh' %}
+                总计
+              {% else %}
+                Total
+              {% endif %}
             </span>
             <span class="preview-total-amount">
               ${{ "{:,.2f}".format(total) }}
@@ -658,7 +846,13 @@
           <div class="small-print-block">
             <p>
               <strong>
-                {% if lang == 'es' %}Notas de la factura:{% else %}Invoice notes:{% endif %}
+                {% if lang == 'es' %}
+                  Notas de la factura:
+                {% elif lang == 'zh' %}
+                  发票备注:
+                {% else %}
+                  Invoice notes:
+                {% endif %}
               </strong><br>
               {{ notes }}
             </p>
@@ -669,7 +863,13 @@
           <div class="small-print-block">
             <p>
               <strong>
-                {% if lang == 'es' %}Términos de pago:{% else %}Payment terms:{% endif %}
+                {% if lang == 'es' %}
+                  Términos de pago:
+                {% elif lang == 'zh' %}
+                  付款条款:
+                {% else %}
+                  Payment terms:
+                {% endif %}
               </strong><br>
               {{ terms }}
             </p>
@@ -679,10 +879,16 @@
         {% if signature_data %}
           <div class="small-print-block signature-preview-wrap">
             <div class="signature-label">
-              {% if lang == 'es' %}Firma del cliente{% else %}Client signature{% endif %}
+              {% if lang == 'es' %}
+                Firma del cliente
+              {% elif lang == 'zh' %}
+                客户签名
+              {% else %}
+                Client signature
+              {% endif %}
             </div>
             <div class="signature-box">
-              <img src="{{ signature_data }}" alt="{% if lang == 'es' %}Firma del cliente{% else %}Client signature{% endif %}">
+              <img src="{{ signature_data }}" alt="{% if lang == 'es' %}Firma del cliente{% elif lang == 'zh' %}客户签名{% else %}Client signature{% endif %}">
             </div>
           </div>
         {% endif %}
@@ -691,13 +897,21 @@
 
     <aside class="preview-sidebar">
       <h3>
-        {% if lang == 'es' %}Estilo de plantilla:{% else %}Template style:{% endif %}
+        {% if lang == 'es' %}
+          Estilo de plantilla:
+        {% elif lang == 'zh' %}
+          模板样式:
+        {% else %}
+          Template style:
+        {% endif %}
         <span class="pill">{{ template_style|capitalize }}</span>
       </h3>
 
       <p class="preview-tip">
         {% if lang == 'es' %}
           Esta vista previa refleja el contenido actual y el estilo elegido. Al guardar, el PDF y la vista pública del cliente seguirán esta dirección visual.
+        {% elif lang == 'zh' %}
+          此预览反映了当前内容和所选样式。保存后，PDF 和客户公开页面都会遵循这一视觉方向。
         {% else %}
           This preview reflects your current content and selected style. Once saved, the PDF and public client view will follow this visual direction.
         {% endif %}
@@ -705,26 +919,58 @@
 
       <ul class="preview-checklist">
         <li>
-          {% if lang == 'es' %}✓ Los datos del cliente se ven correctos{% else %}✓ Client details look correct{% endif %}
+          {% if lang == 'es' %}
+            ✓ Los datos del cliente se ven correctos
+          {% elif lang == 'zh' %}
+            ✓ 客户信息看起来正确
+          {% else %}
+            ✓ Client details look correct
+          {% endif %}
         </li>
         <li>
-          {% if lang == 'es' %}✓ Los conceptos y totales son precisos{% else %}✓ Line items and totals are accurate{% endif %}
+          {% if lang == 'es' %}
+            ✓ Los conceptos y totales son precisos
+          {% elif lang == 'zh' %}
+            ✓ 项目与总额准确无误
+          {% else %}
+            ✓ Line items and totals are accurate
+          {% endif %}
         </li>
         <li>
-          {% if lang == 'es' %}✓ Las notas y términos dicen exactamente lo que quieres{% else %}✓ Notes and terms say exactly what you want{% endif %}
+          {% if lang == 'es' %}
+            ✓ Las notas y términos dicen exactamente lo que quieres
+          {% elif lang == 'zh' %}
+            ✓ 备注和条款内容完全符合您的意思
+          {% else %}
+            ✓ Notes and terms say exactly what you want
+          {% endif %}
         </li>
         <li>
-          {% if lang == 'es' %}✓ El diseño se siente alineado con tu marca{% else %}✓ The layout feels aligned with your brand{% endif %}
+          {% if lang == 'es' %}
+            ✓ El diseño se siente alineado con tu marca
+          {% elif lang == 'zh' %}
+            ✓ 版式风格与您的品牌保持一致
+          {% else %}
+            ✓ The layout feels aligned with your brand
+          {% endif %}
         </li>
       </ul>
 
       <div class="preview-review-card">
         <strong>
-          {% if lang == 'es' %}Antes de guardar{% else %}Before saving{% endif %}
+          {% if lang == 'es' %}
+            Antes de guardar
+          {% elif lang == 'zh' %}
+            保存之前
+          {% else %}
+            Before saving
+          {% endif %}
         </strong>
         <p>
           {% if lang == 'es' %}
             Revisa ortografía, montos, correo del cliente y condiciones de pago. Una factura clara y limpia reduce dudas y acelera el cobro.
+          {% elif lang == 'zh' %}
+            请检查拼写、金额、客户邮箱和付款条款。清晰、整洁的发票能减少疑问并加快收款。
           {% else %}
             Review spelling, amounts, client email, and payment terms. A clear, polished invoice reduces questions and speeds up payment.
           {% endif %}
@@ -734,6 +980,8 @@
       <p class="preview-footer-text">
         {% if lang == 'es' %}
           ¿Te gusta cómo se ve? Cierra esta pestaña y haz clic en <strong>Guardar factura</strong> en la app.
+        {% elif lang == 'zh' %}
+          对这个效果满意吗？关闭此标签页，然后回到应用中点击 <strong>保存发票</strong>。
         {% else %}
           Happy with how it looks? Close this tab and click <strong>Save Invoice</strong> back in the app.
         {% endif %}

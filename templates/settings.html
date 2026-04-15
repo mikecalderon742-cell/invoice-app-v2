@@ -2,10 +2,12 @@
 
 {% block title %}
   {% if lang == 'es' %}
-    Perfil de negocio y marca · {{ business_profile.business_name or "BillBeam" }}
-  {% else %}
-    Business Profile & Branding · {{ business_profile.business_name or "BillBeam" }}
-  {% endif %}
+  Perfil de negocio y marca · {{ business_profile.business_name or "BillBeam" }}
+{% elif lang == 'zh' %}
+  商业信息与品牌 · {{ business_profile.business_name or "BillBeam" }}
+{% else %}
+  Business Profile & Branding · {{ business_profile.business_name or "BillBeam" }}
+{% endif %}
 {% endblock %}
 
 {% block meta_description %}
@@ -18,6 +20,9 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% if lang not in ['en','es','zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 {% set payment_setup = payment_setup or {} %}
 {% set current_plan = current_plan or (user_plan or 'free') %}
 {% set connect_ready = payment_setup.is_ready if payment_setup.is_ready is defined else payment_setup.get('is_ready') %}
@@ -555,6 +560,154 @@
     margin-top: 14px;
   }
 
+  .services-shortcut-card {
+    margin-top: 22px;
+    border-radius: 24px;
+    padding: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.12), transparent 28%),
+      linear-gradient(135deg, rgba(15,23,42,0.03), rgba(255,255,255,0.72));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 20px 46px rgba(15,23,42,0.06);
+  }
+
+  body.dark .services-shortcut-card {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.18), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.92), rgba(15,23,42,0.88));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 22px 50px rgba(2,6,23,0.76);
+  }
+
+  .services-shortcut-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+    gap: 18px;
+    align-items: center;
+  }
+
+  .services-shortcut-copy {
+    display: grid;
+    gap: 10px;
+  }
+
+  .services-shortcut-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.62);
+    border: 1px solid rgba(148,163,184,0.22);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #1e293b;
+  }
+
+  body.dark .services-shortcut-badge {
+    background: rgba(15,23,42,0.64);
+    border-color: rgba(148,163,184,0.18);
+    color: #e2e8f0;
+  }
+
+  .services-shortcut-title {
+    margin: 0;
+    font-size: clamp(22px, 3vw, 30px);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    font-family: "Space Grotesk", sans-serif;
+    color: #0f172a;
+  }
+
+  body.dark .services-shortcut-title {
+    color: #f8fafc;
+  }
+
+  .services-shortcut-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .services-shortcut-text {
+    color: #cbd5e1;
+  }
+
+  .services-shortcut-points {
+    display: grid;
+    gap: 10px;
+  }
+
+  .services-shortcut-point {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.62);
+    border: 1px solid rgba(148,163,184,0.16);
+    font-size: 13px;
+    line-height: 1.6;
+    color: #334155;
+  }
+
+  body.dark .services-shortcut-point {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #e2e8f0;
+  }
+
+  .services-shortcut-point-mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    box-shadow: 0 10px 22px rgba(37,99,235,0.22);
+  }
+
+  .services-shortcut-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .services-shortcut-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .services-shortcut-note {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+    text-align: center;
+  }
+
+  body.dark .services-shortcut-note {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 900px) {
+    .services-shortcut-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .security-card {
     margin-top: 22px;
   }
@@ -631,8 +784,14 @@
     <div class="settings-topbar">
         <div class="settings-title-wrap">
             <h1>
-                {% if lang == 'es' %}Perfil de negocio y marca{% else %}Business Profile & Branding{% endif %}
-            </h1>
+    {% if lang == 'es' %}
+        Perfil de negocio y marca
+    {% elif lang == 'zh' %}
+        商业信息与品牌
+    {% else %}
+        Business Profile & Branding
+    {% endif %}
+</h1>
             <div class="settings-subcopy">
                 {% if lang == 'es' %}
                     Ajusta cómo se presenta tu negocio en facturas, correos, portales públicos y elementos visuales dentro de BillBeam.
@@ -643,6 +802,13 @@
         </div>
 
         <div class="settings-actions">
+        <form method="GET" action="/settings" style="display:flex; gap:8px;">
+  <select name="lang" onchange="this.form.submit()" class="btn btn-secondary">
+    <option value="en" {% if lang=='en' %}selected{% endif %}>EN</option>
+    <option value="es" {% if lang=='es' %}selected{% endif %}>ES</option>
+    <option value="zh" {% if lang=='zh' %}selected{% endif %}>中文</option>
+  </select>
+</form>
             <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
                 {% if lang == 'es' %}Volver a crear{% else %}Back to Create{% endif %}
             </a>
@@ -957,15 +1123,27 @@
 
             <div class="form-actions">
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+                    {% if lang == 'es' %}
+  Cancelar
+{% elif lang == 'zh' %}
+  取消
+{% else %}
+  Cancel
+{% endif %}
                 </a>
                 <button type="submit" class="btn btn-brand">
-                    {% if lang == 'es' %}Guardar configuración{% else %}Save Settings{% endif %}
+                    {% if lang == 'es' %}
+  Guardar configuración
+{% elif lang == 'zh' %}
+  保存设置
+{% else %}
+  Save Settings
+{% endif %}
                 </button>
             </div>
         </form>
 
-        <div class="settings-card payments-card"> id="payments-payouts">
+        <div class="settings-card payments-card" id="payments-payouts">
             <h2>
                 {% if can_collect_payments_here %}
                     {% if lang == 'es' %}Pagos y depósitos{% else %}Payments & Payouts{% endif %}
@@ -1298,6 +1476,115 @@
                         Important: you can keep using BillBeam without configuring online payments. When you want more features, you can upgrade plans without rebuilding your current workflow.
                     {% endif %}
                 {% endif %}
+            </div>
+        </div>
+
+        <div class="settings-card services-shortcut-card">
+            <div class="services-shortcut-grid">
+                <div class="services-shortcut-copy">
+                    <div class="services-shortcut-badge">
+                        {% if lang == 'es' %}
+                            ✨ Herramienta premium
+                        {% elif lang == 'zh' %}
+                            ✨ 高级功能
+                        {% else %}
+                            ✨ Premium feature
+                        {% endif %}
+                    </div>
+
+                    <h2 class="services-shortcut-title">
+                        {% if lang == 'es' %}
+                            Administra tus servicios y listados
+                        {% elif lang == 'zh' %}
+                            管理您的服务与项目
+                        {% else %}
+                            Manage your services and listings
+                        {% endif %}
+                    </h2>
+
+                    <p class="services-shortcut-text">
+                        {% if lang == 'es' %}
+                            Crea servicios con nombre, descripción y precio. Después edítalos, actívalos o desactívalos desde una página dedicada diseñada para que tu negocio se vea más sólido y profesional.
+                        {% elif lang == 'zh' %}
+                            创建带有名称、描述和价格的服务。然后在专门的页面中编辑、启用或停用它们，让您的业务看起来更完整、更专业。
+                        {% else %}
+                            Create services with names, descriptions, and pricing. Then edit, activate, or deactivate them from a dedicated page designed to make your business feel more complete and professional.
+                        {% endif %}
+                    </p>
+
+                    <div class="services-shortcut-points">
+                        <div class="services-shortcut-point">
+                            <div class="services-shortcut-point-mark">1</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Agrega servicios manualmente con una presentación más limpia y lista para clientes.
+                                {% elif lang == 'zh' %}
+                                    手动添加服务，并以更干净、更适合客户展示的方式进行管理。
+                                {% else %}
+                                    Add services manually with a cleaner, more client-ready presentation.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="services-shortcut-point">
+                            <div class="services-shortcut-point-mark">2</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Mantén precios, nombres y descripciones organizados en un solo lugar.
+                                {% elif lang == 'zh' %}
+                                    在一个地方整理价格、名称和描述。
+                                {% else %}
+                                    Keep pricing, names, and descriptions organized in one place.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="services-shortcut-point">
+                            <div class="services-shortcut-point-mark">3</div>
+                            <div>
+                                {% if lang == 'es' %}
+                                    Refuerza la experiencia premium que verán tus clientes en BillBeam.
+                                {% elif lang == 'zh' %}
+                                    强化客户在 BillBeam 中看到的高级体验。
+                                {% else %}
+                                    Strengthen the premium experience your clients will see inside BillBeam.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="services-shortcut-actions">
+                    <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+                        {% if lang == 'es' %}
+                            Abrir servicios
+                        {% elif lang == 'zh' %}
+                            打开服务页面
+                        {% else %}
+                            Open Services
+                        {% endif %}
+                    </a>
+
+                    <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                        {% if lang == 'es' %}
+                            Agregar o editar listados
+                        {% elif lang == 'zh' %}
+                            添加或编辑项目
+                        {% else %}
+                            Add or edit listings
+                        {% endif %}
+                    </a>
+
+                    <div class="services-shortcut-note">
+                        {% if lang == 'es' %}
+                            Esta área abre tu página dedicada de servicios para una gestión completa.
+                        {% elif lang == 'zh' %}
+                            此区域会打开您的专属服务页面，用于完整管理。
+                        {% else %}
+                            This opens your dedicated services page for full management.
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 

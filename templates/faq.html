@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 {% block title %}
   {% if lang == 'es' %}
     Preguntas frecuentes · BillBeam
+  {% elif lang == 'zh' %}
+    常见问题 · BillBeam
   {% else %}
     Frequently Asked Questions · BillBeam
   {% endif %}
@@ -12,6 +17,8 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Respuestas rápidas sobre planes, límites, facturas, datos y funcionamiento general de BillBeam.
+  {% elif lang == 'zh' %}
+    关于套餐、限制、发票、数据以及 BillBeam 工作方式的快速说明。
   {% else %}
     Quick answers about plans, limits, invoices, data, and how BillBeam works.
   {% endif %}
@@ -313,6 +320,8 @@
       <h1>
         {% if lang == 'es' %}
           Preguntas frecuentes sobre BillBeam
+        {% elif lang == 'zh' %}
+          关于 BillBeam 的常见问题
         {% else %}
           Frequently Asked Questions about BillBeam
         {% endif %}
@@ -320,6 +329,8 @@
       <div class="faq-subcopy">
         {% if lang == 'es' %}
           Respuestas rápidas sobre planes, límites, facturas, datos y cómo encaja BillBeam dentro de tu flujo de trabajo.
+        {% elif lang == 'zh' %}
+          快速了解套餐、限制、发票、数据以及 BillBeam 如何融入你的工作流程。
         {% else %}
           Quick answers about plans, limits, invoices, data, and how BillBeam fits into your workflow.
         {% endif %}
@@ -328,36 +339,62 @@
 
     <div class="quick-actions">
       <a href="/support{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ir a soporte{% else %}Go to Support{% endif %}
+        {% if lang == 'es' %}
+          Ir a soporte
+        {% elif lang == 'zh' %}
+          前往支持
+        {% else %}
+          Go to Support
+        {% endif %}
       </a>
     </div>
   </div>
 
   <div class="faq-hero-strip">
     <div class="faq-hero-card">
-      <div class="faq-hero-label">
-        {% if lang == 'es' %}Starter{% else %}Starter{% endif %}
-      </div>
+      <div class="faq-hero-label">Starter</div>
       <div class="faq-hero-value">
-        {% if lang == 'es' %}Hasta 10 facturas/mes{% else %}Up to 10 invoices/month{% endif %}
+        {% if lang == 'es' %}
+          Hasta 10 facturas/mes
+        {% elif lang == 'zh' %}
+          每月最多 10 张发票
+        {% else %}
+          Up to 10 invoices/month
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="faq-hero-card">
+      <div class="faq-hero-label">Pro</div>
+      <div class="faq-hero-value">
+        {% if lang == 'es' %}
+          Más envío y automatización
+        {% elif lang == 'zh' %}
+          更多发送与自动化功能
+        {% else %}
+          More sending and automation
+        {% endif %}
       </div>
     </div>
 
     <div class="faq-hero-card">
       <div class="faq-hero-label">
-        {% if lang == 'es' %}Pro{% else %}Pro{% endif %}
+        {% if lang == 'es' %}
+          Tus datos
+        {% elif lang == 'zh' %}
+          你的数据
+        {% else %}
+          Your data
+        {% endif %}
       </div>
       <div class="faq-hero-value">
-        {% if lang == 'es' %}Más envío y automatización{% else %}More sending and automation{% endif %}
-      </div>
-    </div>
-
-    <div class="faq-hero-card">
-      <div class="faq-hero-label">
-        {% if lang == 'es' %}Tus datos{% else %}Your data{% endif %}
-      </div>
-      <div class="faq-hero-value">
-        {% if lang == 'es' %}Siguen siendo tuyos{% else %}Stays yours{% endif %}
+        {% if lang == 'es' %}
+          Siguen siendo tuyos
+        {% elif lang == 'zh' %}
+          始终属于你
+        {% else %}
+          Stays yours
+        {% endif %}
       </div>
     </div>
   </div>
@@ -370,6 +407,8 @@
         <h2>
           {% if lang == 'es' %}
             ¿Necesito tarjeta para empezar?
+          {% elif lang == 'zh' %}
+            开始使用需要信用卡吗？
           {% else %}
             Do I need a credit card to get started?
           {% endif %}
@@ -377,6 +416,8 @@
         <p>
           {% if lang == 'es' %}
             No. El plan Starter de BillBeam te permite crear hasta 10 facturas al mes sin introducir tarjeta. Cuando veas que realmente te está ahorrando tiempo y trabajo, puedes pasar al plan Pro.
+          {% elif lang == 'zh' %}
+            不需要。BillBeam 的 Starter 套餐允许你在无需绑定信用卡的情况下，每月创建最多 10 张发票。当你确认它确实帮你节省了时间和工作量后，再升级到 Pro 就可以。
           {% else %}
             No. BillBeam’s Starter plan lets you create up to 10 invoices per month without a card on file. Once it is clearly saving you time and effort, you can upgrade to Pro.
           {% endif %}
@@ -387,6 +428,8 @@
         <h2>
           {% if lang == 'es' %}
             ¿Cuál es la diferencia entre Starter y Pro?
+          {% elif lang == 'zh' %}
+            Starter 和 Pro 有什么区别？
           {% else %}
             What’s the difference between Starter and Pro?
           {% endif %}
@@ -394,6 +437,8 @@
         <p>
           {% if lang == 'es' %}
             Starter está pensado para freelancers y negocios pequeños que emiten pocas facturas al mes. Pro está pensado para cuando facturar se vuelve una parte constante de tu semana.
+          {% elif lang == 'zh' %}
+            Starter 适合每月只发送少量发票的自由职业者和小型企业。Pro 则适合当开票已经成为你每周稳定工作的一部分时使用。
           {% else %}
             Starter is designed for freelancers and small businesses who send only a few invoices each month. Pro is for when billing becomes a regular part of your week.
           {% endif %}
@@ -402,6 +447,9 @@
           {% if lang == 'es' %}
             <li>Starter: hasta 10 facturas al mes y panel básico.</li>
             <li>Pro: facturas ilimitadas, plantillas adicionales, envío por email, enlaces públicos y más automatización.</li>
+          {% elif lang == 'zh' %}
+            <li>Starter：每月最多 10 张发票，以及基础面板。</li>
+            <li>Pro：无限发票、额外模板、内置邮件发送、公开链接以及更多自动化功能。</li>
           {% else %}
             <li>Starter: up to 10 invoices per month and a basic dashboard.</li>
             <li>Pro: unlimited invoices, extra templates, built-in email sending, public links, and more automation.</li>
@@ -413,6 +461,8 @@
         <h2>
           {% if lang == 'es' %}
             ¿Puedo enviar facturas por correo desde BillBeam?
+          {% elif lang == 'zh' %}
+            我可以直接从 BillBeam 通过邮件发送发票吗？
           {% else %}
             Can I send invoices by email directly from BillBeam?
           {% endif %}
@@ -420,6 +470,8 @@
         <p>
           {% if lang == 'es' %}
             Sí. En el plan Pro puedes enviar facturas por correo con el PDF adjunto y un enlace público para tu cliente. En Starter siempre puedes descargar el PDF y enviarlo manualmente desde tu correo.
+          {% elif lang == 'zh' %}
+            可以。在 Pro 套餐中，你可以直接通过邮件发送发票，并附带 PDF 和公开发票链接给客户。在 Starter 套餐中，你也始终可以下载 PDF，然后通过自己的邮箱手动发送。
           {% else %}
             Yes. On the Pro plan you can send invoices by email with the PDF attached and a public link for your client. On Starter, you can always download the PDF and send it manually from your own email.
           {% endif %}
@@ -430,6 +482,8 @@
         <h2>
           {% if lang == 'es' %}
             ¿Qué pasa con mis datos si dejo de usar BillBeam?
+          {% elif lang == 'zh' %}
+            如果我不再使用 BillBeam，我的数据会怎样？
           {% else %}
             What happens to my data if I stop using BillBeam?
           {% endif %}
@@ -437,6 +491,8 @@
         <p>
           {% if lang == 'es' %}
             Tus facturas y datos de clientes siguen siendo tuyos. Puedes exportar PDFs y volver a tu sistema anterior si lo necesitas. Si en algún momento quieres eliminar tus datos, puedes escribirnos y los eliminaremos de forma segura.
+          {% elif lang == 'zh' %}
+            你的发票和客户数据始终属于你。你可以导出 PDF，并在需要时回到你原来的系统。如果你希望删除数据，也可以联系我们，我们会安全地为你处理删除。
           {% else %}
             Your invoices and client data remain yours. You can export PDFs and move back to your previous system if needed. If you ever want your data removed, you can contact us and we will delete it safely.
           {% endif %}
@@ -447,6 +503,8 @@
         <h2>
           {% if lang == 'es' %}
             ¿BillBeam funciona con clientes en otros países e idiomas?
+          {% elif lang == 'zh' %}
+            BillBeam 可以用于其他国家和不同语言的客户吗？
           {% else %}
             Does BillBeam work with clients in other countries and languages?
           {% endif %}
@@ -454,8 +512,10 @@
         <p>
           {% if lang == 'es' %}
             Sí. La interfaz está disponible en inglés y español, y puedes escribir tus descripciones de servicios en el idioma que necesites. También puedes ajustar moneda, impuestos y notas según tu flujo.
+          {% elif lang == 'zh' %}
+            可以。界面支持英文、西班牙文和中文，你也可以用任何需要的语言填写服务说明。货币、税务和备注内容也可以按你的业务流程进行调整。
           {% else %}
-            Yes. The interface is available in English and Spanish, and you can write service descriptions in whatever language you need. You can also adjust currency, tax details, and notes to match your workflow.
+            Yes. The interface is available in English, Spanish, and Chinese, and you can write service descriptions in whatever language you need. You can also adjust currency, tax details, and notes to match your workflow.
           {% endif %}
         </p>
       </article>
@@ -464,6 +524,8 @@
         <h2>
           {% if lang == 'es' %}
             ¿BillBeam reemplaza a mi contable?
+          {% elif lang == 'zh' %}
+            BillBeam 可以替代我的会计吗？
           {% else %}
             Does BillBeam replace my accountant?
           {% endif %}
@@ -471,6 +533,8 @@
         <p>
           {% if lang == 'es' %}
             No. BillBeam te ayuda con el día a día de crear, enviar y organizar facturas, pero no da asesoría legal, fiscal o contable. Para impuestos, cumplimiento o temas regulatorios siempre conviene hablar con un profesional.
+          {% elif lang == 'zh' %}
+            不能。BillBeam 主要帮助你完成日常的发票创建、发送和整理，但不提供法律、税务或会计建议。对于税务、合规或监管问题，仍然建议咨询专业人士。
           {% else %}
             No. BillBeam helps with the day-to-day work of creating, sending, and organizing invoices, but it does not provide legal, tax, or accounting advice. For taxes, compliance, or regulatory questions, it is always best to speak with a professional.
           {% endif %}
@@ -483,13 +547,23 @@
 
       <section class="faq-side-card">
         <div class="faq-side-kicker">
-          {% if lang == 'es' %}Resumen rápido{% else %}At a glance{% endif %}
+          {% if lang == 'es' %}
+            Resumen rápido
+          {% elif lang == 'zh' %}
+            快速查看
+          {% else %}
+            At a glance
+          {% endif %}
         </div>
         <ul>
           {% if lang == 'es' %}
             <li>Starter: hasta 10 facturas al mes, sin tarjeta.</li>
             <li>Pro: facturas ilimitadas, email integrado y más automatización.</li>
             <li>Puedes exportar y llevarte tus datos cuando quieras.</li>
+          {% elif lang == 'zh' %}
+            <li>Starter：每月最多 10 张发票，无需信用卡。</li>
+            <li>Pro：无限发票、内置邮件发送以及更多自动化功能。</li>
+            <li>你可以随时导出并带走自己的数据。</li>
           {% else %}
             <li>Starter: up to 10 invoices per month, no card required.</li>
             <li>Pro: unlimited invoices, built-in email, and more automation.</li>
@@ -500,11 +574,19 @@
 
       <section class="faq-side-card">
         <h3>
-          {% if lang == 'es' %}¿Sigues con dudas?{% else %}Still have questions?{% endif %}
+          {% if lang == 'es' %}
+            ¿Sigues con dudas?
+          {% elif lang == 'zh' %}
+            还有问题吗？
+          {% else %}
+            Still have questions?
+          {% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
             Abre BillBeam Assistant desde la esquina inferior derecha o crea una cuenta y pregúntale directamente desde tu panel.
+          {% elif lang == 'zh' %}
+            你可以从右下角打开 BillBeam Assistant，或者先创建账户，再在你的面板中直接提问。
           {% else %}
             Open BillBeam Assistant from the bottom-right corner, or create an account and ask directly from your dashboard.
           {% endif %}
@@ -512,21 +594,41 @@
 
         <div class="faq-cta-row">
           <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="faq-cta-primary">
-            {% if lang == 'es' %}Crear cuenta{% else %}Create account{% endif %}
+            {% if lang == 'es' %}
+              Crear cuenta
+            {% elif lang == 'zh' %}
+              创建账户
+            {% else %}
+              Create account
+            {% endif %}
           </a>
           <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="faq-cta-secondary">
-            {% if lang == 'es' %}Ver planes{% else %}View plans{% endif %}
+            {% if lang == 'es' %}
+              Ver planes
+            {% elif lang == 'zh' %}
+              查看套餐
+            {% else %}
+              View plans
+            {% endif %}
           </a>
         </div>
       </section>
 
       <section class="faq-highlight">
         <strong>
-          {% if lang == 'es' %}Bueno saber{% else %}Good to know{% endif %}
+          {% if lang == 'es' %}
+            Bueno saber
+          {% elif lang == 'zh' %}
+            值得了解
+          {% else %}
+            Good to know
+          {% endif %}
         </strong>
         <p>
           {% if lang == 'es' %}
             BillBeam está pensado para reducir fricción, mejorar claridad y ayudarte a presentar una experiencia de facturación más profesional frente a tus clientes.
+          {% elif lang == 'zh' %}
+            BillBeam 的设计目标，是减少阻力、提高清晰度，并帮助你向客户呈现更专业的开票体验。
           {% else %}
             BillBeam is designed to reduce friction, improve clarity, and help you present a more professional invoicing experience to your clients.
           {% endif %}

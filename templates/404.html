@@ -1,12 +1,20 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if lang == 'es' %}Página no encontrada | BillBeam{% else %}Page Not Found | BillBeam{% endif %}
+{% if lang == 'es' %}
+Página no encontrada | BillBeam
+{% elif lang == 'zh' %}
+页面未找到 | BillBeam
+{% else %}
+Page Not Found | BillBeam
+{% endif %}
 {% endblock %}
 
 {% block meta_description %}
 {% if lang == 'es' %}
 La página que buscas no existe o pudo haber sido movida. Vuelve al panel, revisa tus facturas o explora la ayuda de BillBeam.
+{% elif lang == 'zh' %}
+你要查找的页面不存在，或可能已被移动。返回控制面板、查看发票，或访问 BillBeam 帮助中心。
 {% else %}
 The page you’re looking for does not exist or may have moved. Head back to your dashboard, review invoices, or visit BillBeam help.
 {% endif %}
@@ -171,6 +179,8 @@ The page you’re looking for does not exist or may have moved. Head back to you
         <h1 class="error-title">
           {% if lang == 'es' %}
             Esta página no se pudo encontrar
+          {% elif lang == 'zh' %}
+            找不到此页面
           {% else %}
             We couldn’t find that page
           {% endif %}
@@ -179,6 +189,8 @@ The page you’re looking for does not exist or may have moved. Head back to you
         <p class="error-copy">
           {% if lang == 'es' %}
             El enlace puede estar roto, la página pudo haber sido movida o la URL puede tener un error. No te preocupes: tus datos y facturas no se han visto afectados.
+          {% elif lang == 'zh' %}
+            该链接可能已失效，页面可能已被移动，或者网址中存在输入错误。别担心：你的数据和发票没有受到影响。
           {% else %}
             The link may be broken, the page may have moved, or the URL may contain a typo. Don’t worry: your data and invoices have not been affected.
           {% endif %}
@@ -191,11 +203,19 @@ The page you’re looking for does not exist or may have moved. Head back to you
     <div class="error-grid">
       <div class="error-mini-card">
         <h3>
-          {% if lang == 'es' %}Volver a un lugar seguro{% else %}Get back to a safe place{% endif %}
+          {% if lang == 'es' %}
+            Volver a un lugar seguro
+          {% elif lang == 'zh' %}
+            返回安全页面
+          {% else %}
+            Get back to a safe place
+          {% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
             Regresa al panel principal, abre tu historial de facturas o crea una nueva factura con un clic.
+          {% elif lang == 'zh' %}
+            返回主控制面板、打开发票历史记录，或一键创建新发票。
           {% else %}
             Head back to your main dashboard, open invoice history, or create a new invoice with one click.
           {% endif %}
@@ -204,11 +224,19 @@ The page you’re looking for does not exist or may have moved. Head back to you
 
       <div class="error-mini-card">
         <h3>
-          {% if lang == 'es' %}¿Buscabas ayuda?{% else %}Looking for help?{% endif %}
+          {% if lang == 'es' %}
+            ¿Buscabas ayuda?
+          {% elif lang == 'zh' %}
+            需要帮助吗？
+          {% else %}
+            Looking for help?
+          {% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
             También puedes visitar el centro de ayuda, preguntas frecuentes o la página de contacto.
+          {% elif lang == 'zh' %}
+            你也可以访问帮助中心、常见问题页面或联系我们页面。
           {% else %}
             You can also visit the help center, FAQs, or the contact page.
           {% endif %}
@@ -218,25 +246,51 @@ The page you’re looking for does not exist or may have moved. Head back to you
 
     <div class="error-actions">
       <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+        {% if lang == 'es' %}
+          Ir al panel
+        {% elif lang == 'zh' %}
+          前往控制面板
+        {% else %}
+          Go to Dashboard
+        {% endif %}
       </a>
 
       <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ver facturas{% else %}View Invoices{% endif %}
+        {% if lang == 'es' %}
+          Ver facturas
+        {% elif lang == 'zh' %}
+          查看发票
+        {% else %}
+          View Invoices
+        {% endif %}
       </a>
 
       <a href="/help{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Centro de ayuda{% else %}Help Center{% endif %}
+        {% if lang == 'es' %}
+          Centro de ayuda
+        {% elif lang == 'zh' %}
+          帮助中心
+        {% else %}
+          Help Center
+        {% endif %}
       </a>
 
       <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+        {% if lang == 'es' %}
+          Contacto
+        {% elif lang == 'zh' %}
+          联系我们
+        {% else %}
+          Contact
+        {% endif %}
       </a>
     </div>
 
     <div class="error-footnote">
       {% if lang == 'es' %}
         Si escribiste la dirección manualmente, revisa la URL y vuelve a intentarlo.
+      {% elif lang == 'zh' %}
+        如果你是手动输入地址的，请检查网址后再试一次。
       {% else %}
         If you typed the address manually, double-check the URL and try again.
       {% endif %}

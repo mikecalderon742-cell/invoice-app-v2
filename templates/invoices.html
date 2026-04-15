@@ -2,22 +2,29 @@
 
 {% block title %}
   {% if lang == 'es' %}
-    Panel de facturas · {{ business_profile.business_name or "BILLBeam" }}
+    Panel de facturas · {{ business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    发票面板 · {{ business_profile.business_name or "BillBeam" }}
   {% else %}
-    Invoice Dashboard · {{ business_profile.business_name or "BILLBeam" }}
+    Invoice Dashboard · {{ business_profile.business_name or "BillBeam" }}
   {% endif %}
 {% endblock %}
 
 {% block meta_description %}
   {% if lang == 'es' %}
     Revisa ingresos, estados, clientes principales y el historial completo de facturas en BillBeam.
+  {% elif lang == 'zh' %}
+    在 BillBeam 中查看收入、状态、主要客户以及完整的发票历史记录。
   {% else %}
     Review revenue, statuses, top clients, and your full invoice history inside BillBeam.
   {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 {% set metrics = dashboard_metrics if dashboard_metrics is defined and dashboard_metrics else {} %}
 {% set outstanding_receivables = metrics.outstanding_receivables if metrics.outstanding_receivables is defined else 0 %}
 {% set overdue_receivables = metrics.overdue_receivables if metrics.overdue_receivables is defined else 0 %}
@@ -122,6 +129,80 @@
   }
 
   body.dark .dashboard-upgrade-strip-copy {
+    color: #cbd5e1;
+  }
+
+  .dashboard-services-strip {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .dashboard-services-strip {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 20px 48px rgba(2,6,23,0.76),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .dashboard-services-strip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  body.dark .dashboard-services-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .dashboard-services-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .dashboard-services-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .dashboard-services-copy {
     color: #cbd5e1;
   }
 
@@ -681,6 +762,8 @@
         <h1>
             {% if lang == 'es' %}
                 Panel BillBeam
+            {% elif lang == 'zh' %}
+                BillBeam 面板
             {% else %}
                 BillBeam Dashboard
             {% endif %}
@@ -688,6 +771,8 @@
         <div class="dashboard-subcopy">
             {% if lang == 'es' %}
                 Supervisa ingresos, pagos, facturas vencidas y el movimiento de tu negocio en un solo lugar.
+            {% elif lang == 'zh' %}
+                在一个地方查看收入、付款、逾期发票以及您业务的整体流动情况。
             {% else %}
                 Monitor revenue, payments, overdue invoices, and the flow of your business from one place.
             {% endif %}
@@ -696,11 +781,56 @@
 
     <div class="quick-actions">
         <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn">
-            {% if lang == 'es' %}+ Nueva factura{% else %}+ New Invoice{% endif %}
+            {% if lang == 'es' %}+ Nueva factura{% elif lang == 'zh' %}+ 新建发票{% else %}+ New Invoice{% endif %}
         </a>
         <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Actualizar{% else %}Refresh{% endif %}
+            {% if lang == 'es' %}Actualizar{% elif lang == 'zh' %}刷新{% else %}Refresh{% endif %}
         </a>
+    </div>
+</div>
+
+<div class="dashboard-services-strip">
+    <div class="dashboard-services-strip-top">
+        <div>
+            <div class="dashboard-services-kicker">
+                {% if lang == 'es' %}
+                    ✨ Servicios
+                {% elif lang == 'zh' %}
+                    ✨ 服务
+                {% else %}
+                    ✨ Services
+                {% endif %}
+            </div>
+            <h3 class="dashboard-services-title">
+                {% if lang == 'es' %}
+                    Mantén tus servicios listos para facturar
+                {% elif lang == 'zh' %}
+                    让您的服务随时可用于开票
+                {% else %}
+                    Keep your services ready for invoicing
+                {% endif %}
+            </h3>
+            <div class="dashboard-services-copy">
+                {% if lang == 'es' %}
+                    Organiza tus servicios, descripciones y precios desde tu página dedicada de Servicios para que tus facturas, tu portal público y tu flujo de trabajo se vean más sólidos y profesionales.
+                {% elif lang == 'zh' %}
+                    在专属服务页面中整理您的服务、描述和价格，让您的发票、公开门户和整体工作流程更完整、更专业。
+                {% else %}
+                    Organize your services, descriptions, and pricing from your dedicated Services page so your invoices, public portal, and overall workflow feel more complete and professional.
+                {% endif %}
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}
+                    Abrir servicios
+                {% elif lang == 'zh' %}
+                    打开服务页面
+                {% else %}
+                    Open Services
+                {% endif %}
+            </a>
+        </div>
     </div>
 </div>
 
@@ -711,6 +841,8 @@
             <strong>
                 {% if lang == 'es' %}
                     Desbloquea más capacidad con Simple o Pro
+                {% elif lang == 'zh' %}
+                    通过 Simple 或 Pro 解锁更多能力
                 {% else %}
                     Unlock more capability with Simple or Pro
                 {% endif %}
@@ -718,6 +850,8 @@
             <div class="dashboard-upgrade-strip-copy">
                 {% if lang == 'es' %}
                     Actualiza a Simple para enviar facturas por correo, descargar PDFs y usar enlaces públicos sin pagos en línea. Actualiza a Pro si también quieres cobros con Stripe, recordatorios y panel avanzado.
+                {% elif lang == 'zh' %}
+                    升级到 Simple 可获得发票邮件、PDF 和无需在线付款的公开链接。若您还需要 Stripe 收款、提醒和高级面板，可升级到 Pro。
                 {% else %}
                     Upgrade to Simple for invoice emails, PDFs, and public links without online payments. Upgrade to Pro if you also want Stripe payments, reminders, and the advanced dashboard.
                 {% endif %}
@@ -725,7 +859,7 @@
         </div>
         <div class="quick-actions">
             <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Ver planes{% else %}View Plans{% endif %}
+                {% if lang == 'es' %}Ver planes{% elif lang == 'zh' %}查看套餐{% else %}View Plans{% endif %}
             </a>
         </div>
     </div>
@@ -737,6 +871,8 @@
             <strong>
                 {% if lang == 'es' %}
                     Estás usando Simple
+                {% elif lang == 'zh' %}
+                    您当前使用的是 Simple
                 {% else %}
                     You’re using Simple
                 {% endif %}
@@ -744,6 +880,8 @@
             <div class="dashboard-upgrade-strip-copy">
                 {% if lang == 'es' %}
                     Tu flujo actual está optimizado para facturas, recibos, PDFs y marcado manual como pagada. Si luego quieres cobros con Stripe, recordatorios y métricas más avanzadas, puedes subir a Pro.
+                {% elif lang == 'zh' %}
+                    您当前的流程已针对发票、收据、PDF 和手动标记已付款进行了优化。如果之后需要 Stripe 收款、提醒和更高级的指标，可以升级到 Pro。
                 {% else %}
                     Your current workflow is optimized for invoices, receipts, PDFs, and manual paid marking. If you later want Stripe payments, reminders, and more advanced metrics, you can move up to Pro.
                 {% endif %}
@@ -751,7 +889,7 @@
         </div>
         <div class="quick-actions">
             <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Comparar planes{% else %}Compare Plans{% endif %}
+                {% if lang == 'es' %}Comparar planes{% elif lang == 'zh' %}比较套餐{% else %}Compare Plans{% endif %}
             </a>
         </div>
     </div>
@@ -763,6 +901,8 @@
             <strong>
                 {% if lang == 'es' %}
                     Completa tu configuración de pagos
+                {% elif lang == 'zh' %}
+                    完成您的收款设置
                 {% else %}
                     Complete your payment setup
                 {% endif %}
@@ -770,6 +910,8 @@
             <div class="dashboard-upgrade-strip-copy">
                 {% if lang == 'es' %}
                     Conecta tu cuenta de Stripe en Configuración para ofrecer una experiencia de cobro más profesional y preparar tus pagos en línea.
+                {% elif lang == 'zh' %}
+                    在设置中连接您的 Stripe 账户，以提供更专业的收款体验并准备在线支付流程。
                 {% else %}
                     Connect your Stripe account in Settings to offer a more professional payment experience and prepare your online payment flow.
                 {% endif %}
@@ -777,7 +919,7 @@
         </div>
         <div class="quick-actions">
             <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Abrir configuración{% else %}Open Settings{% endif %}
+                {% if lang == 'es' %}Abrir configuración{% elif lang == 'zh' %}打开设置{% else %}Open Settings{% endif %}
             </a>
         </div>
     </div>
@@ -787,7 +929,7 @@
 <div class="dashboard-filter-shell">
     <div class="filter-top">
         <div class="filter-title">
-            {% if lang == 'es' %}Buscar y filtrar{% else %}Search & Filter{% endif %}
+{% if lang == 'es' %}Buscar y filtrar{% elif lang == 'zh' %}搜索与筛选{% else %}Search & Filter{% endif %}
         </div>
         <div class="filter-meta">
             {% if q or status_filter or from_date_str or to_date_str %}
@@ -809,7 +951,7 @@
     <form method="get" action="/invoices" class="dashboard-filter-form">
         <div class="filter-field">
             <label for="q">
-                {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+                {% if lang == 'es' %}Buscar{% elif lang == 'zh' %}搜索{% else %}Search{% endif %}
             </label>
             <input
                 id="q"
@@ -822,7 +964,7 @@
 
         <div class="filter-field">
             <label for="status">
-                {% if lang == 'es' %}Estado{% else %}Status{% endif %}
+                {% if lang == 'es' %}Estado{% elif lang == 'zh' %}状态{% else %}Status{% endif %}
             </label>
             <select id="status" name="status">
                 <option value="">{% if lang == 'es' %}Todos{% else %}All{% endif %}</option>
@@ -840,25 +982,25 @@
 
         <div class="filter-field">
             <label for="from_date">
-                {% if lang == 'es' %}Desde{% else %}From{% endif %}
+                {% if lang == 'es' %}Desde{% elif lang == 'zh' %}开始{% else %}From{% endif %}
             </label>
             <input id="from_date" type="date" name="from_date" value="{{ from_date_str }}">
         </div>
 
         <div class="filter-field">
             <label for="to_date">
-                {% if lang == 'es' %}Hasta{% else %}To{% endif %}
+                {% if lang == 'es' %}Hasta{% elif lang == 'zh' %}结束{% else %}To{% endif %}
             </label>
             <input id="to_date" type="date" name="to_date" value="{{ to_date_str }}">
         </div>
 
         <div class="filter-actions">
             <button type="submit" class="btn btn-secondary">
-                {% if lang == 'es' %}Aplicar{% else %}Apply{% endif %}
+                {% if lang == 'es' %}Aplicar{% elif lang == 'zh' %}应用{% else %}Apply{% endif %}
             </button>
 
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Limpiar{% else %}Clear{% endif %}
+                {% if lang == 'es' %}Limpiar{% elif lang == 'zh' %}清除{% else %}Clear{% endif %}
             </a>
         </div>
 
@@ -1414,14 +1556,16 @@
         <div class="table-section-header">
             <div>
                 <h2>
-                    {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+                    {% if lang == 'es' %}Historial de facturas{% elif lang == 'zh' %}发票历史{% else %}Invoice History{% endif %}
                 </h2>
                 <p>
                     {% if lang == 'es' %}
-                        Revisa, descarga, envía y actualiza el estado de tus facturas.
-                    {% else %}
-                        Review, download, send, and update the status of your invoices.
-                    {% endif %}
+    Revisa, descarga, envía y actualiza el estado de tus facturas.
+{% elif lang == 'zh' %}
+    查看、下载、发送并更新您的发票状态。
+{% else %}
+    Review, download, send, and update the status of your invoices.
+{% endif %}
                 </p>
             </div>
             <div class="table-meta">
@@ -1631,7 +1775,7 @@
                         <td>
                             <div class="actions-stack">
                                 <a class="btn btn-brand" href="/invoice/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Ver{% else %}View{% endif %}
+                                    {% if lang == 'es' %}Ver{% elif lang == 'zh' %}查看{% else %}View{% endif %}
                                 </a>
 
                                 <a class="btn btn-secondary" href="/history-pdf/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
@@ -1639,35 +1783,35 @@
                                 </a>
 
                                 <a class="btn btn-edit" href="/edit/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Editar{% else %}Edit{% endif %}
+                                    {% if lang == 'es' %}Editar{% elif lang == 'zh' %}编辑{% else %}Edit{% endif %}
                                 </a>
 
                                 {% if invoice_status != "Paid" and row_can_collect_payments %}
                                     <a class="btn btn-success" href="/add-payment/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                        {% if lang == 'es' %}Registrar pago{% else %}Add Payment{% endif %}
+                                        {% if lang == 'es' %}Registrar pago{% elif lang == 'zh' %}记录付款{% else %}Add Payment{% endif %}
                                     </a>
                                 {% endif %}
 
                                 {% if invoice_status != "Paid" and row_can_use_collections %}
                                     <a class="btn btn-secondary" href="/send-reminder/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                        {% if lang == 'es' %}Recordar{% else %}Reminder{% endif %}
+                                        {% if lang == 'es' %}Recordar{% elif lang == 'zh' %}提醒{% else %}Reminder{% endif %}
                                     </a>
                                 {% endif %}
 
                                 {% if invoice_status != "Paid" %}
                                     <a class="btn btn-success" href="/update-status/{{ invoice_id }}/Paid{% if lang %}?lang={{ lang }}{% endif %}">
-                                        {% if lang == 'es' %}Marcar pagada{% else %}Mark Paid{% endif %}
+                                        {% if lang == 'es' %}Marcar pagada{% elif lang == 'zh' %}标记为已支付{% else %}Mark Paid{% endif %}
                                     </a>
                                 {% endif %}
 
                                 {% if row_can_email %}
                                     <a class="btn btn-info" href="/send-email/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                        {% if lang == 'es' %}Enviar{% else %}Send{% endif %}
+                                        {% if lang == 'es' %}Enviar{% elif lang == 'zh' %}发送{% else %}Send{% endif %}
                                     </a>
                                 {% endif %}
 
                                 <a class="btn btn-danger" href="/delete/{{ invoice_id }}{% if lang %}?lang={{ lang }}{% endif %}">
-                                    {% if lang == 'es' %}Eliminar{% else %}Delete{% endif %}
+                                    {% if lang == 'es' %}Eliminar{% elif lang == 'zh' %}删除{% else %}Delete{% endif %}
                                 </a>
                             </div>
                         </td>
@@ -1727,7 +1871,7 @@ document.addEventListener("DOMContentLoaded", function() {
             data: {
                 labels: revenueLabels,
                 datasets: [{
-                    label: "{{ 'Revenue' if lang == 'en' else 'Ingresos' }}",
+                    label: "{{ '收入' if lang == 'zh' else ('Revenue' if lang == 'en' else 'Ingresos') }}",
                     data: revenueValues,
                     fill: true,
                     tension: 0.35,
@@ -1783,7 +1927,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateDailySummary() {
         if (!dailySelect || !dailySummary || !dailyLabels || dailyLabels.length === 0) {
             if (dailySummary) {
-                dailySummary.textContent = "{{ 'No daily revenue data.' if lang == 'en' else 'Sin datos de ingresos diarios.' }}";
+                dailySummary.textContent = "{{ '暂无每日收入数据。' if lang == 'zh' else ('No daily revenue data.' if lang == 'en' else 'Sin datos de ingresos diarios.') }}";
             }
             return;
         }
@@ -1859,7 +2003,7 @@ document.addEventListener("DOMContentLoaded", function() {
             data: {
                 labels: itemLabels,
                 datasets: [{
-                    label: "{{ 'Total billed' if lang == 'en' else 'Total facturado' }}",
+                    label: "{{ '总开票金额' if lang == 'zh' else ('Total billed' if lang == 'en' else 'Total facturado') }}",
                     data: itemTotals,
                     backgroundColor: "rgba(249, 115, 22, 0.9)",
                     borderColor: "rgba(194, 65, 12, 1)",
@@ -1881,7 +2025,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 return "$" + total.toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
-                                }) + " (" + count + " {{ 'tx' if lang == 'en' else 'mov' }})";
+                                }) + " (" + count + " {{ '笔' if lang == 'zh' else ('tx' if lang == 'en' else 'mov') }})";
                             }
                         }
                     }

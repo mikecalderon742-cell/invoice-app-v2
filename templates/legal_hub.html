@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if lang == 'es' %}Centro legal | BillBeam{% else %}Legal Center | BillBeam{% endif %}
+{% if lang == 'es' %}Centro legal | BillBeam{% elif lang == 'zh' %}法律中心 | BillBeam{% else %}Legal Center | BillBeam{% endif %}
 {% endblock %}
 
 {% block meta_description %}
 {% if lang == 'es' %}
 Consulta las políticas legales de BillBeam, incluyendo privacidad, términos de servicio, facturación, seguridad de datos y uso de IA.
+{% elif lang == 'zh' %}
+查看 BillBeam 的法律政策，包括隐私、服务条款、计费、数据安全和 AI 使用说明。
 {% else %}
 Review BillBeam legal policies including privacy, terms of service, billing, data security, and AI usage disclosures.
 {% endif %}
@@ -240,7 +242,13 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
   <section class="legal-hub-hero">
     <div class="legal-hub-hero-card fade-in-up">
       <div class="legal-hub-eyebrow">
-        {% if lang == 'es' %}Documentación legal{% else %}Legal documentation{% endif %}
+        {% if lang == 'es' %}
+          Documentación legal
+        {% elif lang == 'zh' %}
+          法律文档
+        {% else %}
+          Legal documentation
+        {% endif %}
       </div>
 
       <div class="legal-hub-top">
@@ -248,6 +256,8 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
           <h1 class="legal-hub-title">
             {% if lang == 'es' %}
               Centro legal
+            {% elif lang == 'zh' %}
+              法律中心
             {% else %}
               Legal Center
             {% endif %}
@@ -256,6 +266,8 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
           <p class="legal-hub-copy">
             {% if lang == 'es' %}
               Aquí puedes consultar todas las políticas legales y documentos regulatorios relacionados con el uso de BillBeam. Estas páginas describen cómo protegemos datos, cómo funciona la facturación y qué condiciones aplican al uso del servicio.
+            {% elif lang == 'zh' %}
+              你可以在这里查看与使用 BillBeam 有关的所有法律政策和合规文件。这些页面说明了我们如何保护数据、计费如何运作，以及使用本服务时适用的条件。
             {% else %}
               This page provides access to all legal and regulatory documents related to the use of BillBeam. These policies explain how data is handled, how billing works, and the conditions that apply to use of the service.
             {% endif %}
@@ -264,13 +276,13 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
         <div class="legal-hub-trust">
           <span class="legal-hub-pill">
-            {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+            {% if lang == 'es' %}Privacidad{% elif lang == 'zh' %}隐私{% else %}Privacy{% endif %}
           </span>
           <span class="legal-hub-pill">
-            {% if lang == 'es' %}Facturación{% else %}Billing{% endif %}
+            {% if lang == 'es' %}Facturación{% elif lang == 'zh' %}计费{% else %}Billing{% endif %}
           </span>
           <span class="legal-hub-pill">
-            {% if lang == 'es' %}Seguridad{% else %}Security{% endif %}
+            {% if lang == 'es' %}Seguridad{% elif lang == 'zh' %}安全{% else %}Security{% endif %}
           </span>
         </div>
       </div>
@@ -282,11 +294,19 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
     <article class="legal-hub-card teal">
       <div class="legal-hub-card-head">
         <h2 class="legal-hub-card-title">
-          {% if lang == 'es' %}Política de privacidad{% else %}Privacy Policy{% endif %}
+          {% if lang == 'es' %}
+            Política de privacidad
+          {% elif lang == 'zh' %}
+            隐私政策
+          {% else %}
+            Privacy Policy
+          {% endif %}
         </h2>
         <p class="legal-hub-card-copy">
           {% if lang == 'es' %}
             Explica cómo recopilamos, usamos y protegemos datos personales.
+          {% elif lang == 'zh' %}
+            说明我们如何收集、使用和保护个人数据。
           {% else %}
             Explains how we collect, use, and protect personal data.
           {% endif %}
@@ -295,23 +315,43 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
       <div>
         <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-          {% if lang == 'es' %}Leer política{% else %}Read policy{% endif %}
+          {% if lang == 'es' %}
+            Leer política
+          {% elif lang == 'zh' %}
+            查看政策
+          {% else %}
+            Read policy
+          {% endif %}
         </a>
       </div>
 
       <div class="legal-hub-card-meta">
-        {% if lang == 'es' %}Privacidad y manejo de datos{% else %}Privacy and data handling{% endif %}
+        {% if lang == 'es' %}
+          Privacidad y manejo de datos
+        {% elif lang == 'zh' %}
+          隐私与数据处理
+        {% else %}
+          Privacy and data handling
+        {% endif %}
       </div>
     </article>
 
     <article class="legal-hub-card blue">
       <div class="legal-hub-card-head">
         <h2 class="legal-hub-card-title">
-          {% if lang == 'es' %}Términos de servicio{% else %}Terms of Service{% endif %}
+          {% if lang == 'es' %}
+            Términos de servicio
+          {% elif lang == 'zh' %}
+            服务条款
+          {% else %}
+            Terms of Service
+          {% endif %}
         </h2>
         <p class="legal-hub-card-copy">
           {% if lang == 'es' %}
             Las condiciones legales para usar BillBeam.
+          {% elif lang == 'zh' %}
+            使用 BillBeam 的法律条款。
           {% else %}
             The legal conditions governing use of BillBeam.
           {% endif %}
@@ -320,23 +360,43 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
       <div>
         <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-          {% if lang == 'es' %}Leer términos{% else %}Read terms{% endif %}
+          {% if lang == 'es' %}
+            Leer términos
+          {% elif lang == 'zh' %}
+            查看条款
+          {% else %}
+            Read terms
+          {% endif %}
         </a>
       </div>
 
       <div class="legal-hub-card-meta">
-        {% if lang == 'es' %}Uso del producto y responsabilidades{% else %}Product use and responsibilities{% endif %}
+        {% if lang == 'es' %}
+          Uso del producto y responsabilidades
+        {% elif lang == 'zh' %}
+          产品使用与责任
+        {% else %}
+          Product use and responsibilities
+        {% endif %}
       </div>
     </article>
 
     <article class="legal-hub-card teal">
       <div class="legal-hub-card-head">
         <h2 class="legal-hub-card-title">
-          {% if lang == 'es' %}Facturación y suscripciones{% else %}Billing Policy{% endif %}
+          {% if lang == 'es' %}
+            Facturación y suscripciones
+          {% elif lang == 'zh' %}
+            计费与订阅
+          {% else %}
+            Billing Policy
+          {% endif %}
         </h2>
         <p class="legal-hub-card-copy">
           {% if lang == 'es' %}
             Describe planes, renovaciones, cancelaciones y reembolsos.
+          {% elif lang == 'zh' %}
+            说明套餐、续费、取消和退款规则。
           {% else %}
             Describes plans, renewals, cancellations, and refunds.
           {% endif %}
@@ -345,23 +405,43 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
       <div>
         <a href="/billing-policy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-          {% if lang == 'es' %}Ver política{% else %}View policy{% endif %}
+          {% if lang == 'es' %}
+            Ver política
+          {% elif lang == 'zh' %}
+            查看政策
+          {% else %}
+            View policy
+          {% endif %}
         </a>
       </div>
 
       <div class="legal-hub-card-meta">
-        {% if lang == 'es' %}Planes, cobros y renovaciones{% else %}Plans, charges, and renewals{% endif %}
+        {% if lang == 'es' %}
+          Planes, cobros y renovaciones
+        {% elif lang == 'zh' %}
+          套餐、收费与续费
+        {% else %}
+          Plans, charges, and renewals
+        {% endif %}
       </div>
     </article>
 
     <article class="legal-hub-card blue">
       <div class="legal-hub-card-head">
         <h2 class="legal-hub-card-title">
-          {% if lang == 'es' %}Seguridad de datos{% else %}Data Security{% endif %}
+          {% if lang == 'es' %}
+            Seguridad de datos
+          {% elif lang == 'zh' %}
+            数据安全
+          {% else %}
+            Data Security
+          {% endif %}
         </h2>
         <p class="legal-hub-card-copy">
           {% if lang == 'es' %}
             Cómo protegemos información y manejamos seguridad de la plataforma.
+          {% elif lang == 'zh' %}
+            说明我们如何保护信息以及如何管理平台安全。
           {% else %}
             How we protect information and manage platform security.
           {% endif %}
@@ -370,23 +450,43 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
       <div>
         <a href="/data-security{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-          {% if lang == 'es' %}Ver detalles{% else %}View details{% endif %}
+          {% if lang == 'es' %}
+            Ver detalles
+          {% elif lang == 'zh' %}
+            查看详情
+          {% else %}
+            View details
+          {% endif %}
         </a>
       </div>
 
       <div class="legal-hub-card-meta">
-        {% if lang == 'es' %}Protección y prácticas generales{% else %}Protection and general practices{% endif %}
+        {% if lang == 'es' %}
+          Protección y prácticas generales
+        {% elif lang == 'zh' %}
+          保护措施与一般做法
+        {% else %}
+          Protection and general practices
+        {% endif %}
       </div>
     </article>
 
     <article class="legal-hub-card teal">
       <div class="legal-hub-card-head">
         <h2 class="legal-hub-card-title">
-          {% if lang == 'es' %}Aviso de IA{% else %}AI Notice{% endif %}
+          {% if lang == 'es' %}
+            Aviso de IA
+          {% elif lang == 'zh' %}
+            AI 说明
+          {% else %}
+            AI Notice
+          {% endif %}
         </h2>
         <p class="legal-hub-card-copy">
           {% if lang == 'es' %}
             Información sobre el uso de funciones impulsadas por inteligencia artificial.
+          {% elif lang == 'zh' %}
+            关于产品中 AI 功能使用方式的说明。
           {% else %}
             Information about the use of AI-powered features in the product.
           {% endif %}
@@ -395,23 +495,43 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
       <div>
         <a href="/ai-notice{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-          {% if lang == 'es' %}Ver aviso{% else %}View notice{% endif %}
+          {% if lang == 'es' %}
+            Ver aviso
+          {% elif lang == 'zh' %}
+            查看说明
+          {% else %}
+            View notice
+          {% endif %}
         </a>
       </div>
 
       <div class="legal-hub-card-meta">
-        {% if lang == 'es' %}Asistencia de IA y límites{% else %}AI assistance and limits{% endif %}
+        {% if lang == 'es' %}
+          Asistencia de IA y límites
+        {% elif lang == 'zh' %}
+          AI 辅助与限制
+        {% else %}
+          AI assistance and limits
+        {% endif %}
       </div>
     </article>
 
     <article class="legal-hub-card blue">
       <div class="legal-hub-card-head">
         <h2 class="legal-hub-card-title">
-          {% if lang == 'es' %}Contacto legal{% else %}Legal Contact{% endif %}
+          {% if lang == 'es' %}
+            Contacto legal
+          {% elif lang == 'zh' %}
+            法律联系
+          {% else %}
+            Legal Contact
+          {% endif %}
         </h2>
         <p class="legal-hub-card-copy">
           {% if lang == 'es' %}
             Para consultas legales o regulatorias.
+          {% elif lang == 'zh' %}
+            用于法律或监管相关咨询。
           {% else %}
             For legal or regulatory inquiries.
           {% endif %}
@@ -420,12 +540,24 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
 
       <div>
         <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-          {% if lang == 'es' %}Contactar{% else %}Contact{% endif %}
+          {% if lang == 'es' %}
+            Contactar
+          {% elif lang == 'zh' %}
+            联系我们
+          {% else %}
+            Contact
+          {% endif %}
         </a>
       </div>
 
       <div class="legal-hub-card-meta">
-        {% if lang == 'es' %}Ayuda formal y consultas{% else %}Formal help and inquiries{% endif %}
+        {% if lang == 'es' %}
+          Ayuda formal y consultas
+        {% elif lang == 'zh' %}
+          正式帮助与咨询
+        {% else %}
+          Formal help and inquiries
+        {% endif %}
       </div>
     </article>
 
@@ -434,6 +566,8 @@ Review BillBeam legal policies including privacy, terms of service, billing, dat
   <div class="legal-hub-footer">
     {% if lang == 'es' %}
       Estos documentos pueden actualizarse ocasionalmente para reflejar cambios regulatorios, mejoras de producto o requisitos de cumplimiento.
+    {% elif lang == 'zh' %}
+      这些文件可能会不时更新，以反映监管变化、产品改进或合规要求。
     {% else %}
       These documents may be updated periodically to reflect regulatory changes, product improvements, or compliance requirements.
     {% endif %}

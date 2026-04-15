@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 {% block title %}
   {% if lang == 'es' %}
     Centro de ayuda · BillBeam
+  {% elif lang == 'zh' %}
+    帮助中心 · BillBeam
   {% else %}
     Help Center · BillBeam
   {% endif %}
@@ -12,6 +17,8 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Aprende a usar BillBeam, enviar facturas, compartir enlaces públicos y recibir ayuda dentro de la app.
+  {% elif lang == 'zh' %}
+    了解如何使用 BillBeam、发送发票、分享公开发票链接，并在应用内获得帮助。
   {% else %}
     Learn how to use BillBeam, send invoices, share public invoice links, and get help inside the app.
   {% endif %}
@@ -372,6 +379,8 @@
       <h1>
         {% if lang == 'es' %}
           Centro de ayuda
+        {% elif lang == 'zh' %}
+          帮助中心
         {% else %}
           Help Center
         {% endif %}
@@ -379,6 +388,8 @@
       <div class="help-subcopy">
         {% if lang == 'es' %}
           Aprende a configurar BillBeam, crear facturas, compartir enlaces públicos y sacar más provecho del asistente dentro de la app.
+        {% elif lang == 'zh' %}
+          了解如何设置 BillBeam、创建发票、分享公开发票链接，并更好地使用应用内助手。
         {% else %}
           Learn how to set up BillBeam, create invoices, share public links, and get more value from the in-app assistant.
         {% endif %}
@@ -387,7 +398,13 @@
 
     <div class="quick-actions">
       <a href="/faq{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ver preguntas frecuentes{% else %}View FAQs{% endif %}
+        {% if lang == 'es' %}
+          Ver preguntas frecuentes
+        {% elif lang == 'zh' %}
+          查看常见问题
+        {% else %}
+          View FAQs
+        {% endif %}
       </a>
     </div>
   </div>
@@ -397,6 +414,8 @@
       <div class="help-kicker">
         {% if lang == 'es' %}
           Soporte y guía • BillBeam
+        {% elif lang == 'zh' %}
+          支持与指南 • BillBeam
         {% else %}
           Support and guidance • BillBeam
         {% endif %}
@@ -405,6 +424,8 @@
       <h2 class="help-hero-title">
         {% if lang == 'es' %}
           Empezar con BillBeam
+        {% elif lang == 'zh' %}
+          开始使用 BillBeam
         {% else %}
           Getting started with BillBeam
         {% endif %}
@@ -413,6 +434,8 @@
       <div class="help-hero-copy">
         {% if lang == 'es' %}
           BillBeam está diseñado para que puedas pasar de configurar tu negocio a crear y enviar facturas con muy pocos pasos. Aquí tienes el camino más rápido para empezar bien.
+        {% elif lang == 'zh' %}
+          BillBeam 的设计目标，是让你从设置业务到创建并发送发票，只需要很少的步骤。这里是最适合快速上手的路线。
         {% else %}
           BillBeam is designed to take you from setup to sending invoices in just a few steps. Here is the fastest path to getting started the right way.
         {% endif %}
@@ -421,28 +444,64 @@
       <div class="help-hero-points">
         <div class="help-point">
           <div class="help-point-label">
-            {% if lang == 'es' %}Primer paso{% else %}First step{% endif %}
+            {% if lang == 'es' %}
+              Primer paso
+            {% elif lang == 'zh' %}
+              第一步
+            {% else %}
+              First step
+            {% endif %}
           </div>
           <div class="help-point-value">
-            {% if lang == 'es' %}Configura tu perfil{% else %}Set up your profile{% endif %}
+            {% if lang == 'es' %}
+              Configura tu perfil
+            {% elif lang == 'zh' %}
+              设置你的资料
+            {% else %}
+              Set up your profile
+            {% endif %}
           </div>
         </div>
 
         <div class="help-point">
           <div class="help-point-label">
-            {% if lang == 'es' %}Después{% else %}Then{% endif %}
+            {% if lang == 'es' %}
+              Después
+            {% elif lang == 'zh' %}
+              然后
+            {% else %}
+              Then
+            {% endif %}
           </div>
           <div class="help-point-value">
-            {% if lang == 'es' %}Crea tu factura{% else %}Create your invoice{% endif %}
+            {% if lang == 'es' %}
+              Crea tu factura
+            {% elif lang == 'zh' %}
+              创建你的发票
+            {% else %}
+              Create your invoice
+            {% endif %}
           </div>
         </div>
 
         <div class="help-point">
           <div class="help-point-label">
-            {% if lang == 'es' %}Resultado{% else %}Outcome{% endif %}
+            {% if lang == 'es' %}
+              Resultado
+            {% elif lang == 'zh' %}
+              结果
+            {% else %}
+              Outcome
+            {% endif %}
           </div>
           <div class="help-point-value">
-            {% if lang == 'es' %}Cobra más fácil{% else %}Get paid easier{% endif %}
+            {% if lang == 'es' %}
+              Cobra más fácil
+            {% elif lang == 'zh' %}
+              更轻松收款
+            {% else %}
+              Get paid easier
+            {% endif %}
           </div>
         </div>
       </div>
@@ -450,12 +509,20 @@
 
     <aside class="help-side-panel reveal">
       <h3>
-        {% if lang == 'es' %}Ruta recomendada{% else %}Recommended path{% endif %}
+        {% if lang == 'es' %}
+          Ruta recomendada
+        {% elif lang == 'zh' %}
+          推荐流程
+        {% else %}
+          Recommended path
+        {% endif %}
       </h3>
 
       <div class="help-side-copy">
         {% if lang == 'es' %}
           Si eres nuevo en BillBeam, esta secuencia te ayudará a evitar errores y a dejar todo listo más rápido.
+        {% elif lang == 'zh' %}
+          如果你刚开始使用 BillBeam，这个顺序可以帮助你减少错误，并更快完成设置。
         {% else %}
           If you are new to BillBeam, this sequence helps you avoid mistakes and get set up faster.
         {% endif %}
@@ -467,6 +534,8 @@
           <div>
             {% if lang == 'es' %}
               Configura tu negocio en Ajustes.
+            {% elif lang == 'zh' %}
+              在设置中配置你的业务信息。
             {% else %}
               Set up your business in Settings.
             {% endif %}
@@ -478,6 +547,8 @@
           <div>
             {% if lang == 'es' %}
               Crea tu primera factura y revisa la vista previa.
+            {% elif lang == 'zh' %}
+              创建第一张发票并检查预览。
             {% else %}
               Create your first invoice and review the preview.
             {% endif %}
@@ -489,6 +560,8 @@
           <div>
             {% if lang == 'es' %}
               Guárdala y envíala por correo o comparte el enlace.
+            {% elif lang == 'zh' %}
+              保存后通过邮件发送，或直接分享链接。
             {% else %}
               Save it and send it by email or share the invoice link.
             {% endif %}
@@ -504,6 +577,8 @@
       <h3>
         {% if lang == 'es' %}
           Primeros pasos dentro de BillBeam
+        {% elif lang == 'zh' %}
+          在 BillBeam 中的第一步
         {% else %}
           First steps inside BillBeam
         {% endif %}
@@ -515,6 +590,8 @@
           <div class="help-step-copy">
             {% if lang == 'es' %}
               Crea una cuenta o inicia sesión con tu correo.
+            {% elif lang == 'zh' %}
+              用你的邮箱注册账户或登录。
             {% else %}
               Create an account or sign in with your email.
             {% endif %}
@@ -526,6 +603,8 @@
           <div class="help-step-copy">
             {% if lang == 'es' %}
               Configura tu perfil de negocio en Configuración con tu logo, nombre y datos de contacto.
+            {% elif lang == 'zh' %}
+              在设置中完善你的业务资料，包括 logo、名称和联系方式。
             {% else %}
               Set up your business profile in Settings with your logo, name, and contact details.
             {% endif %}
@@ -537,6 +616,8 @@
           <div class="help-step-copy">
             {% if lang == 'es' %}
               Usa “Crear factura” para capturar a tu cliente, añadir conceptos y revisar el total.
+            {% elif lang == 'zh' %}
+              使用“创建发票”填写客户信息、添加项目并检查总额。
             {% else %}
               Use “Create Invoice” to add your client, line items, and review the total.
             {% endif %}
@@ -548,6 +629,8 @@
           <div class="help-step-copy">
             {% if lang == 'es' %}
               Guarda la factura y, si quieres, envíala por correo directamente desde BillBeam.
+            {% elif lang == 'zh' %}
+              保存发票，如有需要可直接通过 BillBeam 邮件发送。
             {% else %}
               Save the invoice and optionally send it by email directly from BillBeam.
             {% endif %}
@@ -559,6 +642,8 @@
           <div class="help-step-copy">
             {% if lang == 'es' %}
               Registra pagos desde el historial de facturas para mantener tus balances al día.
+            {% elif lang == 'zh' %}
+              在发票历史中记录付款，保持余额信息最新。
             {% else %}
               Record payments from invoice history to keep your balances up to date.
             {% endif %}
@@ -571,6 +656,8 @@
       <h3>
         {% if lang == 'es' %}
           ¿Cómo funcionan los enlaces públicos de factura?
+        {% elif lang == 'zh' %}
+          公开发票链接如何运作？
         {% else %}
           How do public invoice links work?
         {% endif %}
@@ -578,6 +665,8 @@
       <p>
         {% if lang == 'es' %}
           Cuando guardas una factura, BillBeam puede generar un enlace público seguro para tu cliente. Desde ese enlace, tu cliente puede ver un resumen moderno de la factura, revisar el historial de pagos y descargar el PDF.
+        {% elif lang == 'zh' %}
+          当你保存发票后，BillBeam 可以为客户生成一个安全的公开链接。客户通过这个链接可以查看现代化的发票摘要、付款记录，并下载 PDF。
         {% else %}
           When you save an invoice, BillBeam can generate a secure public link for your client. From that link, they can view a modern invoice summary, review payment history, and download the PDF.
         {% endif %}
@@ -585,6 +674,8 @@
       <p style="margin-top:12px;">
         {% if lang == 'es' %}
           El enlace está pensado para compartirse por correo o mensajería. Evita publicarlo en páginas totalmente abiertas si contiene información sensible.
+        {% elif lang == 'zh' %}
+          这个链接适合通过邮件或消息发送。如果其中包含敏感信息，请不要发布在完全公开的页面上。
         {% else %}
           The link is meant to be shared by email or messaging. Avoid posting it on fully public pages if it contains sensitive information.
         {% endif %}
@@ -593,11 +684,13 @@
 
     <section class="help-section-card reveal">
       <h3>
-        {% if lang == 'es' %}BillBeam Assistant{% else %}BillBeam Assistant{% endif %}
+        BillBeam Assistant
       </h3>
       <p>
         {% if lang == 'es' %}
           En una esquina de la app verás un botón de chat. Desde ahí puedes hacer preguntas sobre tus facturas, textos sugeridos, recordatorios de cobro y más. El asistente usa el contexto de la página donde estás para darte respuestas más útiles.
+        {% elif lang == 'zh' %}
+          在应用的一角你会看到聊天按钮。你可以在那里询问有关发票、文案建议、催款提醒等问题。助手会结合你当前页面的内容，给出更有用的回答。
         {% else %}
           In a corner of the app you will see a chat button. From there you can ask questions about your invoices, suggested wording, follow-up reminders, and more. The assistant uses the context of the page you are on to provide more useful answers.
         {% endif %}
@@ -607,11 +700,19 @@
     <div class="help-values reveal">
       <div class="help-value-card">
         <div class="help-value-title">
-          {% if lang == 'es' %}Configuración{% else %}Setup{% endif %}
+          {% if lang == 'es' %}
+            Configuración
+          {% elif lang == 'zh' %}
+            设置
+          {% else %}
+            Setup
+          {% endif %}
         </div>
         <div class="help-value-copy">
           {% if lang == 'es' %}
             Una buena configuración inicial te ahorra trabajo manual en cada factura futura.
+          {% elif lang == 'zh' %}
+            良好的初始设置，会帮你在之后的每张发票上减少手动工作。
           {% else %}
             A strong initial setup saves manual work on every future invoice.
           {% endif %}
@@ -620,11 +721,19 @@
 
       <div class="help-value-card">
         <div class="help-value-title">
-          {% if lang == 'es' %}Claridad{% else %}Clarity{% endif %}
+          {% if lang == 'es' %}
+            Claridad
+          {% elif lang == 'zh' %}
+            清晰
+          {% else %}
+            Clarity
+          {% endif %}
         </div>
         <div class="help-value-copy">
           {% if lang == 'es' %}
             Cuanto más clara sea la factura, menos preguntas tendrá tu cliente antes de pagar.
+          {% elif lang == 'zh' %}
+            发票越清晰，客户在付款前就越少会提出问题。
           {% else %}
             The clearer the invoice, the fewer questions your client will have before paying.
           {% endif %}
@@ -633,11 +742,19 @@
 
       <div class="help-value-card">
         <div class="help-value-title">
-          {% if lang == 'es' %}Seguimiento{% else %}Follow-up{% endif %}
+          {% if lang == 'es' %}
+            Seguimiento
+          {% elif lang == 'zh' %}
+            跟进
+          {% else %}
+            Follow-up
+          {% endif %}
         </div>
         <div class="help-value-copy">
           {% if lang == 'es' %}
             Registrar pagos y revisar estados te ayuda a mantener tu flujo financiero bajo control.
+          {% elif lang == 'zh' %}
+            记录付款并查看状态，有助于你更好掌控现金流。
           {% else %}
             Recording payments and reviewing statuses helps keep your cash flow under control.
           {% endif %}
@@ -647,11 +764,19 @@
 
     <section class="help-section-card reveal">
       <h3>
-        {% if lang == 'es' %}Soporte y contacto{% else %}Support & contact{% endif %}
+        {% if lang == 'es' %}
+          Soporte y contacto
+        {% elif lang == 'zh' %}
+          支持与联系
+        {% else %}
+          Support & contact
+        {% endif %}
       </h3>
       <p>
         {% if lang == 'es' %}
           Si algo no funciona como esperas, o necesitas ayuda con un caso específico, comparte una descripción clara del problema, el navegador que usas y, si es posible, algunas capturas de pantalla.
+        {% elif lang == 'zh' %}
+          如果某些功能没有按预期运行，或你需要针对具体问题获得帮助，请尽量提供清晰的问题描述、所用浏览器，以及可用的截图。
         {% else %}
           If something is not working as expected, or you need help with a specific case, include a clear description of the problem, which browser you are using, and screenshots if possible.
         {% endif %}
@@ -659,6 +784,8 @@
       <p style="margin-top:12px;">
         {% if lang == 'es' %}
           Puedes escribir desde esta sección de ayuda o responder a cualquier correo de BillBeam que hayas recibido.
+        {% elif lang == 'zh' %}
+          你可以通过帮助页面联系，或直接回复任何一封你收到的 BillBeam 邮件。
         {% else %}
           You can reach out from this Help section or by replying to any BillBeam email you receive.
         {% endif %}

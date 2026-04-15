@@ -8,6 +8,7 @@ from flask import (
     url_for,
     send_from_directory,
     jsonify,
+    g,
 )
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -71,7 +72,7 @@ logger = logging.getLogger("billbeam")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+c = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
@@ -145,7 +146,149 @@ def now_local():
 
 def normalize_lang(value: str) -> str:
     value = (value or "en").strip().lower()
-    return value if value in ("en", "es") else "en"
+    return value if value in ("en", "es", "zh") else "en"
+
+
+def get_request_lang(default: str = "en") -> str:
+    """
+    Resolve the current request language in one safe place.
+
+    Priority:
+    1) explicit ?lang=
+    2) POSTed hidden/input lang
+    3) session-stored lang
+    4) logged-in user's saved language
+    5) default fallback
+    """
+    query_lang = request.args.get("lang")
+    form_lang = request.form.get("lang") if request.method == "POST" else None
+    session_lang = session.get("lang")
+
+    user_lang = None
+    try:
+        user_lang = (get_current_user() or {}).get("language")
+    except Exception:
+        user_lang = None
+
+    return normalize_lang(query_lang or form_lang or session_lang or user_lang or default)
+
+
+def lang_url_for(endpoint: str, **values) -> str:
+    """
+    Build a url_for() that always carries the active language unless
+    the caller explicitly passed lang already.
+    """
+    if "lang" not in values or not values.get("lang"):
+        values["lang"] = get_request_lang()
+    else:
+        values["lang"] = normalize_lang(values["lang"])
+    return url_for(endpoint, **values)
+
+
+def lang_redirect(endpoint: str, **values):
+    """
+    Safe redirect helper that preserves the active language.
+    """
+    return redirect(lang_url_for(endpoint, **values))
+
+
+def t(key: str, lang: str = "en") -> str:
+    lang = normalize_lang(lang)
+
+    translations = {
+        "create_invoice": {
+            "en": "Create Invoice",
+            "es": "Crear factura",
+            "zh": "创建发票",
+        },
+        "save_invoice": {
+            "en": "Save Invoice",
+            "es": "Guardar factura",
+            "zh": "保存发票",
+        },
+        "mark_paid": {
+            "en": "Mark as Paid",
+            "es": "Marcar como pagada",
+            "zh": "标记为已支付",
+        },
+        "business_profile_branding": {
+            "en": "Business Profile & Branding",
+            "es": "Perfil de negocio y marca",
+            "zh": "企业资料与品牌",
+        },
+        "language_preferences": {
+            "en": "Language Preferences",
+            "es": "Preferencias de idioma",
+            "zh": "语言偏好",
+        },
+        "preferred_language": {
+            "en": "Preferred Language",
+            "es": "Idioma preferido",
+            "zh": "首选语言",
+        },
+        "manage_services": {
+            "en": "Manage Services",
+            "es": "Administrar servicios",
+            "zh": "管理服务",
+        },
+        "service_name": {
+            "en": "Service Name",
+            "es": "Nombre del servicio",
+            "zh": "服务名称",
+        },
+        "service_description": {
+            "en": "Description",
+            "es": "Descripción",
+            "zh": "描述",
+        },
+        "service_price": {
+            "en": "Price",
+            "es": "Precio",
+            "zh": "价格",
+        },
+        "add_service": {
+            "en": "Add Service",
+            "es": "Agregar servicio",
+            "zh": "添加服务",
+        },
+        "save_settings": {
+            "en": "Save Settings",
+            "es": "Guardar configuración",
+            "zh": "保存设置",
+        },
+        "services": {
+            "en": "Services",
+            "es": "Servicios",
+            "zh": "服务",
+        },
+        "active": {
+            "en": "Active",
+            "es": "Activo",
+            "zh": "启用",
+        },
+        "inactive": {
+            "en": "Inactive",
+            "es": "Inactivo",
+            "zh": "停用",
+        },
+        "edit": {
+            "en": "Edit",
+            "es": "Editar",
+            "zh": "编辑",
+        },
+        "update": {
+            "en": "Update",
+            "es": "Actualizar",
+            "zh": "更新",
+        },
+        "cancel": {
+            "en": "Cancel",
+            "es": "Cancelar",
+            "zh": "取消",
+        },
+    }
+
+    return translations.get(key, {}).get(lang, translations.get(key, {}).get("en", key))
 
 
 def parse_float(value, default=0.0):
@@ -272,6 +415,10 @@ def can_use_advanced_dashboard(user_or_plan=None) -> bool:
 
 
 def can_use_collections(user_or_plan=None) -> bool:
+    return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
+
+
+def can_use_branding(user_or_plan=None) -> bool:
     return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
 
 
@@ -407,6 +554,7 @@ def init_db():
             is_active BOOLEAN DEFAULT TRUE,
             stripe_customer_id TEXT,
             stripe_subscription_id TEXT,
+            language TEXT DEFAULT 'en',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
@@ -514,6 +662,20 @@ def init_db():
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS services (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            price NUMERIC(10,2),
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS invoice_events (
             id SERIAL PRIMARY KEY,
             invoice_id INTEGER REFERENCES invoices(id) ON DELETE CASCADE,
@@ -538,6 +700,7 @@ def init_db():
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_original_transaction_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_transaction_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_last_purchase_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en';")
 
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
@@ -610,6 +773,19 @@ def init_db():
         """
         CREATE INDEX IF NOT EXISTS invoices_last_reminder_idx
         ON invoices(last_reminder_sent_at DESC);
+        """
+    )
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS services_user_created_idx
+        ON services(user_id, created_at DESC);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS services_user_active_idx
+        ON services(user_id, is_active);
         """
     )
 
@@ -875,7 +1051,7 @@ def get_default_user():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, email, plan, is_active, created_at FROM users ORDER BY id ASC LIMIT 1;"
+        "SELECT id, email, plan, is_active, language, created_at FROM users ORDER BY id ASC LIMIT 1;"
     )
     row = cursor.fetchone()
     cursor.close()
@@ -890,12 +1066,13 @@ def get_default_user():
             "created_at": None,
         }
 
-    user_id, email, plan, is_active, created_at = row
+    user_id, email, plan, is_active, language, created_at = row
     return {
         "id": user_id,
         "email": email,
         "plan": normalize_plan_key(plan or "free"),
         "is_active": is_active,
+        "language": normalize_lang(language or "en"),
         "created_at": created_at,
     }
 
@@ -906,7 +1083,7 @@ def get_current_user():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, email, plan, is_active, created_at FROM users WHERE id = %s",
+            "SELECT id, email, plan, is_active, language, created_at FROM users WHERE id = %s",
             (user_id,),
         )
         row = cursor.fetchone()
@@ -914,13 +1091,14 @@ def get_current_user():
         conn.close()
 
         if row:
-            uid, email, plan, is_active, created_at = row
+            uid, email, plan, is_active, language, created_at = row
             if is_active:
                 return {
                     "id": uid,
                     "email": email,
                     "plan": normalize_plan_key(plan or "free"),
                     "is_active": is_active,
+                    "language": normalize_lang(language or "en"),
                     "created_at": created_at,
                 }
 
@@ -929,6 +1107,7 @@ def get_current_user():
         "email": "",
         "plan": "free",
         "is_active": False,
+        "language": "en",
         "created_at": None,
     }
 
@@ -938,8 +1117,7 @@ def login_required(view_func):
     def wrapped_view(*args, **kwargs):
         user = get_current_user()
         if not user.get("id"):
-            lang = normalize_lang(request.args.get("lang", "en"))
-            return redirect(url_for("login", lang=lang))
+            return lang_redirect("login")
         return view_func(*args, **kwargs)
     return wrapped_view
 
@@ -1633,6 +1811,215 @@ def get_business_profile():
     }
 
 
+def get_user_services(user_id: int, include_inactive: bool = False):
+    if not user_id:
+        return []
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if include_inactive:
+            cur.execute(
+                """
+                SELECT id, user_id, name, description, price, is_active, created_at
+                FROM services
+                WHERE user_id = %s
+                ORDER BY created_at DESC, id DESC
+                """,
+                (user_id,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT id, user_id, name, description, price, is_active, created_at
+                FROM services
+                WHERE user_id = %s AND is_active = TRUE
+                ORDER BY created_at DESC, id DESC
+                """,
+                (user_id,),
+            )
+
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    services = []
+    for service_id, service_user_id, name, description, price, is_active, created_at in rows:
+        services.append(
+            {
+                "id": service_id,
+                "user_id": service_user_id,
+                "name": name or "",
+                "description": description or "",
+                "price": float(price or 0),
+                "is_active": bool(is_active),
+                "created_at": created_at,
+            }
+        )
+    return services
+
+
+def get_service_by_id(service_id: int, user_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT id, user_id, name, description, price, is_active, created_at
+            FROM services
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+            """,
+            (service_id, user_id),
+        )
+        row = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "user_id": row[1],
+        "name": row[2] or "",
+        "description": row[3] or "",
+        "price": float(row[4] or 0),
+        "is_active": bool(row[5]),
+        "created_at": row[6],
+    }
+
+
+def create_user_service(user_id: int, name: str, description: str = "", price: float = 0.0):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO services (user_id, name, description, price, is_active, created_at)
+            VALUES (%s, %s, %s, %s, TRUE, %s)
+            RETURNING id
+            """,
+            (user_id, name.strip(), description.strip(), price, now_local()),
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        return new_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
+def update_user_service(service_id: int, user_id: int, name: str, description: str = "", price: float = 0.0):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE services
+            SET name = %s,
+                description = %s,
+                price = %s
+            WHERE id = %s AND user_id = %s
+            """,
+            (name.strip(), description.strip(), price, service_id, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
+def set_user_service_active(service_id: int, user_id: int, is_active: bool):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE services
+            SET is_active = %s
+            WHERE id = %s AND user_id = %s
+            """,
+            (bool(is_active), service_id, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
+def validate_service_form(name: str, description: str = "", price_raw=None):
+    name = (name or "").strip()
+    description = (description or "").strip()
+    price = parse_float(price_raw, default=None)
+
+    if not name:
+        return {
+            "ok": False,
+            "error": "Service name is required.",
+            "name": name,
+            "description": description,
+            "price": 0.0,
+        }
+
+    if len(name) > 120:
+        return {
+            "ok": False,
+            "error": "Service name must be 120 characters or fewer.",
+            "name": name,
+            "description": description,
+            "price": 0.0,
+        }
+
+    if len(description) > 1000:
+        return {
+            "ok": False,
+            "error": "Service description must be 1000 characters or fewer.",
+            "name": name,
+            "description": description,
+            "price": 0.0,
+        }
+
+    if price is None:
+        return {
+            "ok": False,
+            "error": "Service price must be a valid number.",
+            "name": name,
+            "description": description,
+            "price": 0.0,
+        }
+
+    if price < 0:
+        return {
+            "ok": False,
+            "error": "Service price cannot be negative.",
+            "name": name,
+            "description": description,
+            "price": 0.0,
+        }
+
+    return {
+        "ok": True,
+        "error": None,
+        "name": name,
+        "description": description,
+        "price": round(float(price), 2),
+    }
+
+
 def upsert_business_profile(data: dict):
     user = get_current_user()
     user_id = user["id"]
@@ -1718,6 +2105,21 @@ init_db()
 
 
 # -------------------------
+# LANGUAGE SYNC
+# -------------------------
+@app.before_request
+def sync_request_language():
+    """
+    Keep the active language stable across page loads and redirects.
+    This is intentionally lightweight and additive.
+    """
+    resolved_lang = get_request_lang()
+    session["lang"] = resolved_lang
+    session.modified = True
+    g.current_lang = resolved_lang
+
+
+# -------------------------
 # RESPONSE HARDENING
 # -------------------------
 @app.after_request
@@ -1793,6 +2195,8 @@ def inject_current_user_ctx():
         "can_use_ai_current": can_use_ai(user),
         "can_use_advanced_dashboard_current": can_use_advanced_dashboard(user),
         "can_use_collections_current": can_use_collections(user),
+        "can_use_branding_current": can_use_branding(user),
+        "t": t,
     }
 
 
@@ -1819,7 +2223,11 @@ def home():
     cursor.close()
     conn.close()
 
-    return render_template("index.html", clients=clients)
+    return render_template(
+    "index.html",
+    clients=clients,
+    lang=get_request_lang(),
+)
 
 
 # -------------------------
@@ -1828,6 +2236,8 @@ def home():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error = None
+
+    lang = get_request_lang()
 
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
@@ -1866,14 +2276,17 @@ def register():
                     user_id, _plan = row
                     session["user_id"] = user_id
                     session.permanent = True
-                    return redirect(url_for("invoices_page"))
+                    session["lang"] = lang
+                    return lang_redirect("invoices_page")
 
-    return render_template("register.html", error=error)
+    return render_template("register.html", error=error, lang=lang)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
+
+    lang = get_request_lang()
 
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
@@ -1905,15 +2318,19 @@ def login():
                 else:
                     session["user_id"] = user_id
                     session.permanent = True
-                    return redirect(url_for("invoices_page"))
+                    session["lang"] = lang
+                    return lang_redirect("invoices_page")
 
-    return render_template("login.html", error=error)
+    return render_template("login.html", error=error, lang=lang)
 
 
 @app.route("/logout")
 def logout():
+    lang = get_request_lang()
     session.clear()
-    return redirect(url_for("login"))
+    session["lang"] = lang
+    session.modified = True
+    return lang_redirect("login")
 
 
 # -------------------------
@@ -2480,6 +2897,209 @@ def payment_account_dashboard():
 
 
 # -------------------------
+# SERVICES / LISTINGS
+# -------------------------
+@app.route("/services", methods=["GET"])
+@login_required
+def services_page():
+    current_user = get_current_user()
+    user_id = current_user["id"]
+    lang = get_request_lang()
+
+    services = get_user_services(user_id, include_inactive=True)
+
+    edit_service_id = request.args.get("edit")
+    edit_service = None
+    if edit_service_id:
+        try:
+            edit_service = get_service_by_id(int(edit_service_id), user_id)
+        except (TypeError, ValueError):
+            edit_service = None
+
+    return render_template(
+        "services.html",
+        lang=lang,
+        services=services,
+        edit_service=edit_service,
+        service_error=request.args.get("service_error") or "",
+        service_success=request.args.get("service_success") or "",
+    )
+
+
+@app.route("/services/create", methods=["POST"])
+@login_required
+def create_service_route():
+    current_user = get_current_user()
+    user_id = current_user["id"]
+    lang = get_request_lang()
+
+    validation = validate_service_form(
+        request.form.get("name"),
+        request.form.get("description"),
+        request.form.get("price"),
+    )
+
+    if not validation["ok"]:
+        return redirect(
+            lang_url_for(
+                "services_page",
+                service_error=validation["error"],
+            )
+        )
+
+    try:
+        create_user_service(
+            user_id=user_id,
+            name=validation["name"],
+            description=validation["description"],
+            price=validation["price"],
+        )
+    except Exception:
+        logger.exception("Failed creating service for user_id=%s", user_id)
+        return redirect(
+            lang_url_for(
+                "services_page",
+                service_error="Failed to create service.",
+            )
+        )
+
+    return redirect(
+        lang_url_for(
+            "services_page",
+            service_success="Service created successfully.",
+        )
+    )
+
+
+@app.route("/services/<int:service_id>/update", methods=["POST"])
+@login_required
+def update_service_route(service_id):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+    lang = get_request_lang()
+
+    existing = get_service_by_id(service_id, user_id)
+    if not existing:
+        return redirect(
+            lang_url_for(
+                "services_page",
+                service_error="Service not found.",
+            )
+        )
+
+    validation = validate_service_form(
+        request.form.get("name"),
+        request.form.get("description"),
+        request.form.get("price"),
+    )
+
+    if not validation["ok"]:
+        return redirect(
+            lang_url_for(
+                "services_page",
+                edit=service_id,
+                service_error=validation["error"],
+            )
+        )
+
+    try:
+        updated = update_user_service(
+            service_id=service_id,
+            user_id=user_id,
+            name=validation["name"],
+            description=validation["description"],
+            price=validation["price"],
+        )
+        if not updated:
+            return redirect(
+                lang_url_for(
+                    "services_page",
+                    service_error="Service not found.",
+                )
+            )
+    except Exception:
+        logger.exception("Failed updating service_id=%s for user_id=%s", service_id, user_id)
+        return redirect(
+            lang_url_for(
+                "services_page",
+                edit=service_id,
+                service_error="Failed to update service.",
+            )
+        )
+
+    return redirect(
+        lang_url_for(
+            "services_page",
+            service_success="Service updated successfully.",
+        )
+    )
+
+
+@app.route("/services/<int:service_id>/deactivate", methods=["POST"])
+@login_required
+def deactivate_service_route(service_id):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
+    try:
+        updated = set_user_service_active(service_id, user_id, False)
+        if not updated:
+            return redirect(
+                lang_url_for(
+                    "services_page",
+                    service_error="Service not found.",
+                )
+            )
+    except Exception:
+        logger.exception("Failed deactivating service_id=%s for user_id=%s", service_id, user_id)
+        return redirect(
+            lang_url_for(
+                "services_page",
+                service_error="Failed to deactivate service.",
+            )
+        )
+
+    return redirect(
+        lang_url_for(
+            "services_page",
+            service_success="Service removed from active listings.",
+        )
+    )
+
+
+@app.route("/services/<int:service_id>/activate", methods=["POST"])
+@login_required
+def activate_service_route(service_id):
+    current_user = get_current_user()
+    user_id = current_user["id"]
+
+    try:
+        updated = set_user_service_active(service_id, user_id, True)
+        if not updated:
+            return redirect(
+                lang_url_for(
+                    "services_page",
+                    service_error="Service not found.",
+                )
+            )
+    except Exception:
+        logger.exception("Failed activating service_id=%s for user_id=%s", service_id, user_id)
+        return redirect(
+            lang_url_for(
+                "services_page",
+                service_error="Failed to activate service.",
+            )
+        )
+
+    return redirect(
+        lang_url_for(
+            "services_page",
+            service_success="Service activated successfully.",
+        )
+    )
+
+
+# -------------------------
 # PREVIEW
 # -------------------------
 @app.route("/preview", methods=["GET", "POST"])
@@ -2775,6 +3395,8 @@ def save():
 def invoices_page():
     update_overdue_statuses()
 
+    lang = normalize_lang(request.args.get("lang") or get_current_user().get("language") or "en")
+
     q = (request.args.get("q") or "").strip()
     status_filter = (request.args.get("status") or "").strip()
     from_date_str = (request.args.get("from_date") or "").strip()
@@ -3038,6 +3660,7 @@ def invoices_page():
         item_totals=item_totals,
         item_counts=item_counts,
         dashboard_metrics=dashboard_metrics,
+        lang=lang,
     )
 
 
@@ -3111,17 +3734,19 @@ def global_search():
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings():
+    user = get_current_user()
+    user_id = user["id"]
+    lang = normalize_lang(request.args.get("lang") or user.get("language") or "en")
+
     profile = get_business_profile()
     feedback_message = None
     feedback_type = None
+    editing_service = None
 
     if request.method == "POST":
         form_type = (request.form.get("form_type") or "profile").strip().lower()
 
         if form_type == "password":
-            user = get_current_user()
-            user_id = user["id"]
-
             current_password = request.form.get("current_password") or ""
             new_password = request.form.get("new_password") or ""
             confirm_password = request.form.get("confirm_password") or ""
@@ -3167,6 +3792,83 @@ def settings():
                     feedback_message = "Password updated successfully."
                     feedback_type = "success"
 
+        elif form_type == "service_add":
+            service_name = (request.form.get("service_name") or "").strip()
+            service_description = (request.form.get("service_description") or "").strip()
+            service_price = parse_float(request.form.get("service_price"), default=0.0)
+
+            if not service_name:
+                feedback_message = "Service name is required."
+                feedback_type = "error"
+            else:
+                create_user_service(
+                    user_id=user_id,
+                    name=service_name,
+                    description=service_description,
+                    price=service_price,
+                )
+                feedback_message = "Service added successfully."
+                feedback_type = "success"
+
+        elif form_type == "service_update":
+            service_id_raw = (request.form.get("service_id") or "").strip()
+            service_name = (request.form.get("service_name") or "").strip()
+            service_description = (request.form.get("service_description") or "").strip()
+            service_price = parse_float(request.form.get("service_price"), default=0.0)
+
+            try:
+                service_id = int(service_id_raw)
+            except ValueError:
+                service_id = None
+
+            if not service_id:
+                feedback_message = "Invalid service selected."
+                feedback_type = "error"
+            elif not service_name:
+                feedback_message = "Service name is required."
+                feedback_type = "error"
+            else:
+                updated = update_user_service(
+                    service_id=service_id,
+                    user_id=user_id,
+                    name=service_name,
+                    description=service_description,
+                    price=service_price,
+                )
+                if updated:
+                    feedback_message = "Service updated successfully."
+                    feedback_type = "success"
+                else:
+                    feedback_message = "Service could not be updated."
+                    feedback_type = "error"
+
+        elif form_type == "service_toggle":
+            service_id_raw = (request.form.get("service_id") or "").strip()
+            next_active_raw = (request.form.get("next_active") or "").strip().lower()
+
+            try:
+                service_id = int(service_id_raw)
+            except ValueError:
+                service_id = None
+
+            next_active = next_active_raw in ("1", "true", "yes", "on")
+
+            if not service_id:
+                feedback_message = "Invalid service selected."
+                feedback_type = "error"
+            else:
+                updated = set_user_service_active(
+                    service_id=service_id,
+                    user_id=user_id,
+                    is_active=next_active,
+                )
+                if updated:
+                    feedback_message = "Service status updated successfully."
+                    feedback_type = "success"
+                else:
+                    feedback_message = "Service status could not be updated."
+                    feedback_type = "error"
+
         else:
             business_name = (request.form.get("business_name") or "").strip()
             email = (request.form.get("email") or "").strip()
@@ -3178,6 +3880,7 @@ def settings():
             accent_color = (request.form.get("accent_color") or "").strip() or DEFAULT_ACCENT_COLOR
             default_terms = (request.form.get("default_terms") or "").strip()
             default_notes = (request.form.get("default_notes") or "").strip()
+            language = normalize_lang(request.form.get("language") or user.get("language") or "en")
 
             data = {
                 "business_name": business_name or DEFAULT_BUSINESS_NAME,
@@ -3193,18 +3896,41 @@ def settings():
             }
 
             upsert_business_profile(data)
-            profile = get_business_profile()
 
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE users SET language = %s WHERE id = %s",
+                (language, user_id),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            profile = get_business_profile()
             feedback_message = "Business profile updated successfully."
             feedback_type = "success"
+            lang = language
+
+    edit_service_id = request.args.get("edit_service")
+    if edit_service_id:
+        try:
+            editing_service = get_service_by_id(int(edit_service_id), user_id)
+        except ValueError:
+            editing_service = None
+
+    services = get_user_services(user_id, include_inactive=True)
 
     return render_template(
         "settings.html",
         profile=profile,
         feedback_message=feedback_message,
         feedback_type=feedback_type,
-        payment_setup=sync_stripe_connect_status_for_user(get_current_user()["id"]),
-        current_plan=normalize_plan_key(get_current_user().get("plan") or "free"),
+        payment_setup=sync_stripe_connect_status_for_user(user_id),
+        current_plan=normalize_plan_key(user.get("plan") or "free"),
+        lang=lang,
+        services=services,
+        editing_service=editing_service,
     )
 
 
@@ -3231,7 +3957,7 @@ def clients_page():
     cursor.close()
     conn.close()
 
-    return render_template("clients.html", clients=clients)
+    return render_template("clients.html", clients=clients, lang=normalize_lang(request.args.get("lang") or get_current_user().get("language") or "en"))
 
 
 @app.route("/clients/add", methods=["POST"])
@@ -4104,8 +4830,16 @@ def public_invoice(token):
     percent_paid = float(payment_summary.get("percent_paid") or 0)
     paid_at = payment_summary.get("last_payment_at")
     view_summary = get_invoice_view_summary(invoice_id)
-    owner_plan = get_user_plan_by_user_id(get_invoice_by_public_token(token)["user_id"]) if get_invoice_by_public_token(token) else "free"
+
+    invoice_public_summary = get_invoice_by_public_token(token)
+    owner_user_id = invoice_public_summary["user_id"] if invoice_public_summary else None
+    owner_plan = get_user_plan_by_user_id(owner_user_id) if owner_user_id else "free"
+
+    is_paid_in_full = payment_summary.get("is_paid_in_full", False)
     show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001 and not is_paid_in_full
+
+    owner_services = get_user_services(owner_user_id, include_inactive=False) if owner_user_id else []
+    show_portal_branding = can_use_branding(owner_plan)
 
     if amount_float > 0 and total_paid >= amount_float and status != "Paid":
         try:
@@ -4119,7 +4853,6 @@ def public_invoice(token):
         except Exception as e:
             logger.warning("[PublicInvoice] Failed safety sync for invoice %s: %s", invoice_id, e)
 
-    is_paid_in_full = payment_summary.get("is_paid_in_full", False)
     if is_paid_in_full:
         status = "Paid"
         balance = 0.0
@@ -4159,6 +4892,9 @@ def public_invoice(token):
         view_summary=view_summary,
         show_pay_button=show_pay_button,
         owner_plan=owner_plan,
+        services=owner_services,
+        show_portal_branding=show_portal_branding,
+        owner_user_id=owner_user_id,
         collection_recommendation=get_invoice_collection_recommendation(
             status,
             payment_summary,
@@ -4262,6 +4998,8 @@ def invoice_detail(invoice_id):
     view_summary = get_invoice_view_summary(invoice_id)
     owner_plan = get_user_plan_by_user_id(user_id)
     show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001
+    owner_services = get_user_services(user_id, include_inactive=False)
+    show_portal_branding = can_use_branding(owner_plan)
 
     cursor.execute(
         """
@@ -4309,6 +5047,9 @@ def invoice_detail(invoice_id):
         last_reminder_sent_at=last_reminder_sent_at,
         show_pay_button=show_pay_button,
         owner_plan=owner_plan,
+        services=owner_services,
+        show_portal_branding=show_portal_branding,
+        owner_user_id=user_id,
         collection_recommendation=get_invoice_collection_recommendation(
             status,
             payment_summary,

@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Factura eliminada{% else %}Invoice Deleted{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+    {% if lang == 'es' %}
+        Factura eliminada
+    {% elif lang == 'zh' %}
+        发票已删除
+    {% else %}
+        Invoice Deleted
+    {% endif %}
+    • {{ business_profile.business_name or "BillBeam" }}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Confirmación de eliminación de factura en BillBeam.
+    {% elif lang == 'zh' %}
+        您的发票已在 BillBeam 中删除。
     {% else %}
         Invoice deletion confirmation in BillBeam.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .deleted-shell {
@@ -58,6 +70,7 @@
     color: #94a3b8;
   }
 
+  .deleted-services-strip,
   .deleted-main-card {
     border-radius: 26px;
     background: rgba(255,255,255,0.82);
@@ -66,15 +79,82 @@
       0 22px 52px rgba(15,23,42,0.055),
       0 0 0 1px rgba(15,23,42,0.015);
     backdrop-filter: blur(12px);
-    padding: 24px;
   }
 
+  body.dark .deleted-services-strip,
   body.dark .deleted-main-card {
     background: rgba(15,23,42,0.78);
     border-color: rgba(148,163,184,0.16);
     box-shadow:
       0 24px 56px rgba(2,6,23,0.82),
       0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .deleted-services-strip {
+    padding: 18px 20px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+  }
+
+  body.dark .deleted-services-strip {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+  }
+
+  .deleted-services-strip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .deleted-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  body.dark .deleted-services-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .deleted-services-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .deleted-services-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .deleted-services-copy {
+    color: #cbd5e1;
+  }
+
+  .deleted-main-card {
+    padding: 24px;
   }
 
   .deleted-warning-banner {
@@ -184,6 +264,8 @@
             <h1>
                 {% if lang == 'es' %}
                     Factura eliminada
+                {% elif lang == 'zh' %}
+                    发票已删除
                 {% else %}
                     Invoice Deleted
                 {% endif %}
@@ -191,6 +273,8 @@
             <div class="deleted-subcopy">
                 {% if lang == 'es' %}
                     La factura fue eliminada correctamente de tu historial.
+                {% elif lang == 'zh' %}
+                    该发票已从您的历史记录中成功移除。
                 {% else %}
                     The invoice was successfully removed from your history.
                 {% endif %}
@@ -199,23 +283,88 @@
 
         <div class="quick-actions">
             <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                {% if lang == 'es' %}
+                    Nueva factura
+                {% elif lang == 'zh' %}
+                    新建发票
+                {% else %}
+                    New Invoice
+                {% endif %}
             </a>
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+                {% if lang == 'es' %}
+                    Volver al historial
+                {% elif lang == 'zh' %}
+                    返回发票历史
+                {% else %}
+                    Back to Invoices
+                {% endif %}
             </a>
+        </div>
+    </div>
+
+    <div class="deleted-services-strip fade-in-up">
+        <div class="deleted-services-strip-top">
+            <div>
+                <div class="deleted-services-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Flujo limpio
+                    {% elif lang == 'zh' %}
+                        ✨ 干净流程
+                    {% else %}
+                        ✨ Clean workflow
+                    {% endif %}
+                </div>
+                <h3 class="deleted-services-title">
+                    {% if lang == 'es' %}
+                        Tu historial sigue limpio y tu flujo sigue organizado
+                    {% elif lang == 'zh' %}
+                        您的历史记录保持整洁，工作流程依旧有序
+                    {% else %}
+                        Your history stays clean and your workflow stays organized
+                    {% endif %}
+                </h3>
+                <div class="deleted-services-copy">
+                    {% if lang == 'es' %}
+                        Si estabas corrigiendo un borrador, eliminando un error o limpiando registros, BillBeam sigue listo para ayudarte a crear una versión mejor organizada.
+                    {% elif lang == 'zh' %}
+                        如果您是在修正草稿、删除错误记录或清理历史，BillBeam 仍然可以帮助您创建一个更清晰、更有条理的新版本。
+                    {% else %}
+                        If you were correcting a draft, removing a mistake, or cleaning up records, BillBeam is still ready to help you create a cleaner and more organized version next.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Abrir servicios
+                    {% elif lang == 'zh' %}
+                        打开服务页面
+                    {% else %}
+                        Open Services
+                    {% endif %}
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="deleted-main-card fade-in-up">
         <div class="deleted-warning-banner">
             <div class="deleted-pill">
-                {% if lang == 'es' %}Eliminación completada{% else %}Deletion complete{% endif %}
+                {% if lang == 'es' %}
+                    Eliminación completada
+                {% elif lang == 'zh' %}
+                    删除完成
+                {% else %}
+                    Deletion complete
+                {% endif %}
             </div>
 
             <h2>
                 {% if lang == 'es' %}
                     Esta factura ya no aparece en BillBeam
+                {% elif lang == 'zh' %}
+                    这张发票已不再显示在 BillBeam 中
                 {% else %}
                     This invoice no longer appears in BillBeam
                 {% endif %}
@@ -224,6 +373,8 @@
             <p>
                 {% if lang == 'es' %}
                     La factura y sus conceptos asociados se eliminaron del flujo activo. Si estabas limpiando registros antiguos o corrigiendo un borrador equivocado, ya puedes continuar.
+                {% elif lang == 'zh' %}
+                    这张发票及其相关项目已从当前流程中移除。如果您是在清理旧记录或修正错误草稿，现在可以继续进行下一步了。
                 {% else %}
                     The invoice and its associated line items were removed from the active workflow. If you were cleaning up old records or correcting a mistaken draft, you’re all set.
                 {% endif %}
@@ -233,11 +384,19 @@
         <div class="deleted-stat-grid">
             <div class="deleted-stat-card">
                 <div class="deleted-stat-label">
-                    {% if lang == 'es' %}Qué hacer ahora{% else %}What to do next{% endif %}
+                    {% if lang == 'es' %}
+                        Qué hacer ahora
+                    {% elif lang == 'zh' %}
+                        现在可以做什么
+                    {% else %}
+                        What to do next
+                    {% endif %}
                 </div>
                 <div class="deleted-stat-value">
                     {% if lang == 'es' %}
                         Crea una nueva factura o vuelve al historial.
+                    {% elif lang == 'zh' %}
+                        创建一张新发票，或返回发票历史。
                     {% else %}
                         Create a new invoice or return to your history.
                     {% endif %}
@@ -246,11 +405,19 @@
 
             <div class="deleted-stat-card">
                 <div class="deleted-stat-label">
-                    {% if lang == 'es' %}Consejo{% else %}Tip{% endif %}
+                    {% if lang == 'es' %}
+                        Consejo
+                    {% elif lang == 'zh' %}
+                        提示
+                    {% else %}
+                        Tip
+                    {% endif %}
                 </div>
                 <div class="deleted-stat-value">
                     {% if lang == 'es' %}
                         Si era una factura real, confirma que ya tienes el PDF o registro que necesitas.
+                    {% elif lang == 'zh' %}
+                        如果这是一张真实发票，请确认您已经保存了所需的 PDF 或记录。
                     {% else %}
                         If this was a real invoice, make sure you already saved the PDF or record you need.
                     {% endif %}
@@ -260,10 +427,22 @@
 
         <div class="deleted-actions">
             <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                {% if lang == 'es' %}Crear otra factura{% else %}Create Another Invoice{% endif %}
+                {% if lang == 'es' %}
+                    Crear otra factura
+                {% elif lang == 'zh' %}
+                    再创建一张发票
+                {% else %}
+                    Create Another Invoice
+                {% endif %}
             </a>
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}Volver al historial{% else %}Back to Invoices{% endif %}
+                {% if lang == 'es' %}
+                    Volver al historial
+                {% elif lang == 'zh' %}
+                    返回发票历史
+                {% else %}
+                    Back to Invoices
+                {% endif %}
             </a>
         </div>
     </div>

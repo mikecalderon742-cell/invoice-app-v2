@@ -1,12 +1,20 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if lang == 'es' %}Privacidad de la App | BillBeam{% else %}App Privacy Notice | BillBeam{% endif %}
+{% if lang == 'es' %}
+Privacidad de la App | BillBeam
+{% elif lang == 'zh' %}
+应用隐私说明 | BillBeam
+{% else %}
+App Privacy Notice | BillBeam
+{% endif %}
 {% endblock %}
 
 {% block meta_description %}
 {% if lang == 'es' %}
 Resumen de privacidad de la aplicación BillBeam para usuarios de web y app móvil.
+{% elif lang == 'zh' %}
+面向网页端和移动端用户的 BillBeam 应用隐私摘要。
 {% else %}
 BillBeam application privacy summary for web and mobile app users.
 {% endif %}
@@ -154,12 +162,20 @@ BillBeam application privacy summary for web and mobile app users.
 
   <section class="privacy-hero fade-in-up">
     <div class="privacy-eyebrow">
-      {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+      {% if lang == 'es' %}
+        Privacidad
+      {% elif lang == 'zh' %}
+        隐私
+      {% else %}
+        Privacy
+      {% endif %}
     </div>
 
     <h1>
       {% if lang == 'es' %}
         Aviso de privacidad de la aplicación
+      {% elif lang == 'zh' %}
+        应用隐私说明
       {% else %}
         App Privacy Notice
       {% endif %}
@@ -168,6 +184,8 @@ BillBeam application privacy summary for web and mobile app users.
     <p class="privacy-lead">
       {% if lang == 'es' %}
         Este documento resume cómo la aplicación BillBeam recopila y utiliza información cuando utilizas el producto en la web o en aplicaciones móviles. Este resumen complementa la Política de Privacidad completa.
+      {% elif lang == 'zh' %}
+        本文档概述了当你通过网页或移动应用使用 BillBeam 产品时，BillBeam 如何收集和使用信息。本摘要是对完整隐私政策的补充。
       {% else %}
         This document summarizes how the BillBeam application collects and uses information when you use the product on the web or through mobile applications. This summary complements the full Privacy Policy.
       {% endif %}
@@ -176,13 +194,21 @@ BillBeam application privacy summary for web and mobile app users.
 
   <section class="privacy-card fade-in-up">
     <h2>
-      {% if lang == 'es' %}Información que recopilamos{% else %}Information We Collect{% endif %}
+      {% if lang == 'es' %}
+        Información que recopilamos
+      {% elif lang == 'zh' %}
+        我们收集的信息
+      {% else %}
+        Information We Collect
+      {% endif %}
     </h2>
 
     <ul class="privacy-list">
       <li>
         {% if lang == 'es' %}
         Información de cuenta como correo electrónico y credenciales de acceso.
+        {% elif lang == 'zh' %}
+        账户信息，例如电子邮件地址和登录凭据。
         {% else %}
         Account information such as email address and login credentials.
         {% endif %}
@@ -191,6 +217,8 @@ BillBeam application privacy summary for web and mobile app users.
       <li>
         {% if lang == 'es' %}
         Datos introducidos por el usuario como clientes, facturas y notas.
+        {% elif lang == 'zh' %}
+        用户输入的数据，例如客户、发票和备注。
         {% else %}
         User-entered data such as clients, invoices, and notes.
         {% endif %}
@@ -199,6 +227,8 @@ BillBeam application privacy summary for web and mobile app users.
       <li>
         {% if lang == 'es' %}
         Información técnica limitada necesaria para operar el servicio (navegador, dispositivo y registros del sistema).
+        {% elif lang == 'zh' %}
+        为运行服务所需的有限技术信息，例如浏览器、设备和系统日志。
         {% else %}
         Limited technical information necessary to operate the service (browser, device, and system logs).
         {% endif %}
@@ -208,13 +238,21 @@ BillBeam application privacy summary for web and mobile app users.
 
   <section class="privacy-card fade-in-up">
     <h2>
-      {% if lang == 'es' %}Cómo utilizamos la información{% else %}How Information Is Used{% endif %}
+      {% if lang == 'es' %}
+        Cómo utilizamos la información
+      {% elif lang == 'zh' %}
+        信息如何被使用
+      {% else %}
+        How Information Is Used
+      {% endif %}
     </h2>
 
     <ul class="privacy-list">
       <li>
         {% if lang == 'es' %}
         Proporcionar funciones de creación y gestión de facturas.
+        {% elif lang == 'zh' %}
+        提供发票创建和管理功能。
         {% else %}
         Provide invoice creation and management features.
         {% endif %}
@@ -223,6 +261,8 @@ BillBeam application privacy summary for web and mobile app users.
       <li>
         {% if lang == 'es' %}
         Mantener la seguridad y estabilidad de la plataforma.
+        {% elif lang == 'zh' %}
+        维护平台的安全性和稳定性。
         {% else %}
         Maintain platform security and reliability.
         {% endif %}
@@ -231,6 +271,8 @@ BillBeam application privacy summary for web and mobile app users.
       <li>
         {% if lang == 'es' %}
         Mejorar el producto mediante análisis de uso agregados.
+        {% elif lang == 'zh' %}
+        通过汇总使用分析改进产品。
         {% else %}
         Improve the product through aggregated usage analytics.
         {% endif %}
@@ -240,12 +282,20 @@ BillBeam application privacy summary for web and mobile app users.
 
   <section class="privacy-card fade-in-up">
     <h2>
-      {% if lang == 'es' %}Compartición de datos{% else %}Data Sharing{% endif %}
+      {% if lang == 'es' %}
+        Compartición de datos
+      {% elif lang == 'zh' %}
+        数据共享
+      {% else %}
+        Data Sharing
+      {% endif %}
     </h2>
 
     <p>
       {% if lang == 'es' %}
       BillBeam no vende datos personales. Los datos pueden compartirse únicamente con proveedores de infraestructura y servicios necesarios para operar la plataforma (por ejemplo, alojamiento, correo electrónico o procesamiento de pagos).
+      {% elif lang == 'zh' %}
+      BillBeam 不会出售个人数据。数据仅可能与运营平台所必需的基础设施和服务提供商共享，例如托管、电子邮件发送或支付处理服务商。
       {% else %}
       BillBeam does not sell personal data. Data may only be shared with infrastructure and service providers necessary to operate the platform (for example hosting, email delivery, or payment processing).
       {% endif %}
@@ -254,13 +304,21 @@ BillBeam application privacy summary for web and mobile app users.
 
   <section class="privacy-card fade-in-up">
     <h2>
-      {% if lang == 'es' %}Control del usuario{% else %}User Control{% endif %}
+      {% if lang == 'es' %}
+        Control del usuario
+      {% elif lang == 'zh' %}
+        用户控制
+      {% else %}
+        User Control
+      {% endif %}
     </h2>
 
     <ul class="privacy-list">
       <li>
         {% if lang == 'es' %}
         Los usuarios pueden actualizar o eliminar información de cuenta desde la aplicación.
+        {% elif lang == 'zh' %}
+        用户可以在应用内更新或删除账户信息。
         {% else %}
         Users can update or remove account information from within the application.
         {% endif %}
@@ -269,6 +327,8 @@ BillBeam application privacy summary for web and mobile app users.
       <li>
         {% if lang == 'es' %}
         Los usuarios pueden solicitar la eliminación de su cuenta.
+        {% elif lang == 'zh' %}
+        用户可以请求删除其账户。
         {% else %}
         Users may request account deletion.
         {% endif %}
@@ -278,12 +338,20 @@ BillBeam application privacy summary for web and mobile app users.
 
   <section class="privacy-card fade-in-up">
     <h2>
-      {% if lang == 'es' %}Más información{% else %}More Information{% endif %}
+      {% if lang == 'es' %}
+        Más información
+      {% elif lang == 'zh' %}
+        更多信息
+      {% else %}
+        More Information
+      {% endif %}
     </h2>
 
     <p>
       {% if lang == 'es' %}
       Para información completa sobre privacidad, consulta la Política de Privacidad completa.
+      {% elif lang == 'zh' %}
+      如需查看完整的隐私实践详情，请参阅完整隐私政策。
       {% else %}
       For full details about privacy practices, please review the full Privacy Policy.
       {% endif %}
@@ -291,7 +359,13 @@ BillBeam application privacy summary for web and mobile app users.
 
     <div class="privacy-cta">
       <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ver Política de Privacidad{% else %}View Privacy Policy{% endif %}
+        {% if lang == 'es' %}
+          Ver Política de Privacidad
+        {% elif lang == 'zh' %}
+          查看隐私政策
+        {% else %}
+          View Privacy Policy
+        {% endif %}
       </a>
     </div>
   </section>

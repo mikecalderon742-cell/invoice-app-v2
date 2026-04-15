@@ -1,12 +1,20 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if lang == 'es' %}Error del servidor | BillBeam{% else %}Server Error | BillBeam{% endif %}
+{% if lang == 'es' %}
+Error del servidor | BillBeam
+{% elif lang == 'zh' %}
+服务器错误 | BillBeam
+{% else %}
+Server Error | BillBeam
+{% endif %}
 {% endblock %}
 
 {% block meta_description %}
 {% if lang == 'es' %}
 Ocurrió un error inesperado en BillBeam. Intenta de nuevo en unos momentos o vuelve al panel principal.
+{% elif lang == 'zh' %}
+BillBeam 发生了意外错误。请稍后再试，或返回主控制面板。
 {% else %}
 An unexpected error occurred in BillBeam. Please try again in a moment or return to your main dashboard.
 {% endif %}
@@ -171,6 +179,8 @@ An unexpected error occurred in BillBeam. Please try again in a moment or return
         <h1 class="error-title">
           {% if lang == 'es' %}
             Algo salió mal en nuestro lado
+          {% elif lang == 'zh' %}
+            我们这边出现了一些问题
           {% else %}
             Something went wrong on our side
           {% endif %}
@@ -179,6 +189,8 @@ An unexpected error occurred in BillBeam. Please try again in a moment or return
         <p class="error-copy">
           {% if lang == 'es' %}
             BillBeam encontró un error inesperado mientras intentaba cargar esta página. Es posible que el problema sea temporal. Tus datos no deberían haberse perdido por este error.
+          {% elif lang == 'zh' %}
+            BillBeam 在加载此页面时遇到了意外错误。该问题可能是暂时的。你的数据不应该因此丢失。
           {% else %}
             BillBeam hit an unexpected error while trying to load this page. The issue may be temporary. Your data should not have been lost because of this error.
           {% endif %}
@@ -191,11 +203,19 @@ An unexpected error occurred in BillBeam. Please try again in a moment or return
     <div class="error-grid">
       <div class="error-mini-card">
         <h3>
-          {% if lang == 'es' %}Qué hacer ahora{% else %}What to do now{% endif %}
+          {% if lang == 'es' %}
+            Qué hacer ahora
+          {% elif lang == 'zh' %}
+            接下来该怎么做
+          {% else %}
+            What to do now
+          {% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
             Intenta recargar la página. Si estabas editando algo importante, vuelve al historial de facturas o al panel principal antes de repetir la acción.
+          {% elif lang == 'zh' %}
+            请尝试刷新页面。如果你正在编辑重要内容，请先返回发票历史或主控制面板，再重新操作。
           {% else %}
             Try refreshing the page. If you were editing something important, head back to invoice history or the main dashboard before repeating the action.
           {% endif %}
@@ -204,11 +224,19 @@ An unexpected error occurred in BillBeam. Please try again in a moment or return
 
       <div class="error-mini-card">
         <h3>
-          {% if lang == 'es' %}Si el problema continúa{% else %}If the problem continues{% endif %}
+          {% if lang == 'es' %}
+            Si el problema continúa
+          {% elif lang == 'zh' %}
+            如果问题持续
+          {% else %}
+            If the problem continues
+          {% endif %}
         </h3>
         <p>
           {% if lang == 'es' %}
             Ponte en contacto con soporte e incluye lo que intentabas hacer, la hora aproximada y cualquier mensaje que hayas visto.
+          {% elif lang == 'zh' %}
+            请联系支持团队，并说明你正在做的操作、大致时间以及你看到的任何错误信息。
           {% else %}
             Contact support and include what you were trying to do, the approximate time, and any message you saw.
           {% endif %}
@@ -218,21 +246,41 @@ An unexpected error occurred in BillBeam. Please try again in a moment or return
 
     <div class="error-actions">
       <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-        {% if lang == 'es' %}Ir al panel{% else %}Go to Dashboard{% endif %}
+        {% if lang == 'es' %}
+          Ir al panel
+        {% elif lang == 'zh' %}
+          前往控制面板
+        {% else %}
+          Go to Dashboard
+        {% endif %}
       </a>
 
       <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Ver facturas{% else %}View Invoices{% endif %}
+        {% if lang == 'es' %}
+          Ver facturas
+        {% elif lang == 'zh' %}
+          查看发票
+        {% else %}
+          View Invoices
+        {% endif %}
       </a>
 
       <a href="/support{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Contactar soporte{% else %}Contact Support{% endif %}
+        {% if lang == 'es' %}
+          Contactar soporte
+        {% elif lang == 'zh' %}
+          联系支持
+        {% else %}
+          Contact Support
+        {% endif %}
       </a>
     </div>
 
     <div class="error-footnote">
       {% if lang == 'es' %}
         Consejo: si este error ocurrió después de enviar un formulario, evita reenviarlo varias veces seguidas hasta volver a una pantalla estable.
+      {% elif lang == 'zh' %}
+        提示：如果此错误发生在提交表单之后，请避免反复提交，直到返回稳定页面。
       {% else %}
         Tip: if this happened right after submitting a form, avoid resubmitting it repeatedly until you’re back on a stable screen.
       {% endif %}

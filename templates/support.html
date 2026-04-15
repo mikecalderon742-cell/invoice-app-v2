@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Soporte{% else %}Support{% endif %} • {{ business_profile.business_name or "BillBeam" }}
+    {% if lang == 'es' %}
+        Soporte
+    {% elif lang == 'zh' %}
+        支持
+    {% else %}
+        Support
+    {% endif %} • {{ business_profile.business_name or "BillBeam" }}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Obtén ayuda con cuentas, facturas, pagos, enlaces públicos, correo, restablecimiento de contraseña y problemas técnicos en BillBeam.
+    {% elif lang == 'zh' %}
+        获取有关账户、发票、付款、公开链接、邮件、密码重置和技术问题的 BillBeam 帮助。
     {% else %}
         Get help with accounts, invoices, payments, public links, email, password resets, and technical issues in BillBeam.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
     .support-shell {
@@ -332,12 +343,20 @@
 <div class="support-shell">
     <section class="support-hero fade-in-up">
         <div class="support-eyebrow">
-            {% if lang == 'es' %}Centro de soporte{% else %}Support center{% endif %}
+            {% if lang == 'es' %}
+                Centro de soporte
+            {% elif lang == 'zh' %}
+                支持中心
+            {% else %}
+                Support center
+            {% endif %}
         </div>
 
         <h1>
             {% if lang == 'es' %}
                 Soporte
+            {% elif lang == 'zh' %}
+                支持
             {% else %}
                 Support
             {% endif %}
@@ -346,6 +365,8 @@
         <p>
             {% if lang == 'es' %}
                 Encuentra ayuda rápida para los flujos más comunes de BillBeam, entiende qué información incluir cuando reportes un problema y conoce la mejor forma de contactarnos.
+            {% elif lang == 'zh' %}
+                在这里你可以快速找到 BillBeam 常见流程的帮助，了解在报告问题时应提供哪些信息，以及联系我们的最佳方式。
             {% else %}
                 Find quick help for the most common BillBeam workflows, understand what information to include when reporting an issue, and see the best way to contact us.
             {% endif %}
@@ -353,13 +374,31 @@
 
         <div class="support-trust-row">
             <div class="support-trust-pill">
-                {% if lang == 'es' %}Ayuda clara{% else %}Clear help{% endif %}
+                {% if lang == 'es' %}
+                    Ayuda clara
+                {% elif lang == 'zh' %}
+                    清晰帮助
+                {% else %}
+                    Clear help
+                {% endif %}
             </div>
             <div class="support-trust-pill">
-                {% if lang == 'es' %}Respuesta directa{% else %}Direct response{% endif %}
+                {% if lang == 'es' %}
+                    Respuesta directa
+                {% elif lang == 'zh' %}
+                    直接回复
+                {% else %}
+                    Direct response
+                {% endif %}
             </div>
             <div class="support-trust-pill">
-                {% if lang == 'es' %}Canal oficial{% else %}Official channel{% endif %}
+                {% if lang == 'es' %}
+                    Canal oficial
+                {% elif lang == 'zh' %}
+                    官方渠道
+                {% else %}
+                    Official channel
+                {% endif %}
             </div>
         </div>
     </section>
@@ -370,6 +409,8 @@
             <h2 class="support-main-title">
                 {% if lang == 'es' %}
                     Ayuda con los casos más comunes
+                {% elif lang == 'zh' %}
+                    常见问题帮助
                 {% else %}
                     Help with the most common cases
                 {% endif %}
@@ -378,6 +419,8 @@
             <p class="support-main-copy">
                 {% if lang == 'es' %}
                     Estas son algunas de las situaciones más comunes en BillBeam y la mejor información para incluir cuando necesites ayuda.
+                {% elif lang == 'zh' %}
+                    以下是 BillBeam 中最常见的一些情况，以及在你需要帮助时最适合附上的信息。
                 {% else %}
                     These are some of the most common BillBeam situations and the best information to include when you need help.
                 {% endif %}
@@ -389,6 +432,8 @@
                     <h3>
                         {% if lang == 'es' %}
                             No puedo iniciar sesión
+                        {% elif lang == 'zh' %}
+                            我无法登录
                         {% else %}
                             I cannot log in
                         {% endif %}
@@ -396,6 +441,8 @@
                     <p>
                         {% if lang == 'es' %}
                             Verifica que estás usando la dirección correcta, revisa errores de escritura y prueba el flujo de restablecimiento de contraseña. Si sigues sin poder acceder, contáctanos desde el correo asociado a tu cuenta.
+                        {% elif lang == 'zh' %}
+                            请确认你使用的是正确的邮箱地址，检查是否有输入错误，并尝试密码重置流程。如果仍然无法访问，请使用与你账户关联的邮箱联系我们。
                         {% else %}
                             Confirm that you are using the correct email address, check for typing mistakes, and try the password reset flow. If you still cannot access your account, contact us from the email associated with it.
                         {% endif %}
@@ -406,6 +453,8 @@
                     <h3>
                         {% if lang == 'es' %}
                             Mi factura o PDF no se ve bien
+                        {% elif lang == 'zh' %}
+                            我的发票或 PDF 显示不正确
                         {% else %}
                             My invoice or PDF does not look right
                         {% endif %}
@@ -413,6 +462,8 @@
                     <p>
                         {% if lang == 'es' %}
                             Incluye el número de factura, una captura de pantalla del problema y una breve explicación de lo que esperabas ver. También ayuda indicar si el problema ocurre en la vista pública, en la vista interna o en ambos lugares.
+                        {% elif lang == 'zh' %}
+                            请附上发票编号、问题截图，以及你原本期望看到的结果的简短说明。如果问题出现在公开页面、内部页面，或两者都有，也请一并说明。
                         {% else %}
                             Include the invoice number, a screenshot of the issue, and a short explanation of what you expected to see. It also helps to mention whether the issue appears in the public view, the internal view, or both.
                         {% endif %}
@@ -423,6 +474,8 @@
                     <h3>
                         {% if lang == 'es' %}
                             El correo de factura no se envió
+                        {% elif lang == 'zh' %}
+                            发票邮件未发送成功
                         {% else %}
                             The invoice email did not send
                         {% endif %}
@@ -430,6 +483,8 @@
                     <p>
                         {% if lang == 'es' %}
                             Comparte el número de factura, la dirección de destino y cualquier mensaje de error visible. Si el PDF se descargó correctamente pero el correo falló, indícanos eso también.
+                        {% elif lang == 'zh' %}
+                            请提供发票编号、收件邮箱地址以及任何可见的错误信息。如果 PDF 下载正常但邮件发送失败，也请一并说明。
                         {% else %}
                             Share the invoice number, the destination email address, and any visible error message. If the PDF downloaded correctly but the email failed, mention that too.
                         {% endif %}
@@ -440,6 +495,8 @@
                     <h3>
                         {% if lang == 'es' %}
                             El enlace público o el pago no funciona
+                        {% elif lang == 'zh' %}
+                            公开链接或付款流程无法使用
                         {% else %}
                             The public link or payment flow is not working
                         {% endif %}
@@ -447,6 +504,8 @@
                     <p>
                         {% if lang == 'es' %}
                             Envía el número de factura, el enlace si lo tienes, la hora aproximada en que ocurrió el problema y el comportamiento observado. Si el pago fue intentado, incluye cualquier mensaje mostrado por la pasarela.
+                        {% elif lang == 'zh' %}
+                            请发送发票编号、相关链接（如果有）、问题发生的大致时间，以及你观察到的异常行为。如果曾尝试付款，也请附上支付流程显示的任何信息。
                         {% else %}
                             Send the invoice number, the link if you have it, the approximate time the issue occurred, and what behavior you observed. If a payment was attempted, include any message shown by the payment flow.
                         {% endif %}
@@ -458,6 +517,8 @@
                 <h3>
                     {% if lang == 'es' %}
                         Qué incluir en tu mensaje
+                    {% elif lang == 'zh' %}
+                        你的消息中应包含什么
                     {% else %}
                         What to include in your message
                     {% endif %}
@@ -466,6 +527,8 @@
                     <li>
                         {% if lang == 'es' %}
                             El correo asociado a tu cuenta.
+                        {% elif lang == 'zh' %}
+                            与你账户关联的邮箱地址。
                         {% else %}
                             The email associated with your account.
                         {% endif %}
@@ -473,6 +536,8 @@
                     <li>
                         {% if lang == 'es' %}
                             El número de factura, si aplica.
+                        {% elif lang == 'zh' %}
+                            发票编号（如适用）。
                         {% else %}
                             The invoice number, if applicable.
                         {% endif %}
@@ -480,6 +545,8 @@
                     <li>
                         {% if lang == 'es' %}
                             El navegador y dispositivo que estabas usando.
+                        {% elif lang == 'zh' %}
+                            你当时使用的浏览器和设备。
                         {% else %}
                             The browser and device you were using.
                         {% endif %}
@@ -487,6 +554,8 @@
                     <li>
                         {% if lang == 'es' %}
                             Capturas de pantalla o el texto exacto del error.
+                        {% elif lang == 'zh' %}
+                            截图或完整准确的错误信息文本。
                         {% else %}
                             Screenshots or the exact error text.
                         {% endif %}
@@ -494,6 +563,8 @@
                     <li>
                         {% if lang == 'es' %}
                             Una explicación breve de lo que pasó y lo que esperabas que pasara.
+                        {% elif lang == 'zh' %}
+                            简要说明发生了什么，以及你原本期望发生什么。
                         {% else %}
                             A brief explanation of what happened and what you expected to happen.
                         {% endif %}
@@ -506,6 +577,8 @@
             <h2>
                 {% if lang == 'es' %}
                     Opciones de ayuda
+                {% elif lang == 'zh' %}
+                    帮助方式
                 {% else %}
                     Help options
                 {% endif %}
@@ -514,7 +587,13 @@
             <div class="support-sidebar-sections">
                 <div>
                     <div class="support-label">
-                        {% if lang == 'es' %}Ayuda general{% else %}General help{% endif %}
+                        {% if lang == 'es' %}
+                            Ayuda general
+                        {% elif lang == 'zh' %}
+                            一般帮助
+                        {% else %}
+                            General help
+                        {% endif %}
                     </div>
                     <div class="support-email">
                         <a href="mailto:support@billbeam.app">support@billbeam.app</a>
@@ -523,29 +602,61 @@
 
                 <div>
                     <div class="support-label">
-                        {% if lang == 'es' %}Páginas útiles{% else %}Helpful pages{% endif %}
+                        {% if lang == 'es' %}
+                            Páginas útiles
+                        {% elif lang == 'zh' %}
+                            实用页面
+                        {% else %}
+                            Helpful pages
+                        {% endif %}
                     </div>
                     <div class="support-links">
                         <a href="/faq?lang={{ lang }}">FAQ</a>
                         <a href="/contact?lang={{ lang }}">
-                            {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+                            {% if lang == 'es' %}
+                                Contacto
+                            {% elif lang == 'zh' %}
+                                联系我们
+                            {% else %}
+                                Contact
+                            {% endif %}
                         </a>
                         <a href="/privacy?lang={{ lang }}">
-                            {% if lang == 'es' %}Privacidad{% else %}Privacy{% endif %}
+                            {% if lang == 'es' %}
+                                Privacidad
+                            {% elif lang == 'zh' %}
+                                隐私政策
+                            {% else %}
+                                Privacy
+                            {% endif %}
                         </a>
                         <a href="/terms?lang={{ lang }}">
-                            {% if lang == 'es' %}Términos{% else %}Terms{% endif %}
+                            {% if lang == 'es' %}
+                                Términos
+                            {% elif lang == 'zh' %}
+                                条款
+                            {% else %}
+                                Terms
+                            {% endif %}
                         </a>
                     </div>
                 </div>
 
                 <div>
                     <div class="support-label">
-                        {% if lang == 'es' %}Tiempo de respuesta{% else %}Response time{% endif %}
+                        {% if lang == 'es' %}
+                            Tiempo de respuesta
+                        {% elif lang == 'zh' %}
+                            回复时间
+                        {% else %}
+                            Response time
+                        {% endif %}
                     </div>
                     <div class="support-response">
                         {% if lang == 'es' %}
                             Normalmente dentro de 24 horas hábiles.
+                        {% elif lang == 'zh' %}
+                            通常会在 24 个工作小时内回复。
                         {% else %}
                             Typically within 24 business hours.
                         {% endif %}
@@ -556,6 +667,8 @@
             <div class="support-sidebar-note">
                 {% if lang == 'es' %}
                     No envíes números completos de tarjetas, contraseñas ni otra información sensible por correo.
+                {% elif lang == 'zh' %}
+                    请不要通过电子邮件发送完整卡号、密码或其他敏感信息。
                 {% else %}
                     Do not send full card numbers, passwords, or other sensitive information by email.
                 {% endif %}

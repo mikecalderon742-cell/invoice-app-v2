@@ -3,6 +3,8 @@
 {% block title %}
   {% if lang == 'es' %}
     Enviar factura {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    发送发票 {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
   {% else %}
     Send Invoice {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
   {% endif %}
@@ -11,13 +13,18 @@
 {% block meta_description %}
   {% if lang == 'es' %}
     Envía la factura {{ inv_label }} por correo con PDF adjunto y enlace público desde BillBeam.
+  {% elif lang == 'zh' %}
+    通过 BillBeam 发送发票 {{ inv_label }}，附带 PDF 和公开发票链接。
   {% else %}
     Send invoice {{ inv_label }} by email with a PDF attachment and public invoice link from BillBeam.
   {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 {% set total_paid_safe = total_paid if total_paid is defined and total_paid is not none else 0 %}
 {% set remaining_balance = balance if balance is defined and balance is not none else (amount - total_paid_safe) %}
 {% set is_partial = total_paid_safe > 0 and remaining_balance > 0 %}
@@ -99,13 +106,7 @@
     color: #fee2e2;
   }
 
-  .send-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) 340px;
-    gap: 22px;
-    align-items: start;
-  }
-
+  .send-services-strip,
   .send-main-shell,
   .send-side-shell {
     border-radius: 26px;
@@ -117,6 +118,7 @@
     backdrop-filter: blur(12px);
   }
 
+  body.dark .send-services-strip,
   body.dark .send-main-shell,
   body.dark .send-side-shell {
     background: rgba(2,6,23,0.76);
@@ -124,6 +126,76 @@
     box-shadow:
       0 24px 56px rgba(2,6,23,0.82),
       0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .send-services-strip {
+    padding: 18px 20px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+  }
+
+  body.dark .send-services-strip {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+  }
+
+  .send-services-strip-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .send-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  body.dark .send-services-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .send-services-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .send-services-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+    max-width: 760px;
+  }
+
+  body.dark .send-services-copy {
+    color: #cbd5e1;
+  }
+
+  .send-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) 340px;
+    gap: 22px;
+    align-items: start;
   }
 
   .send-main-shell {
@@ -203,6 +275,7 @@
     font-size: 16px;
     font-weight: 700;
     line-height: 1.3;
+    word-break: break-word;
   }
 
   .public-link-card {
@@ -422,21 +495,37 @@
     <div class="send-title-wrap">
       <h1>
         {% if email_mode_safe == 'reminder' %}
-          {% if lang == 'es' %}Enviar recordatorio{% else %}Send Reminder{% endif %}
+          {% if lang == 'es' %}
+            Enviar recordatorio
+          {% elif lang == 'zh' %}
+            发送提醒
+          {% else %}
+            Send Reminder
+          {% endif %}
         {% else %}
-          {% if lang == 'es' %}Enviar factura{% else %}Send Invoice{% endif %}
+          {% if lang == 'es' %}
+            Enviar factura
+          {% elif lang == 'zh' %}
+            发送发票
+          {% else %}
+            Send Invoice
+          {% endif %}
         {% endif %}
       </h1>
       <div class="send-subcopy">
         {% if email_mode_safe == 'reminder' %}
           {% if lang == 'es' %}
             Envía un recordatorio profesional con PDF adjunto y enlace público para ayudar al cliente a revisar y completar el pago.
+          {% elif lang == 'zh' %}
+            发送一封专业提醒邮件，附带 PDF 和公开发票链接，帮助客户查看并完成付款。
           {% else %}
             Send a professional reminder with a PDF attachment and public invoice link to help the client review and complete payment.
           {% endif %}
         {% else %}
           {% if lang == 'es' %}
             Envía una factura profesional con PDF adjunto y enlace público para que tu cliente pueda verla y pagarla más fácilmente.
+          {% elif lang == 'zh' %}
+            发送一张带 PDF 和公开链接的专业发票，让您的客户更轻松地查看并付款。
           {% else %}
             Send a polished invoice with a PDF attachment and public invoice link so your client can review and pay more easily.
           {% endif %}
@@ -446,7 +535,13 @@
 
     <div class="quick-actions">
       <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-        {% if lang == 'es' %}Volver a facturas{% else %}Back to Invoices{% endif %}
+        {% if lang == 'es' %}
+          Volver a facturas
+        {% elif lang == 'zh' %}
+          返回发票历史
+        {% else %}
+          Back to Invoices
+        {% endif %}
       </a>
     </div>
   </div>
@@ -457,6 +552,51 @@
     </div>
   {% endif %}
 
+  <div class="send-services-strip">
+    <div class="send-services-strip-top">
+      <div>
+        <div class="send-services-kicker">
+          {% if lang == 'es' %}
+            ✨ Experiencia premium
+          {% elif lang == 'zh' %}
+            ✨ 高级体验
+          {% else %}
+            ✨ Premium experience
+          {% endif %}
+        </div>
+        <h3 class="send-services-title">
+          {% if lang == 'es' %}
+            Tu factura ya puede salir con mejor presentación y mejor seguimiento
+          {% elif lang == 'zh' %}
+            您的发票现在可以拥有更好的呈现方式与后续跟进体验
+          {% else %}
+            Your invoice can now go out with stronger presentation and follow-up
+          {% endif %}
+        </h3>
+        <div class="send-services-copy">
+          {% if lang == 'es' %}
+            Este correo combina tu factura, el PDF y el enlace público para que el cliente reciba una experiencia más clara, más ordenada y más profesional.
+          {% elif lang == 'zh' %}
+            这封邮件将发票、PDF 和公开链接整合在一起，让客户收到更清晰、更有条理、更专业的体验。
+          {% else %}
+            This email combines the invoice, PDF, and public link so the client receives a clearer, more organized, and more professional experience.
+          {% endif %}
+        </div>
+      </div>
+      <div class="quick-actions">
+        <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}
+            Abrir servicios
+          {% elif lang == 'zh' %}
+            打开服务页面
+          {% else %}
+            Open Services
+          {% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div class="send-layout">
 
     <div class="send-main-shell">
@@ -465,6 +605,8 @@
           <h2>
             {% if lang == 'es' %}
               Factura {{ inv_label }}
+            {% elif lang == 'zh' %}
+              发票 {{ inv_label }}
             {% else %}
               Invoice {{ inv_label }}
             {% endif %}
@@ -473,12 +615,16 @@
             {% if email_mode_safe == 'reminder' %}
               {% if lang == 'es' %}
                 Revisa el destinatario, el asunto y el recordatorio antes de enviarlo.
+              {% elif lang == 'zh' %}
+                在发送之前，请检查收件人、主题和提醒内容。
               {% else %}
                 Review the recipient, subject, and reminder message before sending.
               {% endif %}
             {% else %}
               {% if lang == 'es' %}
                 Revisa el destinatario, el asunto y el mensaje antes de enviar.
+              {% elif lang == 'zh' %}
+                在发送之前，请检查收件人、主题和邮件内容。
               {% else %}
                 Review the recipient, subject, and message before sending.
               {% endif %}
@@ -490,28 +636,52 @@
       <div class="invoice-kpis">
         <div class="invoice-kpi">
           <div class="invoice-kpi-label">
-            {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+            {% if lang == 'es' %}
+              Cliente
+            {% elif lang == 'zh' %}
+              客户
+            {% else %}
+              Client
+            {% endif %}
           </div>
           <div class="invoice-kpi-value">{{ client_name }}</div>
         </div>
 
         <div class="invoice-kpi">
           <div class="invoice-kpi-label">
-            {% if lang == 'es' %}Total{% else %}Total{% endif %}
+            {% if lang == 'es' %}
+              Total
+            {% elif lang == 'zh' %}
+              总额
+            {% else %}
+              Total
+            {% endif %}
           </div>
           <div class="invoice-kpi-value">${{ "{:,.2f}".format(amount) }}</div>
         </div>
 
         <div class="invoice-kpi">
           <div class="invoice-kpi-label">
-            {% if lang == 'es' %}Pagado{% else %}Paid{% endif %}
+            {% if lang == 'es' %}
+              Pagado
+            {% elif lang == 'zh' %}
+              已支付
+            {% else %}
+              Paid
+            {% endif %}
           </div>
           <div class="invoice-kpi-value">${{ "{:,.2f}".format(total_paid_safe) }}</div>
         </div>
 
         <div class="invoice-kpi">
           <div class="invoice-kpi-label">
-            {% if lang == 'es' %}Pendiente{% else %}Remaining{% endif %}
+            {% if lang == 'es' %}
+              Pendiente
+            {% elif lang == 'zh' %}
+              待支付
+            {% else %}
+              Remaining
+            {% endif %}
           </div>
           <div class="invoice-kpi-value">${{ "{:,.2f}".format(remaining_balance) }}</div>
         </div>
@@ -521,6 +691,8 @@
         <div class="field-help" style="margin-bottom: 10px;">
           {% if lang == 'es' %}
             Progreso de pago: <strong>{{ "{:.1f}".format(payment_summary_safe.get("percent_paid", 0)) }}%</strong>
+          {% elif lang == 'zh' %}
+            付款进度: <strong>{{ "{:.1f}".format(payment_summary_safe.get("percent_paid", 0)) }}%</strong>
           {% else %}
             Payment progress: <strong>{{ "{:.1f}".format(payment_summary_safe.get("percent_paid", 0)) }}%</strong>
           {% endif %}
@@ -531,6 +703,8 @@
         <div class="field-help" style="margin-bottom: 10px;">
           {% if lang == 'es' %}
             Ya se registró un pago parcial para esta factura. Este mensaje puede ayudar a cobrar el saldo restante.
+          {% elif lang == 'zh' %}
+            这张发票已经记录了部分付款。此消息可帮助您收取剩余余额。
           {% else %}
             A partial payment has already been recorded for this invoice. This message can help collect the remaining balance.
           {% endif %}
@@ -543,6 +717,11 @@
             Último envío: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
             {% if last_emailed_to %}
               a <strong>{{ last_emailed_to }}</strong>
+            {% endif %}
+          {% elif lang == 'zh' %}
+            上次发送时间: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+            {% if last_emailed_to %}
+              至 <strong>{{ last_emailed_to }}</strong>
             {% endif %}
           {% else %}
             Last emailed: <strong>{{ last_emailed_at.strftime('%Y-%m-%d %H:%M') }}</strong>
@@ -557,6 +736,8 @@
         <div class="field-help" style="margin-bottom: 16px;">
           {% if lang == 'es' %}
             Último recordatorio enviado: <strong>{{ last_reminder_sent_safe.strftime('%Y-%m-%d %H:%M') }}</strong>
+          {% elif lang == 'zh' %}
+            上次提醒发送时间: <strong>{{ last_reminder_sent_safe.strftime('%Y-%m-%d %H:%M') }}</strong>
           {% else %}
             Last reminder sent: <strong>{{ last_reminder_sent_safe.strftime('%Y-%m-%d %H:%M') }}</strong>
           {% endif %}
@@ -566,12 +747,20 @@
       {% if public_url %}
         <div class="public-link-card">
           <div class="public-link-title">
-            {% if lang == 'es' %}Enlace público de factura{% else %}Public Invoice Link{% endif %}
+            {% if lang == 'es' %}
+              Enlace público de factura
+            {% elif lang == 'zh' %}
+              公开发票链接
+            {% else %}
+              Public Invoice Link
+            {% endif %}
           </div>
           <div class="public-link-url">{{ public_url }}</div>
           <div class="public-link-copy">
             {% if lang == 'es' %}
               Este enlace ya está incluido en el mensaje por defecto. También puedes copiarlo y enviarlo manualmente si lo necesitas.
+            {% elif lang == 'zh' %}
+              该链接已包含在默认消息中。如有需要，您也可以手动复制并发送。
             {% else %}
               This link is already included in the default message. You can also copy and send it manually if needed.
             {% endif %}
@@ -584,7 +773,13 @@
 
           <div class="field-group">
             <label for="to_email">
-              {% if lang == 'es' %}Para{% else %}To{% endif %}
+              {% if lang == 'es' %}
+                Para
+              {% elif lang == 'zh' %}
+                收件人
+              {% else %}
+                To
+              {% endif %}
             </label>
             <input
               type="email"
@@ -598,7 +793,13 @@
 
           <div class="field-group">
             <label for="subject">
-              {% if lang == 'es' %}Asunto{% else %}Subject{% endif %}
+              {% if lang == 'es' %}
+                Asunto
+              {% elif lang == 'zh' %}
+                主题
+              {% else %}
+                Subject
+              {% endif %}
             </label>
             <input
               type="text"
@@ -611,7 +812,13 @@
 
           <div class="field-group">
             <label for="message">
-              {% if lang == 'es' %}Mensaje{% else %}Message{% endif %}
+              {% if lang == 'es' %}
+                Mensaje
+              {% elif lang == 'zh' %}
+                消息内容
+              {% else %}
+                Message
+              {% endif %}
             </label>
             <div class="message-box">
               <textarea
@@ -624,6 +831,8 @@
             <div class="field-help">
               {% if lang == 'es' %}
                 El PDF de la factura se adjuntará automáticamente al correo.
+              {% elif lang == 'zh' %}
+                发票 PDF 将自动附加到邮件中。
               {% else %}
                 The invoice PDF will be attached automatically to the email.
               {% endif %}
@@ -634,13 +843,31 @@
 
         <div class="form-actions">
           <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-            {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+            {% if lang == 'es' %}
+              Cancelar
+            {% elif lang == 'zh' %}
+              取消
+            {% else %}
+              Cancel
+            {% endif %}
           </a>
           <button type="submit" class="btn btn-brand">
             {% if email_mode_safe == 'reminder' %}
-              {% if lang == 'es' %}Enviar recordatorio{% else %}Send Reminder{% endif %}
+              {% if lang == 'es' %}
+                Enviar recordatorio
+              {% elif lang == 'zh' %}
+                发送提醒
+              {% else %}
+                Send Reminder
+              {% endif %}
             {% else %}
-              {% if lang == 'es' %}Enviar correo{% else %}Send Email{% endif %}
+              {% if lang == 'es' %}
+                Enviar correo
+              {% elif lang == 'zh' %}
+                发送邮件
+              {% else %}
+                Send Email
+              {% endif %}
             {% endif %}
           </button>
         </div>
@@ -650,18 +877,28 @@
     <aside class="send-side-shell">
       <div class="side-card">
         <h3>
-          {% if lang == 'es' %}Antes de enviar{% else %}Before sending{% endif %}
+          {% if lang == 'es' %}
+            Antes de enviar
+          {% elif lang == 'zh' %}
+            发送之前
+          {% else %}
+            Before sending
+          {% endif %}
         </h3>
         <div class="side-copy">
           {% if email_mode_safe == 'reminder' %}
             {% if lang == 'es' %}
               Un recordatorio claro y profesional ayuda a mantener el cobro firme sin sonar agresivo.
+            {% elif lang == 'zh' %}
+              清晰而专业的提醒邮件，有助于坚定催收，同时不会显得过于强硬。
             {% else %}
               A clear, professional reminder helps keep collections firm without sounding aggressive.
             {% endif %}
           {% else %}
             {% if lang == 'es' %}
               Un correo claro y profesional mejora la confianza y aumenta la probabilidad de pago rápido.
+            {% elif lang == 'zh' %}
+              清晰而专业的邮件能提升信任感，并提高客户快速付款的可能性。
             {% else %}
               A clear, professional email builds trust and improves the chance of fast payment.
             {% endif %}
@@ -675,6 +912,8 @@
           <div>
             {% if lang == 'es' %}
               Confirma que el correo del cliente esté correcto.
+            {% elif lang == 'zh' %}
+              确认客户的邮箱地址正确无误。
             {% else %}
               Confirm the client’s email address is correct.
             {% endif %}
@@ -687,12 +926,16 @@
             {% if email_mode_safe == 'reminder' %}
               {% if lang == 'es' %}
                 Revisa que el mensaje deje claro el saldo pendiente y el siguiente paso.
+              {% elif lang == 'zh' %}
+                确保消息清楚说明剩余余额以及下一步该做什么。
               {% else %}
                 Make sure the message clearly explains the remaining balance and next step.
               {% endif %}
             {% else %}
               {% if lang == 'es' %}
                 Revisa que el asunto deje claro qué factura se está enviando.
+              {% elif lang == 'zh' %}
+                确保主题清楚说明发送的是哪一张发票。
               {% else %}
                 Make sure the subject clearly identifies which invoice is being sent.
               {% endif %}
@@ -705,6 +948,8 @@
           <div>
             {% if lang == 'es' %}
               Mantén el mensaje breve, amable y fácil de seguir.
+            {% elif lang == 'zh' %}
+              让消息保持简短、友好且易于理解。
             {% else %}
               Keep the message short, friendly, and easy to follow.
             {% endif %}
@@ -714,18 +959,28 @@
 
       <div class="side-highlight">
         <strong>
-          {% if lang == 'es' %}Consejo de cobro{% else %}Payment tip{% endif %}
+          {% if lang == 'es' %}
+            Consejo de cobro
+          {% elif lang == 'zh' %}
+            收款建议
+          {% else %}
+            Payment tip
+          {% endif %}
         </strong>
         <p>
           {% if is_partial %}
             {% if lang == 'es' %}
               Como ya existe un pago parcial, este es un buen momento para pedir el saldo restante con un tono claro y profesional.
+            {% elif lang == 'zh' %}
+              由于这张发票已经有部分付款，现在正是以清晰、专业的语气请求剩余余额的好时机。
             {% else %}
               Since a partial payment already exists, this is a strong time to request the remaining balance with clear, professional wording.
             {% endif %}
           {% else %}
             {% if lang == 'es' %}
               Los mensajes con monto, fecha de vencimiento y enlace directo suelen reducir idas y vueltas innecesarias.
+            {% elif lang == 'zh' %}
+              包含金额、到期日和直接链接的消息，通常能减少不必要的来回沟通。
             {% else %}
               Messages that include the amount, due date, and direct invoice link usually reduce unnecessary back-and-forth.
             {% endif %}
@@ -735,11 +990,19 @@
 
       <div class="side-highlight">
         <strong>
-          {% if lang == 'es' %}Adjunto automático{% else %}Automatic attachment{% endif %}
+          {% if lang == 'es' %}
+            Adjunto automático
+          {% elif lang == 'zh' %}
+            自动附件
+          {% else %}
+            Automatic attachment
+          {% endif %}
         </strong>
         <p>
           {% if lang == 'es' %}
             BillBeam adjunta automáticamente el PDF de la factura al correo que estás enviando.
+          {% elif lang == 'zh' %}
+            BillBeam 会自动将发票 PDF 附加到您正在发送的邮件中。
           {% else %}
             BillBeam automatically attaches the invoice PDF to the email you are sending.
           {% endif %}
@@ -748,11 +1011,19 @@
 
       <div class="side-highlight">
         <strong>
-          {% if lang == 'es' %}Enlace de pago incluido{% else %}Included payment link{% endif %}
+          {% if lang == 'es' %}
+            Enlace de pago incluido
+          {% elif lang == 'zh' %}
+            已包含付款链接
+          {% else %}
+            Included payment link
+          {% endif %}
         </strong>
         <p>
           {% if lang == 'es' %}
             Cuando el cliente abre el enlace público, puede revisar la factura, descargar el PDF y pagar en línea cuando esa opción esté disponible.
+          {% elif lang == 'zh' %}
+            当客户打开公开链接时，他们可以查看发票、下载 PDF，并在可用时在线付款。
           {% else %}
             When the client opens the public link, they can review the invoice, download the PDF, and pay online when that option is available.
           {% endif %}

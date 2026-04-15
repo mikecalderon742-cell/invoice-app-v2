@@ -1,84 +1,711 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Se requiere actualización · BillBeam{% else %}Upgrade Required · BillBeam{% endif %}
+    {% if lang == 'es' %}
+        Se requiere actualización · BillBeam
+    {% elif lang == 'zh' %}
+        需要升级 · BillBeam
+    {% else %}
+        Upgrade Required · BillBeam
+    {% endif %}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Algunas funciones de BillBeam requieren un plan superior. Compara planes y desbloquea más potencia cuando lo necesites.
+    {% elif lang == 'zh' %}
+        BillBeam 的某些功能需要更高等级的方案。比较不同计划，并在需要时解锁更多能力。
     {% else %}
         Some BillBeam features require a higher BillBeam plan. Compare plans and unlock more power when you need it.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
-{% set current_plan_label = 'Business' if user_plan == 'enterprise' else (user_plan|capitalize) %}
-{% set required_plan_label = 'Business' if required_plan == 'enterprise' else (required_plan|capitalize) %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
-<div class="page-shell" style="max-width: 1100px;">
-    <section class="page-card fade-in-up" style="padding: 30px 28px 26px;">
-        <div class="page-eyebrow">
-            {% if lang == 'es' %}Acceso por plan{% else %}Plan access{% endif %}
-        </div>
+{% set current_plan_label = 'Enterprise' if user_plan == 'enterprise' else (user_plan|capitalize) %}
+{% set required_plan_label = 'Enterprise' if required_plan == 'enterprise' else (required_plan|capitalize) %}
 
-        <div class="table-section-header" style="margin-bottom:14px; align-items:flex-start;">
+<style>
+    .upgrade-shell {
+        display: grid;
+        gap: 24px;
+    }
+
+    .upgrade-main-card,
+    .upgrade-trust-card {
+        border-radius: 28px;
+        background: rgba(255,255,255,0.82);
+        border: 1px solid rgba(15,23,42,0.06);
+        box-shadow:
+            0 22px 52px rgba(15,23,42,0.055),
+            0 0 0 1px rgba(15,23,42,0.015);
+        backdrop-filter: blur(12px);
+    }
+
+    body.dark .upgrade-main-card,
+    body.dark .upgrade-trust-card {
+        background: rgba(2,6,23,0.80);
+        border-color: rgba(148,163,184,0.18);
+        box-shadow:
+            0 24px 56px rgba(2,6,23,0.82),
+            0 0 0 1px rgba(59,130,246,0.06);
+    }
+
+    .upgrade-main-card {
+        padding: 30px 28px 26px;
+    }
+
+    .upgrade-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .upgrade-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(59,130,246,0.10);
+        border: 1px solid rgba(59,130,246,0.14);
+        color: #1d4ed8;
+        margin-bottom: 12px;
+    }
+
+    body.dark .upgrade-eyebrow {
+        background: rgba(59,130,246,0.18);
+        border-color: rgba(96,165,250,0.18);
+        color: #bfdbfe;
+    }
+
+    .upgrade-title {
+        margin: 0 0 10px 0;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(30px, 4vw, 44px);
+        line-height: 0.98;
+        letter-spacing: -0.045em;
+        background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    .upgrade-copy {
+        max-width: 760px;
+        font-size: 15px;
+        line-height: 1.68;
+        color: #475569;
+    }
+
+    body.dark .upgrade-copy {
+        color: #cbd5e1;
+    }
+
+    .upgrade-pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .upgrade-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: rgba(15,23,42,0.04);
+        border: 1px solid rgba(148,163,184,0.24);
+        color: #0f172a;
+        white-space: nowrap;
+    }
+
+    body.dark .upgrade-pill {
+        background: rgba(15,23,42,0.52);
+        border-color: rgba(148,163,184,0.18);
+        color: #f8fafc;
+    }
+
+    .upgrade-snapshot-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .upgrade-snapshot-card {
+        padding: 18px;
+        border-radius: 22px;
+        background: rgba(15,23,42,0.03);
+        border: 1px solid rgba(148,163,184,0.15);
+    }
+
+    body.dark .upgrade-snapshot-card {
+        background: rgba(15,23,42,0.42);
+        border-color: rgba(148,163,184,0.16);
+    }
+
+    .upgrade-snapshot-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    body.dark .upgrade-snapshot-label {
+        color: #94a3b8;
+    }
+
+    .upgrade-snapshot-value {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+    }
+
+    body.dark .upgrade-snapshot-value {
+        color: #f8fafc;
+    }
+
+    .upgrade-snapshot-copy {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.65;
+        color: #475569;
+    }
+
+    body.dark .upgrade-snapshot-copy {
+        color: #cbd5e1;
+    }
+
+    .upgrade-plan-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .upgrade-plan-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding: 24px;
+        min-height: 100%;
+        border-radius: 30px;
+        overflow: hidden;
+        border: 1px solid rgba(15,23,42,0.08);
+        box-shadow:
+            0 24px 56px rgba(15,23,42,0.08),
+            0 0 0 1px rgba(255,255,255,0.35) inset;
+        backdrop-filter: blur(16px);
+    }
+
+    .upgrade-plan-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.02));
+        opacity: 0.9;
+    }
+
+    .upgrade-plan-card::after {
+        content: "";
+        position: absolute;
+        right: -44px;
+        bottom: -44px;
+        width: 180px;
+        height: 180px;
+        border-radius: 999px;
+        pointer-events: none;
+        opacity: 0.55;
+    }
+
+    .upgrade-plan-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .plan-free {
+        background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(241,245,249,0.95));
+    }
+
+    .plan-free::after {
+        background: radial-gradient(circle, rgba(59,130,246,0.18), transparent 68%);
+    }
+
+    .plan-simple {
+        background: linear-gradient(180deg, rgba(240,253,250,0.98), rgba(204,251,241,0.94));
+        border-color: rgba(13,148,136,0.22);
+        box-shadow:
+            0 30px 72px rgba(13,148,136,0.14),
+            0 0 0 1px rgba(13,148,136,0.08);
+    }
+
+    .plan-simple::after {
+        background: radial-gradient(circle, rgba(20,184,166,0.26), transparent 68%);
+    }
+
+    .plan-pro {
+        background: linear-gradient(180deg, rgba(239,246,255,0.98), rgba(219,234,254,0.94));
+        border-color: rgba(59,130,246,0.22);
+        box-shadow:
+            0 30px 72px rgba(37,99,235,0.16),
+            0 0 0 1px rgba(59,130,246,0.08);
+    }
+
+    .plan-pro::after {
+        background: radial-gradient(circle, rgba(252,220,42,0.30), transparent 68%);
+    }
+
+    .plan-enterprise {
+        background: linear-gradient(180deg, rgba(248,250,252,0.98), rgba(226,232,240,0.94));
+    }
+
+    .plan-enterprise::after {
+        background: radial-gradient(circle, rgba(15,23,42,0.16), transparent 68%);
+    }
+
+    body.dark .plan-free {
+        background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.94));
+        border-color: rgba(148,163,184,0.16);
+        box-shadow:
+            0 24px 60px rgba(2,6,23,0.86),
+            0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+
+    body.dark .plan-simple {
+        background: linear-gradient(180deg, rgba(8,30,30,0.99), rgba(6,18,23,0.96));
+        border-color: rgba(45,212,191,0.28);
+        box-shadow:
+            0 34px 78px rgba(2,6,23,0.94),
+            0 0 0 1px rgba(45,212,191,0.10);
+    }
+
+    body.dark .plan-pro {
+        background: linear-gradient(180deg, rgba(15,23,42,0.99), rgba(10,19,40,0.96));
+        border-color: rgba(96,165,250,0.34);
+        box-shadow:
+            0 34px 78px rgba(2,6,23,0.94),
+            0 0 0 1px rgba(96,165,250,0.12);
+    }
+
+    body.dark .plan-enterprise {
+        background: linear-gradient(180deg, rgba(17,24,39,0.98), rgba(2,6,23,0.94));
+        border-color: rgba(148,163,184,0.16);
+        box-shadow:
+            0 24px 60px rgba(2,6,23,0.86),
+            0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+
+    .upgrade-plan-current {
+        outline: 2px solid rgba(34,197,94,0.40);
+    }
+
+    .upgrade-plan-needed {
+        outline: 2px solid rgba(59,130,246,0.30);
+    }
+
+    .upgrade-plan-header {
+        display: grid;
+        gap: 12px;
+    }
+
+    .upgrade-plan-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .upgrade-plan-name {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    .plan-free .upgrade-plan-name {
+        background: linear-gradient(90deg, #0f172a, #1d4ed8);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    .plan-simple .upgrade-plan-name {
+        background: linear-gradient(90deg, #0f766e, #14b8a6);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    .plan-pro .upgrade-plan-name {
+        background: linear-gradient(90deg, #1d4ed8, #f59e0b);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    .plan-enterprise .upgrade-plan-name {
+        background: linear-gradient(90deg, #0f172a, #475569);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    body.dark .plan-free .upgrade-plan-name {
+        background: linear-gradient(90deg, #f8fafc, #93c5fd);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    body.dark .plan-simple .upgrade-plan-name {
+        background: linear-gradient(90deg, #ccfbf1, #5eead4);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    body.dark .plan-pro .upgrade-plan-name {
+        background: linear-gradient(90deg, #bfdbfe, #fde68a);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    body.dark .plan-enterprise .upgrade-plan-name {
+        background: linear-gradient(90deg, #f8fafc, #cbd5e1);
+        -webkit-background-clip: text;
+        color: transparent;
+    }
+
+    .upgrade-plan-tagline {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #334155;
+        font-weight: 600;
+        max-width: 240px;
+    }
+
+    body.dark .upgrade-plan-tagline {
+        color: #e2e8f0;
+    }
+
+    .upgrade-plan-price .amount {
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-family: "Space Grotesk", sans-serif;
+        color: #0f172a;
+    }
+
+    body.dark .upgrade-plan-price .amount {
+        color: #f8fafc;
+    }
+
+    .upgrade-plan-pill {
+        display: inline-flex;
+        align-items: center;
+        margin-top: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .upgrade-plan-pill.current {
+        color: #166534;
+        background: #dcfce7;
+        border: 1px solid #86efac;
+    }
+
+    .upgrade-plan-pill.recommended {
+        color: #1d4ed8;
+        background: #dbeafe;
+        border: 1px solid #93c5fd;
+    }
+
+    body.dark .upgrade-plan-pill.current {
+        color: #bbf7d0;
+        background: rgba(22, 101, 52, 0.38);
+        border-color: rgba(134, 239, 172, 0.34);
+    }
+
+    body.dark .upgrade-plan-pill.recommended {
+        color: #dbeafe;
+        background: rgba(29, 78, 216, 0.34);
+        border-color: rgba(147, 197, 253, 0.30);
+    }
+
+    .upgrade-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 13px;
+    }
+
+    .upgrade-features li {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        font-size: 14px;
+        line-height: 1.65;
+        color: #0f172a;
+        font-weight: 600;
+    }
+
+    body.dark .upgrade-features li {
+        color: #f8fafc;
+    }
+
+    .upgrade-bullet {
+        color: var(--accent);
+        font-weight: 900;
+        line-height: 1.15;
+        transform: translateY(1px);
+    }
+
+    .upgrade-cta {
+        margin-top: auto;
+        display: grid;
+        gap: 10px;
+        align-items: start;
+    }
+
+    .upgrade-cta .btn {
+        min-height: 46px;
+        border-radius: 16px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        box-shadow:
+            0 14px 30px rgba(15,23,42,0.10),
+            inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    .upgrade-cta .btn-brand {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border: 1px solid rgba(37,99,235,0.32);
+        color: #ffffff;
+    }
+
+    .upgrade-cta .btn-secondary {
+        background: rgba(255,255,255,0.70);
+        border: 1px solid rgba(148,163,184,0.34);
+        color: #0f172a;
+        backdrop-filter: blur(10px);
+    }
+
+    body.dark .upgrade-cta .btn-secondary {
+        background: rgba(15,23,42,0.74);
+        border-color: rgba(148,163,184,0.28);
+        color: #f8fafc;
+    }
+
+    .upgrade-note {
+        font-size: 12px;
+        line-height: 1.7;
+        color: #334155;
+        font-weight: 700;
+    }
+
+    body.dark .upgrade-note {
+        color: #e2e8f0;
+    }
+
+    .upgrade-bottom-note {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 13px;
+        opacity: 0.82;
+        line-height: 1.6;
+        color: #475569;
+    }
+
+    body.dark .upgrade-bottom-note {
+        color: #cbd5e1;
+    }
+
+    .upgrade-trust-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .upgrade-trust-card {
+        padding: 18px;
+    }
+
+    .upgrade-trust-title {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+        color: #0f172a;
+    }
+
+    body.dark .upgrade-trust-title {
+        color: #f8fafc;
+    }
+
+    .upgrade-trust-copy {
+        font-size: 13px;
+        line-height: 1.68;
+        color: #334155;
+        font-weight: 600;
+    }
+
+    body.dark .upgrade-trust-copy {
+        color: #e2e8f0;
+    }
+
+    @media (max-width: 1180px) {
+        .upgrade-plan-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .upgrade-snapshot-grid,
+        .upgrade-trust-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .upgrade-plan-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .upgrade-main-card {
+            padding: 22px 18px;
+        }
+    }
+</style>
+
+<div class="page-shell upgrade-shell" style="max-width: 1200px;">
+    <section class="upgrade-main-card fade-in-up">
+        <div class="upgrade-hero">
             <div>
-                <h1 style="margin:0 0 8px 0;">
+                <div class="upgrade-eyebrow">
+                    {% if lang == 'es' %}
+                        Acceso por plan
+                    {% elif lang == 'zh' %}
+                        方案访问权限
+                    {% else %}
+                        Plan access
+                    {% endif %}
+                </div>
+
+                <h1 class="upgrade-title">
                     {% if lang == 'es' %}
                         {{ title or "Se requiere actualización" }}
+                    {% elif lang == 'zh' %}
+                        {{ title or "需要升级" }}
                     {% else %}
                         {{ title or "Upgrade required" }}
                     {% endif %}
                 </h1>
-                <p style="max-width:760px; font-size:15px; line-height:1.6;">
+
+                <p class="upgrade-copy">
                     {% if lang == 'es' %}
                         {{ reason or "Esta función no está disponible en tu plan actual." }}
+                    {% elif lang == 'zh' %}
+                        {{ reason or "此功能在您当前方案中不可用。" }}
                     {% else %}
                         {{ reason or "This feature is not available on your current plan." }}
                     {% endif %}
                 </p>
             </div>
 
-            <div class="trust-row" style="justify-content:flex-end;">
-                <div class="trust-pill">
-                    {% if lang == 'es' %}Sin cambios forzados{% else %}No forced changes{% endif %}
+            <div class="upgrade-pill-row">
+                <div class="upgrade-pill">
+                    {% if lang == 'es' %}
+                        Sin cambios forzados
+                    {% elif lang == 'zh' %}
+                        不会强制更改
+                    {% else %}
+                        No forced changes
+                    {% endif %}
                 </div>
-                <div class="trust-pill">
-                    {% if lang == 'es' %}Tu plan actual sigue funcionando{% else %}Your current plan still works{% endif %}
+                <div class="upgrade-pill">
+                    {% if lang == 'es' %}
+                        Tu plan actual sigue funcionando
+                    {% elif lang == 'zh' %}
+                        当前方案仍可继续使用
+                    {% else %}
+                        Your current plan still works
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="public-grid" style="margin-bottom:22px;">
-            <div class="public-card" style="padding:16px 18px;">
-                <div class="snap-label">
-                    {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+        <div class="upgrade-snapshot-grid">
+            <div class="upgrade-snapshot-card">
+                <div class="upgrade-snapshot-label">
+                    {% if lang == 'es' %}
+                        Plan actual
+                    {% elif lang == 'zh' %}
+                        当前方案
+                    {% else %}
+                        Current plan
+                    {% endif %}
                 </div>
-                <div class="snap-value" style="margin-top:6px;">
+                <div class="upgrade-snapshot-value">
                     {{ current_plan_label }}
                 </div>
-                <div class="mini-hint" style="margin-top:8px;">
+                <div class="upgrade-snapshot-copy">
                     {% if lang == 'es' %}
                         Puedes seguir usando todas las funciones incluidas en este plan.
+                    {% elif lang == 'zh' %}
+                        您仍可继续使用此方案中已包含的所有功能。
                     {% else %}
                         You can continue using all features included in this plan.
                     {% endif %}
                 </div>
             </div>
 
-            <div class="public-card" style="padding:16px 18px;">
-                <div class="snap-label">
-                    {% if lang == 'es' %}Plan requerido{% else %}Required plan{% endif %}
+            <div class="upgrade-snapshot-card">
+                <div class="upgrade-snapshot-label">
+                    {% if lang == 'es' %}
+                        Plan requerido
+                    {% elif lang == 'zh' %}
+                        所需方案
+                    {% else %}
+                        Required plan
+                    {% endif %}
                 </div>
-                <div class="snap-value" style="margin-top:6px;">
+                <div class="upgrade-snapshot-value">
                     {{ required_plan_label }}
-                    {% if lang == 'es' %} o superior{% else %} or higher{% endif %}
+                    {% if lang == 'es' %}
+                        o superior
+                    {% elif lang == 'zh' %}
+                        或更高
+                    {% else %}
+                        or higher
+                    {% endif %}
                 </div>
-                <div class="mini-hint" style="margin-top:8px;">
+                <div class="upgrade-snapshot-copy">
                     {% if lang == 'es' %}
                         Esta función se desbloquea cuando tu espacio tiene acceso al nivel requerido.
+                    {% elif lang == 'zh' %}
+                        当您的工作区拥有所需等级方案时，此功能将自动解锁。
                     {% else %}
                         This feature unlocks when your workspace has access to the required tier.
                     {% endif %}
@@ -86,149 +713,116 @@
             </div>
         </div>
 
-        <div class="pricing-grid">
+        <div class="upgrade-plan-grid">
             {% for key, plan in plans.items() %}
                 {% set is_current = (key == user_plan) %}
                 {% set is_required = (key == required_plan) %}
-                {% set display_key = 'business' if key == 'enterprise' else key %}
                 {% set plan_name = plan.name if plan.name is defined else (key|capitalize) %}
-                {% set display_name = 'Business' if key == 'enterprise' else plan_name %}
+                {% set display_name = 'Enterprise' if key == 'enterprise' else plan_name %}
 
-                <article class="pricing-card {% if key == 'free' %}pricing-free{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %} {% if is_current %}pricing-current{% endif %}"
-                         style="position:relative;">
-
-                    <div class="pricing-card-header">
-                        <div class="pricing-title-row">
+                <article class="upgrade-plan-card {% if key == 'free' %}plan-free{% elif key == 'simple' %}plan-simple{% elif key == 'pro' %}plan-pro{% else %}plan-enterprise{% endif %} {% if is_current %}upgrade-plan-current{% endif %} {% if is_required and not is_current %}upgrade-plan-needed{% endif %}">
+                    <div class="upgrade-plan-header">
+                        <div class="upgrade-plan-title-row">
                             <div>
-                                <div class="pricing-name">
-                                    {% if lang == 'es' %}
-                                        {% if display_key == 'free' %}Starter{% elif display_key == 'pro' %}Pro{% else %}Business{% endif %}
-                                    {% else %}
-                                        {{ display_name }}
-                                    {% endif %}
-                                </div>
-                                <p class="pricing-tagline">
-                                    {% if lang == 'es' %}
-                                        {% if display_key == 'free' %}
-                                            Para freelancers que están empezando.
-                                        {% elif display_key == 'pro' %}
-                                            Para negocios en crecimiento que facturan con frecuencia.
-                                        {% else %}
-                                            Para operaciones que necesitan pagos más profesionales y más control.
-                                        {% endif %}
-                                    {% else %}
-                                        {% if display_key == 'business' %}
-                                            For operations that need more professional payment setup and more control.
-                                        {% else %}
-                                            {{ plan.tagline }}
-                                        {% endif %}
-                                    {% endif %}
-                                </p>
+                                <div class="upgrade-plan-name">{{ display_name }}</div>
+                                <p class="upgrade-plan-tagline">{{ plan.tagline }}</p>
                             </div>
 
-                            <div class="pricing-price" style="text-align:right;">
-                                <span class="amount">
-                                    {% if display_key == 'business' and plan.price_label == 'Contact us' %}
-                                        $49 / month
-                                    {% else %}
-                                        {{ plan.price_label }}
-                                    {% endif %}
-                                </span><br>
+                            <div class="upgrade-plan-price" style="text-align:right;">
+                                <span class="amount">{{ plan.price_label }}</span><br>
 
                                 {% if is_current %}
-                                    <span class="pricing-pill current">
-                                        {% if lang == 'es' %}Plan actual{% else %}Current plan{% endif %}
+                                    <span class="upgrade-plan-pill current">
+                                        {% if lang == 'es' %}
+                                            Plan actual
+                                        {% elif lang == 'zh' %}
+                                            当前方案
+                                        {% else %}
+                                            Current plan
+                                        {% endif %}
                                     </span>
                                 {% elif is_required %}
-                                    <span class="pricing-pill recommended">
-                                        {% if lang == 'es' %}Necesario para esta función{% else %}Needed for this feature{% endif %}
+                                    <span class="upgrade-plan-pill recommended">
+                                        {% if lang == 'es' %}
+                                            Necesario aquí
+                                        {% elif lang == 'zh' %}
+                                            此功能所需
+                                        {% else %}
+                                            Needed here
+                                        {% endif %}
                                     </span>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <ul class="pricing-features">
-                        {% if lang == 'es' %}
-                            {% if display_key == 'free' %}
-                                <li><span class="feature-bullet">•</span><span>Hasta 10 facturas al mes</span></li>
-                                <li><span class="feature-bullet">•</span><span>Una sola plantilla de factura</span></li>
-                                <li><span class="feature-bullet">•</span><span>Panel básico</span></li>
-                            {% elif display_key == 'pro' %}
-                                <li><span class="feature-bullet">•</span><span>Facturas ilimitadas</span></li>
-                                <li><span class="feature-bullet">•</span><span>Múltiples plantillas de factura</span></li>
-                                <li><span class="feature-bullet">•</span><span>Envío por correo + PDFs</span></li>
-                                <li><span class="feature-bullet">•</span><span>Enlaces públicos y botón “Pagar ahora”</span></li>
-                                <li><span class="feature-bullet">•</span><span>BillBeam Assistant</span></li>
-                            {% else %}
-                                <li><span class="feature-bullet">•</span><span>Todas las funciones Pro</span></li>
-                                <li><span class="feature-bullet">•</span><span>Conexión de cuenta Stripe</span></li>
-                                <li><span class="feature-bullet">•</span><span>Panel de pagos y cobros más profesional</span></li>
-                                <li><span class="feature-bullet">•</span><span>Soporte prioritario</span></li>
-                            {% endif %}
-                        {% else %}
-                            {% if display_key == 'business' %}
-                                <li><span class="feature-bullet">•</span><span>All Pro features</span></li>
-                                <li><span class="feature-bullet">•</span><span>Stripe account connection</span></li>
-                                <li><span class="feature-bullet">•</span><span>More professional payment setup</span></li>
-                                <li><span class="feature-bullet">•</span><span>Priority support</span></li>
-                            {% else %}
-                                {% for f in plan.features %}
-                                    <li>
-                                        <span class="feature-bullet">•</span>
-                                        <span>{{ f }}</span>
-                                    </li>
-                                {% endfor %}
-                            {% endif %}
-                        {% endif %}
+                    <ul class="upgrade-features">
+                        {% for f in plan.features %}
+                            <li>
+                                <span class="upgrade-bullet">•</span>
+                                <span>{{ f }}</span>
+                            </li>
+                        {% endfor %}
                     </ul>
 
-                    <div class="pricing-cta">
+                    <div class="upgrade-cta">
                         {% if is_current %}
                             <span class="badge paid">
-                                {% if lang == 'es' %}Ya activo{% else %}Already active{% endif %}
+                                {% if lang == 'es' %}
+                                    Ya activo
+                                {% elif lang == 'zh' %}
+                                    已启用
+                                {% else %}
+                                    Already active
+                                {% endif %}
                             </span>
-                            <span class="pricing-note">
+                            <span class="upgrade-note">
                                 {% if lang == 'es' %}
                                     Este es el plan que estás usando actualmente.
+                                {% elif lang == 'zh' %}
+                                    这是您当前正在使用的方案。
                                 {% else %}
                                     This is the plan you are currently using.
                                 {% endif %}
                             </span>
 
-                        {% elif display_key == 'pro' %}
+                        {% elif is_required %}
                             <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand btn-compact">
-                                {% if lang == 'es' %}Ver Pro{% else %}View Pro{% endif %}
-                            </a>
-                            <span class="pricing-note">
                                 {% if lang == 'es' %}
-                                    Ideal si quieres desbloquear más automatización y funciones de facturación.
+                                    Ver este plan
+                                {% elif lang == 'zh' %}
+                                    查看此方案
                                 {% else %}
-                                    Best if you want to unlock more automation and billing features.
+                                    View this plan
                                 {% endif %}
-                            </span>
-
-                        {% elif display_key == 'business' %}
-                            <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
-                                {% if lang == 'es' %}Ver Business{% else %}View Business{% endif %}
                             </a>
-                            <span class="pricing-note">
+                            <span class="upgrade-note">
                                 {% if lang == 'es' %}
-                                    Pensado para operaciones que necesitan pagos más profesionales y mayor control.
+                                    Este es el nivel mínimo necesario para desbloquear esta función.
+                                {% elif lang == 'zh' %}
+                                    这是解锁此功能所需的最低等级方案。
                                 {% else %}
-                                    Built for operations that need more professional payment handling and more control.
+                                    This is the minimum tier needed to unlock this feature.
                                 {% endif %}
                             </span>
 
                         {% else %}
                             <a href="{{ url_for('pricing') }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-compact">
-                                {% if lang == 'es' %}Ver Starter{% else %}View Starter{% endif %}
-                            </a>
-                            <span class="pricing-note">
                                 {% if lang == 'es' %}
-                                    Una buena base para empezar antes de crecer.
+                                    Ver planes
+                                {% elif lang == 'zh' %}
+                                    查看方案
                                 {% else %}
-                                    A strong starting point before you grow.
+                                    View plans
+                                {% endif %}
+                            </a>
+                            <span class="upgrade-note">
+                                {% if lang == 'es' %}
+                                    Puedes comparar este nivel con los demás desde la página de precios.
+                                {% elif lang == 'zh' %}
+                                    您可以在定价页面中将此方案与其他方案进行比较。
+                                {% else %}
+                                    You can compare this tier with the others from the pricing page.
                                 {% endif %}
                             </span>
                         {% endif %}
@@ -237,13 +831,80 @@
             {% endfor %}
         </div>
 
-        <div style="text-align:center; margin-top:24px; font-size:13px; opacity:0.82; line-height:1.6;">
+        <div class="upgrade-bottom-note">
             {% if lang == 'es' %}
                 No perderás acceso a lo que ya funciona en tu cuenta actual. Esta pantalla solo aparece cuando intentas usar una función reservada para un plan superior.
+            {% elif lang == 'zh' %}
+                您不会失去当前账户中已可正常使用的功能。此页面只会在您尝试使用更高等级方案专属功能时出现。
             {% else %}
                 You will not lose access to what already works in your current account. This screen only appears when you try to use a feature reserved for a higher plan.
             {% endif %}
         </div>
     </section>
+
+    <div class="upgrade-trust-grid">
+        <div class="upgrade-trust-card">
+            <div class="upgrade-trust-title">
+                {% if lang == 'es' %}
+                    Sin riesgo para tu flujo actual
+                {% elif lang == 'zh' %}
+                    不影响当前流程
+                {% else %}
+                    No risk to your current flow
+                {% endif %}
+            </div>
+            <div class="upgrade-trust-copy">
+                {% if lang == 'es' %}
+                    BillBeam mantiene funcionando lo que ya usas hoy. Esta pantalla solo aclara cuándo una función pertenece a un nivel superior.
+                {% elif lang == 'zh' %}
+                    BillBeam 会继续保留您当前已在使用的功能。此页面只是说明哪些功能属于更高等级方案。
+                {% else %}
+                    BillBeam keeps what you already use working today. This screen only clarifies when a feature belongs to a higher tier.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="upgrade-trust-card">
+            <div class="upgrade-trust-title">
+                {% if lang == 'es' %}
+                    Más claridad para decidir
+                {% elif lang == 'zh' %}
+                    更清晰的决策方式
+                {% else %}
+                    More clarity for decision-making
+                {% endif %}
+            </div>
+            <div class="upgrade-trust-copy">
+                {% if lang == 'es' %}
+                    Ver tu plan actual junto al requerido hace que la decisión sea mucho más simple y evita confusión.
+                {% elif lang == 'zh' %}
+                    同时看到当前方案和所需方案，会让升级决策更简单，也能减少混乱。
+                {% else %}
+                    Seeing your current plan next to the required plan makes the decision much simpler and avoids confusion.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="upgrade-trust-card">
+            <div class="upgrade-trust-title">
+                {% if lang == 'es' %}
+                    Experiencia más premium
+                {% elif lang == 'zh' %}
+                    更高级的体验
+                {% else %}
+                    More premium experience
+                {% endif %}
+            </div>
+            <div class="upgrade-trust-copy">
+                {% if lang == 'es' %}
+                    Incluso una pantalla de bloqueo de acceso debe sentirse limpia, útil y profesional dentro de BillBeam.
+                {% elif lang == 'zh' %}
+                    即使是访问受限页面，也应该在 BillBeam 中显得干净、实用且专业。
+                {% else %}
+                    Even an access gate should feel clean, useful, and professional inside BillBeam.
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

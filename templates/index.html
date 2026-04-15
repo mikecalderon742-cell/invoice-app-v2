@@ -2,22 +2,29 @@
 
 {% block title %}
   {% if lang == 'es' %}
-    Crear factura · {{ business_profile.business_name or "BILLBeam" }}
+    Crear factura · {{ business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    创建发票 · {{ business_profile.business_name or "BillBeam" }}
   {% else %}
-    Create Invoice · {{ business_profile.business_name or "BILLBeam" }}
+    Create Invoice · {{ business_profile.business_name or "BillBeam" }}
   {% endif %}
 {% endblock %}
 
 {% block meta_description %}
   {% if lang == 'es' %}
     Crea una nueva factura en BillBeam, añade clientes, conceptos, firma y genera una vista previa antes de guardar.
+  {% elif lang == 'zh' %}
+    在 BillBeam 中创建新发票，添加客户、项目与签名，并在保存前先预览全部内容。
   {% else %}
     Create a new invoice in BillBeam, add clients, line items, signature, and preview everything before saving.
   {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
   .create-shell {
@@ -591,6 +598,110 @@
     color: #cbd5e1;
   }
 
+  .services-shortcut-side {
+    padding: 18px;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+      linear-gradient(135deg, rgba(15,23,42,0.03), rgba(255,255,255,0.72));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 16px 34px rgba(15,23,42,0.05);
+  }
+
+  body.dark .services-shortcut-side {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.18), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.92), rgba(15,23,42,0.88));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 20px 42px rgba(2,6,23,0.74);
+  }
+
+  .services-shortcut-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(148,163,184,0.18);
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  body.dark .services-shortcut-kicker {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #f8fafc;
+  }
+
+  .services-shortcut-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .services-shortcut-copy {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .services-shortcut-copy {
+    color: #cbd5e1;
+  }
+
+  .services-shortcut-points {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .services-shortcut-point {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 12px;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .services-shortcut-point {
+    color: #cbd5e1;
+  }
+
+  .services-shortcut-point-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    box-shadow: 0 8px 18px rgba(37,99,235,0.22);
+  }
+
+  .services-shortcut-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .services-shortcut-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   @media (max-width: 1100px) {
     .invoice-layout-grid {
       grid-template-columns: 1fr;
@@ -702,6 +813,8 @@
         <div class="hero-kicker">
           {% if lang == 'es' %}
             Facturación rápida • BillBeam
+          {% elif lang == 'zh' %}
+            快速开票 • BillBeam
           {% else %}
             Fast Invoicing • BillBeam
           {% endif %}
@@ -710,6 +823,8 @@
         <h1 class="create-hero-title">
           {% if lang == 'es' %}
             Crear una nueva factura con <span class="hero-accent">BillBeam</span>
+          {% elif lang == 'zh' %}
+            使用 <span class="hero-accent">BillBeam</span> 创建新发票
           {% else %}
             Create a New Invoice with <span class="hero-accent">BillBeam</span>
           {% endif %}
@@ -718,6 +833,8 @@
         <div class="create-hero-copy">
           {% if lang == 'es' %}
             Elige un cliente, añade tus servicios, ajusta el estilo de la factura y guarda una versión lista para enviar, descargar o cobrar en línea.
+          {% elif lang == 'zh' %}
+            选择客户，添加服务，设置发票样式，并保存一个可发送、下载或在线收款的版本。
           {% else %}
             Pick a client, add your services, choose an invoice style, and save a version that is ready to send, download, or collect online.
           {% endif %}
@@ -727,6 +844,8 @@
           <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn hero-cta">
             {% if lang == 'es' %}
               Ver historial de facturas
+            {% elif lang == 'zh' %}
+              查看发票历史
             {% else %}
               View Invoice History
             {% endif %}
@@ -735,6 +854,8 @@
           <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="btn hero-cta">
             {% if lang == 'es' %}
               Ver Pro
+            {% elif lang == 'zh' %}
+              查看 Pro
             {% else %}
               View Pro
             {% endif %}
@@ -745,28 +866,27 @@
         <div class="hero-mini-grid">
           <div class="hero-mini-card">
             <div class="hero-mini-label">
-              {% if lang == 'es' %}Cliente{% else %}Client{% endif %}
+              {% if lang == 'es' %}Cliente{% elif lang == 'zh' %}客户{% else %}Client{% endif %}
             </div>
             <div class="hero-mini-value">
-              {% if lang == 'es' %}Nuevo o existente{% else %}New or existing{% endif %}
+              {% if lang == 'es' %}Nuevo o existente{% elif lang == 'zh' %}新客户或现有客户{% else %}New or existing{% endif %}
             </div>
           </div>
 
           <div class="hero-mini-card">
             <div class="hero-mini-label">
-              {% if lang == 'es' %}Vista previa{% else %}Preview{% endif %}
+              {% if lang == 'es' %}Vista previa{% elif lang == 'zh' %}预览{% else %}Preview{% endif %}
             </div>
             <div class="hero-mini-value">
-              {% if lang == 'es' %}Antes de guardar{% else %}Before saving{% endif %}
+              {% if lang == 'es' %}Antes de guardar{% elif lang == 'zh' %}保存之前{% else %}Before saving{% endif %}
             </div>
           </div>
 
           <div class="hero-mini-card">
             <div class="hero-mini-label">
-              {% if lang == 'es' %}Portal{% else %}Portal{% endif %}
-            </div>
+              {% if lang == 'es' %}Portal{% elif lang == 'zh' %}门户{% else %}Portal{% endif %}
             <div class="hero-mini-value">
-              {% if lang == 'es' %}Listo para cliente{% else %}Client-ready{% endif %}
+              {% if lang == 'es' %}Listo para cliente{% elif lang == 'zh' %}可供客户查看{% else %}Client-ready{% endif %}
             </div>
           </div>
         </div>
@@ -777,6 +897,8 @@
       <h3 class="side-card-title">
         {% if lang == 'es' %}
           Flujo recomendado
+        {% elif lang == 'zh' %}
+          推荐流程
         {% else %}
           Recommended flow
         {% endif %}
@@ -785,6 +907,8 @@
       <div class="side-card-copy">
         {% if lang == 'es' %}
           Mantén cada factura clara, simple y fácil de pagar. Un buen flujo aquí mejora la percepción de marca y reduce retrasos.
+        {% elif lang == 'zh' %}
+          让每张发票都清晰、简单且易于支付。这里的良好流程会提升品牌观感并减少付款延迟。
         {% else %}
           Keep each invoice clear, simple, and easy to pay. A strong flow here improves brand perception and reduces payment delays.
         {% endif %}
@@ -830,6 +954,8 @@
         <strong>
           {% if lang == 'es' %}
             Consejo de crecimiento
+          {% elif lang == 'zh' %}
+            增长建议
           {% else %}
             Growth tip
           {% endif %}
@@ -837,6 +963,8 @@
         <p>
           {% if lang == 'es' %}
             Pro desbloquea correos con PDF, enlaces públicos y pagos en línea para que tu flujo de cobro se vea mucho más profesional.
+          {% elif lang == 'zh' %}
+            Pro 可解锁带 PDF 的发票邮件、公开发票链接和在线支付，让您的收款流程显得更加专业。
           {% else %}
             Pro unlocks invoice emails with PDFs, public invoice links, and online payments so your collection flow feels much more professional.
           {% endif %}
@@ -852,6 +980,8 @@
         <h2 class="form-main-title">
           {% if lang == 'es' %}
             Nueva factura
+          {% elif lang == 'zh' %}
+            新建发票
           {% else %}
             New Invoice
           {% endif %}
@@ -859,6 +989,8 @@
         <div class="form-main-subcopy">
           {% if lang == 'es' %}
             Completa los datos principales, revisa los conceptos y genera una factura profesional en minutos.
+          {% elif lang == 'zh' %}
+            填写主要信息，检查项目内容，并在几分钟内生成一张专业发票。
           {% else %}
             Fill in the key details, review your line items, and generate a polished invoice in minutes.
           {% endif %}
@@ -871,7 +1003,7 @@
 
           <div class="form-section">
             <div class="form-section-header">
-              <h3>{% if lang == 'es' %}Cliente{% else %}Client{% endif %}</h3>
+              <h3>{% if lang == 'es' %}Cliente{% elif lang == 'zh' %}客户{% else %}Client{% endif %}</h3>
               <div class="form-section-sub">
                 {% if lang == 'es' %}
                   Selecciona un cliente existente o agrega uno nuevo para esta factura.
@@ -994,11 +1126,7 @@
           <div class="form-section">
             <div class="form-section-header">
               <h3>
-                {% if lang == 'es' %}
-                  Detalles de la factura
-                {% else %}
-                  Invoice Details
-                {% endif %}
+{% if lang == 'es' %}Detalles de la factura{% elif lang == 'zh' %}发票详情{% else %}Invoice Details{% endif %}
               </h3>
               <div class="form-section-sub">
                 {% if lang == 'es' %}
@@ -1040,11 +1168,7 @@
           <div class="form-section">
             <div class="form-section-header">
               <h3>
-                {% if lang == 'es' %}
-                  Adjuntos (opcional)
-                {% else %}
-                  Attachments (optional)
-                {% endif %}
+{% if lang == 'es' %}Adjuntos (opcional){% elif lang == 'zh' %}附件（可选）{% else %}Attachments (optional){% endif %}
               </h3>
               <div class="form-section-sub">
                 {% if lang == 'es' %}
@@ -1083,11 +1207,7 @@
           <div class="form-section">
             <div class="form-section-header">
               <h3>
-                {% if lang == 'es' %}
-                  Conceptos
-                {% else %}
-                  Line Items
-                {% endif %}
+{% if lang == 'es' %}Conceptos{% elif lang == 'zh' %}项目{% else %}Line Items{% endif %}
               </h3>
               <div class="form-section-sub">
                 {% if lang == 'es' %}
@@ -1141,11 +1261,7 @@
           <div class="form-section">
             <div class="form-section-header">
               <h3>
-                {% if lang == 'es' %}
-                  Firma del cliente (opcional)
-                {% else %}
-                  Client Signature (optional)
-                {% endif %}
+{% if lang == 'es' %}Firma del cliente (opcional){% elif lang == 'zh' %}客户签名（可选）{% else %}Client Signature (optional){% endif %}
               </h3>
               <div class="form-section-sub">
                 {% if lang == 'es' %}
@@ -1185,11 +1301,7 @@
           <div class="form-section">
             <div class="form-section-header">
               <h3>
-                {% if lang == 'es' %}
-                  Estilo de factura
-                {% else %}
-                  Invoice style
-                {% endif %}
+{% if lang == 'es' %}Estilo de factura{% elif lang == 'zh' %}发票样式{% else %}Invoice style{% endif %}
               </h3>
               <div class="form-section-sub">
                 {% if lang == 'es' %}
@@ -1240,7 +1352,7 @@
 
           <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; flex-wrap:wrap;">
             <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-              {% if lang == 'es' %}Cancelar{% else %}Cancel{% endif %}
+              {% if lang == 'es' %}Cancelar{% elif lang == 'zh' %}取消{% else %}Cancel{% endif %}
             </a>
 
             <button
@@ -1249,11 +1361,11 @@
               formmethod="post"
               class="btn btn-secondary"
             >
-              {% if lang == 'es' %}Vista previa{% else %}Preview Invoice{% endif %}
+              {% if lang == 'es' %}Vista previa{% elif lang == 'zh' %}预览发票{% else %}Preview Invoice{% endif %}
             </button>
 
             <button type="submit" class="btn btn-brand">
-              {% if lang == 'es' %}Guardar factura{% else %}Save Invoice{% endif %}
+              {% if lang == 'es' %}Guardar factura{% elif lang == 'zh' %}保存发票{% else %}Save Invoice{% endif %}
             </button>
           </div>
         </form>
@@ -1343,6 +1455,78 @@
             {% endif %}
           </p>
         </div>
+
+        <div class="services-shortcut-side">
+          <div class="services-shortcut-kicker">
+            {% if lang == 'es' %}
+              ✨ Servicios
+            {% elif lang == 'zh' %}
+              ✨ 服务
+            {% else %}
+              ✨ Services
+            {% endif %}
+          </div>
+
+          <h4 class="services-shortcut-title">
+            {% if lang == 'es' %}
+              Administra tus servicios antes de facturar
+            {% elif lang == 'zh' %}
+              在开票前先管理您的服务
+            {% else %}
+              Manage your services before invoicing
+            {% endif %}
+          </h4>
+
+          <p class="services-shortcut-copy">
+            {% if lang == 'es' %}
+              Mantén tus servicios, descripciones y precios organizados desde una página dedicada para que tu flujo de facturación se vea más sólido y profesional.
+            {% elif lang == 'zh' %}
+              在专门的页面中整理您的服务、描述和价格，让您的开票流程看起来更完整、更专业。
+            {% else %}
+              Keep your services, descriptions, and pricing organized from a dedicated page so your invoicing workflow feels more complete and professional.
+            {% endif %}
+          </p>
+
+          <div class="services-shortcut-points">
+            <div class="services-shortcut-point">
+              <div class="services-shortcut-point-mark">1</div>
+              <div>
+                {% if lang == 'es' %}
+                  Crea servicios con nombre, descripción y precio.
+                {% elif lang == 'zh' %}
+                  为服务添加名称、描述和价格。
+                {% else %}
+                  Create services with names, descriptions, and pricing.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="services-shortcut-point">
+              <div class="services-shortcut-point-mark">2</div>
+              <div>
+                {% if lang == 'es' %}
+                  Mantén tu oferta más clara para ti y para tus clientes.
+                {% elif lang == 'zh' %}
+                  让您的服务内容对您和客户都更加清晰。
+                {% else %}
+                  Keep your offerings clearer for both you and your clients.
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="services-shortcut-actions">
+            <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+              {% if lang == 'es' %}
+                Abrir servicios
+              {% elif lang == 'zh' %}
+                打开服务页面
+              {% else %}
+                Open Services
+              {% endif %}
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1365,6 +1549,8 @@ document.addEventListener("DOMContentLoaded", function () {
         descInput.name = "description";
         descInput.placeholder = {% if lang == 'es' %}
             "p.ej. Desarrollo web, 10 horas"
+        {% elif lang == 'zh' %}
+            "例如：网站开发，10小时"
         {% else %}
             "e.g. Web development, 10 hours"
         {% endif %};
@@ -1385,7 +1571,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.textContent = {% if lang == 'es' %}"Quitar"{% else %}"Remove"{% endif %};
+        removeBtn.textContent = {% if lang == 'es' %}"Quitar"{% elif lang == 'zh' %}"移除"{% else %}"Remove"{% endif %};
         removeBtn.className = "btn btn-secondary btn-compact";
         removeBtn.style.whiteSpace = "nowrap";
 

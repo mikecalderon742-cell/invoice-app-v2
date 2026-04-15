@@ -1,0 +1,838 @@
+{% extends "base.html" %}
+{% block title %}{% if lang == 'es' %}Servicios{% elif lang == 'zh' %}服务{% else %}Services{% endif %} - {{ business_profile.business_name or "BillBeam" }}{% endblock %}
+
+{% block content %}
+{% set current_lang = lang or 'en' %}
+
+<div class="services-page-shell">
+    <style>
+        .services-page-shell {
+            padding: 24px 16px 40px;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .services-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 28px;
+            padding: 28px;
+            margin-bottom: 22px;
+            background:
+                radial-gradient(circle at top right, rgba(58,139,255,.24), transparent 32%),
+                radial-gradient(circle at bottom left, rgba(16,185,129,.16), transparent 28%),
+                linear-gradient(135deg, rgba(2,6,23,.98), rgba(15,23,42,.96));
+            border: 1px solid rgba(148,163,184,.16);
+            box-shadow: 0 24px 60px rgba(2,6,23,.20);
+            color: #f8fafc;
+        }
+
+        .services-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.10);
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+            margin-bottom: 16px;
+        }
+
+        .services-hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -.03em;
+        }
+
+        .services-hero p {
+            margin: 0;
+            max-width: 760px;
+            font-size: 1rem;
+            line-height: 1.65;
+            color: rgba(248,250,252,.84);
+        }
+
+        .services-top-grid {
+            display: grid;
+            grid-template-columns: 1.08fr .92fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .services-panel {
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(148,163,184,.18);
+            border-radius: 24px;
+            box-shadow: 0 18px 46px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+
+        .services-panel-header {
+            padding: 22px 22px 10px;
+        }
+
+        .services-panel-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -.02em;
+        }
+
+        .services-panel-subtitle {
+            margin: 8px 0 0;
+            color: #475569;
+            font-size: .96rem;
+            line-height: 1.6;
+        }
+
+        .services-form-wrap {
+            padding: 0 22px 22px;
+        }
+
+        .services-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .services-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .services-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .services-label {
+            font-size: .92rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .services-input,
+        .services-textarea {
+            width: 100%;
+            border: 1px solid rgba(148,163,184,.28);
+            border-radius: 16px;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: .97rem;
+            padding: 14px 15px;
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+            box-sizing: border-box;
+        }
+
+        .services-input:focus,
+        .services-textarea:focus {
+            border-color: rgba(58,139,255,.66);
+            box-shadow: 0 0 0 4px rgba(58,139,255,.12);
+        }
+
+        .services-textarea {
+            min-height: 130px;
+            resize: vertical;
+            line-height: 1.55;
+        }
+
+        .services-price-wrap {
+            position: relative;
+        }
+
+        .services-price-wrap .services-currency {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-weight: 800;
+            pointer-events: none;
+        }
+
+        .services-price-wrap .services-input {
+            padding-left: 34px;
+        }
+
+        .services-form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .services-btn {
+            appearance: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 16px;
+            padding: 13px 18px;
+            font-size: .95rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+        }
+
+        .services-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .services-btn-primary {
+            background: linear-gradient(135deg, #3A8BFF, #2563eb);
+            color: #ffffff;
+            box-shadow: 0 16px 34px rgba(37,99,235,.28);
+        }
+
+        .services-btn-secondary {
+            background: #eef2ff;
+            color: #1e3a8a;
+            border: 1px solid rgba(99,102,241,.14);
+        }
+
+        .services-btn-neutral {
+            background: #f8fafc;
+            color: #0f172a;
+            border: 1px solid rgba(148,163,184,.22);
+        }
+
+        .services-btn-danger {
+            background: #fff1f2;
+            color: #be123c;
+            border: 1px solid rgba(244,63,94,.16);
+        }
+
+        .services-notice {
+            margin: 0 22px 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: .94rem;
+            line-height: 1.55;
+            border: 1px solid transparent;
+        }
+
+        .services-notice-success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: rgba(16,185,129,.22);
+        }
+
+        .services-notice-error {
+            background: #fff1f2;
+            color: #9f1239;
+            border-color: rgba(244,63,94,.18);
+        }
+
+        .services-list-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .services-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .services-stat {
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(148,163,184,.18);
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 14px 36px rgba(15,23,42,.06);
+        }
+
+        .services-stat-label {
+            font-size: .82rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .services-stat-value {
+            margin-top: 8px;
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -.03em;
+        }
+
+        .services-card-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .service-card {
+            background: rgba(255,255,255,.94);
+            border: 1px solid rgba(148,163,184,.18);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 14px 40px rgba(15,23,42,.06);
+        }
+
+        .service-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .service-card-title-wrap {
+            min-width: 0;
+        }
+
+        .service-card-title {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -.02em;
+            word-break: break-word;
+        }
+
+        .service-card-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 9px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: .77rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .service-card-status.active {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid rgba(16,185,129,.2);
+        }
+
+        .service-card-status.inactive {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid rgba(148,163,184,.18);
+        }
+
+        .service-card-price {
+            white-space: nowrap;
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -.03em;
+            background: #f8fafc;
+            border: 1px solid rgba(148,163,184,.16);
+            border-radius: 18px;
+            padding: 10px 14px;
+        }
+
+        .service-card-description {
+            color: #475569;
+            font-size: .96rem;
+            line-height: 1.65;
+            margin: 0 0 16px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .service-card-footer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid rgba(226,232,240,.9);
+        }
+
+        .service-card-meta {
+            color: #64748b;
+            font-size: .84rem;
+        }
+
+        .service-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .service-inline-form {
+            margin: 0;
+        }
+
+        .services-empty {
+            background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(248,250,252,.95));
+            border: 1px dashed rgba(148,163,184,.34);
+            border-radius: 24px;
+            padding: 28px;
+            text-align: center;
+            color: #475569;
+            box-shadow: 0 14px 34px rgba(15,23,42,.05);
+        }
+
+        .services-empty h3 {
+            margin: 0 0 8px;
+            color: #0f172a;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+        }
+
+        .services-empty p {
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .services-mini-note {
+            margin-top: 14px;
+            font-size: .9rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 980px) {
+            .services-top-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .services-stats {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .services-page-shell {
+                padding: 18px 12px 32px;
+            }
+
+            .services-hero {
+                padding: 22px 18px;
+                border-radius: 24px;
+            }
+
+            .services-form-grid,
+            .services-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .services-panel-header,
+            .services-form-wrap {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .services-notice {
+                margin-left: 16px;
+                margin-right: 16px;
+            }
+
+            .service-card {
+                padding: 16px;
+            }
+
+            .service-card-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .service-card-price {
+                align-self: flex-start;
+            }
+
+            .service-card-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .service-card-actions {
+                width: 100%;
+            }
+
+            .service-card-actions .services-btn,
+            .service-card-actions .service-inline-form,
+            .service-card-actions .service-inline-form .services-btn {
+                width: 100%;
+            }
+
+            .services-form-actions .services-btn {
+                width: 100%;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .services-panel,
+            .services-stat,
+            .service-card {
+                background: rgba(15,23,42,.92);
+                border-color: rgba(148,163,184,.16);
+                box-shadow: 0 18px 44px rgba(2,6,23,.30);
+            }
+
+            .services-panel-title,
+            .services-label,
+            .services-stat-value,
+            .service-card-title,
+            .service-card-price,
+            .services-empty h3 {
+                color: #f8fafc;
+            }
+
+            .services-panel-subtitle,
+            .service-card-description,
+            .services-empty,
+            .services-mini-note,
+            .service-card-meta,
+            .services-stat-label {
+                color: #cbd5e1;
+            }
+
+            .services-input,
+            .services-textarea {
+                background: rgba(2,6,23,.72);
+                color: #f8fafc;
+                border-color: rgba(148,163,184,.18);
+            }
+
+            .services-input::placeholder,
+            .services-textarea::placeholder {
+                color: #94a3b8;
+            }
+
+            .services-price-wrap .services-currency {
+                color: #cbd5e1;
+            }
+
+            .services-btn-neutral {
+                background: rgba(15,23,42,.84);
+                color: #f8fafc;
+                border-color: rgba(148,163,184,.18);
+            }
+
+            .services-btn-secondary {
+                background: rgba(37,99,235,.12);
+                color: #dbeafe;
+                border-color: rgba(59,130,246,.18);
+            }
+
+            .services-btn-danger {
+                background: rgba(190,24,93,.12);
+                color: #fecdd3;
+                border-color: rgba(244,63,94,.18);
+            }
+
+            .service-card-price {
+                background: rgba(2,6,23,.68);
+                border-color: rgba(148,163,184,.18);
+            }
+
+            .services-empty {
+                background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.88));
+                border-color: rgba(148,163,184,.24);
+            }
+
+            .service-card-footer {
+                border-top-color: rgba(51,65,85,.9);
+            }
+        }
+    </style>
+
+    <div class="services-hero">
+        <div class="services-hero-badge">
+            {% if current_lang == 'es' %}
+                ✨ Oferta premium para tu negocio
+            {% elif current_lang == 'zh' %}
+                ✨ 高级服务展示
+            {% else %}
+                ✨ Premium business value
+            {% endif %}
+        </div>
+
+        <h1>
+            {{ t('manage_services', current_lang) }}
+        </h1>
+
+        <p>
+            {% if current_lang == 'es' %}
+                Crea, organiza y presenta tus servicios de una forma más profesional. Esta área está diseñada para que tu negocio se vea más sólido, más claro y más valioso tanto para ti como para tus clientes.
+            {% elif current_lang == 'zh' %}
+                以更专业的方式创建、整理并展示您的服务。这个页面旨在让您的业务看起来更完整、更清晰，也让客户感受到更高的价值。
+            {% else %}
+                Create, organize, and present your services in a more professional way. This area is designed to make your business feel more complete, more polished, and more valuable to both you and your clients.
+            {% endif %}
+        </p>
+    </div>
+
+    {% set active_services = services|selectattr('is_active')|list %}
+    {% set inactive_services = services|rejectattr('is_active')|list %}
+
+    <div class="services-stats">
+        <div class="services-stat">
+            <div class="services-stat-label">
+                {% if current_lang == 'es' %}Total{% elif current_lang == 'zh' %}总数{% else %}Total{% endif %}
+            </div>
+            <div class="services-stat-value">{{ services|length }}</div>
+        </div>
+
+        <div class="services-stat">
+            <div class="services-stat-label">
+                {{ t('active', current_lang) }}
+            </div>
+            <div class="services-stat-value">{{ active_services|length }}</div>
+        </div>
+
+        <div class="services-stat">
+            <div class="services-stat-label">
+                {{ t('inactive', current_lang) }}
+            </div>
+            <div class="services-stat-value">{{ inactive_services|length }}</div>
+        </div>
+    </div>
+
+    <div class="services-top-grid">
+        <section class="services-panel">
+            <div class="services-panel-header">
+                <h2 class="services-panel-title">
+                    {% if edit_service %}
+                        {{ t('edit', current_lang) }} {{ t('service_name', current_lang) }}
+                    {% else %}
+                        {{ t('add_service', current_lang) }}
+                    {% endif %}
+                </h2>
+
+                <p class="services-panel-subtitle">
+                    {% if current_lang == 'es' %}
+                        Agrega servicios con nombres claros, una descripción útil y un precio limpio para que tu catálogo se vea profesional.
+                    {% elif current_lang == 'zh' %}
+                        添加清晰的服务名称、实用的描述和明确的价格，让您的服务目录看起来更加专业。
+                    {% else %}
+                        Add services with clear names, useful descriptions, and clean pricing so your catalog feels professional and client-ready.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if service_success %}
+                <div class="services-notice services-notice-success">{{ service_success }}</div>
+            {% endif %}
+
+            {% if service_error %}
+                <div class="services-notice services-notice-error">{{ service_error }}</div>
+            {% endif %}
+
+            <div class="services-form-wrap">
+                {% if edit_service %}
+                    <form method="POST" action="{{ url_for('update_service_route', service_id=edit_service.id, lang=current_lang) }}">
+                {% else %}
+                    <form method="POST" action="{{ url_for('create_service_route', lang=current_lang) }}">
+                {% endif %}
+                    <input type="hidden" name="lang" value="{{ current_lang }}">
+
+                    <div class="services-form-grid">
+                        <div class="services-field full">
+                            <label class="services-label" for="name">
+                                {{ t('service_name', current_lang) }}
+                            </label>
+                            <input
+                                class="services-input"
+                                id="name"
+                                name="name"
+                                type="text"
+                                maxlength="120"
+                                required
+                                value="{{ (edit_service.name if edit_service else '')|default('', true) }}"
+                                placeholder="{% if current_lang == 'es' %}Ej. Limpieza profunda{% elif current_lang == 'zh' %}例如：深度清洁{% else %}Ex. Deep Cleaning{% endif %}"
+                            >
+                        </div>
+
+                        <div class="services-field full">
+                            <label class="services-label" for="description">
+                                {{ t('service_description', current_lang) }}
+                            </label>
+                            <textarea
+                                class="services-textarea"
+                                id="description"
+                                name="description"
+                                maxlength="1000"
+                                placeholder="{% if current_lang == 'es' %}Describe lo que incluye este servicio, lo que lo hace útil y cualquier detalle importante para el cliente.{% elif current_lang == 'zh' %}描述该服务包含的内容、客户能获得的价值以及任何重要细节。{% else %}Describe what this service includes, the value it provides, and any important client-facing details.{% endif %}"
+                            >{{ (edit_service.description if edit_service else '')|default('', true) }}</textarea>
+                        </div>
+
+                        <div class="services-field">
+                            <label class="services-label" for="price">
+                                {{ t('service_price', current_lang) }}
+                            </label>
+                            <div class="services-price-wrap">
+                                <span class="services-currency">$</span>
+                                <input
+                                    class="services-input"
+                                    id="price"
+                                    name="price"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                    value="{% if edit_service %}{{ '%.2f'|format(edit_service.price or 0) }}{% endif %}"
+                                    placeholder="0.00"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="services-form-actions">
+                        {% if edit_service %}
+                            <button type="submit" class="services-btn services-btn-primary">
+                                {{ t('update', current_lang) }}
+                            </button>
+
+                            <a href="{{ url_for('services_page', lang=current_lang) }}" class="services-btn services-btn-neutral">
+                                {{ t('cancel', current_lang) }}
+                            </a>
+                        {% else %}
+                            <button type="submit" class="services-btn services-btn-primary">
+                                {{ t('add_service', current_lang) }}
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+
+                <div class="services-mini-note">
+                    {% if current_lang == 'es' %}
+                        Consejo: usa nombres de servicio claros y descripciones breves pero útiles. Esto hará que la experiencia pública del cliente se vea mucho más premium.
+                    {% elif current_lang == 'zh' %}
+                        提示：使用清晰的服务名称和简洁但有价值的描述，这会让客户看到的公开页面更有高级感。
+                    {% else %}
+                        Tip: use clear service names and short but useful descriptions. It will make the public client experience feel much more premium.
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="services-list-wrap">
+            {% if services and services|length > 0 %}
+                <div class="services-card-grid">
+                    {% for service in services %}
+                        <article class="service-card">
+                            <div class="service-card-top">
+                                <div class="service-card-title-wrap">
+                                    <h3 class="service-card-title">{{ service.name }}</h3>
+
+                                    <div class="service-card-status {% if service.is_active %}active{% else %}inactive{% endif %}">
+                                        {% if service.is_active %}
+                                            {{ t('active', current_lang) }}
+                                        {% else %}
+                                            {{ t('inactive', current_lang) }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="service-card-price">
+                                    ${{ '%.2f'|format(service.price or 0) }}
+                                </div>
+                            </div>
+
+                            <p class="service-card-description">
+                                {% if service.description %}
+                                    {{ service.description }}
+                                {% else %}
+                                    {% if current_lang == 'es' %}
+                                        Sin descripción todavía.
+                                    {% elif current_lang == 'zh' %}
+                                        暂无描述。
+                                    {% else %}
+                                        No description yet.
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+
+                            <div class="service-card-footer">
+                                <div class="service-card-meta">
+                                    {% if current_lang == 'es' %}
+                                        Visible para tu negocio y listo para usarse en la experiencia del cliente.
+                                    {% elif current_lang == 'zh' %}
+                                        可在您的业务中使用，并可用于客户体验展示。
+                                    {% else %}
+                                        Ready for your business and available for client-facing presentation.
+                                    {% endif %}
+                                </div>
+
+                                <div class="service-card-actions">
+                                    <a
+                                        href="{{ url_for('services_page', lang=current_lang, edit=service.id) }}"
+                                        class="services-btn services-btn-secondary"
+                                    >
+                                        {{ t('edit', current_lang) }}
+                                    </a>
+
+                                    {% if service.is_active %}
+                                        <form class="service-inline-form" method="POST" action="{{ url_for('deactivate_service_route', service_id=service.id, lang=current_lang) }}">
+                                            <input type="hidden" name="lang" value="{{ current_lang }}">
+                                            <button type="submit" class="services-btn services-btn-danger">
+                                                {% if current_lang == 'es' %}
+                                                    Desactivar
+                                                {% elif current_lang == 'zh' %}
+                                                    停用
+                                                {% else %}
+                                                    Deactivate
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <form class="service-inline-form" method="POST" action="{{ url_for('activate_service_route', service_id=service.id, lang=current_lang) }}">
+                                            <input type="hidden" name="lang" value="{{ current_lang }}">
+                                            <button type="submit" class="services-btn services-btn-neutral">
+                                                {% if current_lang == 'es' %}
+                                                    Activar
+                                                {% elif current_lang == 'zh' %}
+                                                    启用
+                                                {% else %}
+                                                    Activate
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="services-empty">
+                    <h3>
+                        {% if current_lang == 'es' %}
+                            Todavía no has creado servicios
+                        {% elif current_lang == 'zh' %}
+                            您还没有创建任何服务
+                        {% else %}
+                            You have not created any services yet
+                        {% endif %}
+                    </h3>
+                    <p>
+                        {% if current_lang == 'es' %}
+                            Empieza agregando tu primer servicio para que tu negocio tenga una experiencia más organizada, más útil y más valiosa.
+                        {% elif current_lang == 'zh' %}
+                            从添加您的第一个服务开始，让您的业务体验更有条理、更实用，也更有价值。
+                        {% else %}
+                            Start by adding your first service so your business feels more organized, more useful, and more valuable right away.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

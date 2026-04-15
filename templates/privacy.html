@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 {% block title %}
 {% if lang == 'es' %}
 Política de Privacidad · BillBeam
+{% elif lang == 'zh' %}
+隐私政策 · BillBeam
 {% else %}
 Privacy Policy · BillBeam
 {% endif %}
@@ -12,6 +17,8 @@ Privacy Policy · BillBeam
 {% block meta_description %}
 {% if lang == 'es' %}
 Cómo BillBeam recopila, utiliza, comparte y protege información en su sitio web, aplicación móvil y servicios relacionados.
+{% elif lang == 'zh' %}
+BillBeam 如何在其网站、移动应用和相关服务中收集、使用、共享和保护信息。
 {% else %}
 How BillBeam collects, uses, shares, and protects information across its website, mobile application, and related services.
 {% endif %}
@@ -23,6 +30,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <div class="legal-eyebrow">
             {% if lang == 'es' %}
                 Privacidad y confianza
+            {% elif lang == 'zh' %}
+                隐私与信任
             {% else %}
                 Privacy & trust
             {% endif %}
@@ -31,6 +40,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h1>
             {% if lang == 'es' %}
                 Política de Privacidad
+            {% elif lang == 'zh' %}
+                隐私政策
             {% else %}
                 Privacy Policy
             {% endif %}
@@ -39,6 +50,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p class="legal-lead">
             {% if lang == 'es' %}
                 Esta Política de Privacidad explica cómo BillBeam recopila, utiliza, comparte y protege información cuando utilizas nuestro sitio web, aplicación móvil y servicios relacionados.
+            {% elif lang == 'zh' %}
+                本隐私政策说明当你使用 BillBeam 的网站、移动应用和相关服务时，BillBeam 如何收集、使用、共享和保护信息。
             {% else %}
                 This Privacy Policy explains how BillBeam collects, uses, shares, and protects information when you use our website, mobile application, and related services.
             {% endif %}
@@ -48,6 +61,8 @@ How BillBeam collects, uses, shares, and protects information across its website
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Última actualización: {{ now().strftime("%B %Y") }}
+                {% elif lang == 'zh' %}
+                    最后更新：{{ now().strftime("%B %Y") }}
                 {% else %}
                     Last updated: {{ now().strftime("%B %Y") }}
                 {% endif %}
@@ -56,6 +71,8 @@ How BillBeam collects, uses, shares, and protects information across its website
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Aplicable al sitio, app y servicios relacionados
+                {% elif lang == 'zh' %}
+                    适用于网站、应用和相关服务
                 {% else %}
                     Applies to the site, app, and related services
                 {% endif %}
@@ -68,6 +85,9 @@ How BillBeam collects, uses, shares, and protects information across its website
             {% if lang == 'es' %}
                 Esta Política de Privacidad explica cómo BillBeam recopila, utiliza, comparte y protege información cuando utilizas nuestro sitio web, aplicación móvil y servicios relacionados (colectivamente, el “Servicio”).
                 Al acceder o utilizar BillBeam, aceptas las prácticas descritas en esta política.
+            {% elif lang == 'zh' %}
+                本隐私政策说明当你使用 BillBeam 的网站、移动应用和相关服务（统称为“服务”）时，BillBeam 如何收集、使用、共享和保护信息。
+                访问或使用 BillBeam 即表示你同意本政策中描述的做法。
             {% else %}
                 This Privacy Policy explains how BillBeam collects, uses, shares, and protects information when you use our website, mobile application, and related services (collectively, the “Service”).
                 By accessing or using BillBeam, you agree to the practices described in this policy.
@@ -79,6 +99,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 1. Información que recopilamos
+            {% elif lang == 'zh' %}
+                1. 我们收集的信息
             {% else %}
                 1. Information We Collect
             {% endif %}
@@ -87,6 +109,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Podemos recopilar diferentes tipos de información dependiendo de cómo utilices BillBeam.
+            {% elif lang == 'zh' %}
+                根据你使用 BillBeam 的方式不同，我们可能会收集不同类型的信息。
             {% else %}
                 We may collect different types of information depending on how you use BillBeam.
             {% endif %}
@@ -94,33 +118,41 @@ How BillBeam collects, uses, shares, and protects information across its website
 
         <ul>
             <li>
-                <strong>{% if lang == 'es' %}Información de cuenta{% else %}Account information{% endif %}</strong>
+                <strong>{% if lang == 'es' %}Información de cuenta{% elif lang == 'zh' %}账户信息{% else %}Account information{% endif %}</strong>
                 {% if lang == 'es' %}
                     Puede incluir nombre, dirección de correo electrónico, credenciales de acceso y otra información necesaria para crear o mantener una cuenta.
+                {% elif lang == 'zh' %}
+                    这可能包括你的姓名、电子邮件地址、登录凭证，以及创建或维护账户所需的其他信息。
                 {% else %}
                     This may include your name, email address, login credentials, and other information needed to create or maintain an account.
                 {% endif %}
             </li>
             <li>
-                <strong>{% if lang == 'es' %}Datos de facturación y clientes{% else %}Invoice and client data{% endif %}</strong>
+                <strong>{% if lang == 'es' %}Datos de facturación y clientes{% elif lang == 'zh' %}发票和客户数据{% else %}Invoice and client data{% endif %}</strong>
                 {% if lang == 'es' %}
                     Puede incluir nombres de clientes, direcciones de correo, datos de contacto, conceptos, montos, fechas de vencimiento, notas y otra información que introduzcas en facturas o perfiles.
+                {% elif lang == 'zh' %}
+                    这可能包括客户姓名、电子邮件地址、联系方式、项目描述、金额、到期日、备注，以及你在发票或档案中输入的其他信息。
                 {% else %}
                     This may include client names, email addresses, contact details, descriptions, amounts, due dates, notes, and other information you enter into invoices or profiles.
                 {% endif %}
             </li>
             <li>
-                <strong>{% if lang == 'es' %}Información de pago{% else %}Payment information{% endif %}</strong>
+                <strong>{% if lang == 'es' %}Información de pago{% elif lang == 'zh' %}付款信息{% else %}Payment information{% endif %}</strong>
                 {% if lang == 'es' %}
                     Los pagos pueden procesarse mediante proveedores externos, como Stripe. BillBeam no está diseñado para almacenar números completos de tarjetas de pago en sus propios sistemas.
+                {% elif lang == 'zh' %}
+                    付款可能通过第三方提供商处理，例如 Stripe。BillBeam 的系统并非为存储完整支付卡号而设计。
                 {% else %}
                     Payments may be processed by third-party providers such as Stripe. BillBeam is not designed to store full payment card numbers in its own systems.
                 {% endif %}
             </li>
             <li>
-                <strong>{% if lang == 'es' %}Datos técnicos y de uso{% else %}Technical and usage data{% endif %}</strong>
+                <strong>{% if lang == 'es' %}Datos técnicos y de uso{% elif lang == 'zh' %}技术与使用数据{% else %}Technical and usage data{% endif %}</strong>
                 {% if lang == 'es' %}
                     Puede incluir dirección IP, tipo de navegador, tipo de dispositivo, sistema operativo, identificadores técnicos, rutas visitadas, eventos de sesión e información general de uso.
+                {% elif lang == 'zh' %}
+                    这可能包括 IP 地址、浏览器类型、设备类型、操作系统、技术标识符、访问路径、会话事件以及一般使用信息。
                 {% else %}
                     This may include IP address, browser type, device type, operating system, technical identifiers, visited pages, session events, and general usage information.
                 {% endif %}
@@ -132,6 +164,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 2. Cómo utilizamos la información
+            {% elif lang == 'zh' %}
+                2. 我们如何使用信息
             {% else %}
                 2. How We Use Information
             {% endif %}
@@ -139,17 +173,19 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Podemos utilizar la información recopilada para:
+            {% elif lang == 'zh' %}
+                我们可能会将收集到的信息用于：
             {% else %}
                 We may use collected information to:
             {% endif %}
         </p>
         <ul>
-            <li>{% if lang == 'es' %}proporcionar, operar y mantener el Servicio{% else %}provide, operate, and maintain the Service{% endif %}</li>
-            <li>{% if lang == 'es' %}crear, almacenar y gestionar facturas, clientes y preferencias{% else %}create, store, and manage invoices, clients, and preferences{% endif %}</li>
-            <li>{% if lang == 'es' %}procesar suscripciones, cobros y actividades relacionadas con pagos{% else %}process subscriptions, charges, and payment-related activity{% endif %}</li>
-            <li>{% if lang == 'es' %}mejorar estabilidad, rendimiento, seguridad y experiencia del usuario{% else %}improve stability, performance, security, and user experience{% endif %}</li>
-            <li>{% if lang == 'es' %}responder solicitudes de soporte y comunicaciones operativas{% else %}respond to support requests and operational communications{% endif %}</li>
-            <li>{% if lang == 'es' %}detectar, prevenir o investigar fraudes, abusos o uso no autorizado{% else %}detect, prevent, or investigate fraud, abuse, or unauthorized use{% endif %}</li>
+            <li>{% if lang == 'es' %}proporcionar, operar y mantener el Servicio{% elif lang == 'zh' %}提供、运营和维护服务{% else %}provide, operate, and maintain the Service{% endif %}</li>
+            <li>{% if lang == 'es' %}crear, almacenar y gestionar facturas, clientes y preferencias{% elif lang == 'zh' %}创建、存储和管理发票、客户和偏好设置{% else %}create, store, and manage invoices, clients, and preferences{% endif %}</li>
+            <li>{% if lang == 'es' %}procesar suscripciones, cobros y actividades relacionadas con pagos{% elif lang == 'zh' %}处理订阅、收费和付款相关活动{% else %}process subscriptions, charges, and payment-related activity{% endif %}</li>
+            <li>{% if lang == 'es' %}mejorar estabilidad, rendimiento, seguridad y experiencia del usuario{% elif lang == 'zh' %}改进稳定性、性能、安全性和用户体验{% else %}improve stability, performance, security, and user experience{% endif %}</li>
+            <li>{% if lang == 'es' %}responder solicitudes de soporte y comunicaciones operativas{% elif lang == 'zh' %}回应支持请求和运营沟通{% else %}respond to support requests and operational communications{% endif %}</li>
+            <li>{% if lang == 'es' %}detectar, prevenir o investigar fraudes, abusos o uso no autorizado{% elif lang == 'zh' %}检测、预防或调查欺诈、滥用或未经授权的使用{% else %}detect, prevent, or investigate fraud, abuse, or unauthorized use{% endif %}</li>
         </ul>
     </section>
 
@@ -157,6 +193,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 3. Asistencia de IA
+            {% elif lang == 'zh' %}
+                3. AI 辅助功能
             {% else %}
                 3. AI Assistance
             {% endif %}
@@ -164,6 +202,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 BillBeam puede incluir funciones de asistencia basadas en inteligencia artificial para ayudar con redacción, sugerencias, resúmenes o interpretación general de información dentro del Servicio.
+            {% elif lang == 'zh' %}
+                BillBeam 可能包含基于人工智能的辅助功能，用于帮助撰写内容、提供建议、生成摘要或解释服务中的一般信息。
             {% else %}
                 BillBeam may include AI-powered assistance features to help with drafting, suggestions, summaries, or general interpretation of information within the Service.
             {% endif %}
@@ -171,6 +211,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Para generar respuestas, estas funciones pueden utilizar información contextual disponible dentro de la página, pantalla o flujo activo. Estas funciones se ofrecen únicamente como ayuda general y no constituyen asesoramiento legal, fiscal, contable o financiero.
+            {% elif lang == 'zh' %}
+                为生成回复，这些功能可能会使用当前页面、界面或流程中可用的上下文信息。这些功能仅作为一般性辅助提供，不构成法律、税务、会计或财务建议。
             {% else %}
                 To generate responses, these features may use contextual information available within the active page, screen, or workflow. These features are provided for general assistance only and do not constitute legal, tax, accounting, or financial advice.
             {% endif %}
@@ -181,6 +223,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 4. Cómo compartimos información
+            {% elif lang == 'zh' %}
+                4. 我们如何共享信息
             {% else %}
                 4. How We Share Information
             {% endif %}
@@ -188,19 +232,23 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 BillBeam no vende información personal. Podemos compartir información limitada con terceros cuando sea razonablemente necesario para operar el Servicio, por ejemplo con:
+            {% elif lang == 'zh' %}
+                BillBeam 不出售个人信息。在为运营服务而有合理必要时，我们可能会与第三方共享有限的信息，例如：
             {% else %}
                 BillBeam does not sell personal information. We may share limited information with third parties where reasonably necessary to operate the Service, for example with:
             {% endif %}
         </p>
         <ul>
-            <li>{% if lang == 'es' %}procesadores de pago{% else %}payment processors{% endif %}</li>
-            <li>{% if lang == 'es' %}proveedores de hosting e infraestructura{% else %}hosting and infrastructure providers{% endif %}</li>
-            <li>{% if lang == 'es' %}servicios de correo electrónico y comunicación{% else %}email and communication services{% endif %}</li>
-            <li>{% if lang == 'es' %}proveedores técnicos necesarios para funciones del producto{% else %}technical providers needed for product functionality{% endif %}</li>
+            <li>{% if lang == 'es' %}procesadores de pago{% elif lang == 'zh' %}支付处理服务商{% else %}payment processors{% endif %}</li>
+            <li>{% if lang == 'es' %}proveedores de hosting e infraestructura{% elif lang == 'zh' %}托管和基础设施提供商{% else %}hosting and infrastructure providers{% endif %}</li>
+            <li>{% if lang == 'es' %}servicios de correo electrónico y comunicación{% elif lang == 'zh' %}电子邮件和通信服务提供商{% else %}email and communication services{% endif %}</li>
+            <li>{% if lang == 'es' %}proveedores técnicos necesarios para funciones del producto{% elif lang == 'zh' %}支持产品功能所需的技术服务商{% else %}technical providers needed for product functionality{% endif %}</li>
         </ul>
         <p>
             {% if lang == 'es' %}
                 También podremos divulgar información cuando sea necesario para cumplir una obligación legal, aplicar nuestros acuerdos o proteger derechos, seguridad o integridad del Servicio o de otros.
+            {% elif lang == 'zh' %}
+                当为了遵守法律义务、执行我们的协议，或保护服务本身或他人的权利、安全或完整性而有必要时，我们也可能披露相关信息。
             {% else %}
                 We may also disclose information where necessary to comply with legal obligations, enforce our agreements, or protect the rights, safety, or integrity of the Service or others.
             {% endif %}
@@ -211,6 +259,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 5. Retención de datos
+            {% elif lang == 'zh' %}
+                5. 数据保留
             {% else %}
                 5. Data Retention
             {% endif %}
@@ -218,6 +268,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Podemos conservar información mientras sea necesaria para operar el Servicio, mantener tu cuenta, cumplir fines operativos razonables, resolver disputas, aplicar acuerdos o cumplir obligaciones legales.
+            {% elif lang == 'zh' %}
+                只要为了运营服务、维护你的账户、实现合理的运营目的、解决争议、执行协议或履行法律义务而有需要，我们就可能保留相关信息。
             {% else %}
                 We may retain information as necessary to operate the Service, maintain your account, fulfill reasonable operational purposes, resolve disputes, enforce agreements, or comply with legal obligations.
             {% endif %}
@@ -225,6 +277,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Cuando sea apropiado y posible, la información puede eliminarse o anonimizarse conforme a políticas internas o solicitudes válidas del usuario.
+            {% elif lang == 'zh' %}
+                在适当且可行的情况下，信息可能会依据内部政策或有效的用户请求被删除或匿名化。
             {% else %}
                 Where appropriate and feasible, information may be deleted or anonymized in accordance with internal policies or valid user requests.
             {% endif %}
@@ -235,6 +289,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 6. Seguridad
+            {% elif lang == 'zh' %}
+                6. 安全
             {% else %}
                 6. Security
             {% endif %}
@@ -242,6 +298,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 BillBeam busca aplicar medidas administrativas, técnicas y operativas razonables para ayudar a proteger la información. Sin embargo, ningún sistema de transmisión o almacenamiento electrónico puede garantizar seguridad absoluta.
+            {% elif lang == 'zh' %}
+                BillBeam 致力于采用合理的管理、技术和运营措施来帮助保护信息。但任何传输或电子存储系统都无法保证绝对安全。
             {% else %}
                 BillBeam seeks to apply reasonable administrative, technical, and operational measures to help protect information. However, no system of transmission or electronic storage can guarantee absolute security.
             {% endif %}
@@ -252,6 +310,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 7. Cookies y tecnologías similares
+            {% elif lang == 'zh' %}
+                7. Cookie 和类似技术
             {% else %}
                 7. Cookies and Similar Technologies
             {% endif %}
@@ -259,6 +319,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 BillBeam puede utilizar cookies o tecnologías similares para mantener sesiones, recordar preferencias, mejorar seguridad y apoyar la funcionalidad general del Servicio. Consulta nuestra Política de Cookies para más información.
+            {% elif lang == 'zh' %}
+                BillBeam 可能使用 Cookie 或类似技术来维持会话、记住偏好、提升安全性并支持服务的一般功能。更多信息请参阅我们的 Cookie 政策。
             {% else %}
                 BillBeam may use cookies or similar technologies to maintain sessions, remember preferences, improve security, and support general Service functionality. Please see our Cookie Policy for more information.
             {% endif %}
@@ -269,6 +331,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 8. Usuarios internacionales
+            {% elif lang == 'zh' %}
+                8. 国际用户
             {% else %}
                 8. International Users
             {% endif %}
@@ -276,6 +340,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Si accedes al Servicio desde fuera del país donde opera BillBeam o sus proveedores, entiendes que tu información puede ser procesada o almacenada en jurisdicciones distintas a la tuya, sujeto a la ley aplicable.
+            {% elif lang == 'zh' %}
+                如果你从 BillBeam 或其服务提供商所在国家/地区以外访问本服务，你理解你的信息可能会在与你所在地不同的司法辖区被处理或存储，并受适用法律约束。
             {% else %}
                 If you access the Service from outside the country where BillBeam or its providers operate, you understand that your information may be processed or stored in jurisdictions different from your own, subject to applicable law.
             {% endif %}
@@ -286,6 +352,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 9. Cambios a esta política
+            {% elif lang == 'zh' %}
+                9. 本政策的变更
             {% else %}
                 9. Changes to This Policy
             {% endif %}
@@ -293,6 +361,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Podemos actualizar esta Política de Privacidad ocasionalmente para reflejar cambios en el Servicio, prácticas operativas o requisitos legales. Las versiones actualizadas se publicarán en esta página.
+            {% elif lang == 'zh' %}
+                我们可能会不时更新本隐私政策，以反映服务、运营做法或法律要求的变化。更新后的版本将发布在本页面上。
             {% else %}
                 We may update this Privacy Policy from time to time to reflect changes in the Service, operational practices, or legal requirements. Updated versions will be posted on this page.
             {% endif %}
@@ -303,6 +373,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <h2>
             {% if lang == 'es' %}
                 10. Contacto
+            {% elif lang == 'zh' %}
+                10. 联系方式
             {% else %}
                 10. Contact
             {% endif %}
@@ -310,6 +382,8 @@ How BillBeam collects, uses, shares, and protects information across its website
         <p>
             {% if lang == 'es' %}
                 Si tienes preguntas sobre esta Política de Privacidad, puedes contactarnos a través de la sección de ayuda o soporte dentro del Servicio.
+            {% elif lang == 'zh' %}
+                如果你对本隐私政策有任何疑问，可以通过服务中的帮助或支持页面联系我们。
             {% else %}
                 If you have questions about this Privacy Policy, you may contact us through the help or support section within the Service.
             {% endif %}

@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 {% block title %}
 {% if lang == 'es' %}
 Política de Cookies · BillBeam
+{% elif lang == 'zh' %}
+Cookie 政策 · BillBeam
 {% else %}
 Cookie Policy · BillBeam
 {% endif %}
@@ -12,6 +17,8 @@ Cookie Policy · BillBeam
 {% block meta_description %}
 {% if lang == 'es' %}
 Cómo BillBeam usa cookies y tecnologías similares en su sitio web, aplicación móvil y servicios relacionados.
+{% elif lang == 'zh' %}
+BillBeam 如何在其网站、移动应用和相关服务中使用 Cookie 及类似技术。
 {% else %}
 How BillBeam uses cookies and similar technologies across its website, mobile application, and related services.
 {% endif %}
@@ -24,6 +31,8 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
         <div class="legal-eyebrow">
             {% if lang == 'es' %}
                 Cookies y tecnologías similares
+            {% elif lang == 'zh' %}
+                Cookie 与类似技术
             {% else %}
                 Cookies and similar technologies
             {% endif %}
@@ -32,6 +41,8 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
         <h1>
             {% if lang == 'es' %}
                 Política de Cookies
+            {% elif lang == 'zh' %}
+                Cookie 政策
             {% else %}
                 Cookie Policy
             {% endif %}
@@ -40,6 +51,8 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
         <p class="legal-lead">
             {% if lang == 'es' %}
                 Esta Política de Cookies explica cómo BillBeam utiliza cookies y tecnologías similares cuando accedes a su sitio web, aplicación móvil y servicios relacionados.
+            {% elif lang == 'zh' %}
+                本 Cookie 政策说明当你访问 BillBeam 的网站、移动应用和相关服务时，BillBeam 如何使用 Cookie 及类似技术。
             {% else %}
                 This Cookie Policy explains how BillBeam uses cookies and similar technologies when you access its website, mobile application, and related services.
             {% endif %}
@@ -49,6 +62,8 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Última actualización: {{ now().strftime("%B %Y") }}
+                {% elif lang == 'zh' %}
+                    最后更新：{{ now().strftime("%B %Y") }}
                 {% else %}
                     Last updated: {{ now().strftime("%B %Y") }}
                 {% endif %}
@@ -57,6 +72,8 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Sesiones, preferencias y seguridad
+                {% elif lang == 'zh' %}
+                    会话、偏好与安全
                 {% else %}
                     Sessions, preferences, and security
                 {% endif %}
@@ -65,10 +82,20 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}1. Qué son las cookies{% else %}1. What Cookies Are{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                1. Qué son las cookies
+            {% elif lang == 'zh' %}
+                1. 什么是 Cookie
+            {% else %}
+                1. What Cookies Are
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Las cookies son pequeños archivos o identificadores almacenados en tu navegador, dispositivo o entorno de aplicación. Ayudan a recordar sesiones, preferencias y cierta información técnica necesaria para que el Servicio funcione correctamente.
+            {% elif lang == 'zh' %}
+                Cookie 是存储在你的浏览器、设备或应用环境中的小型文件或标识符。它们有助于记住会话、偏好设置以及服务正常运行所需的某些技术信息。
             {% else %}
                 Cookies are small files or identifiers stored in your browser, device, or application environment. They help remember sessions, preferences, and certain technical information needed for the Service to function properly.
             {% endif %}
@@ -76,45 +103,69 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}2. Cómo utiliza BillBeam las cookies{% else %}2. How BillBeam Uses Cookies{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                2. Cómo utiliza BillBeam las cookies
+            {% elif lang == 'zh' %}
+                2. BillBeam 如何使用 Cookie
+            {% else %}
+                2. How BillBeam Uses Cookies
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede utilizar cookies o tecnologías similares para:
+            {% elif lang == 'zh' %}
+                BillBeam 可能使用 Cookie 或类似技术来：
             {% else %}
                 BillBeam may use cookies or similar technologies to:
             {% endif %}
         </p>
         <ul>
-            <li>{% if lang == 'es' %}mantener sesiones activas y autenticación{% else %}maintain active sessions and authentication{% endif %}</li>
-            <li>{% if lang == 'es' %}recordar idioma, tema visual u otras preferencias razonables{% else %}remember language, visual theme, or other reasonable preferences{% endif %}</li>
-            <li>{% if lang == 'es' %}apoyar seguridad y detección de actividad anómala{% else %}support security and detection of unusual activity{% endif %}</li>
-            <li>{% if lang == 'es' %}mejorar rendimiento y estabilidad del Servicio{% else %}improve Service performance and stability{% endif %}</li>
+            <li>{% if lang == 'es' %}mantener sesiones activas y autenticación{% elif lang == 'zh' %}维持活动会话和身份验证{% else %}maintain active sessions and authentication{% endif %}</li>
+            <li>{% if lang == 'es' %}recordar idioma, tema visual u otras preferencias razonables{% elif lang == 'zh' %}记住语言、视觉主题或其他合理偏好{% else %}remember language, visual theme, or other reasonable preferences{% endif %}</li>
+            <li>{% if lang == 'es' %}apoyar seguridad y detección de actividad anómala{% elif lang == 'zh' %}支持安全措施和异常活动检测{% else %}support security and detection of unusual activity{% endif %}</li>
+            <li>{% if lang == 'es' %}mejorar rendimiento y estabilidad del Servicio{% elif lang == 'zh' %}提升服务性能和稳定性{% else %}improve Service performance and stability{% endif %}</li>
         </ul>
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}3. Tipos de cookies o tecnologías similares{% else %}3. Types of Cookies or Similar Technologies{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                3. Tipos de cookies o tecnologías similares
+            {% elif lang == 'zh' %}
+                3. Cookie 或类似技术的类型
+            {% else %}
+                3. Types of Cookies or Similar Technologies
+            {% endif %}
+        </h2>
         <ul>
             <li>
-                <strong>{% if lang == 'es' %}Esenciales{% else %}Essential{% endif %}</strong>
+                <strong>{% if lang == 'es' %}Esenciales{% elif lang == 'zh' %}必要型{% else %}Essential{% endif %}</strong>
                 {% if lang == 'es' %}
                     necesarias para funciones principales como autenticación, seguridad, navegación o funcionalidad base del Servicio.
+                {% elif lang == 'zh' %}
+                    用于身份验证、安全、导航或服务基础功能等核心用途。
                 {% else %}
                     needed for core functions such as authentication, security, navigation, or basic Service functionality.
                 {% endif %}
             </li>
             <li>
-                <strong>{% if lang == 'es' %}De preferencia{% else %}Preference{% endif %}</strong>
+                <strong>{% if lang == 'es' %}De preferencia{% elif lang == 'zh' %}偏好型{% else %}Preference{% endif %}</strong>
                 {% if lang == 'es' %}
                     utilizadas para recordar configuraciones seleccionadas por el usuario.
+                {% elif lang == 'zh' %}
+                    用于记住用户选择的设置。
                 {% else %}
                     used to remember user-selected settings.
                 {% endif %}
             </li>
             <li>
-                <strong>{% if lang == 'es' %}De rendimiento o análisis{% else %}Performance or analytics{% endif %}</strong>
+                <strong>{% if lang == 'es' %}De rendimiento o análisis{% elif lang == 'zh' %}性能或分析型{% else %}Performance or analytics{% endif %}</strong>
                 {% if lang == 'es' %}
                     si se implementan herramientas de medición en el futuro, podrán utilizarse para comprender uso general, errores o rendimiento del Servicio.
+                {% elif lang == 'zh' %}
+                    如果未来引入测量工具，它们可能用于了解一般使用情况、错误或服务性能。
                 {% else %}
                     if measurement tools are implemented in the future, they may be used to understand general usage, errors, or Service performance.
                 {% endif %}
@@ -123,10 +174,20 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}4. Tecnologías de terceros{% else %}4. Third-Party Technologies{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                4. Tecnologías de terceros
+            {% elif lang == 'zh' %}
+                4. 第三方技术
+            {% else %}
+                4. Third-Party Technologies
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Algunas funciones de BillBeam pueden depender de proveedores externos, como procesadores de pago, servicios de correo, hosting o infraestructura. Esos terceros pueden utilizar sus propias cookies o tecnologías similares conforme a sus propias políticas.
+            {% elif lang == 'zh' %}
+                BillBeam 的某些功能可能依赖第三方提供商，例如支付处理商、邮件服务、托管或基础设施服务商。这些第三方可能会根据其自身政策使用自己的 Cookie 或类似技术。
             {% else %}
                 Some BillBeam features may rely on third-party providers such as payment processors, email services, hosting, or infrastructure providers. Those third parties may use their own cookies or similar technologies according to their own policies.
             {% endif %}
@@ -134,10 +195,20 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}5. Gestión de cookies{% else %}5. Managing Cookies{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                5. Gestión de cookies
+            {% elif lang == 'zh' %}
+                5. 管理 Cookie
+            {% else %}
+                5. Managing Cookies
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 La mayoría de los navegadores y algunos entornos móviles permiten bloquear, limitar o eliminar cookies desde la configuración correspondiente. Ten en cuenta que desactivar ciertas cookies o tecnologías similares puede afectar funcionalidades del Servicio.
+            {% elif lang == 'zh' %}
+                大多数浏览器和某些移动环境允许你通过相应设置阻止、限制或删除 Cookie。请注意，禁用某些 Cookie 或类似技术可能会影响服务功能。
             {% else %}
                 Most browsers and some mobile environments allow you to block, limit, or delete cookies through the applicable settings. Please note that disabling certain cookies or similar technologies may affect Service functionality.
             {% endif %}
@@ -145,10 +216,20 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}6. Cambios a esta política{% else %}6. Changes to This Policy{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                6. Cambios a esta política
+            {% elif lang == 'zh' %}
+                6. 本政策的变更
+            {% else %}
+                6. Changes to This Policy
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede actualizar esta Política de Cookies ocasionalmente para reflejar cambios en el Servicio, prácticas operativas o requisitos legales.
+            {% elif lang == 'zh' %}
+                BillBeam 可能会不时更新本 Cookie 政策，以反映服务、运营实践或法律要求的变化。
             {% else %}
                 BillBeam may update this Cookie Policy from time to time to reflect changes in the Service, operational practices, or legal requirements.
             {% endif %}
@@ -156,10 +237,20 @@ How BillBeam uses cookies and similar technologies across its website, mobile ap
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}7. Contacto{% else %}7. Contact{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                7. Contacto
+            {% elif lang == 'zh' %}
+                7. 联系方式
+            {% else %}
+                7. Contact
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Si tienes preguntas sobre esta Política de Cookies, puedes contactar a través de la sección de ayuda o soporte dentro del Servicio.
+            {% elif lang == 'zh' %}
+                如果你对本 Cookie 政策有任何疑问，可以通过服务中的帮助或支持页面联系我们。
             {% else %}
                 If you have questions about this Cookie Policy, you may contact us through the help or support section within the Service.
             {% endif %}
@@ -305,6 +396,14 @@ body.dark .legal-card p{
 
 body.dark .legal-card li{
     color:#dbe4f0;
+}
+
+.legal-card strong{
+    color:#0f172a;
+}
+
+body.dark .legal-card strong{
+    color:#f8fafc;
 }
 
 @media (max-width: 700px){

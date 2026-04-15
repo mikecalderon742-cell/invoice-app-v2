@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
 {% set current_plan_key = user_plan or 'free' %}
 {% set is_simple_plan = current_plan_key == 'simple' %}
 {% set can_collect_payments_here = can_collect_payments_current if can_collect_payments_current is defined else (current_plan_key in ['pro', 'enterprise']) %}
@@ -361,44 +361,123 @@
 
     {% if is_authenticated %}
         <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Crear factura{% else %}Create Invoice{% endif %}
+            {% if lang == 'es' %}
+                Crear factura
+            {% elif lang == 'zh' %}
+                创建发票
+            {% else %}
+                Create Invoice
+            {% endif %}
         </a>
         <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Historial de facturas{% else %}Invoice History{% endif %}
+            {% if lang == 'es' %}
+                Historial de facturas
+            {% elif lang == 'zh' %}
+                发票历史
+            {% else %}
+                Invoice History
+            {% endif %}
         </a>
         <a href="/clients{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Clientes{% else %}Clients{% endif %}
+            {% if lang == 'es' %}
+                Clientes
+            {% elif lang == 'zh' %}
+                客户
+            {% else %}
+                Clients
+            {% endif %}
+        </a>
+        <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}
+                Servicios
+            {% elif lang == 'zh' %}
+                服务
+            {% else %}
+                Services
+            {% endif %}
         </a>
         <a href="/search{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+            {% if lang == 'es' %}
+                Buscar
+            {% elif lang == 'zh' %}
+                搜索
+            {% else %}
+                Search
+            {% endif %}
         </a>
         <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Precios{% else %}Pricing{% endif %}
+            {% if lang == 'es' %}
+                Precios
+            {% elif lang == 'zh' %}
+                价格
+            {% else %}
+                Pricing
+            {% endif %}
         </a>
         <a href="/settings{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Configuración{% else %}Settings{% endif %}
+            {% if lang == 'es' %}
+                Configuración
+            {% elif lang == 'zh' %}
+                设置
+            {% else %}
+                Settings
+            {% endif %}
         </a>
         {% if can_collect_payments_here %}
         <a href="/settings{% if lang %}?lang={{ lang }}#payments-payouts{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Pagos y retiros{% else %}Payments & Payouts{% endif %}
+            {% if lang == 'es' %}
+                Pagos y retiros
+            {% elif lang == 'zh' %}
+                收款与提现
+            {% else %}
+                Payments & Payouts
+            {% endif %}
         </a>
         {% endif %}
-            {% if lang == 'es' %}Pagos y retiros{% else %}Payments & Payouts{% endif %}
-        </a>
         <a href="/billing/manage{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Gestionar suscripción{% else %}Manage Subscription{% endif %}
+            {% if lang == 'es' %}
+                Gestionar suscripción
+            {% elif lang == 'zh' %}
+                管理订阅
+            {% else %}
+                Manage Subscription
+            {% endif %}
         </a>
         <a href="/help{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Ayuda{% else %}Help{% endif %}
+            {% if lang == 'es' %}
+                Ayuda
+            {% elif lang == 'zh' %}
+                帮助
+            {% else %}
+                Help
+            {% endif %}
         </a>
         <a href="/support{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Soporte{% else %}Support{% endif %}
+            {% if lang == 'es' %}
+                Soporte
+            {% elif lang == 'zh' %}
+                支持
+            {% else %}
+                Support
+            {% endif %}
         </a>
         <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}Contacto{% else %}Contact{% endif %}
+            {% if lang == 'es' %}
+                Contacto
+            {% elif lang == 'zh' %}
+                联系我们
+            {% else %}
+                Contact
+            {% endif %}
         </a>
-        <a href="/logout" class="sidebar-link">
-            {% if lang == 'es' %}Cerrar sesión{% else %}Logout{% endif %}
+        <a href="/logout{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}
+                Cerrar sesión
+            {% elif lang == 'zh' %}
+                退出登录
+            {% else %}
+                Logout
+            {% endif %}
         </a>
     {% else %}
         <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
@@ -423,8 +502,9 @@
 
     <div class="sidebar-controls">
         <div class="lang-toggle">
-            <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
+            <a href="{{ request.path }}?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
             <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
+            <a href="{{ request.path }}?lang=zh" class="{% if lang == 'zh' %}active{% endif %}">中文</a>
         </div>
 
         <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
@@ -477,18 +557,41 @@
                 </span>
 
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
-                    {% if lang == 'es' %}Panel{% else %}Dashboard{% endif %}
+                    {% if lang == 'es' %}
+                        Panel
+                    {% elif lang == 'zh' %}
+                        仪表板
+                    {% else %}
+                        Dashboard
+                    {% endif %}
+                </a>
+
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
+                    {% if lang == 'es' %}
+                        Servicios
+                    {% elif lang == 'zh' %}
+                        服务
+                    {% else %}
+                        Services
+                    {% endif %}
                 </a>
 
                 {% if can_collect_payments_here %}
                 <a href="/settings{% if lang %}?lang={{ lang }}#payments-payouts{% endif %}" class="nav-primary-link">
-                    {% if lang == 'es' %}Pagos{% else %}Payments{% endif %}
+                    {% if lang == 'es' %}
+                        Pagos
+                    {% elif lang == 'zh' %}
+                        收款
+                    {% else %}
+                        Payments
+                    {% endif %}
                 </a>
                 {% endif %}
 
                 <div class="lang-toggle">
-                    <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
+                    <a href="{{ request.path }}?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
                     <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
+                    <a href="{{ request.path }}?lang=zh" class="{% if lang == 'zh' %}active{% endif %}">中文</a>
                 </div>
 
                 <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
@@ -503,10 +606,11 @@
                     {% if lang == 'es' %}Crear cuenta{% else %}Sign Up{% endif %}
                 </a>
 
-                <div class="lang-toggle">
-                    <a href="{{ request.path }}?lang=en" class="{% if lang != 'es' %}active{% endif %}">EN</a>
-                    <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
-                </div>
+            <div class="lang-toggle">
+                <a href="{{ request.path }}?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
+                <a href="{{ request.path }}?lang=es" class="{% if lang == 'es' %}active{% endif %}">ES</a>
+                <a href="{{ request.path }}?lang=zh" class="{% if lang == 'zh' %}active{% endif %}">中文</a>
+            </div>
 
                 <button class="theme-toggle js-theme-toggle" aria-label="Toggle theme" type="button">🌙</button>
             {% endif %}

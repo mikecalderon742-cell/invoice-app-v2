@@ -3,6 +3,8 @@
 {% block title %}
   {% if lang == 'es' %}
     Factura {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    发票 {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
   {% else %}
     Invoice {{ inv_label }} · {{ business_profile.business_name or "BillBeam" }}
   {% endif %}
@@ -12,12 +14,16 @@
   {% if show_pay_button %}
     {% if lang == 'es' %}
       Revisa la factura {{ inv_label }}, descarga el PDF y completa el pago de forma segura con {{ business_profile.business_name or "BillBeam" }}.
+    {% elif lang == 'zh' %}
+      查看发票 {{ inv_label }}，下载 PDF，并通过 {{ business_profile.business_name or "BillBeam" }} 安全完成付款。
     {% else %}
       Review invoice {{ inv_label }}, download the PDF, and complete payment securely with {{ business_profile.business_name or "BillBeam" }}.
     {% endif %}
   {% else %}
     {% if lang == 'es' %}
       Revisa la factura {{ inv_label }}, descarga el PDF y guarda esta factura o recibo con {{ business_profile.business_name or "BillBeam" }}.
+    {% elif lang == 'zh' %}
+      查看发票 {{ inv_label }}，下载 PDF，并保存来自 {{ business_profile.business_name or "BillBeam" }} 的发票或收据。
     {% else %}
       Review invoice {{ inv_label }}, download the PDF, and keep this invoice or receipt from {{ business_profile.business_name or "BillBeam" }} for your records.
     {% endif %}
@@ -26,6 +32,9 @@
 
 {% block content %}
 {% set lang = request.args.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 {% set is_paid = (status == "Paid") or (payment_summary and payment_summary.get("is_paid_in_full")) or (balance <= 0 and amount > 0) %}
 {% set is_overdue = (payment_summary and payment_summary.get("is_overdue")) or ((status == "Overdue") and not is_paid) %}
 {% set is_partial = (payment_summary and payment_summary.get("is_partially_paid")) or (total_paid > 0 and balance > 0) %}
@@ -36,6 +45,8 @@
 {% set last_viewed_at = view_summary.get("last_viewed_at") if view_summary else None %}
 {% set first_viewed_at = view_summary.get("first_viewed_at") if view_summary else None %}
 {% set is_simple_plan = owner_plan == "simple" if owner_plan is defined else false %}
+{% set show_portal_branding = show_portal_branding if show_portal_branding is defined else false %}
+{% set services = services if services is defined else [] %}
 
 <style>
   .public-portal {
@@ -763,6 +774,247 @@
     border-color: rgba(148,163,184,0.14);
   }
 
+  .portal-services {
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .portal-services::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    opacity: 0.95;
+    pointer-events: none;
+  }
+
+  .services-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding-top: 4px;
+  }
+
+  .services-intro-copy {
+    display: grid;
+    gap: 8px;
+    max-width: 760px;
+  }
+
+  .services-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #0f172a;
+  }
+
+  body.dark .services-eyebrow {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: #f8fafc;
+  }
+
+  .services-heading {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    color: #0f172a;
+  }
+
+  body.dark .services-heading {
+    color: #f8fafc;
+  }
+
+  .services-subcopy {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .services-subcopy {
+    color: #cbd5e1;
+  }
+
+  .services-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.12), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
+  body.dark .services-count-pill {
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgba(58,139,255,0.18), rgba(252,220,42,0.10));
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .service-card {
+    position: relative;
+    padding: 18px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(248,250,252,0.88));
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    overflow: hidden;
+  }
+
+  .service-card::after {
+    content: "";
+    position: absolute;
+    inset: auto auto 0 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    opacity: 0.85;
+  }
+
+  .service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+    border-color: rgba(58,139,255,0.22);
+  }
+
+  body.dark .service-card {
+    background: linear-gradient(180deg, rgba(15,23,42,0.72), rgba(2,6,23,0.8));
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.30);
+  }
+
+  .service-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .service-name-wrap {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+  }
+
+  .service-name {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 0;
+    color: #0f172a;
+    word-break: break-word;
+    letter-spacing: -0.02em;
+  }
+
+  body.dark .service-name {
+    color: #f8fafc;
+  }
+
+  .service-tag {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #334155;
+  }
+
+  body.dark .service-tag {
+    background: rgba(15,23,42,0.54);
+    border-color: rgba(148,163,184,0.16);
+    color: #e2e8f0;
+  }
+
+  .service-price {
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 900;
+    color: #0f172a;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 14px;
+    padding: 9px 12px;
+  }
+
+  body.dark .service-price {
+    color: #f8fafc;
+    background: rgba(2,6,23,0.52);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .service-desc {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+    margin: 0;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  body.dark .service-desc {
+    color: #94a3b8;
+  }
+
+  .service-empty-desc {
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  @media (max-width: 640px) {
+    .services-intro {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .services-count-pill {
+      width: fit-content;
+    }
+
+    .service-card-top {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .service-price {
+      align-self: flex-start;
+    }
+  }
+
   .powered-by {
     text-align: center;
     margin-top: 22px;
@@ -834,6 +1086,8 @@
       <strong>
         {% if lang == 'es' %}
           ✅ Pago recibido correctamente.
+        {% elif lang == 'zh' %}
+          ✅ 已成功收到付款。
         {% else %}
           ✅ Payment received successfully.
         {% endif %}
@@ -842,12 +1096,16 @@
         {% if is_paid %}
           {% if lang == 'es' %}
             Esta factura ya aparece como pagada y liquidada por completo.
+          {% elif lang == 'zh' %}
+            这张发票现已显示为已支付并已全部结清。
           {% else %}
             This invoice now shows as paid and fully settled.
-          {% endif %}
+          {% endif %}}
         {% else %}
           {% if lang == 'es' %}
             Estamos verificando el estado final del pago. Si esta pantalla no cambia de inmediato, vuelve a cargar en unos segundos.
+          {% elif lang == 'zh' %}
+            我们正在核实最终付款状态。如果此页面没有立即更新，请在几秒后重新加载。
           {% else %}
             We’re verifying the final payment status. If this page does not update right away, refresh again in a few seconds.
           {% endif %}
@@ -859,6 +1117,8 @@
       <strong>
         {% if lang == 'es' %}
           Pago cancelado.
+        {% elif lang == 'zh' %}
+          付款已取消。
         {% else %}
           Payment canceled.
         {% endif %}
@@ -866,6 +1126,8 @@
       <div style="opacity:.9;">
         {% if lang == 'es' %}
           No se realizó ningún cargo. Puedes intentarlo nuevamente cuando quieras.
+        {% elif lang == 'zh' %}
+          没有产生任何扣款。您可以随时再次尝试。
         {% else %}
           No charge was made. You can try again any time.
         {% endif %}
@@ -888,41 +1150,96 @@
 
   <div class="public-hero">
     <div class="public-hero-left">
-      <div class="public-brand">
-        {% if business_profile.logo_url %}
-          <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Logo">
-        {% endif %}
-        <div>
-          <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
-          <div class="public-subtitle">
-            {% if is_public_view %}
-              {% if lang == 'es' %}Portal de facturas{% else %}Invoice Portal{% endif %}
-            {% else %}
-              {% if lang == 'es' %}Vista interna de factura{% else %}Internal Invoice View{% endif %}
-            {% endif %}
+            <div class="public-brand">
+        {% if show_portal_branding %}
+          {% if business_profile.logo_url %}
+            <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Logo">
+          {% endif %}
+          <div>
+            <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
+            <div class="public-subtitle">
+              {% if is_public_view %}
+                {% if lang == 'es' %}
+                  Portal de facturas
+                {% elif lang == 'zh' %}
+                  发票门户
+                {% else %}
+                  Invoice Portal
+                {% endif %}
+              {% else %}
+                {% if lang == 'es' %}
+                  Vista interna de factura
+                {% elif lang == 'zh' %}
+                  内部发票视图
+                {% else %}
+                  Internal Invoice View
+                {% endif %}
+              {% endif %}
+            </div>
           </div>
-        </div>
+        {% else %}
+          <div>
+            <div class="public-title">BillBeam</div>
+            <div class="public-subtitle">
+              {% if is_public_view %}
+                {% if lang == 'es' %}
+                  Portal de facturas
+                {% elif lang == 'zh' %}
+                  发票门户
+                {% else %}
+                  Invoice Portal
+                {% endif %}
+              {% else %}
+                {% if lang == 'es' %}
+                  Vista interna de factura
+                {% elif lang == 'zh' %}
+                  内部发票视图
+                {% else %}
+                  Internal Invoice View
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
       </div>
 
       <div class="public-inv-meta">
         <div class="inv-label">
-          {% if lang == 'es' %}Factura{% else %}Invoice{% endif %}
+          {% if lang == 'es' %}
+  Factura
+{% elif lang == 'zh' %}
+  发票
+{% else %}
+  Invoice
+{% endif %}
           <span class="mono">{{ inv_label }}</span>
         </div>
         <div class="inv-dates">
           <span>
-            {% if lang == 'es' %}Creada:{% else %}Created:{% endif %}
+            {% if lang == 'es' %}
+  Creada:
+{% elif lang == 'zh' %}
+  创建日期:
+{% else %}
+  Created:
+{% endif %}
             <strong>{{ created_at.strftime('%Y-%m-%d') if created_at else '—' }}</strong>
           </span>
           <span class="dot">•</span>
           <span>
-            {% if lang == 'es' %}Vence:{% else %}Due:{% endif %}
+            {% if lang == 'es' %}
+  Vence:
+{% elif lang == 'zh' %}
+  到期日:
+{% else %}
+  Due:
+{% endif %}
             <strong>{{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}</strong>
           </span>
           {% if not is_public_view and last_viewed_at %}
             <span class="dot">•</span>
             <span>
-              {% if lang == 'es' %}Última vista:{% else %}Last viewed:{% endif %}
+            {% if lang == 'es' %}Última vista:{% elif lang == 'zh' %}最近查看:{% else %}Last viewed:{% endif %}
               <strong>{{ last_viewed_at.strftime('%Y-%m-%d %I:%M %p') }}</strong>
             </span>
           {% endif %}
@@ -932,7 +1249,7 @@
       <div class="public-status-row">
         {% if is_paid %}
           <span class="status-pill paid">
-            {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+            {% if lang == 'es' %}Pagada{% elif lang == 'zh' %}已支付{% else %}Paid{% endif %}
           </span>
         {% elif is_partial %}
           <span class="status-pill partial">
@@ -991,12 +1308,14 @@
             {% else %}
               {% if lang == 'es' %}
                 Vista interna para seguimiento y operaciones.
+              {% elif lang == 'zh' %}
+                这是用于跟踪和运营的内部视图。
               {% else %}
                 Internal view for operations and tracking.
               {% endif %}
-            {% endif %}
           </span>
-        {% endif %}
+                {% endif %}
+      </div>
 
       <div class="public-glance">
         <div class="glance-card">
@@ -1207,6 +1526,92 @@
     </div>
   </div>
 
+  {% if services and services|length > 0 %}
+    <div class="public-card public-card-wide portal-services">
+      <div class="services-intro">
+        <div class="services-intro-copy">
+          <div class="services-eyebrow">
+            {% if lang == 'es' %}
+              ✨ Servicios destacados
+            {% elif lang == 'zh' %}
+              ✨ 精选服务
+            {% else %}
+              ✨ Featured Services
+            {% endif %}
+          </div>
+
+          <h2 class="services-heading">
+            {% if lang == 'es' %}
+              Servicios y listados disponibles
+            {% elif lang == 'zh' %}
+              可用服务与项目
+            {% else %}
+              Available services and listings
+            {% endif %}
+          </h2>
+
+          <p class="services-subcopy">
+            {% if lang == 'es' %}
+              Además de esta factura, este negocio también ofrece los siguientes servicios. Esta vista está diseñada para darte una idea más clara de su trabajo y de cómo presenta sus ofertas.
+            {% elif lang == 'zh' %}
+              除了这张发票外，该业务还提供以下服务。此区域旨在让您更清楚地了解其服务内容以及整体展示方式。
+            {% else %}
+              In addition to this invoice, this business also offers the following services. This section is designed to give you a clearer sense of their work and how they present their offerings.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="services-count-pill">
+          {{ services|length }}
+          {% if lang == 'es' %}
+            servicio{% if services|length != 1 %}s{% endif %}
+          {% elif lang == 'zh' %}
+            项服务
+          {% else %}
+            service{% if services|length != 1 %}s{% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="services-grid">
+        {% for s in services %}
+          <div class="service-card">
+            <div class="service-card-top">
+              <div class="service-name-wrap">
+                <h3 class="service-name">{{ s.name }}</h3>
+                <div class="service-tag">
+                  {% if lang == 'es' %}
+                    Servicio
+                  {% elif lang == 'zh' %}
+                    服务
+                  {% else %}
+                    Service
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="service-price">${{ "{:,.2f}".format(s.price or 0) }}</div>
+            </div>
+
+            {% if s.description %}
+              <p class="service-desc">{{ s.description }}</p>
+            {% else %}
+              <p class="service-desc service-empty-desc">
+                {% if lang == 'es' %}
+                  Este servicio está disponible y listo para solicitarse.
+                {% elif lang == 'zh' %}
+                  该服务可用，并可随时预约。
+                {% else %}
+                  This service is available and ready to be requested.
+                {% endif %}
+              </p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
   <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
@@ -1283,7 +1688,13 @@
 
   <div class="public-card public-card-wide">
     <div class="card-title">
-      {% if lang == 'es' %}Conceptos{% else %}Line Items{% endif %}
+      {% if lang == 'es' %}
+  Conceptos
+{% elif lang == 'zh' %}
+  项目
+{% else %}
+  Line Items
+{% endif %}
     </div>
 
     <div class="public-table-wrap">
@@ -1410,7 +1821,13 @@
 
     <div class="public-card">
       <div class="card-title">
-        {% if lang == 'es' %}Historial de pagos{% else %}Payment History{% endif %}
+        {% if lang == 'es' %}
+  Historial de pagos
+{% elif lang == 'zh' %}
+  付款记录
+{% else %}
+  Payment History
+{% endif %}
       </div>
 
       {% if payments and payments|length > 0 %}
@@ -1454,7 +1871,13 @@
   <div class="public-grid">
     <div class="public-card">
       <div class="card-title">
-        {% if lang == 'es' %}Notas y términos{% else %}Notes & Terms{% endif %}
+        {% if lang == 'es' %}
+  Notas y términos
+{% elif lang == 'zh' %}
+  备注与条款
+{% else %}
+  Notes & Terms
+{% endif %}
       </div>
 
       {% if notes %}
@@ -1560,8 +1983,10 @@
 
 <div class="powered-by">
   ⚡
-  {% if lang == 'es' %}
+    {% if lang == 'es' %}
     Funciona con <strong>BillBeam</strong>
+  {% elif lang == 'zh' %}
+    由 <strong>BillBeam</strong> 提供支持
   {% else %}
     Powered by <strong>BillBeam</strong>
   {% endif %}
@@ -1602,7 +2027,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else 'Redirecting...' }}";
+    btn.textContent = "{{ 'Redirigiendo...' if lang == 'es' else ('跳转中...' if lang == 'zh' else 'Redirecting...') }}";
 
     try {
       const resp = await fetch(`/public/${token}/create-pay-session`, {

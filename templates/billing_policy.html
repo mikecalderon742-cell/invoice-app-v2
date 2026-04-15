@@ -1,9 +1,14 @@
 {% extends "base.html" %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') or 'en' %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 {% block title %}
 {% if lang == 'es' %}
 Política de Facturación y Suscripciones · BillBeam
+{% elif lang == 'zh' %}
+账单与订阅政策 · BillBeam
 {% else %}
 Billing & Subscription Policy · BillBeam
 {% endif %}
@@ -12,6 +17,8 @@ Billing & Subscription Policy · BillBeam
 {% block meta_description %}
 {% if lang == 'es' %}
 Cómo BillBeam gestiona planes, renovaciones, cancelaciones, pagos y solicitudes de facturación.
+{% elif lang == 'zh' %}
+BillBeam 如何处理套餐、续订、取消、付款以及与账单相关的请求。
 {% else %}
 How BillBeam handles plans, renewals, cancellations, payments, and billing-related requests.
 {% endif %}
@@ -24,6 +31,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <div class="legal-eyebrow">
             {% if lang == 'es' %}
                 Transparencia de planes y cobros
+            {% elif lang == 'zh' %}
+                套餐与收费透明度
             {% else %}
                 Transparency around plans and charges
             {% endif %}
@@ -32,6 +41,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <h1>
             {% if lang == 'es' %}
                 Política de Facturación y Suscripciones
+            {% elif lang == 'zh' %}
+                账单与订阅政策
             {% else %}
                 Billing & Subscription Policy
             {% endif %}
@@ -40,6 +51,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <p class="legal-lead">
             {% if lang == 'es' %}
                 Esta Política de Facturación y Suscripciones explica cómo BillBeam gestiona planes gratuitos y de pago dentro de su sitio web, aplicación móvil y servicios relacionados.
+            {% elif lang == 'zh' %}
+                本账单与订阅政策说明 BillBeam 如何在其网站、移动应用和相关服务中处理免费和付费套餐。
             {% else %}
                 This Billing & Subscription Policy explains how BillBeam handles free and paid plans across its website, mobile application, and related services.
             {% endif %}
@@ -49,6 +62,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Última actualización: {{ now().strftime("%B %Y") }}
+                {% elif lang == 'zh' %}
+                    最后更新：{{ now().strftime("%B %Y") }}
                 {% else %}
                     Last updated: {{ now().strftime("%B %Y") }}
                 {% endif %}
@@ -57,6 +72,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
             <div class="legal-meta-pill">
                 {% if lang == 'es' %}
                     Pagos, renovaciones y cancelaciones
+                {% elif lang == 'zh' %}
+                    付款、续订与取消
                 {% else %}
                     Payments, renewals, and cancellations
                 {% endif %}
@@ -65,10 +82,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}1. Planes y funciones{% else %}1. Plans and Features{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                1. Planes y funciones
+            {% elif lang == 'zh' %}
+                1. 套餐与功能
+            {% else %}
+                1. Plans and Features
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede ofrecer un plan gratuito y uno o más planes de pago. Las funciones, límites y precios pueden cambiar con el tiempo y se mostrarán en la página de precios aplicable.
+            {% elif lang == 'zh' %}
+                BillBeam 可能提供免费套餐以及一个或多个付费套餐。功能、限制和价格可能会随时间变化，并会显示在适用的定价页面上。
             {% else %}
                 BillBeam may offer a free plan and one or more paid plans. Features, limits, and pricing may change over time and will be presented on the applicable pricing page.
             {% endif %}
@@ -76,10 +103,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}2. Proveedor de pagos{% else %}2. Payment Processor{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                2. Proveedor de pagos
+            {% elif lang == 'zh' %}
+                2. 支付处理方
+            {% else %}
+                2. Payment Processor
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Los pagos pueden procesarse mediante proveedores externos, incluyendo Stripe. Al completar un pago, también puedes quedar sujeto a los términos y políticas del proveedor correspondiente.
+            {% elif lang == 'zh' %}
+                付款可能通过第三方提供商处理，包括 Stripe。完成付款时，你也可能受相应提供商的条款和政策约束。
             {% else %}
                 Payments may be processed through third-party providers, including Stripe. By completing a payment, you may also become subject to the terms and policies of the applicable provider.
             {% endif %}
@@ -87,10 +124,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}3. Renovaciones automáticas{% else %}3. Automatic Renewals{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                3. Renovaciones automáticas
+            {% elif lang == 'zh' %}
+                3. 自动续订
+            {% else %}
+                3. Automatic Renewals
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Las suscripciones de pago pueden renovarse automáticamente al final de cada período de facturación, salvo cancelación previa a la próxima fecha de renovación.
+            {% elif lang == 'zh' %}
+                付费订阅可能会在每个计费周期结束时自动续订，除非你在下一次续订日期之前取消订阅。
             {% else %}
                 Paid subscriptions may renew automatically at the end of each billing period unless cancelled before the next renewal date.
             {% endif %}
@@ -98,6 +145,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <p>
             {% if lang == 'es' %}
                 Al suscribirte a un plan de pago autorizas cobros recurrentes conforme al plan seleccionado hasta que la suscripción se cancele.
+            {% elif lang == 'zh' %}
+                订阅付费套餐即表示你授权根据所选套餐进行循环扣费，直至订阅被取消。
             {% else %}
                 By subscribing to a paid plan, you authorize recurring charges consistent with the selected plan until the subscription is cancelled.
             {% endif %}
@@ -105,10 +154,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}4. Cancelación{% else %}4. Cancellation{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                4. Cancelación
+            {% elif lang == 'zh' %}
+                4. 取消
+            {% else %}
+                4. Cancellation
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Puedes cancelar tu suscripción antes de la siguiente renovación. Salvo indicación contraria, la cancelación evitará futuros cobros, pero no revertirá automáticamente cobros ya procesados.
+            {% elif lang == 'zh' %}
+                你可以在下一次续订前取消订阅。除非另有说明，取消将阻止未来收费，但不会自动撤销已经处理的收费。
             {% else %}
                 You may cancel your subscription before the next renewal. Unless otherwise stated, cancellation will prevent future charges but will not automatically reverse charges already processed.
             {% endif %}
@@ -116,6 +175,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <p>
             {% if lang == 'es' %}
                 Cuando corresponda, el acceso a funciones de pago podrá continuar hasta el final del período ya pagado.
+            {% elif lang == 'zh' %}
+                在适用情况下，你对付费功能的访问权限可能会持续到已支付计费周期结束。
             {% else %}
                 Where applicable, access to paid features may continue until the end of the already-paid billing period.
             {% endif %}
@@ -123,10 +184,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}5. Reembolsos{% else %}5. Refunds{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                5. Reembolsos
+            {% elif lang == 'zh' %}
+                5. 退款
+            {% else %}
+                5. Refunds
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Salvo que la ley aplicable exija otra cosa, los pagos de suscripción generalmente no son reembolsables una vez procesados.
+            {% elif lang == 'zh' %}
+                除非适用法律另有要求，订阅付款一经处理通常不予退款。
             {% else %}
                 Unless required by applicable law, subscription payments are generally non-refundable once processed.
             {% endif %}
@@ -134,6 +205,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <p>
             {% if lang == 'es' %}
                 BillBeam puede considerar solicitudes de reembolso caso por caso, por ejemplo en situaciones de cobros duplicados, errores técnicos claros o circunstancias excepcionales. La presentación de una solicitud no garantiza un reembolso.
+            {% elif lang == 'zh' %}
+                BillBeam 可能会根据个案情况考虑退款请求，例如重复扣费、明显的技术错误或特殊情况。提交退款请求并不保证一定会获得退款。
             {% else %}
                 BillBeam may consider refund requests on a case-by-case basis, for example in situations involving duplicate charges, clear technical errors, or exceptional circumstances. Submitting a request does not guarantee a refund.
             {% endif %}
@@ -141,10 +214,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}6. Cambios de precio o plan{% else %}6. Pricing or Plan Changes{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                6. Cambios de precio o plan
+            {% elif lang == 'zh' %}
+                6. 价格或套餐变更
+            {% else %}
+                6. Pricing or Plan Changes
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 BillBeam puede actualizar precios, límites o funciones de planes. Cuando sea apropiado, los cambios materiales se comunicarán antes de que entren en vigor para un nuevo período de facturación.
+            {% elif lang == 'zh' %}
+                BillBeam 可能会更新价格、限制或套餐功能。在适当情况下，重大变更会在其对新计费周期生效前进行通知。
             {% else %}
                 BillBeam may update pricing, limits, or plan features. Where appropriate, material changes will be communicated before they take effect for a new billing period.
             {% endif %}
@@ -152,10 +235,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}7. Cobros fallidos{% else %}7. Failed Charges{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                7. Cobros fallidos
+            {% elif lang == 'zh' %}
+                7. 扣费失败
+            {% else %}
+                7. Failed Charges
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Si un cobro falla, BillBeam o su proveedor de pagos podrá volver a intentarlo conforme a la configuración o reglas aplicables del sistema de pago.
+            {% elif lang == 'zh' %}
+                如果扣费失败，BillBeam 或其支付提供商可能会根据适用支付系统的设置或规则再次尝试扣费。
             {% else %}
                 If a charge fails, BillBeam or its payment provider may retry the charge according to the applicable payment system settings or rules.
             {% endif %}
@@ -163,6 +256,8 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
         <p>
             {% if lang == 'es' %}
                 BillBeam puede suspender o limitar temporalmente acceso a funciones de pago si no puede completarse el cobro correspondiente.
+            {% elif lang == 'zh' %}
+                如果相关收费无法完成，BillBeam 可能会暂时暂停或限制对付费功能的访问。
             {% else %}
                 BillBeam may temporarily suspend or limit access to paid features if the applicable charge cannot be completed.
             {% endif %}
@@ -170,10 +265,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}8. Impuestos{% else %}8. Taxes{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                8. Impuestos
+            {% elif lang == 'zh' %}
+                8. 税费
+            {% else %}
+                8. Taxes
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Los precios pueden mostrarse antes o después de impuestos, según la jurisdicción y la configuración aplicable. Cuando proceda, los impuestos correspondientes podrán añadirse al cobro.
+            {% elif lang == 'zh' %}
+                价格可能根据适用司法管辖区和配置显示为税前或税后金额。在适用情况下，相关税费可能会被加到收费中。
             {% else %}
                 Prices may be displayed before or after taxes depending on the jurisdiction and applicable configuration. Where required, applicable taxes may be added to the charge.
             {% endif %}
@@ -181,10 +286,20 @@ How BillBeam handles plans, renewals, cancellations, payments, and billing-relat
     </section>
 
     <section class="legal-card fade-in-up">
-        <h2>{% if lang == 'es' %}9. Contacto de facturación{% else %}9. Billing Contact{% endif %}</h2>
+        <h2>
+            {% if lang == 'es' %}
+                9. Contacto de facturación
+            {% elif lang == 'zh' %}
+                9. 账单联系
+            {% else %}
+                9. Billing Contact
+            {% endif %}
+        </h2>
         <p>
             {% if lang == 'es' %}
                 Si tienes preguntas sobre cobros, suscripciones, cancelaciones o solicitudes relacionadas con facturación, puedes contactar a través de la sección de ayuda o soporte dentro del Servicio.
+            {% elif lang == 'zh' %}
+                如果你对收费、订阅、取消或与账单有关的请求有疑问，可以通过服务中的帮助或支持页面联系我们。
             {% else %}
                 If you have questions about charges, subscriptions, cancellations, or billing-related requests, you may contact us through the help or support section within the Service.
             {% endif %}

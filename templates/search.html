@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lang == 'es' %}Buscar · BillBeam{% else %}Search · BillBeam{% endif %}
+    {% if lang == 'es' %}
+        Buscar · BillBeam
+    {% elif lang == 'zh' %}
+        搜索 · BillBeam
+    {% else %}
+        Search · BillBeam
+    {% endif %}
 {% endblock %}
 
 {% block meta_description %}
     {% if lang == 'es' %}
         Busca facturas y clientes en BillBeam por nombre, número de factura, correo, notas o términos.
+    {% elif lang == 'zh' %}
+        在 BillBeam 中按姓名、发票编号、邮箱、备注或条款搜索发票和客户。
     {% else %}
         Search invoices and clients in BillBeam by name, invoice number, email, notes, or terms.
     {% endif %}
 {% endblock %}
 
 {% block content %}
-{% set lang = request.args.get('lang', 'en') %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
 
 <style>
     .search-shell {
@@ -22,7 +33,8 @@
     }
 
     .search-hero-card,
-    .search-empty-card {
+    .search-empty-card,
+    .search-services-strip {
         border-radius: 26px;
         background: rgba(255,255,255,0.78);
         border: 1px solid rgba(15,23,42,0.06);
@@ -33,7 +45,8 @@
     }
 
     body.dark .search-hero-card,
-    body.dark .search-empty-card {
+    body.dark .search-empty-card,
+    body.dark .search-services-strip {
         background: rgba(2,6,23,0.76);
         border-color: rgba(148,163,184,0.18);
         box-shadow:
@@ -48,6 +61,69 @@
     .search-empty-card {
         padding: 28px 26px;
         text-align: center;
+    }
+
+    .search-services-strip {
+        padding: 18px 20px;
+        background:
+            radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 34%),
+            radial-gradient(circle at bottom left, rgba(252,220,42,0.10), transparent 28%),
+            linear-gradient(135deg, rgba(255,255,255,0.82), rgba(248,250,252,0.86));
+    }
+
+    body.dark .search-services-strip {
+        background:
+            radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 34%),
+            radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+            linear-gradient(135deg, rgba(2,6,23,0.84), rgba(15,23,42,0.88));
+    }
+
+    .search-services-strip-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .search-services-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: rgba(15,23,42,0.05);
+        border: 1px solid rgba(148,163,184,0.18);
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    body.dark .search-services-kicker {
+        background: rgba(15,23,42,0.54);
+        border-color: rgba(148,163,184,0.16);
+        color: #f8fafc;
+    }
+
+    .search-services-title {
+        margin: 0 0 6px;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+    }
+
+    .search-services-copy {
+        font-size: 13px;
+        line-height: 1.7;
+        color: #475569;
+        max-width: 760px;
+    }
+
+    body.dark .search-services-copy {
+        color: #cbd5e1;
     }
 
     .search-form-grid {
@@ -119,7 +195,8 @@
         }
 
         .search-hero-card,
-        .search-empty-card {
+        .search-empty-card,
+        .search-services-strip {
             padding: 22px 18px;
         }
     }
@@ -130,14 +207,28 @@
         <div class="table-section-header" style="align-items:flex-start; margin-bottom:16px;">
             <div>
                 <div class="page-eyebrow">
-                    {% if lang == 'es' %}Búsqueda global{% else %}Global search{% endif %}
+                    {% if lang == 'es' %}
+                        Búsqueda global
+                    {% elif lang == 'zh' %}
+                        全局搜索
+                    {% else %}
+                        Global search
+                    {% endif %}
                 </div>
                 <h1 style="margin:0 0 8px 0;">
-                    {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+                    {% if lang == 'es' %}
+                        Buscar
+                    {% elif lang == 'zh' %}
+                        搜索
+                    {% else %}
+                        Search
+                    {% endif %}
                 </h1>
                 <p style="margin:0; max-width:760px; font-size:15px; line-height:1.6;">
                     {% if lang == 'es' %}
                         Encuentra clientes y facturas por nombre, correo, empresa, número de factura, notas o términos de pago.
+                    {% elif lang == 'zh' %}
+                        按姓名、邮箱、公司、发票编号、备注或付款条款查找客户和发票。
                     {% else %}
                         Find clients and invoices by name, email, company, invoice number, notes, or payment terms.
                     {% endif %}
@@ -146,10 +237,22 @@
 
             <div class="quick-actions">
                 <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    {% if lang == 'es' %}Nueva factura{% else %}New Invoice{% endif %}
+                    {% if lang == 'es' %}
+                        Nueva factura
+                    {% elif lang == 'zh' %}
+                        新建发票
+                    {% else %}
+                        New Invoice
+                    {% endif %}
                 </a>
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                    {% if lang == 'es' %}Volver al panel{% else %}Back to Dashboard{% endif %}
+                    {% if lang == 'es' %}
+                        Volver al panel
+                    {% elif lang == 'zh' %}
+                        返回面板
+                    {% else %}
+                        Back to Dashboard
+                    {% endif %}
                 </a>
             </div>
         </div>
@@ -159,13 +262,19 @@
               class="search-form-grid">
             <div class="search-field">
                 <label for="searchQuery">
-                    {% if lang == 'es' %}Consulta{% else %}Query{% endif %}
+                    {% if lang == 'es' %}
+                        Consulta
+                    {% elif lang == 'zh' %}
+                        搜索内容
+                    {% else %}
+                        Query
+                    {% endif %}
                 </label>
                 <input
                     id="searchQuery"
                     type="text"
                     name="q"
-                    placeholder="{% if lang == 'es' %}Buscar por cliente, factura #, notas, términos, correo o empresa...{% else %}Search by client, invoice #, notes, terms, email, or company...{% endif %}"
+                    placeholder="{% if lang == 'es' %}Buscar por cliente, factura #, notas, términos, correo o empresa...{% elif lang == 'zh' %}按客户、发票编号、备注、条款、邮箱或公司搜索...{% else %}Search by client, invoice #, notes, terms, email, or company...{% endif %}"
                     value="{{ q or '' }}"
                     autocomplete="off"
                 >
@@ -173,7 +282,13 @@
 
             <div class="search-actions">
                 <button type="submit" class="btn btn-brand">
-                    {% if lang == 'es' %}Buscar{% else %}Search{% endif %}
+                    {% if lang == 'es' %}
+                        Buscar
+                    {% elif lang == 'zh' %}
+                        搜索
+                    {% else %}
+                        Search
+                    {% endif %}
                 </button>
             </div>
 
@@ -184,13 +299,23 @@
             <div class="public-grid search-ideas-grid">
                 <div class="public-card">
                     <div class="card-title">
-                        {% if lang == 'es' %}Ideas rápidas{% else %}Quick ideas{% endif %}
+                        {% if lang == 'es' %}
+                            Ideas rápidas
+                        {% elif lang == 'zh' %}
+                            快速提示
+                        {% else %}
+                            Quick ideas
+                        {% endif %}
                     </div>
                     <div class="mini-hint search-helper-copy">
                         {% if lang == 'es' %}
                             Prueba buscar por <strong>nombre del cliente</strong>, <strong>correo</strong>,
                             <strong>empresa</strong>, <strong>número de factura</strong> o palabras dentro de
                             <strong>notas</strong> y <strong>términos</strong>.
+                        {% elif lang == 'zh' %}
+                            可尝试按<strong>客户姓名</strong>、<strong>邮箱</strong>、
+                            <strong>公司</strong>、<strong>发票编号</strong>，或
+                            <strong>备注</strong>与<strong>条款</strong>中的关键词进行搜索。
                         {% else %}
                             Try searching by <strong>client name</strong>, <strong>email</strong>,
                             <strong>company</strong>, <strong>invoice number</strong>, or words inside
@@ -201,11 +326,19 @@
 
                 <div class="public-card">
                     <div class="card-title">
-                        {% if lang == 'es' %}Ejemplos{% else %}Examples{% endif %}
+                        {% if lang == 'es' %}
+                            Ejemplos
+                        {% elif lang == 'zh' %}
+                            示例
+                        {% else %}
+                            Examples
+                        {% endif %}
                     </div>
                     <div class="mini-hint search-helper-copy">
                         {% if lang == 'es' %}
                             “Acme” · “INV-00012” · “net 30” · “@gmail.com” · “diseño”
+                        {% elif lang == 'zh' %}
+                            “Acme” · “INV-00012” · “net 30” · “@gmail.com” · “设计”
                         {% else %}
                             “Acme” · “INV-00012” · “net 30” · “@gmail.com” · “design”
                         {% endif %}
@@ -213,6 +346,51 @@
                 </div>
             </div>
         {% endif %}
+    </section>
+
+    <section class="search-services-strip fade-in-up">
+        <div class="search-services-strip-top">
+            <div>
+                <div class="search-services-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Flujo más rápido
+                    {% elif lang == 'zh' %}
+                        ✨ 更快流程
+                    {% else %}
+                        ✨ Faster workflow
+                    {% endif %}
+                </div>
+                <h3 class="search-services-title">
+                    {% if lang == 'es' %}
+                        La búsqueda ahora se siente más útil dentro de una experiencia más premium
+                    {% elif lang == 'zh' %}
+                        搜索现在在更高级的体验中显得更加实用
+                    {% else %}
+                        Search now feels more useful inside a more premium experience
+                    {% endif %}
+                </h3>
+                <div class="search-services-copy">
+                    {% if lang == 'es' %}
+                        Encontrar facturas, clientes y detalles clave rápidamente hace que BillBeam se sienta más completo, más serio y mucho más valioso para el día a día.
+                    {% elif lang == 'zh' %}
+                        快速找到发票、客户和关键细节，会让 BillBeam 在日常使用中显得更完整、更专业，也更有价值。
+                    {% else %}
+                        Finding invoices, clients, and key details quickly makes BillBeam feel more complete, more serious, and much more valuable in daily use.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Abrir servicios
+                    {% elif lang == 'zh' %}
+                        打开服务页面
+                    {% else %}
+                        Open Services
+                    {% endif %}
+                </a>
+            </div>
+        </div>
     </section>
 
     {% if q %}
@@ -224,6 +402,8 @@
             <div class="status-item sent">
                 {% if lang == 'es' %}
                     Resultados para: <strong>{{ q }}</strong>
+                {% elif lang == 'zh' %}
+                    搜索结果: <strong>{{ q }}</strong>
                 {% else %}
                     Results for: <strong>{{ q }}</strong>
                 {% endif %}
@@ -231,6 +411,8 @@
             <div class="status-item paid">
                 {% if lang == 'es' %}
                     {{ total_count }} resultado{{ '' if total_count == 1 else 's' }}
+                {% elif lang == 'zh' %}
+                    {{ total_count }} 条结果
                 {% else %}
                     {{ total_count }} result{{ '' if total_count == 1 else 's' }}
                 {% endif %}
@@ -238,6 +420,8 @@
             <div class="status-item draft">
                 {% if lang == 'es' %}
                     {{ invoice_count }} factura{{ '' if invoice_count == 1 else 's' }} · {{ client_count }} cliente{{ '' if client_count == 1 else 's' }}
+                {% elif lang == 'zh' %}
+                    {{ invoice_count }} 张发票 · {{ client_count }} 位客户
                 {% else %}
                     {{ invoice_count }} invoice{{ '' if invoice_count == 1 else 's' }} · {{ client_count }} client{{ '' if client_count == 1 else 's' }}
                 {% endif %}
@@ -247,13 +431,23 @@
         {% if not invoice_results and not client_results %}
             <section class="search-empty-card fade-in-up">
                 <h2 style="margin:0 0 10px 0;">
-                    {% if lang == 'es' %}No encontramos coincidencias{% else %}No matches found{% endif %}
+                    {% if lang == 'es' %}
+                        No encontramos coincidencias
+                    {% elif lang == 'zh' %}
+                        未找到匹配结果
+                    {% else %}
+                        No matches found
+                    {% endif %}
                 </h2>
                 <p class="search-empty-copy">
                     {% if lang == 'es' %}
                         No encontramos facturas ni clientes que coincidan con <strong>{{ q }}</strong>.
                         Intenta con otra ortografía, una parte del nombre, un correo, un número de factura
                         o una palabra de las notas o términos.
+                    {% elif lang == 'zh' %}
+                        我们没有找到与 <strong>{{ q }}</strong> 匹配的发票或客户。
+                        请尝试不同拼写、部分名称、邮箱、发票编号，
+                        或备注与条款中的关键词。
                     {% else %}
                         We could not find invoices or clients matching <strong>{{ q }}</strong>.
                         Try a different spelling, part of the name, an email, an invoice number,
@@ -268,11 +462,19 @@
                 <div class="table-section-header">
                     <div>
                         <h2>
-                            {% if lang == 'es' %}Facturas coincidentes{% else %}Matching Invoices{% endif %}
+                            {% if lang == 'es' %}
+                                Facturas coincidentes
+                            {% elif lang == 'zh' %}
+                                匹配的发票
+                            {% else %}
+                                Matching Invoices
+                            {% endif %}
                         </h2>
                         <p>
                             {% if lang == 'es' %}
                                 Abre una factura para verla, descargar su PDF o continuar trabajando en ella.
+                            {% elif lang == 'zh' %}
+                                打开发票以查看、下载 PDF，或继续处理它。
                             {% else %}
                                 Open an invoice to review it, download its PDF, or continue working on it.
                             {% endif %}
@@ -281,6 +483,8 @@
                     <div class="table-meta">
                         {% if lang == 'es' %}
                             {{ invoice_count }} factura{{ '' if invoice_count == 1 else 's' }}
+                        {% elif lang == 'zh' %}
+                            {{ invoice_count }} 张发票
                         {% else %}
                             {{ invoice_count }} invoice{{ '' if invoice_count == 1 else 's' }}
                         {% endif %}
@@ -292,11 +496,11 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>{% if lang == 'es' %}Cliente{% else %}Client{% endif %}</th>
-                                <th>{% if lang == 'es' %}Importe{% else %}Amount{% endif %}</th>
-                                <th>{% if lang == 'es' %}Creada{% else %}Created{% endif %}</th>
-                                <th>{% if lang == 'es' %}Estado{% else %}Status{% endif %}</th>
-                                <th>{% if lang == 'es' %}Acciones{% else %}Actions{% endif %}</th>
+                                <th>{% if lang == 'es' %}Cliente{% elif lang == 'zh' %}客户{% else %}Client{% endif %}</th>
+                                <th>{% if lang == 'es' %}Importe{% elif lang == 'zh' %}金额{% else %}Amount{% endif %}</th>
+                                <th>{% if lang == 'es' %}Creada{% elif lang == 'zh' %}创建时间{% else %}Created{% endif %}</th>
+                                <th>{% if lang == 'es' %}Estado{% elif lang == 'zh' %}状态{% else %}Status{% endif %}</th>
+                                <th>{% if lang == 'es' %}Acciones{% elif lang == 'zh' %}操作{% else %}Actions{% endif %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -314,15 +518,33 @@
                                     <td>
                                         {% if inv[4] == "Paid" %}
                                             <span class="badge paid">
-                                                {% if lang == 'es' %}Pagada{% else %}Paid{% endif %}
+                                                {% if lang == 'es' %}
+                                                    Pagada
+                                                {% elif lang == 'zh' %}
+                                                    已支付
+                                                {% else %}
+                                                    Paid
+                                                {% endif %}
                                             </span>
                                         {% elif inv[4] == "Overdue" %}
                                             <span class="badge overdue">
-                                                {% if lang == 'es' %}Vencida{% else %}Overdue{% endif %}
+                                                {% if lang == 'es' %}
+                                                    Vencida
+                                                {% elif lang == 'zh' %}
+                                                    已逾期
+                                                {% else %}
+                                                    Overdue
+                                                {% endif %}
                                             </span>
                                         {% elif inv[4] == "Sent" %}
                                             <span class="badge sent">
-                                                {% if lang == 'es' %}Enviada{% else %}Sent{% endif %}
+                                                {% if lang == 'es' %}
+                                                    Enviada
+                                                {% elif lang == 'zh' %}
+                                                    已发送
+                                                {% else %}
+                                                    Sent
+                                                {% endif %}
                                             </span>
                                         {% else %}
                                             {{ inv[4] }}
@@ -331,7 +553,13 @@
                                     <td class="action-buttons">
                                         <div class="search-result-actions">
                                             <a href="/invoice/{{ inv[0] }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
-                                                {% if lang == 'es' %}Abrir{% else %}Open{% endif %}
+                                                {% if lang == 'es' %}
+                                                    Abrir
+                                                {% elif lang == 'zh' %}
+                                                    打开
+                                                {% else %}
+                                                    Open
+                                                {% endif %}
                                             </a>
                                             <a href="/history-pdf/{{ inv[0] }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary btn-pdf">
                                                 PDF
@@ -351,11 +579,19 @@
                 <div class="table-section-header">
                     <div>
                         <h2>
-                            {% if lang == 'es' %}Clientes coincidentes{% else %}Matching Clients{% endif %}
+                            {% if lang == 'es' %}
+                                Clientes coincidentes
+                            {% elif lang == 'zh' %}
+                                匹配的客户
+                            {% else %}
+                                Matching Clients
+                            {% endif %}
                         </h2>
                         <p>
                             {% if lang == 'es' %}
                                 Revisa datos guardados del cliente para continuar facturando más rápido.
+                            {% elif lang == 'zh' %}
+                                查看已保存的客户资料，以便更快继续开票。
                             {% else %}
                                 Review saved client details so you can invoice faster.
                             {% endif %}
@@ -364,6 +600,8 @@
                     <div class="table-meta">
                         {% if lang == 'es' %}
                             {{ client_count }} cliente{{ '' if client_count == 1 else 's' }}
+                        {% elif lang == 'zh' %}
+                            {{ client_count }} 位客户
                         {% else %}
                             {{ client_count }} client{{ '' if client_count == 1 else 's' }}
                         {% endif %}
@@ -374,10 +612,10 @@
                     <table class="modern-table">
                         <thead>
                             <tr>
-                                <th>{% if lang == 'es' %}Nombre{% else %}Name{% endif %}</th>
+                                <th>{% if lang == 'es' %}Nombre{% elif lang == 'zh' %}姓名{% else %}Name{% endif %}</th>
                                 <th>Email</th>
-                                <th>{% if lang == 'es' %}Empresa{% else %}Company{% endif %}</th>
-                                <th>{% if lang == 'es' %}Creado{% else %}Created{% endif %}</th>
+                                <th>{% if lang == 'es' %}Empresa{% elif lang == 'zh' %}公司{% else %}Company{% endif %}</th>
+                                <th>{% if lang == 'es' %}Creado{% elif lang == 'zh' %}创建时间{% else %}Created{% endif %}</th>
                             </tr>
                         </thead>
                         <tbody>
