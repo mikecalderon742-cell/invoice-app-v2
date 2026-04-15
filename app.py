@@ -121,6 +121,10 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=14)
 if SECRET_KEY == "dev-secret-change-me":
     logger.warning("SECRET_KEY is using the development fallback. Set a strong SECRET_KEY before launch.")
 
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
 else:
