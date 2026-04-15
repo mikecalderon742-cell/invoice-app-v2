@@ -1430,17 +1430,26 @@
             </a>
 
             <button
-              type="submit"
-              formaction="/preview{% if lang %}?lang={{ lang }}{% endif %}"
-              formmethod="post"
-              class="btn btn-secondary"
-            >
-              {% if lang == 'es' %}Vista previa{% elif lang == 'zh' %}预览发票{% else %}Preview Invoice{% endif %}
-            </button>
+  type="submit"
+  form="invoiceForm"
+  formaction="/preview{% if lang %}?lang={{ lang }}{% endif %}"
+  formmethod="post"
+  formenctype="multipart/form-data"
+  class="btn btn-secondary"
+>
+  {% if lang == 'es' %}Vista previa{% elif lang == 'zh' %}预览发票{% else %}Preview Invoice{% endif %}
+</button>
 
-            <button type="submit" class="btn btn-brand">
-              {% if lang == 'es' %}Guardar factura{% elif lang == 'zh' %}保存发票{% else %}Save Invoice{% endif %}
-            </button>
+            <button
+  type="submit"
+  form="invoiceForm"
+  formaction="/save{% if lang %}?lang={{ lang }}{% endif %}"
+  formmethod="post"
+  formenctype="multipart/form-data"
+  class="btn btn-brand"
+>
+  {% if lang == 'es' %}Guardar factura{% elif lang == 'zh' %}保存发票{% else %}Save Invoice{% endif %}
+</button>
           </div>
         </form>
       </div>
