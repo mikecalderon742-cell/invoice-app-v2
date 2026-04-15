@@ -4326,7 +4326,7 @@ def preview_invoice():
     cursor.close()
     conn.close()
 
-    profile = get_business_profile()
+    profile = get_business_profile_safe()
     business_name = profile.get("business_name") or DEFAULT_BUSINESS_NAME
     invoice_label = "PREVIEW — Not saved"
 
