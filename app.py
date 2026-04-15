@@ -2986,6 +2986,28 @@ def inject_business_profile_ctx():
     return {"business_profile": get_business_profile()}
 
 
+def get_business_profile_safe():
+    profile = get_business_profile()
+    if profile:
+        return profile
+
+    user = get_current_user()
+    return {
+        "id": None,
+        "business_name": DEFAULT_BUSINESS_NAME,
+        "email": "",
+        "phone": "",
+        "website": "",
+        "address": "",
+        "logo_url": "",
+        "brand_color": DEFAULT_BRAND_COLOR,
+        "accent_color": DEFAULT_ACCENT_COLOR,
+        "default_terms": "",
+        "default_notes": "",
+        "user_id": user.get("id"),
+    }
+
+
 @app.context_processor
 def inject_current_user_ctx():
     user = get_current_user()
@@ -5614,7 +5636,7 @@ def generate_invoice_pdf_bytes(invoice_id: int):
     amount_float = float(amount)
     template_style = (template_style or "modern").lower()
 
-    profile = get_business_profile()
+    profile = get_business_profile_safe()
     business_name = profile.get("business_name") or DEFAULT_BUSINESS_NAME
 
     c.execute(
@@ -6425,8 +6447,8 @@ def build_invoice_email_defaults(invoice_id: int, email_type: str = "invoice"):
         public_token_db,
     ) = row
 
-    profile = get_business_profile()
-    business_name = profile["business_name"] or DEFAULT_BUSINESS_NAME
+    profile = get_business_profile_safe()
+    business_name = profile.get("business_name") or DEFAULT_BUSINESS_NAME
     amount_float = float(amount or 0)
     inv_label = invoice_number or f"#{invoice_id_db}"
 
@@ -6537,8 +6559,8 @@ def send_email_view(invoice_id):
             plans=PLAN_DEFINITIONS,
         )
 
-    profile = get_business_profile()
-    business_name = profile["business_name"] or DEFAULT_BUSINESS_NAME
+    profile = get_business_profile_safe()
+    business_name = profile.get("business_name") or DEFAULT_BUSINESS_NAME
 
     conn = get_db_connection()
     cursor = conn.cursor()

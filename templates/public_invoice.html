@@ -1100,7 +1100,7 @@
             这张发票现已显示为已支付并已全部结清。
           {% else %}
             This invoice now shows as paid and fully settled.
-          {% endif %}}
+          {% endif %}
         {% else %}
           {% if lang == 'es' %}
             Estamos verificando el estado final del pago. Si esta pantalla no cambia de inmediato, vuelve a cargar en unos segundos.
@@ -1150,7 +1150,7 @@
 
   <div class="public-hero">
     <div class="public-hero-left">
-            <div class="public-brand">
+      <div class="public-brand">
         {% if show_portal_branding %}
           {% if business_profile.logo_url %}
             <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Logo">
@@ -1206,40 +1206,50 @@
       <div class="public-inv-meta">
         <div class="inv-label">
           {% if lang == 'es' %}
-  Factura
-{% elif lang == 'zh' %}
-  发票
-{% else %}
-  Invoice
-{% endif %}
+            Factura
+          {% elif lang == 'zh' %}
+            发票
+          {% else %}
+            Invoice
+          {% endif %}
           <span class="mono">{{ inv_label }}</span>
         </div>
+
         <div class="inv-dates">
           <span>
             {% if lang == 'es' %}
-  Creada:
-{% elif lang == 'zh' %}
-  创建日期:
-{% else %}
-  Created:
-{% endif %}
+              Creada:
+            {% elif lang == 'zh' %}
+              创建日期:
+            {% else %}
+              Created:
+            {% endif %}
             <strong>{{ created_at.strftime('%Y-%m-%d') if created_at else '—' }}</strong>
           </span>
+
           <span class="dot">•</span>
+
           <span>
             {% if lang == 'es' %}
-  Vence:
-{% elif lang == 'zh' %}
-  到期日:
-{% else %}
-  Due:
-{% endif %}
+              Vence:
+            {% elif lang == 'zh' %}
+              到期日:
+            {% else %}
+              Due:
+            {% endif %}
             <strong>{{ due_date.strftime('%Y-%m-%d') if due_date else '—' }}</strong>
           </span>
+
           {% if not is_public_view and last_viewed_at %}
             <span class="dot">•</span>
             <span>
-            {% if lang == 'es' %}Última vista:{% elif lang == 'zh' %}最近查看:{% else %}Last viewed:{% endif %}
+              {% if lang == 'es' %}
+                Última vista:
+              {% elif lang == 'zh' %}
+                最近查看:
+              {% else %}
+                Last viewed:
+              {% endif %}
               <strong>{{ last_viewed_at.strftime('%Y-%m-%d %I:%M %p') }}</strong>
             </span>
           {% endif %}
@@ -1313,8 +1323,9 @@
               {% else %}
                 Internal view for operations and tracking.
               {% endif %}
+            {% endif %}
           </span>
-                {% endif %}
+        {% endif %}
       </div>
 
       <div class="public-glance">
@@ -1586,6 +1597,7 @@
             {% endif %}
           </a>
         </div>
+      </div>
 
       <div class="services-grid">
         {% for s in services %}
@@ -1607,20 +1619,6 @@
               <div class="service-price">${{ "{:,.2f}".format(s.price or 0) }}</div>
             </div>
 
-            {% if s.description %}
-              <p class="service-desc">{{ s.description }}</p>
-            {% else %}
-              <p class="service-desc service-empty-desc">
-                {% if lang == 'es' %}
-                  Este servicio está disponible y listo para solicitarse.
-                {% elif lang == 'zh' %}
-                  该服务可用，并可随时预约。
-                {% else %}
-                  This service is available and ready to be requested.
-                {% endif %}
-              </p>
-            {% endif %}
-          </div>
             {% if s.description %}
               <p class="service-desc">{{ s.description }}</p>
             {% else %}
@@ -1732,12 +1730,12 @@
   <div class="public-card public-card-wide">
     <div class="card-title">
       {% if lang == 'es' %}
-  Conceptos
-{% elif lang == 'zh' %}
-  项目
-{% else %}
-  Line Items
-{% endif %}
+        Conceptos
+      {% elif lang == 'zh' %}
+        项目
+      {% else %}
+        Line Items
+      {% endif %}
     </div>
 
     <div class="public-table-wrap">
@@ -1865,12 +1863,12 @@
     <div class="public-card">
       <div class="card-title">
         {% if lang == 'es' %}
-  Historial de pagos
-{% elif lang == 'zh' %}
-  付款记录
-{% else %}
-  Payment History
-{% endif %}
+          Historial de pagos
+        {% elif lang == 'zh' %}
+          付款记录
+        {% else %}
+          Payment History
+        {% endif %}
       </div>
 
       {% if payments and payments|length > 0 %}
@@ -1915,12 +1913,12 @@
     <div class="public-card">
       <div class="card-title">
         {% if lang == 'es' %}
-  Notas y términos
-{% elif lang == 'zh' %}
-  备注与条款
-{% else %}
-  Notes & Terms
-{% endif %}
+          Notas y términos
+        {% elif lang == 'zh' %}
+          备注与条款
+        {% else %}
+          Notes & Terms
+        {% endif %}
       </div>
 
       {% if notes %}
@@ -2021,12 +2019,11 @@
       </div>
     </div>
   </div>
-
 </div>
 
 <div class="powered-by">
   ⚡
-    {% if lang == 'es' %}
+  {% if lang == 'es' %}
     Funciona con <strong>BillBeam</strong>
   {% elif lang == 'zh' %}
     由 <strong>BillBeam</strong> 提供支持
