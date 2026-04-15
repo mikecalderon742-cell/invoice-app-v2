@@ -26,6 +26,16 @@
   {% set lang = 'en' %}
 {% endif %}
 
+{% set prefill_client_id = request.args.get('prefill_client_id', '') %}
+{% set prefill_client_name = request.args.get('prefill_client_name', '') %}
+{% set prefill_client_email = request.args.get('prefill_client_email', '') %}
+{% set prefill_client_phone = request.args.get('prefill_client_phone', '') %}
+{% set prefill_request_details = request.args.get('prefill_request_details', '') %}
+{% set prefill_quantity = request.args.get('prefill_quantity', '1') %}
+{% set prefill_service_title = request.args.get('prefill_service_title', '') %}
+{% set prefill_service_price = request.args.get('prefill_service_price', '') %}
+{% set service_request_id = request.args.get('service_request_id', '') %}
+
 <style>
   .create-shell {
     display: grid;
@@ -1034,6 +1044,7 @@
         </div>
 
         <form id="invoiceForm"
+          <input type="hidden" name="service_request_id" value="{{ service_request_id }}">
               method="POST"
               action="/save{% if lang %}?lang={{ lang }}{% endif %}"
               enctype="multipart/form-data">
@@ -1068,10 +1079,10 @@
                     {% endif %}
                   </option>
                   {% for client in clients %}
-                    <option value="{{ client[0] }}">
-                      {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
-                    </option>
-                  {% endfor %}
+  <option value="{{ client[0] }}" {% if prefill_client_id and prefill_client_id|string == client[0]|string %}selected{% endif %}>
+    {{ client[1] }}{% if client[2] %} ({{ client[2] }}){% endif %}
+  </option>
+{% endfor %}
                 </select>
                 <div class="field-help">
                   {% if lang == 'es' %}
@@ -1091,7 +1102,7 @@
                       New Client Name
                     {% endif %}
                   </label>
-                  <input type="text" id="new_client_name" name="new_client_name"
+                  <input type="text" id="new_client_name" name="new_client_name" value="{{ prefill_client_name }}"
                          placeholder="{% if lang == 'es' %}p.ej. Acme Corp o Jane Doe{% else %}e.g. Acme Corp or Jane Doe{% endif %}">
                 </div>
 
@@ -1103,7 +1114,7 @@
                       Client Email
                     {% endif %}
                   </label>
-                  <input type="email" id="new_client_email" name="new_client_email"
+                  <input type="email" id="new_client_email" name="new_client_email" value="{{ prefill_client_email }}"
                          placeholder="client@example.com">
                 </div>
               </div>
@@ -1129,7 +1140,7 @@
                       Phone (optional)
                     {% endif %}
                   </label>
-                  <input type="text" id="new_client_phone" name="new_client_phone"
+                  <input type="text" id="new_client_phone" name="new_client_phone" value="{{ prefill_client_phone }}"
                          placeholder="+1 (555) 123-4567">
                 </div>
 
@@ -1184,7 +1195,7 @@
                   {% endif %}
                 </label>
                 <input type="text" id="invoice_notes" name="invoice_notes"
-                       value="{{ business_profile.default_notes or '' }}"
+                       value="{{ prefill_request_details or business_profile.default_notes or '' }}"
                        placeholder="{% if lang == 'es' %}p.ej. ¡Gracias por su negocio!{% else %}e.g. Thanks for your business!{% endif %}">
               </div>
 
@@ -1290,7 +1301,34 @@
                   </tr>
                 </thead>
                 <tbody id="lineItemsBody">
-                </tbody>
+  {% if prefill_service_title %}
+  <tr>
+    <td>
+      <input
+        type="text"
+        name="description"
+        value="{{ prefill_service_title }}{% if prefill_quantity and prefill_quantity != '1' %} × {{ prefill_quantity }}{% endif %}"
+        placeholder="{% if lang == 'es' %}p.ej. Desarrollo web, 10 horas{% elif lang == 'zh' %}例如：网站开发，10小时{% else %}e.g. Web development, 10 hours{% endif %}"
+      >
+    </td>
+    <td>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input
+          type="number"
+          name="amount"
+          step="0.01"
+          min="0"
+          value="{{ prefill_service_price }}"
+          placeholder="0.00"
+        >
+        <button type="button" class="btn btn-secondary btn-compact" onclick="this.closest('tr').remove();">
+          {% if lang == 'es' %}Quitar{% elif lang == 'zh' %}移除{% else %}Remove{% endif %}
+        </button>
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+</tbody>
               </table>
             </div>
           </div>

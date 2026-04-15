@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header">
+        <div>
+            <h1>Service Requests</h1>
+            <p class="text-muted">Track incoming requests, review details, and update progress.</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-body">
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                <a href="{{ url_for('requests_page', lang=lang) }}"
+                   class="btn {% if not selected_status %}btn-primary{% else %}btn-secondary{% endif %}">
+                    All
+                </a>
+                <a href="{{ url_for('requests_page', status='requested', lang=lang) }}"
+                   class="btn {% if selected_status == 'requested' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Requested
+                </a>
+                <a href="{{ url_for('requests_page', status='approved', lang=lang) }}"
+                   class="btn {% if selected_status == 'approved' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Approved
+                </a>
+                <a href="{{ url_for('requests_page', status='in_progress', lang=lang) }}"
+                   class="btn {% if selected_status == 'in_progress' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    In Progress
+                </a>
+                <a href="{{ url_for('requests_page', status='completed', lang=lang) }}"
+                   class="btn {% if selected_status == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Completed
+                </a>
+                <a href="{{ url_for('requests_page', status='cancelled', lang=lang) }}"
+                   class="btn {% if selected_status == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Cancelled
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if requests_list and requests_list|length > 0 %}
+                <div style="overflow-x:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requests_list %}
+                            <tr>
+                                <td>#{{ req.id }}</td>
+                                <td>
+                                    <strong>{{ req.client_name }}</strong><br>
+                                    <span class="text-muted">{{ req.client_email }}</span>
+                                </td>
+                                <td>
+                                    {% if req.service_title_snapshot %}
+                                        {{ req.service_title_snapshot }}
+                                    {% else %}
+                                        <span class="text-muted">Custom request</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if req.status == 'requested' %}
+                                        <span class="badge bg-warning text-dark">Requested</span>
+                                    {% elif req.status == 'approved' %}
+                                        <span class="badge bg-info text-dark">Approved</span>
+                                    {% elif req.status == 'in_progress' %}
+                                        <span class="badge bg-primary">In Progress</span>
+                                    {% elif req.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif req.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ req.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if req.created_at %}
+                                        {{ req.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td style="text-align:right;">
+                                    <a href="{{ url_for('request_detail_page', request_id=req.id, lang=lang) }}" class="btn btn-sm btn-primary">
+                                        Open
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div style="padding: 12px 0;">
+                    <h3 style="margin-bottom:8px;">No service requests yet</h3>
+                    <p class="text-muted" style="margin-bottom:0;">
+                        Once your booking flow goes live, incoming service requests will appear here.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Solicitar servicio · {{ public_business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    请求服务 · {{ public_business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Request Service · {{ public_business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Envía una solicitud de servicio directamente a {{ public_business_profile.business_name or "BillBeam" }}.
+  {% elif lang == 'zh' %}
+    直接向 {{ public_business_profile.business_name or "BillBeam" }} 提交服务请求。
+  {% else %}
+    Submit a service request directly to {{ public_business_profile.business_name or "BillBeam" }}.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div>
+            <h1 style="margin-bottom:8px;">
+                {% if lang == 'es' %}
+                    Solicitar {{ service.name }}
+                {% elif lang == 'zh' %}
+                    请求 {{ service.name }}
+                {% else %}
+                    Request {{ service.name }}
+                {% endif %}
+            </h1>
+            <p class="text-muted" style="max-width:760px;">
+                {% if lang == 'es' %}
+                    Completa los datos básicos para enviar tu solicitud. El negocio podrá revisarla, aprobarla y continuar contigo.
+                {% elif lang == 'zh' %}
+                    填写基本信息以提交您的请求。商家可以查看、批准并继续与您沟通。
+                {% else %}
+                    Fill out the basic details to submit your request. The business can review it, approve it, and continue from there.
+                {% endif %}
+            </p>
+        </div>
+
+        <div>
+            <a href="{{ url_for('public_services_page', user_id=public_user_id, lang=lang) }}" class="btn btn-secondary">
+                {% if lang == 'es' %}
+                    Volver a servicios
+                {% elif lang == 'zh' %}
+                    返回服务列表
+                {% else %}
+                    Back to Services
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr); gap:20px;">
+        <div class="card">
+            <div class="card-body">
+                {% if error %}
+                <div style="margin-bottom:16px; padding:12px 14px; border-radius:14px; background:rgba(239,68,68,0.10); border:1px solid rgba(239,68,68,0.20); color:#b91c1c;">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}">
+                    <div style="display:grid; gap:14px;">
+                        <div class="form-group">
+                            <label for="client_name"><strong>
+                                {% if lang == 'es' %}
+                                    Tu nombre
+                                {% elif lang == 'zh' %}
+                                    您的姓名
+                                {% else %}
+                                    Your Name
+                                {% endif %}
+                            </strong></label>
+                            <input type="text" id="client_name" name="client_name" class="form-control" value="{{ form_data.client_name }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client_email"><strong>
+                                {% if lang == 'es' %}
+                                    Tu correo
+                                {% elif lang == 'zh' %}
+                                    您的邮箱
+                                {% else %}
+                                    Your Email
+                                {% endif %}
+                            </strong></label>
+                            <input type="email" id="client_email" name="client_email" class="form-control" value="{{ form_data.client_email }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client_phone"><strong>
+                                {% if lang == 'es' %}
+                                    Tu teléfono
+                                {% elif lang == 'zh' %}
+                                    您的电话
+                                {% else %}
+                                    Your Phone
+                                {% endif %}
+                            </strong></label>
+                            <input type="text" id="client_phone" name="client_phone" class="form-control" value="{{ form_data.client_phone }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity"><strong>
+                                {% if lang == 'es' %}
+                                    Cantidad
+                                {% elif lang == 'zh' %}
+                                    数量
+                                {% else %}
+                                    Quantity
+                                {% endif %}
+                            </strong></label>
+                            <input type="number" id="quantity" name="quantity" min="1" step="1" class="form-control" value="{{ form_data.quantity }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferred_date_text"><strong>
+                                {% if lang == 'es' %}
+                                    Fecha preferida
+                                {% elif lang == 'zh' %}
+                                    偏好日期
+                                {% else %}
+                                    Preferred Date
+                                {% endif %}
+                            </strong></label>
+                            <input type="text" id="preferred_date_text" name="preferred_date_text" class="form-control" value="{{ form_data.preferred_date_text }}"
+                                   placeholder="{% if lang == 'es' %}Ej. próxima semana{% elif lang == 'zh' %}例如：下周{% else %}Example: next week{% endif %}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferred_time_text"><strong>
+                                {% if lang == 'es' %}
+                                    Hora preferida
+                                {% elif lang == 'zh' %}
+                                    偏好时间
+                                {% else %}
+                                    Preferred Time
+                                {% endif %}
+                            </strong></label>
+                            <input type="text" id="preferred_time_text" name="preferred_time_text" class="form-control" value="{{ form_data.preferred_time_text }}"
+                                   placeholder="{% if lang == 'es' %}Ej. por la tarde{% elif lang == 'zh' %}例如：下午{% else %}Example: afternoon{% endif %}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="request_details"><strong>
+                                {% if lang == 'es' %}
+                                    Detalles de tu solicitud
+                                {% elif lang == 'zh' %}
+                                    请求详情
+                                {% else %}
+                                    Request Details
+                                {% endif %}
+                            </strong></label>
+                            <textarea id="request_details" name="request_details" class="form-control" rows="6"
+                                      placeholder="{% if lang == 'es' %}Comparte cualquier detalle útil para el negocio{% elif lang == 'zh' %}填写对商家有帮助的补充说明{% else %}Share any useful details for the business{% endif %}">{{ form_data.request_details }}</textarea>
+                        </div>
+
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+                            <button type="submit" class="btn btn-primary">
+                                {% if lang == 'es' %}
+                                    Enviar solicitud
+                                {% elif lang == 'zh' %}
+                                    提交请求
+                                {% else %}
+                                    Submit Request
+                                {% endif %}
+                            </button>
+
+                            <a href="{{ url_for('public_services_page', user_id=public_user_id, lang=lang) }}" class="btn btn-secondary">
+                                {% if lang == 'es' %}
+                                    Cancelar
+                                {% elif lang == 'zh' %}
+                                    取消
+                                {% else %}
+                                    Cancel
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body" style="display:grid; gap:16px;">
+                <div>
+                    <h3 style="margin:0 0 8px 0;">{{ service.name }}</h3>
+                    <div style="font-size:22px; font-weight:700; margin-bottom:10px;">
+                        ${{ '%.2f'|format(service.price or 0) }}
+                    </div>
+
+                    {% if service.description %}
+                    <p class="text-muted" style="margin:0; line-height:1.65; white-space:pre-line;">
+                        {{ service.description }}
+                    </p>
+                    {% else %}
+                    <p class="text-muted" style="margin:0;">
+                        {% if lang == 'es' %}
+                            Este servicio está listo para solicitar.
+                        {% elif lang == 'zh' %}
+                            该服务已可供提交请求。
+                        {% else %}
+                            This service is ready to be requested.
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <hr>
+
+                <div>
+                    <h4 style="margin:0 0 8px 0;">
+                        {% if lang == 'es' %}
+                            Qué pasa después
+                        {% elif lang == 'zh' %}
+                            接下来会发生什么
+                        {% else %}
+                            What happens next
+                        {% endif %}
+                    </h4>
+
+                    <div style="display:grid; gap:10px;">
+                        <div class="text-muted">
+                            1. {% if lang == 'es' %}Tu solicitud se registra en el sistema del negocio.{% elif lang == 'zh' %}您的请求会记录到商家的系统中。{% else %}Your request is recorded in the business system.{% endif %}
+                        </div>
+                        <div class="text-muted">
+                            2. {% if lang == 'es' %}El negocio revisa y actualiza el estado.{% elif lang == 'zh' %}商家会查看并更新状态。{% else %}The business reviews it and updates the status.{% endif %}
+                        </div>
+                        <div class="text-muted">
+                            3. {% if lang == 'es' %}Después podrá continuar con aprobación, factura y pago según corresponda.{% elif lang == 'zh' %}之后可根据情况继续批准、开票和付款流程。{% else %}After that, the process can continue into approval, invoicing, and payment as needed.{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

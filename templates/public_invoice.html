@@ -1561,17 +1561,31 @@
           </p>
         </div>
 
-        <div class="services-count-pill">
-          {{ services|length }}
-          {% if lang == 'es' %}
-            servicio{% if services|length != 1 %}s{% endif %}
-          {% elif lang == 'zh' %}
-            项服务
-          {% else %}
-            service{% if services|length != 1 %}s{% endif %}
-          {% endif %}
+        <div style="display:grid; gap:10px; justify-items:end;">
+          <div class="services-count-pill">
+            {{ services|length }}
+            {% if lang == 'es' %}
+              servicio{% if services|length != 1 %}s{% endif %}
+            {% elif lang == 'zh' %}
+              项服务
+            {% else %}
+              service{% if services|length != 1 %}s{% endif %}
+            {% endif %}
+          </div>
+
+          <a
+            href="/book/{{ business_profile.user_id }}{% if lang %}?lang={{ lang }}{% endif %}"
+            class="btn btn-secondary"
+          >
+            {% if lang == 'es' %}
+              Ver todos los servicios
+            {% elif lang == 'zh' %}
+              查看所有服务
+            {% else %}
+              View All Services
+            {% endif %}
+          </a>
         </div>
-      </div>
 
       <div class="services-grid">
         {% for s in services %}
@@ -1606,6 +1620,35 @@
                 {% endif %}
               </p>
             {% endif %}
+          </div>
+            {% if s.description %}
+              <p class="service-desc">{{ s.description }}</p>
+            {% else %}
+              <p class="service-desc service-empty-desc">
+                {% if lang == 'es' %}
+                  Este servicio está disponible y listo para solicitarse.
+                {% elif lang == 'zh' %}
+                  该服务可用，并可随时预约。
+                {% else %}
+                  This service is available and ready to be requested.
+                {% endif %}
+              </p>
+            {% endif %}
+
+            <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+              <a
+                href="/book/{{ business_profile.user_id }}/service/{{ s.id }}{% if lang %}?lang={{ lang }}{% endif %}"
+                class="btn btn-primary"
+              >
+                {% if lang == 'es' %}
+                  Solicitar servicio
+                {% elif lang == 'zh' %}
+                  请求服务
+                {% else %}
+                  Request Service
+                {% endif %}
+              </a>
+            </div>
           </div>
         {% endfor %}
       </div>

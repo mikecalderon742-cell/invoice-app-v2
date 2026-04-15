@@ -692,6 +692,124 @@ def init_db():
         """
     )
 
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS service_requests (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            client_id INTEGER,
+            service_id INTEGER,
+            invoice_id INTEGER,
+
+            status TEXT NOT NULL DEFAULT 'requested',
+            request_type TEXT DEFAULT 'request',
+            source TEXT DEFAULT 'public',
+
+            service_title_snapshot TEXT,
+            service_description_snapshot TEXT,
+            service_price_snapshot NUMERIC(10,2),
+
+            client_name TEXT NOT NULL,
+            client_email TEXT NOT NULL,
+            client_phone TEXT,
+
+            request_details TEXT,
+            preferred_date_text TEXT,
+            preferred_time_text TEXT,
+            quantity INTEGER DEFAULT 1,
+
+            intake_answers_json TEXT,
+
+            owner_notes TEXT,
+            client_notes TEXT,
+
+            cancel_requested_by_client BOOLEAN DEFAULT FALSE,
+            cancel_reason TEXT,
+
+            approved_at TIMESTAMP,
+            in_progress_at TIMESTAMP,
+            completed_at TIMESTAMP,
+            cancelled_at TIMESTAMP,
+            converted_to_invoice_at TIMESTAMP,
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS service_request_events (
+            id SERIAL PRIMARY KEY,
+            service_request_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            old_value TEXT,
+            new_value TEXT,
+            note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS service_requests_user_idx
+        ON service_requests(user_id);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS service_requests_status_idx
+        ON service_requests(status);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS service_requests_service_idx
+        ON service_requests(service_id);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS service_requests_client_email_idx
+        ON service_requests(client_email);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS service_request_events_request_idx
+        ON service_request_events(service_request_id, created_at DESC);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS notifications (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            notification_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            body TEXT,
+            link_url TEXT,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS notifications_user_read_idx
+        ON notifications(user_id, is_read, created_at DESC);
+        """
+    )
+
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;")
@@ -1752,6 +1870,72 @@ def get_business_profile():
             "user_id": None,
         }
 
+def get_business_profile_by_user_id(user_id: int):
+    if not user_id:
+        return None
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, business_name, email, phone, website, address,
+               logo_url, brand_color, accent_color, default_terms, default_notes
+        FROM business_profile
+        WHERE user_id = %s
+        ORDER BY id ASC
+        LIMIT 1
+        """,
+        (user_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not row:
+        return {
+            "id": None,
+            "business_name": DEFAULT_BUSINESS_NAME,
+            "email": "",
+            "phone": "",
+            "website": "",
+            "address": "",
+            "logo_url": "",
+            "brand_color": DEFAULT_BRAND_COLOR,
+            "accent_color": DEFAULT_ACCENT_COLOR,
+            "default_terms": "",
+            "default_notes": "",
+            "user_id": user_id,
+        }
+
+    (
+        bp_id,
+        business_name,
+        email,
+        phone,
+        website,
+        address,
+        logo_url,
+        brand_color,
+        accent_color,
+        default_terms,
+        default_notes,
+    ) = row
+
+    return {
+        "id": bp_id,
+        "business_name": business_name or DEFAULT_BUSINESS_NAME,
+        "email": email or "",
+        "phone": phone or "",
+        "website": website or "",
+        "address": address or "",
+        "logo_url": logo_url or "",
+        "brand_color": brand_color or DEFAULT_BRAND_COLOR,
+        "accent_color": accent_color or DEFAULT_ACCENT_COLOR,
+        "default_terms": default_terms or "",
+        "default_notes": default_notes or "",
+        "user_id": user_id,
+    }
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -2023,6 +2207,638 @@ def validate_service_form(name: str, description: str = "", price_raw=None):
         "price": round(float(price), 2),
     }
 
+# =========================
+# SERVICE REQUEST / BOOKING HELPERS
+# =========================
+
+SERVICE_REQUEST_STATUSES = {
+    "requested",
+    "approved",
+    "in_progress",
+    "completed",
+    "cancelled",
+}
+
+
+def normalize_request_status(status: str) -> str:
+    status = (status or "").strip().lower()
+    return status if status in SERVICE_REQUEST_STATUSES else "requested"
+
+
+def log_service_request_event(service_request_id, user_id, event_type, old_value=None, new_value=None, note=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO service_request_events
+            (service_request_id, user_id, event_type, old_value, new_value, note, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                service_request_id,
+                user_id,
+                event_type,
+                old_value,
+                new_value,
+                note,
+                now_local(),
+            ),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning("Failed to log service request event: %s", e)
+    finally:
+        cur.close()
+        conn.close()
+
+
+def find_matching_client(user_id, email):
+    if not email:
+        return None
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT id FROM clients
+            WHERE user_id = %s AND LOWER(email) = LOWER(%s)
+            LIMIT 1
+            """,
+            (user_id, email),
+        )
+        row = cur.fetchone()
+        return row[0] if row else None
+    finally:
+        cur.close()
+        conn.close()
+
+
+def serialize_service_request_row(row):
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "user_id": row[1],
+        "client_id": row[2],
+        "service_id": row[3],
+        "invoice_id": row[4],
+        "status": row[5] or "requested",
+        "request_type": row[6] or "request",
+        "source": row[7] or "public",
+        "service_title_snapshot": row[8] or "",
+        "service_description_snapshot": row[9] or "",
+        "service_price_snapshot": float(row[10] or 0),
+        "client_name": row[11] or "",
+        "client_email": row[12] or "",
+        "client_phone": row[13] or "",
+        "request_details": row[14] or "",
+        "preferred_date_text": row[15] or "",
+        "preferred_time_text": row[16] or "",
+        "quantity": int(row[17] or 1),
+        "intake_answers_json": row[18] or "",
+        "owner_notes": row[19] or "",
+        "client_notes": row[20] or "",
+        "cancel_requested_by_client": bool(row[21]),
+        "cancel_reason": row[22] or "",
+        "approved_at": row[23],
+        "in_progress_at": row[24],
+        "completed_at": row[25],
+        "cancelled_at": row[26],
+        "converted_to_invoice_at": row[27],
+        "created_at": row[28],
+        "updated_at": row[29],
+    }
+
+
+def serialize_service_request_rows(rows):
+    return [serialize_service_request_row(row) for row in (rows or [])]
+
+
+def get_service_request_events_for_user(request_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT event_type, old_value, new_value, note, created_at
+            FROM service_request_events
+            WHERE service_request_id = %s AND user_id = %s
+            ORDER BY created_at DESC, id DESC
+            """,
+            (request_id, user_id),
+        )
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    events = []
+    for row in rows:
+        events.append(
+            {
+                "event_type": row[0] or "",
+                "old_value": row[1] or "",
+                "new_value": row[2] or "",
+                "note": row[3] or "",
+                "created_at": row[4],
+            }
+        )
+    return events
+
+
+def get_service_request_counts_for_user(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT status, COUNT(*)
+            FROM service_requests
+            WHERE user_id = %s
+            GROUP BY status
+            """,
+            (user_id,),
+        )
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    counts = {
+        "all": 0,
+        "requested": 0,
+        "approved": 0,
+        "in_progress": 0,
+        "completed": 0,
+        "cancelled": 0,
+    }
+
+    for status, count in rows:
+        status_key = normalize_request_status(status)
+        counts[status_key] = int(count or 0)
+        counts["all"] += int(count or 0)
+
+    return counts
+
+
+def get_recent_service_requests_for_user(user_id, limit=5):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT *
+            FROM service_requests
+            WHERE user_id = %s
+            ORDER BY created_at DESC, id DESC
+            LIMIT %s
+            """,
+            (user_id, limit),
+        )
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    return serialize_service_request_rows(rows)
+
+
+def link_service_request_to_invoice(request_id, user_id, invoice_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE service_requests
+            SET invoice_id = %s,
+                converted_to_invoice_at = %s,
+                updated_at = %s
+            WHERE id = %s AND user_id = %s
+            """,
+            (invoice_id, now_local(), now_local(), request_id, user_id),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed linking service request %s to invoice %s: %s", request_id, invoice_id, e)
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+    log_service_request_event(
+        request_id,
+        user_id,
+        "invoice_linked",
+        new_value=str(invoice_id),
+        note=f"Invoice #{invoice_id} was created from this request.",
+    )
+    return True
+
+
+def get_invoice_summary_for_user(invoice_id, user_id):
+    if not invoice_id or not user_id:
+        return None
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT id, invoice_number, client, amount, status, created_at, due_date
+            FROM invoices
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+            """,
+            (invoice_id, user_id),
+        )
+        row = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "invoice_number": row[1] or f"#{row[0]}",
+        "client": row[2] or "",
+        "amount": float(row[3] or 0),
+        "status": row[4] or "Sent",
+        "created_at": row[5],
+        "due_date": row[6],
+    }
+
+
+def create_notification(user_id, notification_type, title, body="", link_url=""):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                notification_type,
+                title,
+                body,
+                link_url,
+                is_read,
+                created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            (
+                user_id,
+                notification_type,
+                title,
+                body or "",
+                link_url or "",
+                False,
+                now_local(),
+            ),
+        )
+        notification_id = cur.fetchone()[0]
+        conn.commit()
+        return notification_id
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed creating notification for user %s: %s", user_id, e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_notifications_for_user(user_id, unread_only=False, limit=25):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if unread_only:
+            cur.execute(
+                """
+                SELECT id, notification_type, title, body, link_url, is_read, created_at
+                FROM notifications
+                WHERE user_id = %s AND is_read = FALSE
+                ORDER BY created_at DESC, id DESC
+                LIMIT %s
+                """,
+                (user_id, limit),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT id, notification_type, title, body, link_url, is_read, created_at
+                FROM notifications
+                WHERE user_id = %s
+                ORDER BY created_at DESC, id DESC
+                LIMIT %s
+                """,
+                (user_id, limit),
+            )
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    notifications = []
+    for row in rows:
+        notifications.append(
+            {
+                "id": row[0],
+                "notification_type": row[1] or "",
+                "title": row[2] or "",
+                "body": row[3] or "",
+                "link_url": row[4] or "",
+                "is_read": bool(row[5]),
+                "created_at": row[6],
+            }
+        )
+    return notifications
+
+
+def get_unread_notification_count_for_user(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT COUNT(*)
+            FROM notifications
+            WHERE user_id = %s AND is_read = FALSE
+            """,
+            (user_id,),
+        )
+        row = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+    return int(row[0] or 0) if row else 0
+
+
+def mark_notification_read(notification_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE id = %s AND user_id = %s
+            """,
+            (notification_id, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed marking notification %s read for user %s: %s", notification_id, user_id, e)
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+def create_service_request(
+    user_id,
+    service_id,
+    client_name,
+    client_email,
+    client_phone=None,
+    request_details=None,
+    preferred_date_text=None,
+    preferred_time_text=None,
+    quantity=1,
+):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # --- Service snapshot ---
+        service_title = None
+        service_description = None
+        service_price = None
+
+        if service_id:
+            cur.execute(
+                """
+                SELECT name, description, price
+                FROM services
+                WHERE id = %s AND user_id = %s
+                """,
+                (service_id, user_id),
+            )
+            svc = cur.fetchone()
+            if svc:
+                service_title, service_description, service_price = svc
+
+        # --- Match existing client ---
+        client_id = find_matching_client(user_id, client_email)
+
+        cur.execute(
+            """
+            INSERT INTO service_requests (
+                user_id,
+                client_id,
+                service_id,
+                status,
+                service_title_snapshot,
+                service_description_snapshot,
+                service_price_snapshot,
+                client_name,
+                client_email,
+                client_phone,
+                request_details,
+                preferred_date_text,
+                preferred_time_text,
+                quantity,
+                created_at,
+                updated_at
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            RETURNING id
+            """,
+            (
+                user_id,
+                client_id,
+                service_id,
+                "requested",
+                service_title,
+                service_description,
+                service_price,
+                client_name,
+                client_email,
+                client_phone,
+                request_details,
+                preferred_date_text,
+                preferred_time_text,
+                quantity,
+                now_local(),
+                now_local(),
+            ),
+        )
+
+        request_id = cur.fetchone()[0]
+        conn.commit()
+
+        log_service_request_event(
+            request_id,
+            user_id,
+            "created",
+            note="Service request submitted",
+        )
+
+        create_notification(
+            user_id=user_id,
+            notification_type="service_request_created",
+            title=f"New service request from {client_name}",
+            body=(service_title or "Custom request"),
+            link_url=f"/requests/{request_id}",
+        )
+
+        return request_id
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed to create service request: %s", e)
+        return None
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_service_requests_for_user(user_id, status=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        if status:
+            cur.execute(
+                """
+                SELECT *
+                FROM service_requests
+                WHERE user_id = %s AND status = %s
+                ORDER BY created_at DESC
+                """,
+                (user_id, status),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT *
+                FROM service_requests
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+                """,
+                (user_id,),
+            )
+
+        return cur.fetchall()
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_service_request_by_id(request_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT *
+            FROM service_requests
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+            """,
+            (request_id, user_id),
+        )
+        return cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+
+def update_service_request_status(request_id, user_id, new_status):
+    new_status = normalize_request_status(new_status)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT status FROM service_requests
+            WHERE id = %s AND user_id = %s
+            """,
+            (request_id, user_id),
+        )
+        row = cur.fetchone()
+        if not row:
+            return False
+
+        old_status = row[0]
+
+        timestamp_field = None
+        if new_status == "approved":
+            timestamp_field = "approved_at"
+        elif new_status == "in_progress":
+            timestamp_field = "in_progress_at"
+        elif new_status == "completed":
+            timestamp_field = "completed_at"
+        elif new_status == "cancelled":
+            timestamp_field = "cancelled_at"
+
+        if timestamp_field:
+            cur.execute(
+                f"""
+                UPDATE service_requests
+                SET status = %s,
+                    {timestamp_field} = %s,
+                    updated_at = %s
+                WHERE id = %s AND user_id = %s
+                """,
+                (new_status, now_local(), now_local(), request_id, user_id),
+            )
+        else:
+            cur.execute(
+                """
+                UPDATE service_requests
+                SET status = %s,
+                    updated_at = %s
+                WHERE id = %s AND user_id = %s
+                """,
+                (new_status, now_local(), request_id, user_id),
+            )
+
+        conn.commit()
+
+        log_service_request_event(
+            request_id,
+            user_id,
+            "status_changed",
+            old_value=old_status,
+            new_value=new_status,
+        )
+
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed updating request status: %s", e)
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
 
 def upsert_business_profile(data: dict):
     user = get_current_user()
@@ -2201,6 +3017,52 @@ def inject_current_user_ctx():
         "can_use_collections_current": can_use_collections(user),
         "can_use_branding_current": can_use_branding(user),
         "t": t,
+    }
+
+
+@app.context_processor
+def inject_service_request_dashboard_ctx():
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not user_id:
+        return {
+            "service_request_counts": {
+                "all": 0,
+                "requested": 0,
+                "approved": 0,
+                "in_progress": 0,
+                "completed": 0,
+                "cancelled": 0,
+            },
+            "recent_service_requests": [],
+            "has_service_requests": False,
+        }
+
+    counts = get_service_request_counts_for_user(user_id)
+    recent_requests = get_recent_service_requests_for_user(user_id, limit=5)
+
+    return {
+        "service_request_counts": counts,
+        "recent_service_requests": recent_requests,
+        "has_service_requests": counts.get("all", 0) > 0,
+    }
+
+
+@app.context_processor
+def inject_notification_ctx():
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not user_id:
+        return {
+            "unread_notification_count": 0,
+            "recent_notifications": [],
+        }
+
+    return {
+        "unread_notification_count": get_unread_notification_count_for_user(user_id),
+        "recent_notifications": get_notifications_for_user(user_id, unread_only=False, limit=5),
     }
 
 
@@ -2406,6 +3268,260 @@ def contact():
 def faq_page():
     lang = normalize_lang(request.args.get("lang"))
     return render_template("faq.html", lang=lang)
+
+# -------------------------
+# SERVICE REQUESTS / OWNER VIEWS
+# -------------------------
+@app.route("/requests")
+@login_required
+def requests_page():
+    user = get_current_user()
+    user_id = user["id"]
+    lang = get_request_lang()
+
+    raw_status = (request.args.get("status") or "").strip().lower()
+    status = normalize_request_status(raw_status) if raw_status else None
+
+    requests_list = serialize_service_request_rows(
+        get_service_requests_for_user(user_id, status=status)
+    )
+
+    return render_template(
+        "requests.html",
+        requests_list=requests_list,
+        selected_status=status,
+        lang=lang,
+    )
+
+
+@app.route("/requests/<int:request_id>")
+@login_required
+def request_detail_page(request_id):
+    user = get_current_user()
+    user_id = user["id"]
+    lang = get_request_lang()
+
+    service_request = serialize_service_request_row(
+        get_service_request_by_id(request_id, user_id)
+    )
+    if not service_request:
+        return lang_redirect("requests_page")
+
+    request_events = get_service_request_events_for_user(request_id, user_id)
+    linked_invoice = None
+    if service_request.get("invoice_id"):
+        linked_invoice = get_invoice_summary_for_user(service_request["invoice_id"], user_id)
+
+    public_booking_url = url_for(
+        "public_services_page",
+        user_id=user_id,
+        lang=lang,
+        _external=True,
+    )
+
+    return render_template(
+        "request_detail.html",
+        service_request=service_request,
+        request_events=request_events,
+        linked_invoice=linked_invoice,
+        public_booking_url=public_booking_url,
+        lang=lang,
+    )
+
+
+@app.route("/requests/<int:request_id>/status", methods=["POST"])
+@login_required
+def update_request_status(request_id):
+    user = get_current_user()
+    user_id = user["id"]
+
+    new_status = request.form.get("status", "")
+    update_service_request_status(request_id, user_id, new_status)
+
+    return lang_redirect("request_detail_page", request_id=request_id)
+
+
+@app.route("/requests/<int:request_id>/create-invoice")
+@login_required
+def create_invoice_from_request(request_id):
+    user = get_current_user()
+    user_id = user["id"]
+    lang = get_request_lang()
+
+    service_request = serialize_service_request_row(
+        get_service_request_by_id(request_id, user_id)
+    )
+    if not service_request:
+        return lang_redirect("requests_page")
+
+    params = {
+        "lang": lang,
+        "service_request_id": service_request["id"],
+        "prefill_client_name": service_request["client_name"],
+        "prefill_client_email": service_request["client_email"],
+        "prefill_client_phone": service_request["client_phone"],
+        "prefill_request_details": service_request["request_details"],
+        "prefill_quantity": service_request["quantity"],
+        "prefill_service_title": service_request["service_title_snapshot"],
+        "prefill_service_price": service_request["service_price_snapshot"],
+    }
+
+    if service_request.get("client_id"):
+        params["prefill_client_id"] = service_request["client_id"]
+
+    return redirect(url_for("home", **params))
+
+
+@app.route("/notifications")
+@login_required
+def notifications_page():
+    user = get_current_user()
+    user_id = user["id"]
+    lang = get_request_lang()
+
+    notifications = get_notifications_for_user(user_id, unread_only=False, limit=100)
+
+    return render_template(
+        "notifications.html",
+        notifications=notifications,
+        lang=lang,
+    )
+
+
+@app.route("/notifications/<int:notification_id>/read")
+@login_required
+def mark_notification_read_page(notification_id):
+    user = get_current_user()
+    user_id = user["id"]
+
+    notifications = get_notifications_for_user(user_id, unread_only=False, limit=100)
+    target = None
+    for item in notifications:
+        if item["id"] == notification_id:
+            target = item
+            break
+
+    mark_notification_read(notification_id, user_id)
+
+    if target and target.get("link_url"):
+        link_url = target["link_url"]
+        if "?" in link_url:
+            return redirect(f"{link_url}&lang={get_request_lang()}")
+        return redirect(f"{link_url}?lang={get_request_lang()}")
+
+    return lang_redirect("notifications_page")
+
+
+# -------------------------
+# PUBLIC SERVICE REQUEST FLOW
+# -------------------------
+@app.route("/book/<int:user_id>")
+def public_services_page(user_id):
+    lang = get_request_lang()
+    business_profile = get_business_profile_by_user_id(user_id)
+    services = get_user_services(user_id, include_inactive=False)
+
+    if not business_profile and not services:
+        return render_template("404.html"), 404
+
+    return render_template(
+        "public_services.html",
+        public_user_id=user_id,
+        public_business_profile=business_profile,
+        public_services=services,
+        lang=lang,
+    )
+
+
+@app.route("/book/<int:user_id>/service/<int:service_id>", methods=["GET", "POST"])
+def public_service_request_page(user_id, service_id):
+    lang = get_request_lang()
+    business_profile = get_business_profile_by_user_id(user_id)
+    service = get_service_by_id(service_id, user_id)
+
+    if not business_profile or not service or not service.get("is_active"):
+        return render_template("404.html"), 404
+
+    error = None
+    form_data = {
+        "client_name": "",
+        "client_email": "",
+        "client_phone": "",
+        "request_details": "",
+        "preferred_date_text": "",
+        "preferred_time_text": "",
+        "quantity": 1,
+    }
+
+    if request.method == "POST":
+        form_data["client_name"] = (request.form.get("client_name") or "").strip()
+        form_data["client_email"] = (request.form.get("client_email") or "").strip()
+        form_data["client_phone"] = (request.form.get("client_phone") or "").strip()
+        form_data["request_details"] = (request.form.get("request_details") or "").strip()
+        form_data["preferred_date_text"] = (request.form.get("preferred_date_text") or "").strip()
+        form_data["preferred_time_text"] = (request.form.get("preferred_time_text") or "").strip()
+
+        quantity_raw = (request.form.get("quantity") or "1").strip()
+        try:
+            form_data["quantity"] = max(1, int(quantity_raw))
+        except ValueError:
+            form_data["quantity"] = 1
+
+        if not form_data["client_name"]:
+            error = "Client name is required."
+        elif not form_data["client_email"]:
+            error = "Client email is required."
+        else:
+            request_id = create_service_request(
+                user_id=user_id,
+                service_id=service_id,
+                client_name=form_data["client_name"],
+                client_email=form_data["client_email"],
+                client_phone=form_data["client_phone"],
+                request_details=form_data["request_details"],
+                preferred_date_text=form_data["preferred_date_text"],
+                preferred_time_text=form_data["preferred_time_text"],
+                quantity=form_data["quantity"],
+            )
+
+            if request_id:
+                return redirect(
+                    url_for(
+                        "public_request_success_page",
+                        user_id=user_id,
+                        request_id=request_id,
+                        lang=lang,
+                    )
+                )
+
+            error = "Something went wrong while submitting your request. Please try again."
+
+    return render_template(
+        "public_request_form.html",
+        public_user_id=user_id,
+        public_business_profile=business_profile,
+        service=service,
+        error=error,
+        form_data=form_data,
+        lang=lang,
+    )
+
+
+@app.route("/book/<int:user_id>/success/<int:request_id>")
+def public_request_success_page(user_id, request_id):
+    lang = get_request_lang()
+    business_profile = get_business_profile_by_user_id(user_id)
+
+    if not business_profile:
+        return render_template("404.html"), 404
+
+    return render_template(
+        "public_request_success.html",
+        public_user_id=user_id,
+        public_business_profile=business_profile,
+        request_id=request_id,
+        lang=lang,
+    )
 
 
 @app.route("/changelog")
@@ -3237,6 +4353,7 @@ def save():
     new_client_phone = (request.form.get("new_client_phone") or "").strip()
     new_client_address = (request.form.get("new_client_address") or "").strip()
     new_client_notes = (request.form.get("new_client_notes") or "").strip()
+    service_request_id_raw = (request.form.get("service_request_id") or "").strip()
 
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
@@ -3379,6 +4496,13 @@ def save():
         details=f"Invoice {invoice_number} was created for {client_name_for_invoice}.",
         visibility="both",
     )
+
+    if service_request_id_raw:
+        try:
+            service_request_id = int(service_request_id_raw)
+            link_service_request_to_invoice(service_request_id, user_id, invoice_id)
+        except ValueError:
+            pass
 
     return render_template(
         "saved.html",

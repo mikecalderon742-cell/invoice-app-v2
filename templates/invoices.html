@@ -789,6 +789,44 @@
     </div>
 </div>
 
+{% if unread_notification_count > 0 %}
+<div class="dashboard-upgrade-strip">
+    <div class="dashboard-upgrade-strip-top">
+        <div>
+            <strong>
+                {% if lang == 'es' %}
+                    Tienes {{ unread_notification_count }} notificación{% if unread_notification_count != 1 %}es{% endif %} nueva{% if unread_notification_count != 1 %}s{% endif %}
+                {% elif lang == 'zh' %}
+                    您有 {{ unread_notification_count }} 条新通知
+                {% else %}
+                    You have {{ unread_notification_count }} new notification{% if unread_notification_count != 1 %}s{% endif %}
+                {% endif %}
+            </strong>
+            <div class="dashboard-upgrade-strip-copy">
+                {% if lang == 'es' %}
+                    Revisa nuevas solicitudes y actividad reciente del sistema desde tu centro de notificaciones.
+                {% elif lang == 'zh' %}
+                    在通知页中查看新的请求和最近的系统活动。
+                {% else %}
+                    Review new requests and recent system activity from your notifications page.
+                {% endif %}
+            </div>
+        </div>
+        <div class="quick-actions">
+            <a href="/notifications{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}
+                    Abrir notificaciones
+                {% elif lang == 'zh' %}
+                    打开通知
+                {% else %}
+                    Open Notifications
+                {% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="dashboard-services-strip">
     <div class="dashboard-services-strip-top">
         <div>
@@ -832,6 +870,186 @@
             </a>
         </div>
     </div>
+</div>
+
+<div class="dashboard-services-strip">
+    <div class="dashboard-services-strip-top">
+        <div>
+            <div class="dashboard-services-kicker">
+                {% if lang == 'es' %}
+                    📥 Solicitudes
+                {% elif lang == 'zh' %}
+                    📥 请求
+                {% else %}
+                    📥 Requests
+                {% endif %}
+            </div>
+
+            <h3 class="dashboard-services-title">
+                {% if lang == 'es' %}
+                    Tu flujo de solicitudes ya está listo
+                {% elif lang == 'zh' %}
+                    您的请求流程已准备就绪
+                {% else %}
+                    Your request workflow is ready
+                {% endif %}
+            </h3>
+
+            <div class="dashboard-services-copy">
+                {% if lang == 'es' %}
+                    Revisa nuevas solicitudes de servicio, sigue trabajos en progreso y mantén una vista clara de lo que ya fue aprobado, completado o cancelado.
+                {% elif lang == 'zh' %}
+                    查看新的服务请求，跟踪进行中的工作，并清晰查看哪些请求已批准、已完成或已取消。
+                {% else %}
+                    Review new service requests, track work in progress, and keep a clear view of what has already been approved, completed, or cancelled.
+                {% endif %}
+            </div>
+
+            <div class="quick-actions" style="margin-top:14px;">
+                <div class="signal-pill viewed">
+                    {% if lang == 'es' %}
+                        Total: {{ service_request_counts.all }}
+                    {% elif lang == 'zh' %}
+                        总数：{{ service_request_counts.all }}
+                    {% else %}
+                        Total: {{ service_request_counts.all }}
+                    {% endif %}
+                </div>
+
+                <div class="signal-pill overdue">
+                    {% if lang == 'es' %}
+                        Nuevas: {{ service_request_counts.requested }}
+                    {% elif lang == 'zh' %}
+                        新请求：{{ service_request_counts.requested }}
+                    {% else %}
+                        New: {{ service_request_counts.requested }}
+                    {% endif %}
+                </div>
+
+                <div class="signal-pill partial">
+                    {% if lang == 'es' %}
+                        En progreso: {{ service_request_counts.in_progress }}
+                    {% elif lang == 'zh' %}
+                        进行中：{{ service_request_counts.in_progress }}
+                    {% else %}
+                        In Progress: {{ service_request_counts.in_progress }}
+                    {% endif %}
+                </div>
+
+                <div class="signal-pill reminded">
+                    {% if lang == 'es' %}
+                        Completadas: {{ service_request_counts.completed }}
+                    {% elif lang == 'zh' %}
+                        已完成：{{ service_request_counts.completed }}
+                    {% else %}
+                        Completed: {{ service_request_counts.completed }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <a href="/requests{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}
+                    Abrir solicitudes
+                {% elif lang == 'zh' %}
+                    打开请求页面
+                {% else %}
+                    Open Requests
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    {% if recent_service_requests and recent_service_requests|length > 0 %}
+    <div style="margin-top:16px; display:grid; gap:10px;">
+        {% for req in recent_service_requests[:4] %}
+        <a href="/requests/{{ req.id }}{% if lang %}?lang={{ lang }}{% endif %}"
+           style="display:flex; justify-content:space-between; gap:14px; align-items:flex-start; text-decoration:none; padding:14px 16px; border-radius:18px; background:rgba(15,23,42,0.04); border:1px solid rgba(148,163,184,0.14); color:inherit;">
+            <div style="min-width:0;">
+                <div style="font-weight:700; margin-bottom:4px;">
+                    {% if req.service_title_snapshot %}
+                        {{ req.service_title_snapshot }}
+                    {% else %}
+                        {% if lang == 'es' %}
+                            Solicitud personalizada
+                        {% elif lang == 'zh' %}
+                            自定义请求
+                        {% else %}
+                            Custom request
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <div style="font-size:13px; color:#64748b;">
+                    {{ req.client_name }} · {{ req.client_email }}
+                </div>
+
+                {% if req.request_details %}
+                <div style="font-size:12px; color:#64748b; margin-top:6px; line-height:1.55;">
+                    {{ req.request_details[:120] }}{% if req.request_details|length > 120 %}…{% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="display:grid; gap:8px; justify-items:end; flex:0 0 auto;">
+                {% if req.status == 'requested' %}
+                    <span class="signal-pill overdue">
+                        {% if lang == 'es' %}Solicitada{% elif lang == 'zh' %}已请求{% else %}Requested{% endif %}
+                    </span>
+                {% elif req.status == 'approved' %}
+                    <span class="signal-pill viewed">
+                        {% if lang == 'es' %}Aprobada{% elif lang == 'zh' %}已批准{% else %}Approved{% endif %}
+                    </span>
+                {% elif req.status == 'in_progress' %}
+                    <span class="signal-pill partial">
+                        {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+                    </span>
+                {% elif req.status == 'completed' %}
+                    <span class="signal-pill reminded">
+                        {% if lang == 'es' %}Completada{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+                    </span>
+                {% elif req.status == 'cancelled' %}
+                    <span class="signal-pill unviewed">
+                        {% if lang == 'es' %}Cancelada{% elif lang == 'zh' %}已取消{% else %}Cancelled{% endif %}
+                    </span>
+                {% else %}
+                    <span class="signal-pill unviewed">{{ req.status }}</span>
+                {% endif %}
+
+                <div style="font-size:12px; color:#64748b;">
+                    {% if req.created_at %}
+                        {{ req.created_at.strftime("%Y-%m-%d") }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="margin-top:16px; padding:14px 16px; border-radius:18px; background:rgba(15,23,42,0.04); border:1px solid rgba(148,163,184,0.14);">
+        <div style="font-weight:700; margin-bottom:6px;">
+            {% if lang == 'es' %}
+                Aún no hay solicitudes de servicio
+            {% elif lang == 'zh' %}
+                还没有服务请求
+            {% else %}
+                No service requests yet
+            {% endif %}
+        </div>
+        <div style="font-size:13px; color:#64748b; line-height:1.6;">
+            {% if lang == 'es' %}
+                Cuando la parte pública del sistema de solicitudes esté activa, aquí verás las solicitudes más recientes de tus clientes.
+            {% elif lang == 'zh' %}
+                当公共请求流程启用后，您将在这里看到客户最近提交的服务请求。
+            {% else %}
+                Once the public request flow is live, this area will show the most recent service requests from your clients.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 {% if is_free_plan %}

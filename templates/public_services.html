@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Servicios · {{ public_business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    服务 · {{ public_business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Services · {{ public_business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Explora servicios y envía una solicitud directamente desde {{ public_business_profile.business_name or "BillBeam" }}.
+  {% elif lang == 'zh' %}
+    浏览服务并直接向 {{ public_business_profile.business_name or "BillBeam" }} 提交请求。
+  {% else %}
+    Browse services and submit a request directly to {{ public_business_profile.business_name or "BillBeam" }}.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header" style="margin-bottom:24px;">
+        <div>
+            <h1 style="margin-bottom:8px;">
+                {% if lang == 'es' %}
+                    Servicios de {{ public_business_profile.business_name or "BillBeam" }}
+                {% elif lang == 'zh' %}
+                    {{ public_business_profile.business_name or "BillBeam" }} 的服务
+                {% else %}
+                    Services from {{ public_business_profile.business_name or "BillBeam" }}
+                {% endif %}
+            </h1>
+            <p class="text-muted" style="max-width:760px;">
+                {% if lang == 'es' %}
+                    Elige un servicio y envía una solicitud para empezar la conversación, recibir aprobación y continuar con el siguiente paso.
+                {% elif lang == 'zh' %}
+                    选择一项服务并提交请求，以开始沟通、获得批准并进入下一步。
+                {% else %}
+                    Choose a service and submit a request to start the conversation, get approval, and move into the next step.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% if public_services and public_services|length > 0 %}
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:18px;">
+        {% for service in public_services %}
+        <div class="card">
+            <div class="card-body" style="display:grid; gap:14px;">
+                <div>
+                    <h3 style="margin:0 0 8px 0;">{{ service.name }}</h3>
+
+                    {% if service.description %}
+                    <p class="text-muted" style="margin:0; line-height:1.65; white-space:pre-line;">
+                        {{ service.description }}
+                    </p>
+                    {% else %}
+                    <p class="text-muted" style="margin:0;">
+                        {% if lang == 'es' %}
+                            Este servicio está listo para solicitar.
+                        {% elif lang == 'zh' %}
+                            该服务已可供提交请求。
+                        {% else %}
+                            This service is ready to be requested.
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="font-size:20px; font-weight:700;">
+                        ${{ '%.2f'|format(service.price or 0) }}
+                    </div>
+
+                    <a href="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}"
+                       class="btn btn-primary">
+                        {% if lang == 'es' %}
+                            Solicitar servicio
+                        {% elif lang == 'zh' %}
+                            请求服务
+                        {% else %}
+                            Request Service
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body">
+            <h3 style="margin-top:0;">
+                {% if lang == 'es' %}
+                    No hay servicios activos
+                {% elif lang == 'zh' %}
+                    当前没有可用服务
+                {% else %}
+                    No active services available
+                {% endif %}
+            </h3>
+            <p class="text-muted" style="margin-bottom:0;">
+                {% if lang == 'es' %}
+                    Este negocio todavía no ha publicado servicios activos en esta página.
+                {% elif lang == 'zh' %}
+                    该商家尚未在此页面发布可用服务。
+                {% else %}
+                    This business has not published active services on this page yet.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

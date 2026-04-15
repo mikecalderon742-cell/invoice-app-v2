@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div>
+            <h1 style="margin-bottom:8px;">
+                {% if lang == 'es' %}
+                    Notificaciones
+                {% elif lang == 'zh' %}
+                    通知
+                {% else %}
+                    Notifications
+                {% endif %}
+            </h1>
+            <p class="text-muted" style="max-width:760px;">
+                {% if lang == 'es' %}
+                    Mantente al día con nuevas solicitudes y actividad importante del sistema.
+                {% elif lang == 'zh' %}
+                    及时了解新的请求和重要系统活动。
+                {% else %}
+                    Stay up to date with new requests and important system activity.
+                {% endif %}
+            </p>
+        </div>
+
+        <div>
+            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}
+                    Volver al panel
+                {% elif lang == 'zh' %}
+                    返回面板
+                {% else %}
+                    Back to Dashboard
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if notifications and notifications|length > 0 %}
+                <div style="display:grid; gap:12px;">
+                    {% for n in notifications %}
+                    <a href="{{ url_for('mark_notification_read_page', notification_id=n.id, lang=lang) }}"
+                       style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start; text-decoration:none; color:inherit; padding:16px 18px; border-radius:18px; background:{% if not n.is_read %}rgba(58,139,255,0.08){% else %}rgba(15,23,42,0.04){% endif %}; border:1px solid rgba(148,163,184,0.16);">
+                        <div style="min-width:0;">
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
+                                <strong>{{ n.title }}</strong>
+                                {% if not n.is_read %}
+                                <span class="signal-pill viewed">
+                                    {% if lang == 'es' %}
+                                        Nueva
+                                    {% elif lang == 'zh' %}
+                                        新通知
+                                    {% else %}
+                                        New
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            {% if n.body %}
+                            <div class="text-muted" style="font-size:13px; line-height:1.6;">
+                                {{ n.body }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="font-size:12px; color:#64748b; white-space:nowrap;">
+                            {% if n.created_at %}
+                                {{ n.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="padding:8px 0;">
+                    <h3 style="margin:0 0 8px 0;">
+                        {% if lang == 'es' %}
+                            No hay notificaciones
+                        {% elif lang == 'zh' %}
+                            暂无通知
+                        {% else %}
+                            No notifications
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted" style="margin-bottom:0;">
+                        {% if lang == 'es' %}
+                            Cuando entren nuevas solicitudes u ocurra actividad importante, aparecerá aquí.
+                        {% elif lang == 'zh' %}
+                            当有新请求或重要活动时，会显示在这里。
+                        {% else %}
+                            When new requests or important activity come in, they will appear here.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
