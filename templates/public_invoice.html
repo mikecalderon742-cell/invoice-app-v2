@@ -1585,8 +1585,9 @@
           </div>
 
           <a
-            href="/book/{{ business_profile.user_id }}{% if lang %}?lang={{ lang }}{% endif %}"
-            class="btn btn-secondary"
+  href="/book/{{ owner_user_id }}{% if lang %}?lang={{ lang }}{% endif %}"
+  class="btn btn-secondary"
+>
           >
             {% if lang == 'es' %}
               Ver todos los servicios
@@ -1635,8 +1636,9 @@
 
             <div style="margin-top:14px; display:flex; justify-content:flex-end;">
               <a
-                href="/book/{{ business_profile.user_id }}/service/{{ s.id }}{% if lang %}?lang={{ lang }}{% endif %}"
-                class="btn btn-primary"
+  href="/book/{{ owner_user_id }}/service/{{ s.id }}{% if lang %}?lang={{ lang }}{% endif %}"
+  class="btn btn-primary"
+>
               >
                 {% if lang == 'es' %}
                   Solicitar servicio
