@@ -899,7 +899,7 @@
                             <label for="business_name">
                                 {% if lang == 'es' %}Nombre del negocio{% else %}Business Name{% endif %}
                             </label>
-                            <input id="business_name" type="text" name="business_name" value="{{ profile.business_name }}" required>
+                            <input id="business_name" type="text" name="business_name" value="{{ profile.business_name if profile else '' }}" required>
                         </div>
 
                         <div class="field-row-2">
@@ -907,14 +907,14 @@
                                 <label for="email">
                                     {% if lang == 'es' %}Correo del negocio{% else %}Business Email{% endif %}
                                 </label>
-                                <input id="email" type="email" name="email" value="{{ profile.email }}">
+                                <input id="email" type="email" name="email" value="{{ profile.email if profile else '' }}">
                             </div>
 
                             <div class="field-group">
                                 <label for="phone">
                                     {% if lang == 'es' %}Teléfono{% else %}Phone{% endif %}
                                 </label>
-                                <input id="phone" type="text" name="phone" value="{{ profile.phone }}">
+                                <input id="phone" type="text" name="phone" value="{{ profile.phone if profile else '' }}">
                             </div>
                         </div>
 
@@ -922,7 +922,7 @@
                             <label for="website">
                                 {% if lang == 'es' %}Sitio web{% else %}Website{% endif %}
                             </label>
-                            <input id="website" type="text" name="website" value="{{ profile.website }}">
+                            <input id="website" type="text" name="website" value="{{ profile.website if profile else '' }}">
                             <div class="field-help">
                                 {% if lang == 'es' %}
                                     Ejemplo: https://tusitio.com
@@ -941,7 +941,7 @@
                                 name="address"
                                 rows="4"
                                 style="padding:12px 14px; border-radius:14px; font-size:14px; font-family:inherit;"
-                            >{{ profile.address }}</textarea>
+                            >{{ profile.address if profile else '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -963,7 +963,7 @@
                             <label for="logo_url">
                                 {% if lang == 'es' %}URL del logo{% else %}Logo URL{% endif %}
                             </label>
-                            <input id="logo_url" type="text" name="logo_url" value="{{ profile.logo_url }}" placeholder="https://...">
+                            <input id="logo_url" type="text" name="logo_url" value="{{ profile.logo_url if profile else '' }}" placeholder="https://...">
                             <div class="field-help">
                                 {% if lang == 'es' %}
                                     Usa una imagen clara y cuadrada para un mejor resultado visual.
@@ -978,7 +978,7 @@
                                 <label for="brand_color">
                                     {% if lang == 'es' %}Color de marca principal{% else %}Primary Brand Color{% endif %}
                                 </label>
-                                <input id="brand_color" type="text" name="brand_color" value="{{ profile.brand_color }}">
+                                <input id="brand_color" type="text" name="brand_color" value="{{ profile.brand_color if profile else '' }}">
                                 <div class="field-help">
                                     {% if lang == 'es' %}
                                         Se usa en botones, acentos y elementos clave.
@@ -992,7 +992,7 @@
                                 <label for="accent_color">
                                     {% if lang == 'es' %}Color secundario{% else %}Secondary Accent Color{% endif %}
                                 </label>
-                                <input id="accent_color" type="text" name="accent_color" value="{{ profile.accent_color }}">
+                                <input id="accent_color" type="text" name="accent_color" value="{{ profile.accent_color if profile else '' }}">
                                 <div class="field-help">
                                     {% if lang == 'es' %}
                                         Se usa para resaltados y contraste visual.
@@ -1095,7 +1095,7 @@
                             rows="4"
                             style="padding:12px 14px; border-radius:14px; font-size:14px; font-family:inherit;"
                             placeholder="{% if lang == 'es' %}Gracias por su negocio...{% else %}Thank you for your business...{% endif %}"
-                        >{{ profile.default_notes }}</textarea>
+                        >{{ profile.default_notes if profile else '' }}</textarea>
                     </div>
 
                     <div class="field-group">
@@ -1108,7 +1108,7 @@
                             rows="4"
                             style="padding:12px 14px; border-radius:14px; font-size:14px; font-family:inherit;"
                             placeholder="{% if lang == 'es' %}El pago vence en 14 días...{% else %}Payment is due within 14 days...{% endif %}"
-                        >{{ profile.default_terms }}</textarea>
+                        >{{ profile.default_terms if profile else '' }}</textarea>
                     </div>
                 </div>
 
