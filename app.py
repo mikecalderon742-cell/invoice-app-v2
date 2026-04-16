@@ -1870,6 +1870,8 @@ def get_business_profile():
             "user_id": None,
         }
 
+    return get_business_profile_by_user_id(user_id)
+
 def get_business_profile_by_user_id(user_id: int):
     if not user_id:
         return None
