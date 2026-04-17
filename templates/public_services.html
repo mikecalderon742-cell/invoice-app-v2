@@ -21,16 +21,104 @@
 {% endblock %}
 
 {% block content %}
+<style>
+  .public-services-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .public-services-logo {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    flex: 0 0 auto;
+  }
+
+  .public-services-brand-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .public-services-kicker {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .public-services-kicker {
+    color: #94a3b8;
+  }
+
+  .public-services-brand-name {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    color: #0f172a;
+    word-break: break-word;
+  }
+
+  body.dark .public-services-brand-name {
+    color: #f8fafc;
+  }
+
+  .public-services-powered {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .public-services-powered {
+    color: #94a3b8;
+  }
+</style>
+
 <div class="page-shell">
     <div class="page-header" style="margin-bottom:24px;">
+        <div class="public-services-brand">
+            {% if public_business_profile.logo_url %}
+                <img
+                    src="{{ public_business_profile.logo_url }}"
+                    alt="{{ public_business_profile.business_name or 'Business logo' }}"
+                    class="public-services-logo"
+                >
+            {% endif %}
+
+            <div class="public-services-brand-copy">
+                <div class="public-services-kicker">
+                    {% if lang == 'es' %}
+                        Servicios del negocio
+                    {% elif lang == 'zh' %}
+                        商家服务
+                    {% else %}
+                        Business Services
+                    {% endif %}
+                </div>
+
+                <div class="public-services-brand-name">
+                    {{ public_business_profile.business_name or "BillBeam" }}
+                </div>
+            </div>
+        </div>
+
         <div>
             <h1 style="margin-bottom:8px;">
                 {% if lang == 'es' %}
-                    Servicios de {{ public_business_profile.business_name or "BillBeam" }}
+                    Servicios disponibles
                 {% elif lang == 'zh' %}
-                    {{ public_business_profile.business_name or "BillBeam" }} 的服务
+                    可用服务
                 {% else %}
-                    Services from {{ public_business_profile.business_name or "BillBeam" }}
+                    Available Services
                 {% endif %}
             </h1>
             <p class="text-muted" style="max-width:760px;">
@@ -114,5 +202,15 @@
         </div>
     </div>
     {% endif %}
+    <div class="public-services-powered">
+        ⚡
+        {% if lang == 'es' %}
+            Funciona con <strong>BillBeam</strong>
+        {% elif lang == 'zh' %}
+            由 <strong>BillBeam</strong> 提供支持
+        {% else %}
+            Powered by <strong>BillBeam</strong>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

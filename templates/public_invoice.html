@@ -1151,34 +1151,32 @@
   <div class="public-hero">
     <div class="public-hero-left">
       <div class="public-brand">
-        {% if show_portal_branding %}
-          {% if business_profile.logo_url %}
-            <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Logo">
-          {% endif %}
-          <div>
-            <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
-            <div class="public-subtitle">
-              {% if is_public_view %}
-                {% if lang == 'es' %}
-                  Portal de facturas
-                {% elif lang == 'zh' %}
-                  发票门户
-                {% else %}
-                  Invoice Portal
-                {% endif %}
+        {% if business_profile.logo_url %}
+          <img class="public-logo" src="{{ business_profile.logo_url }}" alt="{{ business_profile.business_name or 'Business logo' }}">
+        {% endif %}
+        <div>
+          <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
+          <div class="public-subtitle">
+            {% if is_public_view %}
+              {% if lang == 'es' %}
+                Portal de facturas
+              {% elif lang == 'zh' %}
+                发票门户
               {% else %}
-                {% if lang == 'es' %}
-                  Vista interna de factura
-                {% elif lang == 'zh' %}
-                  内部发票视图
-                {% else %}
-                  Internal Invoice View
-                {% endif %}
+                Invoice Portal
               {% endif %}
-            </div>
+            {% else %}
+              {% if lang == 'es' %}
+                Vista interna de factura
+              {% elif lang == 'zh' %}
+                内部发票视图
+              {% else %}
+                Internal Invoice View
+              {% endif %}
+            {% endif %}
           </div>
-        {% else %}
-          <div>
+        </div>
+      </div>
             <div class="public-title">BillBeam</div>
             <div class="public-subtitle">
               {% if is_public_view %}
@@ -1507,21 +1505,21 @@
                 A partial payment has already been recorded on this invoice.
               {% endif %}
             {% endif %}
-          {% else %}
-            {% if is_simple_plan %}
-              {% if lang == 'es' %}
-                Esta vista está pensada para revisar la factura o guardarla como recibo para tus registros.
-              {% else %}
-                This view is designed for reviewing the invoice or keeping it as a receipt for your records.
-              {% endif %}
+        {% else %}
+          {% if is_simple_plan %}
+            {% if lang == 'es' %}
+              Esta vista está pensada para revisar la factura o guardarla como recibo para tus registros.
             {% else %}
-              {% if lang == 'es' %}
-                ¿Tienes dudas? Escríbenos a <strong>{{ business_profile.email or "tu negocio" }}</strong>.
-              {% else %}
-                Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>.
-              {% endif %}
+              This view is designed for reviewing the invoice or keeping it as a receipt for your records.
+            {% endif %}
+          {% else %}
+            {% if lang == 'es' %}
+              ¿Tienes dudas? Contacta a <strong>{{ business_profile.business_name or "este negocio" }}</strong>{% if business_profile.email %} en <strong>{{ business_profile.email }}</strong>{% endif %}.
+            {% else %}
+              Questions? Contact <strong>{{ business_profile.business_name or "this business" }}</strong>{% if business_profile.email %} at <strong>{{ business_profile.email }}</strong>{% endif %}.
             {% endif %}
           {% endif %}
+        {% endif %}
         </div>
 
         {% if can_pay %}
@@ -1585,9 +1583,8 @@
           </div>
 
           <a
-  href="/book/{{ owner_user_id }}{% if lang %}?lang={{ lang }}{% endif %}"
-  class="btn btn-secondary"
->
+            href="/book/{{ owner_user_id }}{% if lang %}?lang={{ lang }}{% endif %}"
+            class="btn btn-secondary"
           >
             {% if lang == 'es' %}
               Ver todos los servicios
@@ -1636,9 +1633,8 @@
 
             <div style="margin-top:14px; display:flex; justify-content:flex-end;">
               <a
-  href="/book/{{ owner_user_id }}/service/{{ s.id }}{% if lang %}?lang={{ lang }}{% endif %}"
-  class="btn btn-primary"
->
+                href="/book/{{ owner_user_id }}/service/{{ s.id }}{% if lang %}?lang={{ lang }}{% endif %}"
+                class="btn btn-primary"
               >
                 {% if lang == 'es' %}
                   Solicitar servicio

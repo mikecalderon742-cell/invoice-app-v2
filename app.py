@@ -3069,6 +3069,19 @@ def get_business_profile_safe():
     }
 
 
+def get_outbound_email_branding():
+    profile = get_business_profile_safe()
+    business_name = (profile.get("business_name") or DEFAULT_BUSINESS_NAME).strip() or DEFAULT_BUSINESS_NAME
+    business_email = (profile.get("email") or "").strip()
+    business_website = (profile.get("website") or "").strip()
+
+    return {
+        "business_name": business_name,
+        "business_email": business_email,
+        "business_website": business_website,
+    }
+
+
 @app.context_processor
 def inject_current_user_ctx():
     user = get_current_user()
@@ -6448,18 +6461,27 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
             "or SMTP (SMTP_HOST & SMTP_FROM)."
         )
 
+    branding = get_outbound_email_branding()
+    business_name = branding["business_name"]
+    business_email = branding["business_email"]
+    business_website = branding["business_website"]
+
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = smtp_from
+    msg["From"] = f"{business_name} <{smtp_from}>"
     msg["To"] = to_email
 
-    body_text += """
+    footer_lines = ["", "—", business_name]
 
-—
-Created with BillBeam
-Modern invoicing made simple
-https://billbeam.app
-"""
+    if business_email:
+        footer_lines.append(business_email)
+
+    if business_website:
+        footer_lines.append(business_website)
+
+    footer_lines.append("Powered by BillBeam")
+
+    body_text += "\n" + "\n".join(footer_lines)
 
     msg.set_content(body_text)
 
