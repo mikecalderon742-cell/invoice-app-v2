@@ -32,6 +32,7 @@ from reportlab.lib.pagesizes import LETTER
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 # -------------------------
 # APP / BRAND
@@ -131,10 +132,18 @@ else:
     logger.warning("STRIPE_SECRET_KEY is not set")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+# Render persistent disk mount path
+PERSISTENT_STORAGE_ROOT = os.environ.get("PERSISTENT_STORAGE_ROOT", "/var/data").rstrip("/")
+LOGO_UPLOAD_ROOT = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads", "logos")
+
+os.makedirs(LOGO_UPLOAD_ROOT, exist_ok=True)
+
+app.config["UPLOAD_FOLDER"] = LOGO_UPLOAD_ROOT
+app.config["MAX_LOGO_UPLOAD_BYTES"] = int(os.environ.get("MAX_LOGO_UPLOAD_BYTES", str(2 * 1024 * 1024)))
+
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+ALLOWED_IMAGE_MIMETYPES = {"image/png", "image/jpeg", "image/webp"}
 
 
 # -------------------------
@@ -424,6 +433,56 @@ def can_use_collections(user_or_plan=None) -> bool:
 
 def can_use_branding(user_or_plan=None) -> bool:
     return resolve_plan_key(user_or_plan) in ("pro", "enterprise")
+
+
+def allowed_logo_file(filename: str) -> bool:
+    if not filename or "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    return ext in ALLOWED_IMAGE_EXTENSIONS
+
+
+def build_logo_public_url(filename: str) -> str:
+    base_url = (APP_BASE_URL or request.host_url.rstrip("/")).rstrip("/")
+    return f"{base_url}/uploads/logos/{filename}"
+
+
+def save_uploaded_logo(file_storage, user_id: int):
+    if not file_storage or not getattr(file_storage, "filename", ""):
+        return None, "No logo file was selected."
+
+    original_name = (file_storage.filename or "").strip()
+    if not allowed_logo_file(original_name):
+        return None, "Logo must be a PNG, JPG, JPEG, or WEBP image."
+
+    mimetype = (file_storage.mimetype or "").lower().strip()
+    if mimetype not in ALLOWED_IMAGE_MIMETYPES:
+        return None, "Unsupported logo file type."
+
+    safe_name = secure_filename(original_name)
+    ext = safe_name.rsplit(".", 1)[1].lower()
+
+    file_storage.stream.seek(0, os.SEEK_END)
+    file_size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+
+    if file_size <= 0:
+        return None, "Uploaded logo file is empty."
+
+    if file_size > app.config["MAX_LOGO_UPLOAD_BYTES"]:
+        return None, "Logo file is too large. Please upload an image under 2 MB."
+
+    filename = f"user_{user_id}_logo.{ext}"
+    destination_path = os.path.join(LOGO_UPLOAD_ROOT, filename)
+
+    try:
+        file_storage.save(destination_path)
+    except Exception as e:
+        logger.exception("Failed saving uploaded logo for user_id=%s: %s", user_id, e)
+        return None, "Could not save the uploaded logo."
+
+    public_url = build_logo_public_url(filename)
+    return public_url, None
 
 
 # -------------------------
@@ -4880,6 +4939,14 @@ def global_search():
     )
 
 
+@app.route("/uploads/logos/<path:filename>")
+def uploaded_logo(filename):
+    safe_filename = os.path.basename(filename or "")
+    if not safe_filename:
+        return "", 404
+    return send_from_directory(LOGO_UPLOAD_ROOT, safe_filename)
+
+
 # -------------------------
 # SETTINGS
 # -------------------------
@@ -5034,13 +5101,39 @@ def settings():
             default_notes = (request.form.get("default_notes") or "").strip()
             language = normalize_lang(request.form.get("language") or user.get("language") or "en")
 
+            uploaded_logo_file = request.files.get("logo_file")
+            uploaded_logo_url = None
+
+            if uploaded_logo_file and (uploaded_logo_file.filename or "").strip():
+                uploaded_logo_url, logo_error = save_uploaded_logo(uploaded_logo_file, user_id)
+                if logo_error:
+                    profile = get_business_profile()
+                    feedback_message = logo_error
+                    feedback_type = "error"
+
+                    services = get_user_services(user_id, include_inactive=True)
+
+                    return render_template(
+                        "settings.html",
+                        profile=profile,
+                        feedback_message=feedback_message,
+                        feedback_type=feedback_type,
+                        payment_setup=sync_stripe_connect_status_for_user(user_id),
+                        current_plan=normalize_plan_key(user.get("plan") or "free"),
+                        lang=lang,
+                        services=services,
+                        editing_service=editing_service,
+                    )
+
+            final_logo_url = uploaded_logo_url or logo_url
+
             data = {
                 "business_name": business_name or DEFAULT_BUSINESS_NAME,
                 "email": email,
                 "phone": phone,
                 "website": website,
                 "address": address,
-                "logo_url": logo_url,
+                "logo_url": final_logo_url,
                 "brand_color": brand_color,
                 "accent_color": accent_color,
                 "default_terms": default_terms,

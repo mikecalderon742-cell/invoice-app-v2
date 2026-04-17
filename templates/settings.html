@@ -236,6 +236,21 @@
     border-radius: 14px;
   }
 
+  .settings-form-shell input[type="file"] {
+    width: 100%;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    font-size: 14px;
+  }
+
+  body.dark .settings-form-shell input[type="file"] {
+    background: rgba(15,23,42,0.6);
+    border-color: rgba(148,163,184,0.18);
+    color: #e5e7eb;
+  }
+
   .brand-preview {
     display: grid;
     gap: 16px;
@@ -877,7 +892,7 @@
     {% endif %}
 
     <div class="settings-form-shell fade-in-up">
-        <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+        <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}" enctype="multipart/form-data">
             <input type="hidden" name="form_type" value="profile">
 
             <div class="settings-grid">
@@ -958,17 +973,34 @@
                         {% endif %}
                     </div>
 
-                    <div class="field-grid">
+                                            <div class="field-group">
+                            <label for="logo_file">
+                                {% if lang == 'es' %}Subir logo{% elif lang == 'zh' %}上传 Logo{% else %}Upload Logo{% endif %}
+                            </label>
+                            <input id="logo_file" type="file" name="logo_file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+                            <div class="field-help">
+                                {% if lang == 'es' %}
+                                    Sube una imagen PNG, JPG o WEBP. Una imagen limpia y cuadrada suele verse mejor.
+                                {% elif lang == 'zh' %}
+                                    上传 PNG、JPG 或 WEBP 图片。清晰的方形图片通常显示效果最好。
+                                {% else %}
+                                    Upload a PNG, JPG, or WEBP image. A clean square image usually looks best.
+                                {% endif %}
+                            </div>
+                        </div>
+
                         <div class="field-group">
                             <label for="logo_url">
-                                {% if lang == 'es' %}URL del logo{% else %}Logo URL{% endif %}
+                                {% if lang == 'es' %}URL del logo (opcional){% elif lang == 'zh' %}Logo URL（可选）{% else %}Logo URL (optional){% endif %}
                             </label>
                             <input id="logo_url" type="text" name="logo_url" value="{{ profile.logo_url if profile else '' }}" placeholder="https://...">
                             <div class="field-help">
                                 {% if lang == 'es' %}
-                                    Usa una imagen clara y cuadrada para un mejor resultado visual.
+                                    Si prefieres, todavía puedes pegar una URL directa de imagen. Si subes un archivo, BillBeam usará la imagen subida.
+                                {% elif lang == 'zh' %}
+                                    如果你愿意，仍然可以粘贴直接图片链接。如果你上传文件，BillBeam 会优先使用上传的图片。
                                 {% else %}
-                                    Use a clean, square image for the best visual result.
+                                    You can still paste a direct image URL if you prefer. If you upload a file, BillBeam will use the uploaded image.
                                 {% endif %}
                             </div>
                         </div>
