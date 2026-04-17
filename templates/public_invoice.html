@@ -1152,7 +1152,7 @@
     <div class="public-hero-left">
       <div class="public-brand">
         {% if business_profile.logo_url %}
-          <img class="public-logo" src="{{ business_profile.logo_url }}" alt="{{ business_profile.business_name or 'Business logo' }}">
+          <img class="public-logo" src="{{ business_profile.logo_url }}" alt="Business logo">
         {% endif %}
         <div>
           <div class="public-title">{{ business_profile.business_name or "BillBeam" }}</div>
@@ -1514,9 +1514,9 @@
             {% endif %}
           {% else %}
             {% if lang == 'es' %}
-              ¿Tienes dudas? Contacta a <strong>{{ business_profile.business_name or "este negocio" }}</strong>{% if business_profile.email %} en <strong>{{ business_profile.email }}</strong>{% endif %}.
+              ¿Tienes dudas? Escríbenos a <strong>{{ business_profile.email or "tu negocio" }}</strong>.
             {% else %}
-              Questions? Contact <strong>{{ business_profile.business_name or "this business" }}</strong>{% if business_profile.email %} at <strong>{{ business_profile.email }}</strong>{% endif %}.
+              Questions? Email <strong>{{ business_profile.email or "your business" }}</strong>.
             {% endif %}
           {% endif %}
         {% endif %}
