@@ -6049,7 +6049,8 @@ def public_invoice(token):
 
     if client_name_from_client:
         client_name = client_name_from_client
-        record_public_invoice_view(invoice_id, token)
+
+    record_public_invoice_view(invoice_id, token)
 
     amount_float = float(amount)
     inv_label = invoice_number or f"#{invoice_id}"
@@ -6086,10 +6087,17 @@ def public_invoice(token):
     total_paid = float(payment_summary.get("total_paid") or 0)
     balance = float(payment_summary.get("balance") or 0)
     percent_paid = float(payment_summary.get("percent_paid") or 0)
+    paid_at = payment_summary.get("last_payment_at")
     view_summary = get_invoice_view_summary(invoice_id)
-    owner_plan = get_user_plan_by_user_id(user_id)
-    show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001
-    owner_services = get_user_services(user_id, include_inactive=False)
+
+    invoice_public_summary = get_invoice_by_public_token(token)
+    owner_user_id = invoice_public_summary["user_id"] if invoice_public_summary else None
+    owner_plan = get_user_plan_by_user_id(owner_user_id) if owner_user_id else "free"
+
+    is_paid_in_full = payment_summary.get("is_paid_in_full", False)
+    show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001 and not is_paid_in_full
+
+    owner_services = get_user_services(owner_user_id, include_inactive=False) if owner_user_id else []
     show_portal_branding = can_use_branding(owner_plan)
 
     if amount_float > 0 and total_paid >= amount_float and status != "Paid":
@@ -6142,6 +6150,7 @@ def public_invoice(token):
         payment_summary=payment_summary,
         view_summary=view_summary,
         show_pay_button=show_pay_button,
+        business_profile=get_business_profile_by_user_id(owner_user_id) if owner_user_id else get_business_profile(),
         owner_plan=owner_plan,
         services=owner_services,
         show_portal_branding=show_portal_branding,
