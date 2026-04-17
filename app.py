@@ -6087,7 +6087,6 @@ def public_invoice(token):
     balance = float(payment_summary.get("balance") or 0)
     percent_paid = float(payment_summary.get("percent_paid") or 0)
     view_summary = get_invoice_view_summary(invoice_id)
-    business_profile = get_business_profile_by_user_id(user_id)
     owner_plan = get_user_plan_by_user_id(user_id)
     show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001
     owner_services = get_user_services(user_id, include_inactive=False)
@@ -6143,7 +6142,6 @@ def public_invoice(token):
         payment_summary=payment_summary,
         view_summary=view_summary,
         show_pay_button=show_pay_button,
-        business_profile=business_profile,
         owner_plan=owner_plan,
         services=owner_services,
         show_portal_branding=show_portal_branding,
@@ -6288,18 +6286,17 @@ def invoice_detail(invoice_id):
         payments=payments,
         total_paid=total_paid,
         balance=balance,
+        paid_at=paid_at,
+        is_paid_in_full=is_paid_in_full,
         pdf_url=pdf_url,
-        is_public_view=False,
-        public_token=None,
+        is_public_view=True,
+        public_token=token,
         signature_data=signature_data,
         invoice_events=invoice_events,
-        paid_at=payment_summary.get("last_payment_at"),
         percent_paid=percent_paid,
         payment_summary=payment_summary,
         view_summary=view_summary,
-        last_reminder_sent_at=last_reminder_sent_at,
         show_pay_button=show_pay_button,
-        business_profile=get_business_profile_by_user_id(owner_user_id) if owner_user_id else None,
         owner_plan=owner_plan,
         services=owner_services,
         show_portal_branding=show_portal_branding,
@@ -6308,7 +6305,7 @@ def invoice_detail(invoice_id):
             status,
             payment_summary,
             view_summary,
-            last_reminder_sent_at,
+            None,
         ),
     )
 
