@@ -6247,9 +6247,16 @@ def invoice_detail(invoice_id):
     balance = float(payment_summary.get("balance") or 0)
     percent_paid = float(payment_summary.get("percent_paid") or 0)
     view_summary = get_invoice_view_summary(invoice_id)
-    owner_plan = get_user_plan_by_user_id(user_id)
-    show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001
-    owner_services = get_user_services(user_id, include_inactive=False)
+
+    invoice_public_summary = get_invoice_by_public_token(token)
+    owner_user_id = invoice_public_summary["user_id"] if invoice_public_summary else None
+    owner_plan = get_user_plan_by_user_id(owner_user_id) if owner_user_id else "free"
+
+    is_paid_in_full = payment_summary.get("is_paid_in_full", False)
+    paid_at = payment_summary.get("last_payment_at")
+    show_pay_button = can_collect_payments(owner_plan) and balance > 0.0001 and not is_paid_in_full
+
+    owner_services = get_user_services(owner_user_id, include_inactive=False) if owner_user_id else []
     show_portal_branding = can_use_branding(owner_plan)
 
     cursor.execute(
@@ -6297,6 +6304,7 @@ def invoice_detail(invoice_id):
         payment_summary=payment_summary,
         view_summary=view_summary,
         show_pay_button=show_pay_button,
+        business_profile=get_business_profile_by_user_id(owner_user_id) if owner_user_id else get_business_profile(),
         owner_plan=owner_plan,
         services=owner_services,
         show_portal_branding=show_portal_branding,
