@@ -199,6 +199,42 @@
     gap: 12px;
   }
 
+  .color-input-stack {
+    display: grid;
+    gap: 8px;
+  }
+
+  .color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .settings-form-shell input[type="color"] {
+    width: 56px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  body.dark .settings-form-shell input[type="color"] {
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  .color-picker-label {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+  }
+
+  body.dark .color-picker-label {
+    color: #94a3b8;
+  }
+
   .field-group {
     display: grid;
     gap: 6px;
@@ -1006,34 +1042,95 @@
                         </div>
 
                         <div class="field-row-2">
-                            <div class="field-group">
+                                                        <div class="field-group">
                                 <label for="brand_color">
-                                    {% if lang == 'es' %}Color de marca principal{% else %}Primary Brand Color{% endif %}
+                                    {% if lang == 'es' %}Color de marca principal{% elif lang == 'zh' %}主品牌颜色{% else %}Primary Brand Color{% endif %}
                                 </label>
-                                <input id="brand_color" type="text" name="brand_color" value="{{ profile.brand_color if profile else '' }}">
+
+                                <div class="color-input-stack">
+                                    <div class="color-picker-row">
+                                        <input
+                                            id="brand_color_picker"
+                                            type="color"
+                                            value="{{ profile.brand_color if profile and profile.brand_color else '#020617' }}"
+                                            oninput="document.getElementById('brand_color').value = this.value"
+                                        >
+                                        <div class="color-picker-label">
+                                            {% if lang == 'es' %}
+                                                Elige un color visualmente y ajusta el código manualmente si quieres.
+                                            {% elif lang == 'zh' %}
+                                                先直接选择颜色，如有需要也可以手动调整颜色代码。
+                                            {% else %}
+                                                Pick a color visually, then fine-tune the code manually if needed.
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <input
+                                        id="brand_color"
+                                        type="text"
+                                        name="brand_color"
+                                        value="{{ profile.brand_color if profile else '' }}"
+                                        placeholder="#020617"
+                                        oninput="document.getElementById('brand_color_picker').value = this.value"
+                                    >
+                                </div>
+
                                 <div class="field-help">
                                     {% if lang == 'es' %}
                                         Se usa en botones, acentos y elementos clave.
+                                    {% elif lang == 'zh' %}
+                                        用于按钮、强调元素和关键界面细节。
                                     {% else %}
                                         Used in buttons, accents, and key interface elements.
                                     {% endif %}
                                 </div>
                             </div>
 
-                            <div class="field-group">
+                                                        <div class="field-group">
                                 <label for="accent_color">
-                                    {% if lang == 'es' %}Color secundario{% else %}Secondary Accent Color{% endif %}
+                                    {% if lang == 'es' %}Color secundario{% elif lang == 'zh' %}辅助颜色{% else %}Secondary Accent Color{% endif %}
                                 </label>
-                                <input id="accent_color" type="text" name="accent_color" value="{{ profile.accent_color if profile else '' }}">
+
+                                <div class="color-input-stack">
+                                    <div class="color-picker-row">
+                                        <input
+                                            id="accent_color_picker"
+                                            type="color"
+                                            value="{{ profile.accent_color if profile and profile.accent_color else '#3A8BFF' }}"
+                                            oninput="document.getElementById('accent_color').value = this.value"
+                                        >
+                                        <div class="color-picker-label">
+                                            {% if lang == 'es' %}
+                                                Elige un color visualmente y conserva el campo manual para precisión.
+                                            {% elif lang == 'zh' %}
+                                                可视化选择颜色，同时保留手动输入以便精确调整。
+                                            {% else %}
+                                                Choose visually and keep the manual field for exact control.
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <input
+                                        id="accent_color"
+                                        type="text"
+                                        name="accent_color"
+                                        value="{{ profile.accent_color if profile else '' }}"
+                                        placeholder="#3A8BFF"
+                                        oninput="document.getElementById('accent_color_picker').value = this.value"
+                                    >
+                                </div>
+
                                 <div class="field-help">
                                     {% if lang == 'es' %}
                                         Se usa para resaltados y contraste visual.
+                                    {% elif lang == 'zh' %}
+                                        用于高亮和视觉对比。
                                     {% else %}
                                         Used for highlights and visual contrast.
                                     {% endif %}
                                 </div>
                             </div>
-                        </div>
 
                         <div class="brand-preview">
                             <div class="brand-preview-card">
