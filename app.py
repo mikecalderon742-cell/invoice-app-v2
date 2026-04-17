@@ -6299,11 +6299,11 @@ def invoice_detail(invoice_id):
         view_summary=view_summary,
         last_reminder_sent_at=last_reminder_sent_at,
         show_pay_button=show_pay_button,
-        business_profile=business_profile,
+        business_profile=get_business_profile_by_user_id(owner_user_id) if owner_user_id else None,
         owner_plan=owner_plan,
         services=owner_services,
         show_portal_branding=show_portal_branding,
-        owner_user_id=user_id,
+        owner_user_id=owner_user_id,
         collection_recommendation=get_invoice_collection_recommendation(
             status,
             payment_summary,
