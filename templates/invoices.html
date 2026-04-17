@@ -761,11 +761,11 @@
     <div class="dashboard-title-wrap">
         <h1>
             {% if lang == 'es' %}
-                Panel BillBeam
+                {{ business_profile.business_name or "BillBeam" }} · Panel
             {% elif lang == 'zh' %}
-                BillBeam 面板
+                {{ business_profile.business_name or "BillBeam" }} · 面板
             {% else %}
-                BillBeam Dashboard
+                {{ business_profile.business_name or "BillBeam" }} Dashboard
             {% endif %}
         </h1>
         <div class="dashboard-subcopy">
