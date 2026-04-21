@@ -64,15 +64,15 @@
             align-items: start;
         }
 
-.services-panel {
-    background:
-        radial-gradient(circle at top right, rgba(58,139,255,.10), transparent 40%),
-        linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.96));
-    border: 1px solid rgba(148,163,184,.16);
-    border-radius: 24px;
-    box-shadow: 0 18px 46px rgba(15,23,42,.08);
-    overflow: hidden;
-}
+        .services-panel {
+            background:
+                radial-gradient(circle at top right, rgba(58,139,255,.10), transparent 40%),
+                linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.96));
+            border: 1px solid rgba(148,163,184,.16);
+            border-radius: 24px;
+            box-shadow: 0 18px 46px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
 
         .services-panel-header {
             padding: 22px 22px 10px;
@@ -248,35 +248,34 @@
             margin-bottom: 18px;
         }
 
-.services-stat {
-    border-radius: 22px;
-    padding: 18px;
-    box-shadow: 0 14px 36px rgba(15,23,42,.08);
-    border: 1px solid rgba(148,163,184,.16);
-    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.96));
-}
+        .services-stat {
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 14px 36px rgba(15,23,42,.08);
+            border: 1px solid rgba(148,163,184,.16);
+            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.96));
+        }
 
-/* TOTAL */
-.services-stat:nth-child(1) {
-    background:
-        radial-gradient(circle at top right, rgba(58,139,255,.12), transparent 40%),
-        linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.96));
-}
+        .services-stat:nth-child(1) {
+            background:
+                radial-gradient(circle at top right, rgba(58,139,255,.14), transparent 42%),
+                linear-gradient(180deg, rgba(255,255,255,.98), rgba(241,245,249,.96));
+            border-color: rgba(96,165,250,.20);
+        }
 
-/* ACTIVE */
-.services-stat:nth-child(2) {
-    background:
-        radial-gradient(circle at top right, rgba(16,185,129,.18), transparent 40%),
-        linear-gradient(180deg, rgba(236,253,245,.9), rgba(220,252,231,.9));
-    border-color: rgba(16,185,129,.25);
-}
+        .services-stat:nth-child(2) {
+            background:
+                radial-gradient(circle at top right, rgba(16,185,129,.18), transparent 40%),
+                linear-gradient(180deg, rgba(236,253,245,.94), rgba(220,252,231,.92));
+            border-color: rgba(16,185,129,.25);
+        }
 
-/* INACTIVE */
-.services-stat:nth-child(3) {
-    background:
-        radial-gradient(circle at top right, rgba(148,163,184,.16), transparent 40%),
-        linear-gradient(180deg, rgba(248,250,252,.96), rgba(241,245,249,.96));
-}
+        .services-stat:nth-child(3) {
+            background:
+                radial-gradient(circle at top right, rgba(148,163,184,.18), transparent 42%),
+                linear-gradient(180deg, rgba(248,250,252,.98), rgba(226,232,240,.96));
+            border-color: rgba(148,163,184,.22);
+        }
 
         .services-stat-label {
             font-size: .82rem;
@@ -304,8 +303,79 @@
             background: rgba(255,255,255,.94);
             border: 1px solid rgba(148,163,184,.18);
             border-radius: 24px;
-            padding: 20px;
             box-shadow: 0 14px 40px rgba(15,23,42,.06);
+            padding: 0;
+            overflow: hidden;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 28px 60px rgba(15,23,42,.12);
+        }
+
+        .service-card::before {
+            content: "";
+            display: block;
+            height: 3px;
+            width: 100%;
+            background: linear-gradient(
+                90deg,
+                color-mix(in srgb, var(--accent) 92%, white 8%),
+                color-mix(in srgb, var(--accent-light) 78%, white 22%)
+            );
+            opacity: .95;
+        }
+
+        .service-card-media {
+            position: relative;
+            height: 132px;
+            background:
+                radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 34%, transparent), transparent 42%),
+                radial-gradient(circle at bottom left, color-mix(in srgb, var(--accent-light) 22%, transparent), transparent 34%),
+                linear-gradient(
+                    135deg,
+                    color-mix(in srgb, var(--accent) 78%, #0f172a 22%),
+                    color-mix(in srgb, var(--accent-dark, #151B54) 72%, #0f172a 28%)
+                );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,.72);
+            font-size: .86rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            overflow: hidden;
+        }
+
+        .service-card-media::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(135deg, rgba(255,255,255,.16), transparent 36%),
+                linear-gradient(180deg, rgba(255,255,255,.06), transparent 44%);
+            pointer-events: none;
+        }
+
+        .service-card-media::after {
+            content: "";
+            position: absolute;
+            right: -26px;
+            bottom: -30px;
+            width: 116px;
+            height: 116px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.10);
+            filter: blur(2px);
+            pointer-events: none;
+        }
+
+        .service-card-inner {
+            padding: 20px;
+            display: grid;
+            gap: 0;
         }
 
         .service-card-top {
@@ -328,27 +398,27 @@
             color: #0f172a;
             letter-spacing: -.024em;
             word-break: break-word;
-         }
+        }
 
-         .service-card-status {
-             display: inline-flex;
-             align-items: center;
-             gap: 6px;
-             margin-top: 10px;
-             padding: 7px 11px;
-             border-radius: 999px;
-             font-size: .74rem;
-             font-weight: 800;
-             text-transform: uppercase;
-             letter-spacing: .07em;
-             box-shadow: inset 0 1px 0 rgba(255,255,255,.28);
-         }
+        .service-card-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: .74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.28);
+        }
 
-.service-card-status.active {
-    background: color-mix(in srgb, var(--accent) 10%, #ecfdf5 90%);
-    color: color-mix(in srgb, var(--accent-dark, #151B54) 68%, #047857 32%);
-    border: 1px solid color-mix(in srgb, var(--accent) 18%, rgba(16,185,129,.2));
-}
+        .service-card-status.active {
+            background: color-mix(in srgb, var(--accent) 10%, #ecfdf5 90%);
+            color: color-mix(in srgb, var(--accent-dark, #151B54) 68%, #047857 32%);
+            border: 1px solid color-mix(in srgb, var(--accent) 18%, rgba(16,185,129,.2));
+        }
 
         .service-card-status.inactive {
             background: #f8fafc;
@@ -356,22 +426,22 @@
             border: 1px solid rgba(148,163,184,.18);
         }
 
-.service-card-price {
-    white-space: nowrap;
-    font-size: 1.2rem;
-    font-weight: 900;
-    letter-spacing: -.03em;
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--accent) 88%, white 12%),
-        color-mix(in srgb, var(--accent-dark, #151B54) 82%, #2563eb 18%)
-    );
-    color: #ffffff;
-    border: none;
-    border-radius: 18px;
-    padding: 11px 15px;
-    box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 24%, transparent);
-}
+        .service-card-price {
+            white-space: nowrap;
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: -.03em;
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--accent) 88%, white 12%),
+                color-mix(in srgb, var(--accent-dark, #151B54) 82%, #2563eb 18%)
+            );
+            color: #ffffff;
+            border: none;
+            border-radius: 18px;
+            padding: 11px 15px;
+            box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 24%, transparent);
+        }
 
         .service-card-description {
             color: #475569;
@@ -389,7 +459,7 @@
             align-items: center;
             justify-content: space-between;
             padding-top: 15px;
-            border-top: 1px solid rgba(226,232,240,.85);
+            border-top: 1px solid rgba(226,232,240,.75);
         }
 
         .service-card-meta {
@@ -475,7 +545,12 @@
                 margin-right: 16px;
             }
 
+            .service-card-inner,
             .service-card {
+                padding: 0;
+            }
+
+            .service-card-inner {
                 padding: 16px;
             }
 
@@ -508,207 +583,125 @@
             }
         }
 
-        @media (prefers-color-scheme: dark) {
-            .services-panel {
-    background:
-        radial-gradient(circle at top right, rgba(58,139,255,.18), transparent 40%),
-        linear-gradient(180deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
-}
+        body.dark .services-panel {
+            background:
+                radial-gradient(circle at top right, rgba(58,139,255,.18), transparent 40%),
+                linear-gradient(180deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
+            border-color: rgba(148,163,184,.16);
+            box-shadow: 0 18px 44px rgba(2,6,23,.30);
+        }
 
-.services-stat {
-    background: linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.92));
-}
+        body.dark .services-stat {
+            border-color: rgba(148,163,184,.16);
+            box-shadow: 0 18px 44px rgba(2,6,23,.30);
+            background: linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.92));
+        }
 
-/* ACTIVE dark */
-.services-stat:nth-child(2) {
-    background:
-        radial-gradient(circle at top right, rgba(16,185,129,.22), transparent 40%),
-        linear-gradient(180deg, rgba(6,78,59,.85), rgba(2,44,34,.9));
-}
+        body.dark .services-stat:nth-child(1) {
+            background:
+                radial-gradient(circle at top right, rgba(58,139,255,.22), transparent 42%),
+                linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.94));
+            border-color: rgba(96,165,250,.24);
+        }
 
-/* TOTAL subtle blue */
-.services-stat:nth-child(1) {
-    background:
-        radial-gradient(circle at top right, rgba(58,139,255,.18), transparent 40%),
-        linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.92));
-}
+        body.dark .services-stat:nth-child(2) {
+            background:
+                radial-gradient(circle at top right, rgba(16,185,129,.22), transparent 40%),
+                linear-gradient(180deg, rgba(6,78,59,.85), rgba(2,44,34,.90));
+            border-color: rgba(16,185,129,.26);
+        }
 
-/* INACTIVE muted */
-.services-stat:nth-child(3) {
-    background:
-        radial-gradient(circle at top right, rgba(148,163,184,.18), transparent 40%),
-        linear-gradient(180deg, rgba(30,41,59,.92), rgba(15,23,42,.92));
-}
+        body.dark .services-stat:nth-child(3) {
+            background:
+                radial-gradient(circle at top right, rgba(148,163,184,.18), transparent 42%),
+                linear-gradient(180deg, rgba(51,65,85,.94), rgba(15,23,42,.94));
+            border-color: rgba(148,163,184,.22);
+        }
 
-            .services-panel-title,
-            .services-label,
-            .services-stat-value,
-            .service-card-title,
-            .service-card-price,
-            .services-empty h3 {
-                color: #f8fafc;
-            }
+        body.dark .service-card {
+            background: linear-gradient(180deg, rgba(15,23,42,.96), rgba(2,6,23,.96));
+            border-color: rgba(148,163,184,.16);
+            box-shadow: 0 18px 44px rgba(2,6,23,.34);
+        }
 
-            .services-panel-subtitle,
-            .service-card-description,
-            .services-empty,
-            .services-mini-note,
-            .service-card-meta,
-            .services-stat-label {
-                color: #cbd5e1;
-            }
+        body.dark .services-panel-title,
+        body.dark .services-label,
+        body.dark .services-stat-value,
+        body.dark .service-card-title,
+        body.dark .services-empty h3 {
+            color: #f8fafc;
+        }
 
-            .services-input,
-            .services-textarea {
-                background: rgba(2,6,23,.72);
-                color: #f8fafc;
-                border-color: rgba(148,163,184,.18);
-            }
+        body.dark .services-panel-subtitle,
+        body.dark .service-card-description,
+        body.dark .services-empty,
+        body.dark .services-mini-note,
+        body.dark .service-card-meta,
+        body.dark .services-stat-label,
+        body.dark .services-input::placeholder,
+        body.dark .services-textarea::placeholder {
+            color: #cbd5e1;
+        }
 
-            .services-input::placeholder,
-            .services-textarea::placeholder {
-                color: #94a3b8;
-            }
+        body.dark .services-input,
+        body.dark .services-textarea {
+            background: rgba(2,6,23,.72);
+            color: #f8fafc;
+            border-color: rgba(148,163,184,.18);
+        }
 
-            .services-price-wrap .services-currency {
-                color: #cbd5e1;
-            }
+        body.dark .services-price-wrap .services-currency {
+            color: #cbd5e1;
+        }
 
-            .services-btn-neutral {
-                background: rgba(15,23,42,.84);
-                color: #f8fafc;
-                border-color: rgba(148,163,184,.18);
-            }
+        body.dark .services-btn-neutral {
+            background: rgba(15,23,42,.84);
+            color: #f8fafc;
+            border-color: rgba(148,163,184,.18);
+        }
 
-            .services-btn-secondary {
-                background: rgba(37,99,235,.12);
-                color: #dbeafe;
-                border-color: rgba(59,130,246,.18);
-            }
+        body.dark .services-btn-secondary {
+            background: rgba(37,99,235,.12);
+            color: #dbeafe;
+            border-color: rgba(59,130,246,.18);
+        }
 
-            .services-btn-danger {
-                background: rgba(190,24,93,.12);
-                color: #fecdd3;
-                border-color: rgba(244,63,94,.18);
-            }
+        body.dark .services-btn-danger {
+            background: rgba(190,24,93,.12);
+            color: #fecdd3;
+            border-color: rgba(244,63,94,.18);
+        }
 
-            .service-card-price {
-                background: linear-gradient(
-                    135deg,
-                    color-mix(in srgb, var(--accent) 86%, #1e3a8a 14%),
-                    color-mix(in srgb, var(--accent-dark, #151B54) 86%, #0f172a 14%)
-                );
-                color: #ffffff;
-                border: none;
-                box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 20%, transparent);
-            }
+        body.dark .service-card-price {
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--accent) 86%, #1e3a8a 14%),
+                color-mix(in srgb, var(--accent-dark, #151B54) 86%, #0f172a 14%)
+            );
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 20%, transparent);
+        }
 
-            .services-empty {
-                background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.88));
-                border-color: rgba(148,163,184,.24);
-            }
+        body.dark .service-card-status.active {
+            background: color-mix(in srgb, var(--accent) 16%, rgba(6,78,59,.84));
+            color: #d1fae5;
+            border-color: color-mix(in srgb, var(--accent) 18%, rgba(16,185,129,.24));
+        }
 
-            .service-card-footer {
-                border-top-color: rgba(51,65,85,.9);
-            }
+        body.dark .service-card-status.inactive {
+            background: rgba(15,23,42,.76);
+            color: #cbd5e1;
+            border-color: rgba(148,163,184,.18);
+        }
 
-/* === Service Card Premium Upgrade (SAFE ADDITIVE) === */
+        body.dark .services-empty {
+            background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.88));
+            border-color: rgba(148,163,184,.24);
+        }
 
-.service-card {
-    padding: 0; /* remove internal padding, handled inside */
-    overflow: hidden;
-    transition: transform .2s ease, box-shadow .2s ease;
-}
-
-.service-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 28px 60px rgba(15,23,42,.12);
-}
-
-.service-card::before {
-    content: "";
-    display: block;
-    height: 3px;
-    width: 100%;
-    background: linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--accent) 92%, white 8%),
-        color-mix(in srgb, var(--accent-light) 78%, white 22%)
-    );
-    opacity: .95;
-}
-
-/* image placeholder (future photos ready) */
-.service-card-media {
-    position: relative;
-    height: 132px;
-    background:
-        radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 34%, transparent), transparent 42%),
-        radial-gradient(circle at bottom left, color-mix(in srgb, var(--accent-light) 22%, transparent), transparent 34%),
-        linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--accent) 78%, #0f172a 22%),
-            color-mix(in srgb, var(--accent-dark, #151B54) 72%, #0f172a 28%)
-        );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,.72);
-    font-size: .86rem;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    overflow: hidden;
-}
-
-.service-card-media::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(135deg, rgba(255,255,255,.16), transparent 36%),
-        linear-gradient(180deg, rgba(255,255,255,.06), transparent 44%);
-    pointer-events: none;
-}
-
-.service-card-media::after {
-    content: "";
-    position: absolute;
-    right: -26px;
-    bottom: -30px;
-    width: 116px;
-    height: 116px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.10);
-    filter: blur(2px);
-    pointer-events: none;
-}
-
-/* inner wrapper so layout stays safe */
-.service-card-inner {
-    padding: 20px;
-    display: grid;
-    gap: 0;
-}
-
-/* stronger pricing anchor */
-.service-card-price {
-    background: linear-gradient(135deg, #3A8BFF, #2563eb);
-    color: white;
-    border: none;
-    box-shadow: 0 10px 24px rgba(37,99,235,.25);
-    font-size: 1.35rem;
-}
-
-/* smoother description */
-.service-card-description {
-    line-height: 1.7;
-}
-
-/* better footer separation */
-.service-card-footer {
-    border-top: 1px solid rgba(226,232,240,.75);
-}
+        body.dark .service-card-footer {
+            border-top-color: rgba(51,65,85,.9);
         }
     </style>
 
@@ -887,98 +880,99 @@
                 <div class="services-card-grid">
                     {% for service in services %}
                         <article class="service-card">
-<div class="service-card-media">
-    {% if current_lang == 'es' %}
-        Presentación visual
-    {% elif current_lang == 'zh' %}
-        视觉展示
-    {% else %}
-        Visual presentation
-    {% endif %}
-</div>
+                            <div class="service-card-media">
+                                {% if current_lang == 'es' %}
+                                    Presentación visual
+                                {% elif current_lang == 'zh' %}
+                                    视觉展示
+                                {% else %}
+                                    Visual presentation
+                                {% endif %}
+                            </div>
 
-<div class="service-card-inner">
-                            <div class="service-card-top">
-                                <div class="service-card-title-wrap">
-                                    <h3 class="service-card-title">{{ service.name }}</h3>
+                            <div class="service-card-inner">
+                                <div class="service-card-top">
+                                    <div class="service-card-title-wrap">
+                                        <h3 class="service-card-title">{{ service.name }}</h3>
 
-                                    <div class="service-card-status {% if service.is_active %}active{% else %}inactive{% endif %}">
-                                        {% if service.is_active %}
-                                            {{ t('active', current_lang) }}
-                                        {% else %}
-                                            {{ t('inactive', current_lang) }}
-                                        {% endif %}
+                                        <div class="service-card-status {% if service.is_active %}active{% else %}inactive{% endif %}">
+                                            {% if service.is_active %}
+                                                {{ t('active', current_lang) }}
+                                            {% else %}
+                                                {{ t('inactive', current_lang) }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="service-card-price">
+                                        ${{ '%.2f'|format(service.price or 0) }}
                                     </div>
                                 </div>
 
-                                <div class="service-card-price">
-                                    ${{ '%.2f'|format(service.price or 0) }}
+                                <p class="service-card-description">
+                                    {% if service.description %}
+                                        {{ service.description }}
+                                    {% else %}
+                                        {% if current_lang == 'es' %}
+                                            Sin descripción todavía.
+                                        {% elif current_lang == 'zh' %}
+                                            暂无描述。
+                                        {% else %}
+                                            No description yet.
+                                        {% endif %}
+                                    {% endif %}
+                                </p>
+
+                                <div class="service-card-footer">
+                                    <div class="service-card-meta">
+                                        {% if current_lang == 'es' %}
+                                            Visible para tu negocio y listo para usarse en la experiencia del cliente.
+                                        {% elif current_lang == 'zh' %}
+                                            可在您的业务中使用，并可用于客户体验展示。
+                                        {% else %}
+                                            Ready for your business and available for client-facing presentation.
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="service-card-actions">
+                                        <a
+                                            href="{{ url_for('services_page', lang=current_lang, edit=service.id) }}"
+                                            class="services-btn services-btn-secondary"
+                                        >
+                                            {{ t('edit', current_lang) }}
+                                        </a>
+
+                                        {% if service.is_active %}
+                                            <form class="service-inline-form" method="POST" action="{{ url_for('deactivate_service_route', service_id=service.id, lang=current_lang) }}">
+                                                <input type="hidden" name="lang" value="{{ current_lang }}">
+                                                <button type="submit" class="services-btn services-btn-danger">
+                                                    {% if current_lang == 'es' %}
+                                                        Desactivar
+                                                    {% elif current_lang == 'zh' %}
+                                                        停用
+                                                    {% else %}
+                                                        Deactivate
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <form class="service-inline-form" method="POST" action="{{ url_for('activate_service_route', service_id=service.id, lang=current_lang) }}">
+                                                <input type="hidden" name="lang" value="{{ current_lang }}">
+                                                <button type="submit" class="services-btn services-btn-neutral">
+                                                    {% if current_lang == 'es' %}
+                                                        Activar
+                                                    {% elif current_lang == 'zh' %}
+                                                        启用
+                                                    {% else %}
+                                                        Activate
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
-
-                            <p class="service-card-description">
-                                {% if service.description %}
-                                    {{ service.description }}
-                                {% else %}
-                                    {% if current_lang == 'es' %}
-                                        Sin descripción todavía.
-                                    {% elif current_lang == 'zh' %}
-                                        暂无描述。
-                                    {% else %}
-                                        No description yet.
-                                    {% endif %}
-                                {% endif %}
-                            </p>
-
-                            <div class="service-card-footer">
-                                <div class="service-card-meta">
-                                    {% if current_lang == 'es' %}
-                                        Visible para tu negocio y listo para usarse en la experiencia del cliente.
-                                    {% elif current_lang == 'zh' %}
-                                        可在您的业务中使用，并可用于客户体验展示。
-                                    {% else %}
-                                        Ready for your business and available for client-facing presentation.
-                                    {% endif %}
-                                </div>
-
-                                <div class="service-card-actions">
-                                    <a
-                                        href="{{ url_for('services_page', lang=current_lang, edit=service.id) }}"
-                                        class="services-btn services-btn-secondary"
-                                    >
-                                        {{ t('edit', current_lang) }}
-                                    </a>
-
-                                    {% if service.is_active %}
-                                        <form class="service-inline-form" method="POST" action="{{ url_for('deactivate_service_route', service_id=service.id, lang=current_lang) }}">
-                                            <input type="hidden" name="lang" value="{{ current_lang }}">
-                                            <button type="submit" class="services-btn services-btn-danger">
-                                                {% if current_lang == 'es' %}
-                                                    Desactivar
-                                                {% elif current_lang == 'zh' %}
-                                                    停用
-                                                {% else %}
-                                                    Deactivate
-                                                {% endif %}
-                                            </button>
-                                        </form>
-                                    {% else %}
-                                        <form class="service-inline-form" method="POST" action="{{ url_for('activate_service_route', service_id=service.id, lang=current_lang) }}">
-                                            <input type="hidden" name="lang" value="{{ current_lang }}">
-                                            <button type="submit" class="services-btn services-btn-neutral">
-                                                {% if current_lang == 'es' %}
-                                                    Activar
-                                                {% elif current_lang == 'zh' %}
-                                                    启用
-                                                {% else %}
-                                                    Activate
-                                                {% endif %}
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </div> <!-- END service-card-inner -->
-</article>
+                        </article>
                     {% endfor %}
                 </div>
             {% else %}
