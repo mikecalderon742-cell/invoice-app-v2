@@ -22,6 +22,65 @@
 
 {% block content %}
 <style>
+  .public-services-shell {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 8px 0 8px;
+  }
+
+  .public-services-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 30px;
+    padding: 28px;
+    margin-bottom: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.24), transparent 30%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.14), transparent 26%),
+      linear-gradient(135deg, rgba(15,23,42,0.98), rgba(21,27,84,0.96));
+    border: 1px solid rgba(148,163,184,0.14);
+    box-shadow:
+      0 28px 70px rgba(15,23,42,0.16),
+      0 0 0 1px rgba(255,255,255,0.04) inset;
+    color: #f8fafc;
+    isolation: isolate;
+  }
+
+  .public-services-hero::before {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 68%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .public-services-hero::after {
+    content: "";
+    position: absolute;
+    left: -40px;
+    bottom: -70px;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(58,139,255,0.14), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .public-services-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+    gap: 22px;
+    align-items: end;
+  }
+
   .public-services-brand {
     display: flex;
     align-items: center;
@@ -31,44 +90,317 @@
   }
 
   .public-services-logo {
-    width: 56px;
-    height: 56px;
+    width: 58px;
+    height: 58px;
     object-fit: cover;
-    border-radius: 14px;
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    border-radius: 16px;
+    box-shadow:
+      0 16px 34px rgba(2,6,23,0.28),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
+    flex: 0 0 auto;
+  }
+
+  .public-services-logo-fallback {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,255,255,0.10);
+    color: #ffffff;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow:
+      0 16px 34px rgba(2,6,23,0.22),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
     flex: 0 0 auto;
   }
 
   .public-services-brand-copy {
     display: grid;
-    gap: 4px;
+    gap: 5px;
     min-width: 0;
   }
 
   .public-services-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #64748b;
-  }
-
-  body.dark .public-services-kicker {
-    color: #94a3b8;
+    color: rgba(248,250,252,0.88);
   }
 
   .public-services-brand-name {
     font-family: "Space Grotesk", sans-serif;
-    font-size: clamp(24px, 3vw, 32px);
-    line-height: 1.02;
+    font-size: clamp(26px, 3vw, 34px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    font-weight: 800;
+    color: #ffffff;
+    word-break: break-word;
+    text-shadow: 0 10px 30px rgba(2,6,23,0.18);
+  }
+
+  .public-services-title {
+    margin: 0 0 10px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    color: #ffffff;
+  }
+
+  .public-services-copy {
+    margin: 0;
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(239,246,255,0.88);
+  }
+
+  .public-services-summary {
+    display: grid;
+    gap: 12px;
+  }
+
+  .public-services-summary-card {
+    padding: 16px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+  }
+
+  .public-services-summary-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(219,234,254,0.82);
+    margin-bottom: 8px;
+  }
+
+  .public-services-summary-value {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #ffffff;
+  }
+
+  .public-services-summary-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(226,232,240,0.80);
+  }
+
+  .public-services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  .public-service-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 26px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.97), rgba(248,250,252,0.98));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow:
+      0 18px 46px rgba(15,23,42,0.08),
+      0 0 0 1px rgba(255,255,255,0.35) inset;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .public-service-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 24px 60px rgba(15,23,42,0.12),
+      0 0 0 1px rgba(255,255,255,0.42) inset;
+  }
+
+  .public-service-card::before {
+    content: "";
+    display: block;
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  }
+
+  .public-service-card-media {
+    position: relative;
+    height: 144px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.24), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.18), transparent 28%),
+      linear-gradient(135deg, color-mix(in srgb, var(--accent) 84%, #0f172a 16%), color-mix(in srgb, var(--accent-dark, #151B54) 82%, #0f172a 18%));
+    display: flex;
+    align-items: flex-end;
+    padding: 16px 18px;
+    color: rgba(255,255,255,0.92);
+  }
+
+  .public-service-card-media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.18), transparent 34%),
+      linear-gradient(180deg, rgba(255,255,255,0.06), transparent 44%);
+    pointer-events: none;
+  }
+
+  .public-service-card-media::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    bottom: -24px;
+    width: 120px;
+    height: 120px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.10);
+    pointer-events: none;
+  }
+
+  .public-service-media-label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.14);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+  }
+
+  .public-service-card-body {
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .public-service-card-top {
+    display: grid;
+    gap: 10px;
+  }
+
+  .public-service-title {
+    margin: 0;
+    font-size: 21px;
+    line-height: 1.08;
     letter-spacing: -0.03em;
-    font-weight: 700;
+    font-weight: 800;
     color: #0f172a;
     word-break: break-word;
   }
 
-  body.dark .public-services-brand-name {
-    color: #f8fafc;
+  .public-service-description {
+    margin: 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-line;
+    word-break: break-word;
+  }
+
+  .public-service-description.empty {
+    color: #64748b;
+  }
+
+  .public-service-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .public-service-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+    background: #f8fafc;
+    border: 1px solid rgba(148,163,184,0.18);
+  }
+
+  .public-service-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-top: 14px;
+    border-top: 1px solid rgba(226,232,240,0.9);
+  }
+
+  .public-service-price-block {
+    display: grid;
+    gap: 4px;
+  }
+
+  .public-service-price-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .public-service-price {
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #0f172a;
+  }
+
+  .public-service-cta {
+    min-width: 190px;
+    justify-content: center;
+  }
+
+  .public-services-empty {
+    border-radius: 28px;
+    padding: 30px 24px;
+    text-align: center;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+    border: 1px dashed rgba(148,163,184,0.32);
+    box-shadow: 0 18px 42px rgba(15,23,42,0.06);
+  }
+
+  .public-services-empty h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .public-services-empty p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.7;
   }
 
   .public-services-powered {
@@ -81,136 +413,320 @@
   body.dark .public-services-powered {
     color: #94a3b8;
   }
+
+  body.dark .public-service-card {
+    background:
+      linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 20px 48px rgba(2,6,23,0.76),
+      0 0 0 1px rgba(255,255,255,0.03) inset;
+  }
+
+  body.dark .public-service-title,
+  body.dark .public-service-price,
+  body.dark .public-services-empty h3 {
+    color: #f8fafc;
+  }
+
+  body.dark .public-service-description,
+  body.dark .public-services-empty p {
+    color: #cbd5e1;
+  }
+
+  body.dark .public-service-description.empty {
+    color: #94a3b8;
+  }
+
+  body.dark .public-service-chip {
+    background: rgba(15,23,42,0.74);
+    color: #e2e8f0;
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  body.dark .public-service-price-label {
+    color: #94a3b8;
+  }
+
+  body.dark .public-service-price-row {
+    border-top-color: rgba(51,65,85,0.9);
+  }
+
+  body.dark .public-services-empty {
+    background:
+      linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
+    border-color: rgba(148,163,184,0.24);
+    box-shadow: 0 20px 48px rgba(2,6,23,0.74);
+  }
+
+  @media (max-width: 980px) {
+    .public-services-hero-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .public-services-shell {
+      padding-top: 0;
+    }
+
+    .public-services-hero {
+      padding: 22px 18px;
+      border-radius: 24px;
+    }
+
+    .public-service-card-body {
+      padding: 18px 16px;
+    }
+
+    .public-service-card-media {
+      height: 126px;
+      padding: 14px 16px;
+    }
+
+    .public-service-price-row {
+      align-items: stretch;
+    }
+
+    .public-service-cta {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 </style>
 
-<div class="page-shell">
-    <div class="page-header" style="margin-bottom:24px;">
+<div class="public-services-shell">
+  <div class="public-services-hero">
+    <div class="public-services-hero-inner">
+      <div>
         <div class="public-services-brand">
-            {% if public_business_profile.logo_url %}
-                <img
-                    src="{{ public_business_profile.logo_url }}"
-                    alt="{{ public_business_profile.business_name or 'Business logo' }}"
-                    class="public-services-logo"
-                >
+          {% if public_business_profile.logo_url %}
+            <img
+              src="{{ public_business_profile.logo_url }}"
+              alt="{{ public_business_profile.business_name or 'Business logo' }}"
+              class="public-services-logo"
+            >
+          {% else %}
+            <div class="public-services-logo-fallback">
+              {{ (public_business_profile.business_name or "B")[0] }}
+            </div>
+          {% endif %}
+
+          <div class="public-services-brand-copy">
+            <div class="public-services-kicker">
+              {% if lang == 'es' %}
+                Servicios del negocio
+              {% elif lang == 'zh' %}
+                商家服务
+              {% else %}
+                Business Services
+              {% endif %}
+            </div>
+
+            <div class="public-services-brand-name">
+              {{ public_business_profile.business_name or "BillBeam" }}
+            </div>
+          </div>
+        </div>
+
+        <h1 class="public-services-title">
+          {% if lang == 'es' %}
+            Servicios disponibles
+          {% elif lang == 'zh' %}
+            可用服务
+          {% else %}
+            Available Services
+          {% endif %}
+        </h1>
+
+        <p class="public-services-copy">
+          {% if lang == 'es' %}
+            Explora los servicios disponibles y envía una solicitud para empezar el trabajo con una experiencia más clara, profesional y fácil de seguir.
+          {% elif lang == 'zh' %}
+            浏览可用服务并提交请求，以更清晰、更专业、更易跟进的方式开始合作。
+          {% else %}
+            Browse available services and submit a request to start the conversation with a clearer, more professional, and easier-to-follow experience.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="public-services-summary">
+        <div class="public-services-summary-card">
+          <div class="public-services-summary-label">
+            {% if lang == 'es' %}
+              Servicio
+            {% elif lang == 'zh' %}
+              服务流程
+            {% else %}
+              Service Flow
             {% endif %}
+          </div>
+          <div class="public-services-summary-value">
+            {% if lang == 'es' %}
+              Elige, solicita y continúa al siguiente paso
+            {% elif lang == 'zh' %}
+              选择、提交请求并继续下一步
+            {% else %}
+              Choose, request, and move to the next step
+            {% endif %}
+          </div>
+          <div class="public-services-summary-sub">
+            {% if lang == 'es' %}
+              Cada servicio está preparado para que el cliente entienda rápido qué ofrece el negocio.
+            {% elif lang == 'zh' %}
+              每项服务都以便于客户快速理解的方式展示。
+            {% else %}
+              Each service is presented in a way that makes it easy for a client to understand what the business offers.
+            {% endif %}
+          </div>
+        </div>
 
-            <div class="public-services-brand-copy">
-                <div class="public-services-kicker">
-                    {% if lang == 'es' %}
-                        Servicios del negocio
-                    {% elif lang == 'zh' %}
-                        商家服务
-                    {% else %}
-                        Business Services
-                    {% endif %}
-                </div>
+        <div class="public-services-summary-card">
+          <div class="public-services-summary-label">
+            {% if lang == 'es' %}
+              Acceso rápido
+            {% elif lang == 'zh' %}
+              快速开始
+            {% else %}
+              Quick Start
+            {% endif %}
+          </div>
+          <div class="public-services-summary-value">
+            {% if lang == 'es' %}
+              Solicita el servicio que mejor encaje con lo que necesitas
+            {% elif lang == 'zh' %}
+              选择最适合您需求的服务并提交请求
+            {% else %}
+              Request the service that best fits what you need
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                <div class="public-services-brand-name">
-                    {{ public_business_profile.business_name or "BillBeam" }}
-                </div>
+  {% if public_services and public_services|length > 0 %}
+    <div class="public-services-grid">
+      {% for service in public_services %}
+        <article class="public-service-card">
+          <div class="public-service-card-media">
+            <div class="public-service-media-label">
+              {% if lang == 'es' %}
+                Servicio destacado
+              {% elif lang == 'zh' %}
+                精选服务
+              {% else %}
+                Featured Service
+              {% endif %}
             </div>
-        </div>
+          </div>
 
-        <div>
-            <h1 style="margin-bottom:8px;">
-                {% if lang == 'es' %}
-                    Servicios disponibles
-                {% elif lang == 'zh' %}
-                    可用服务
-                {% else %}
-                    Available Services
-                {% endif %}
-            </h1>
-            <p class="text-muted" style="max-width:760px;">
-                {% if lang == 'es' %}
-                    Elige un servicio y envía una solicitud para empezar la conversación, recibir aprobación y continuar con el siguiente paso.
-                {% elif lang == 'zh' %}
-                    选择一项服务并提交请求，以开始沟通、获得批准并进入下一步。
-                {% else %}
-                    Choose a service and submit a request to start the conversation, get approval, and move into the next step.
-                {% endif %}
-            </p>
-        </div>
-    </div>
+          <div class="public-service-card-body">
+            <div class="public-service-card-top">
+              <h3 class="public-service-title">{{ service.name }}</h3>
 
-    {% if public_services and public_services|length > 0 %}
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:18px;">
-        {% for service in public_services %}
-        <div class="card">
-            <div class="card-body" style="display:grid; gap:14px;">
-                <div>
-                    <h3 style="margin:0 0 8px 0;">{{ service.name }}</h3>
-
-                    {% if service.description %}
-                    <p class="text-muted" style="margin:0; line-height:1.65; white-space:pre-line;">
-                        {{ service.description }}
-                    </p>
-                    {% else %}
-                    <p class="text-muted" style="margin:0;">
-                        {% if lang == 'es' %}
-                            Este servicio está listo para solicitar.
-                        {% elif lang == 'zh' %}
-                            该服务已可供提交请求。
-                        {% else %}
-                            This service is ready to be requested.
-                        {% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <div style="font-size:20px; font-weight:700;">
-                        ${{ '%.2f'|format(service.price or 0) }}
-                    </div>
-
-                    <a href="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}"
-                       class="btn btn-primary">
-                        {% if lang == 'es' %}
-                            Solicitar servicio
-                        {% elif lang == 'zh' %}
-                            请求服务
-                        {% else %}
-                            Request Service
-                        {% endif %}
-                    </a>
-                </div>
+              {% if service.description %}
+                <p class="public-service-description">{{ service.description }}</p>
+              {% else %}
+                <p class="public-service-description empty">
+                  {% if lang == 'es' %}
+                    Este servicio está listo para solicitar.
+                  {% elif lang == 'zh' %}
+                    该服务已可供提交请求。
+                  {% else %}
+                    This service is ready to be requested.
+                  {% endif %}
+                </p>
+              {% endif %}
             </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="card">
-        <div class="card-body">
-            <h3 style="margin-top:0;">
+
+            <div class="public-service-meta-row">
+              <span class="public-service-chip">
                 {% if lang == 'es' %}
-                    No hay servicios activos
+                  Solicitud directa
                 {% elif lang == 'zh' %}
-                    当前没有可用服务
+                  直接提交请求
                 {% else %}
-                    No active services available
+                  Direct request
                 {% endif %}
-            </h3>
-            <p class="text-muted" style="margin-bottom:0;">
+              </span>
+
+              <span class="public-service-chip">
                 {% if lang == 'es' %}
-                    Este negocio todavía no ha publicado servicios activos en esta página.
+                  Respuesta profesional
                 {% elif lang == 'zh' %}
-                    该商家尚未在此页面发布可用服务。
+                  专业流程
                 {% else %}
-                    This business has not published active services on this page yet.
+                  Professional flow
                 {% endif %}
-            </p>
-        </div>
+              </span>
+            </div>
+
+            <div class="public-service-price-row">
+              <div class="public-service-price-block">
+                <div class="public-service-price-label">
+                  {% if lang == 'es' %}
+                    Precio
+                  {% elif lang == 'zh' %}
+                    价格
+                  {% else %}
+                    Price
+                  {% endif %}
+                </div>
+                <div class="public-service-price">
+                  ${{ '%.2f'|format(service.price or 0) }}
+                </div>
+              </div>
+
+              <a
+                href="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}"
+                class="btn public-service-cta"
+              >
+                {% if lang == 'es' %}
+                  Solicitar servicio
+                {% elif lang == 'zh' %}
+                  请求服务
+                {% else %}
+                  Request Service
+                {% endif %}
+              </a>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
     </div>
-    {% endif %}
-    <div class="public-services-powered">
-        ⚡
+  {% else %}
+    <div class="public-services-empty">
+      <h3>
         {% if lang == 'es' %}
-            Funciona con <strong>BillBeam</strong>
+          No hay servicios activos
         {% elif lang == 'zh' %}
-            由 <strong>BillBeam</strong> 提供支持
+          当前没有可用服务
         {% else %}
-            Powered by <strong>BillBeam</strong>
+          No active services available
         {% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Este negocio todavía no ha publicado servicios activos en esta página.
+        {% elif lang == 'zh' %}
+          该商家尚未在此页面发布可用服务。
+        {% else %}
+          This business has not published active services on this page yet.
+        {% endif %}
+      </p>
     </div>
+  {% endif %}
+
+  <div class="public-services-powered">
+    ⚡
+    {% if lang == 'es' %}
+      Funciona con <strong>BillBeam</strong>
+    {% elif lang == 'zh' %}
+      由 <strong>BillBeam</strong> 提供支持
+    {% else %}
+      Powered by <strong>BillBeam</strong>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
