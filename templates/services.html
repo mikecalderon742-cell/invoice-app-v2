@@ -549,6 +549,58 @@
             .service-card-footer {
                 border-top-color: rgba(51,65,85,.9);
             }
+
+/* === Service Card Premium Upgrade (SAFE ADDITIVE) === */
+
+.service-card {
+    padding: 0; /* remove internal padding, handled inside */
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 28px 60px rgba(15,23,42,.12);
+}
+
+/* image placeholder (future photos ready) */
+.service-card-media {
+    height: 120px;
+    background:
+        radial-gradient(circle at top right, rgba(58,139,255,.25), transparent 40%),
+        linear-gradient(135deg, #0f172a, #1e293b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,.5);
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
+/* inner wrapper so layout stays safe */
+.service-card-inner {
+    padding: 20px;
+}
+
+/* stronger pricing anchor */
+.service-card-price {
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    color: white;
+    border: none;
+    box-shadow: 0 10px 24px rgba(37,99,235,.25);
+    font-size: 1.35rem;
+}
+
+/* smoother description */
+.service-card-description {
+    line-height: 1.7;
+}
+
+/* better footer separation */
+.service-card-footer {
+    border-top: 1px solid rgba(226,232,240,.75);
+}
         }
     </style>
 
@@ -727,6 +779,17 @@
                 <div class="services-card-grid">
                     {% for service in services %}
                         <article class="service-card">
+                           <div class="service-card-media">
+    {% if current_lang == 'es' %}
+        Vista de servicio
+    {% elif current_lang == 'zh' %}
+        服务展示
+    {% else %}
+        Service preview
+    {% endif %}
+</div>
+
+<div class="service-card-inner">
                             <div class="service-card-top">
                                 <div class="service-card-title-wrap">
                                     <h3 class="service-card-title">{{ service.name }}</h3>
@@ -806,8 +869,8 @@
                                         </form>
                                     {% endif %}
                                 </div>
-                            </div>
-                        </article>
+                            </div> <!-- END service-card-inner -->
+</article>
                     {% endfor %}
                 </div>
             {% else %}
