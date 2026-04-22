@@ -1,280 +1,861 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  .request-detail-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .request-detail-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .request-detail-title-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .request-detail-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(58, 139, 255, 0.10);
+    border: 1px solid rgba(58, 139, 255, 0.16);
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  body.dark .request-detail-kicker {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: rgba(96, 165, 250, 0.22);
+    color: #bfdbfe;
+  }
+
+  .request-detail-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 40px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    color: #0f172a;
+  }
+
+  body.dark .request-detail-title {
+    color: #f8fafc;
+  }
+
+  .request-detail-subcopy {
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .request-detail-subcopy {
+    color: #94a3b8;
+  }
+
+  .request-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .request-column {
+    display: grid;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .request-card {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.015);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  body.dark .request-card {
+    background: rgba(2,6,23,0.78);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.80),
+      0 0 0 1px rgba(59,130,246,0.06);
+  }
+
+  .request-card-header {
+    padding: 20px 20px 10px;
+  }
+
+  .request-card-title {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  body.dark .request-card-title {
+    color: #f8fafc;
+  }
+
+  .request-card-sub {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
+  body.dark .request-card-sub {
+    color: #94a3b8;
+  }
+
+  .request-card-body {
+    padding: 0 20px 20px;
+  }
+
+  .request-status-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 18px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    border: 1px solid rgba(148,163,184,0.16);
+    background: linear-gradient(135deg, rgba(58,139,255,0.08), rgba(252,220,42,0.08));
+  }
+
+  body.dark .request-status-banner {
+    border-color: rgba(148,163,184,0.18);
+    background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(250,204,21,0.08));
+  }
+
+  .request-status-copy {
+    display: grid;
+    gap: 6px;
+  }
+
+  .request-status-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .request-status-label {
+    color: #94a3b8;
+  }
+
+  .request-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .request-info-block {
+    padding: 16px;
+    border-radius: 20px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+    min-width: 0;
+  }
+
+  body.dark .request-info-block {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .request-info-block h4 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+  }
+
+  body.dark .request-info-block h4 {
+    color: #f8fafc;
+  }
+
+  .request-info-block p {
+    margin: 0 0 6px;
+    line-height: 1.65;
+    word-break: break-word;
+  }
+
+  .request-info-block p:last-child {
+    margin-bottom: 0;
+  }
+
+  .request-muted {
+    color: #64748b;
+  }
+
+  body.dark .request-muted {
+    color: #94a3b8;
+  }
+
+  .request-section-divider {
+    height: 1px;
+    margin: 18px 0;
+    background: linear-gradient(90deg, transparent, rgba(148,163,184,0.35), transparent);
+  }
+
+  .request-rich-panel {
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .request-rich-panel {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .request-rich-panel h4 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #0f172a;
+  }
+
+  body.dark .request-rich-panel h4 {
+    color: #f8fafc;
+  }
+
+  .request-rich-panel p {
+    margin: 0;
+    line-height: 1.75;
+    white-space: pre-line;
+    word-break: break-word;
+  }
+
+  .request-timeline {
+    display: grid;
+    gap: 14px;
+  }
+
+  .request-timeline-item {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .request-timeline-dot {
+    width: 12px;
+    height: 12px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    box-shadow: 0 0 0 5px rgba(58,139,255,0.12);
+  }
+
+  .request-timeline-card {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  body.dark .request-timeline-card {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .request-timeline-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .request-timeline-top strong {
+    color: #0f172a;
+  }
+
+  body.dark .request-timeline-top strong {
+    color: #f8fafc;
+  }
+
+  .request-side-stack {
+    display: grid;
+    gap: 20px;
+  }
+
+  .request-side-highlight {
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.10), rgba(252,220,42,0.12));
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+
+  body.dark .request-side-highlight {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .request-side-highlight strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+
+  .request-side-highlight p {
+    margin: 0;
+    line-height: 1.65;
+    color: #475569;
+  }
+
+  body.dark .request-side-highlight p {
+    color: #cbd5e1;
+  }
+
+  .request-meta-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .request-meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(148,163,184,0.12);
+  }
+
+  .request-meta-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .request-meta-row:first-child {
+    padding-top: 0;
+  }
+
+  .request-meta-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    font-weight: 800;
+  }
+
+  body.dark .request-meta-label {
+    color: #94a3b8;
+  }
+
+  .request-meta-value {
+    text-align: right;
+    font-weight: 600;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .request-action-form {
+    display: grid;
+    gap: 12px;
+  }
+
+  .request-action-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .request-action-form select {
+    width: 100%;
+  }
+
+  .request-action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .request-link-box {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(15,23,42,0.04);
+    border: 1px solid rgba(148,163,184,0.16);
+    font-size: 13px;
+    line-height: 1.65;
+    word-break: break-all;
+  }
+
+  body.dark .request-link-box {
+    background: rgba(15,23,42,0.46);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .request-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+
+  .request-pill.requested {
+    background: #ffedd5;
+    color: #9a3412;
+    border-color: #fdba74;
+  }
+
+  .request-pill.approved {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+  }
+
+  .request-pill.in_progress {
+    background: #ede9fe;
+    color: #6d28d9;
+    border-color: #c4b5fd;
+  }
+
+  .request-pill.completed {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+  }
+
+  .request-pill.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fca5a5;
+  }
+
+  .request-pill.default {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+
+  body.dark .request-pill.requested {
+    background: rgba(154,52,18,0.28);
+    color: #fdba74;
+    border-color: rgba(253,186,116,0.28);
+  }
+
+  body.dark .request-pill.approved {
+    background: rgba(29,78,216,0.26);
+    color: #bfdbfe;
+    border-color: rgba(147,197,253,0.30);
+  }
+
+  body.dark .request-pill.in_progress {
+    background: rgba(109,40,217,0.24);
+    color: #ddd6fe;
+    border-color: rgba(196,181,253,0.28);
+  }
+
+  body.dark .request-pill.completed {
+    background: rgba(22,101,52,0.28);
+    color: #bbf7d0;
+    border-color: rgba(134,239,172,0.28);
+  }
+
+  body.dark .request-pill.cancelled {
+    background: rgba(127,29,29,0.30);
+    color: #fecaca;
+    border-color: rgba(252,165,165,0.28);
+  }
+
+  body.dark .request-pill.default {
+    background: rgba(71,85,105,0.28);
+    color: #e2e8f0;
+    border-color: rgba(148,163,184,0.28);
+  }
+
+  @media (max-width: 980px) {
+    .request-detail-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .request-grid-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .request-action-buttons .btn {
+      width: 100%;
+    }
+  }
+</style>
+
 <div class="page-shell">
-    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
-        <div>
-            <h1>Request #{{ service_request.id }}</h1>
-            <p class="text-muted">Review request details, update the status, and move the job forward.</p>
+  <div class="request-detail-shell">
+    <div class="request-detail-topbar">
+      <div class="request-detail-title-wrap">
+        <div class="request-detail-kicker">BillBeam Request Flow</div>
+        <h1 class="request-detail-title">Request #{{ service_request.id }}</h1>
+        <div class="request-detail-subcopy">
+          Review request details, update the status, and move the job forward without losing the bigger picture.
         </div>
-        <div>
-            <a href="{{ url_for('requests_page', lang=lang) }}" class="btn btn-secondary">Back to Requests</a>
-        </div>
+      </div>
+
+      <div>
+        <a href="{{ url_for('requests_page', lang=lang) }}" class="btn btn-secondary">Back to Requests</a>
+      </div>
     </div>
 
-    <div class="grid" style="display:grid; grid-template-columns: 1.3fr 0.9fr; gap:20px;">
-        <div>
-            <div class="card" style="margin-bottom:20px;">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Request Overview</h3>
+    <div class="request-detail-layout">
+      <div class="request-column">
+        <div class="request-card">
+          <div class="request-card-header">
+            <h3 class="request-card-title">Request Overview</h3>
+            <div class="request-card-sub">
+              A clean view of the client, requested service, details, and timing so you can decide the next move quickly.
+            </div>
+          </div>
 
-                    <div style="margin-bottom:16px;">
-                        <strong>Status:</strong>
-                        {% if service_request.status == 'requested' %}
-                            <span class="badge bg-warning text-dark">Requested</span>
-                        {% elif service_request.status == 'approved' %}
-                            <span class="badge bg-info text-dark">Approved</span>
-                        {% elif service_request.status == 'in_progress' %}
-                            <span class="badge bg-primary">In Progress</span>
-                        {% elif service_request.status == 'completed' %}
-                            <span class="badge bg-success">Completed</span>
-                        {% elif service_request.status == 'cancelled' %}
-                            <span class="badge bg-danger">Cancelled</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ service_request.status }}</span>
-                        {% endif %}
-                    </div>
+          <div class="request-card-body">
+            <div class="request-status-banner">
+              <div class="request-status-copy">
+                <div class="request-status-label">Current Status</div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                        <div>
-                            <h4 style="margin-bottom:8px;">Client</h4>
-                            <p style="margin:0 0 6px 0;"><strong>{{ service_request.client_name }}</strong></p>
-                            <p style="margin:0 0 6px 0;">{{ service_request.client_email }}</p>
-                            <p style="margin:0;">
-                                {% if service_request.client_phone %}
-                                    {{ service_request.client_phone }}
-                                {% else %}
-                                    <span class="text-muted">No phone provided</span>
-                                {% endif %}
-                            </p>
-                        </div>
+                {% if service_request.status == 'requested' %}
+                  <span class="request-pill requested">Requested</span>
+                {% elif service_request.status == 'approved' %}
+                  <span class="request-pill approved">Approved</span>
+                {% elif service_request.status == 'in_progress' %}
+                  <span class="request-pill in_progress">In Progress</span>
+                {% elif service_request.status == 'completed' %}
+                  <span class="request-pill completed">Completed</span>
+                {% elif service_request.status == 'cancelled' %}
+                  <span class="request-pill cancelled">Cancelled</span>
+                {% else %}
+                  <span class="request-pill default">{{ service_request.status }}</span>
+                {% endif %}
+              </div>
 
-                        <div>
-                            <h4 style="margin-bottom:8px;">Service</h4>
-                            <p style="margin:0 0 6px 0;">
-                                {% if service_request.service_title_snapshot %}
-                                    <strong>{{ service_request.service_title_snapshot }}</strong>
-                                {% else %}
-                                    <span class="text-muted">Custom request</span>
-                                {% endif %}
-                            </p>
-                            <p style="margin:0 0 6px 0;">
-                                {% if service_request.service_price_snapshot %}
-                                    ${{ '%.2f'|format(service_request.service_price_snapshot) }}
-                                {% else %}
-                                    <span class="text-muted">No saved price</span>
-                                {% endif %}
-                            </p>
-                            <p style="margin:0;">
-                                Quantity:
-                                <strong>{{ service_request.quantity }}</strong>
-                            </p>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div style="margin-bottom:16px;">
-                        <h4 style="margin-bottom:8px;">Request Details</h4>
-                        {% if service_request.request_details %}
-                            <p style="margin-bottom:0; white-space:pre-line;">{{ service_request.request_details }}</p>
-                        {% else %}
-                            <p class="text-muted" style="margin-bottom:0;">No additional request details provided.</p>
-                        {% endif %}
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                        <div>
-                            <h4 style="margin-bottom:8px;">Preferred Date</h4>
-                            {% if service_request.preferred_date_text %}
-                                <p style="margin-bottom:0;">{{ service_request.preferred_date_text }}</p>
-                            {% else %}
-                                <p class="text-muted" style="margin-bottom:0;">Not provided</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom:8px;">Preferred Time</h4>
-                            {% if service_request.preferred_time_text %}
-                                <p style="margin-bottom:0;">{{ service_request.preferred_time_text }}</p>
-                            {% else %}
-                                <p class="text-muted" style="margin-bottom:0;">Not provided</p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    {% if service_request.service_description_snapshot %}
-                    <hr>
-                    <div>
-                        <h4 style="margin-bottom:8px;">Saved Service Description</h4>
-                        <p style="margin-bottom:0; white-space:pre-line;">{{ service_request.service_description_snapshot }}</p>
-                    </div>
-                    {% endif %}
-                </div>
+              <div class="request-muted" style="font-size:13px;">
+                Keep this updated so your request inbox stays clear and actionable.
+              </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Request Timeline</h3>
+            <div class="request-grid-2">
+              <div class="request-info-block">
+                <h4>Client</h4>
+                <p><strong>{{ service_request.client_name }}</strong></p>
+                <p>{{ service_request.client_email }}</p>
+                <p>
+                  {% if service_request.client_phone %}
+                    {{ service_request.client_phone }}
+                  {% else %}
+                    <span class="request-muted">No phone provided</span>
+                  {% endif %}
+                </p>
+              </div>
 
-                    {% if request_events and request_events|length > 0 %}
-                        <div style="display:flex; flex-direction:column; gap:14px;">
-                            {% for event in request_events %}
-                                <div style="padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                                        <strong>{{ event.event_type|replace('_', ' ')|title }}</strong>
-                                        <span class="text-muted">
-                                            {% if event.created_at %}
-                                                {{ event.created_at.strftime("%Y-%m-%d %I:%M %p") }}
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </span>
-                                    </div>
-
-                                    {% if event.old_value or event.new_value %}
-                                        <p style="margin:8px 0 0 0;">
-                                            {% if event.old_value %}{{ event.old_value }}{% else %}—{% endif %}
-                                            →
-                                            {% if event.new_value %}{{ event.new_value }}{% else %}—{% endif %}
-                                        </p>
-                                    {% endif %}
-
-                                    {% if event.note %}
-                                        <p class="text-muted" style="margin:8px 0 0 0;">{{ event.note }}</p>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted" style="margin-bottom:0;">No request activity has been logged yet.</p>
-                    {% endif %}
-                </div>
+              <div class="request-info-block">
+                <h4>Service</h4>
+                <p>
+                  {% if service_request.service_title_snapshot %}
+                    <strong>{{ service_request.service_title_snapshot }}</strong>
+                  {% else %}
+                    <span class="request-muted">Custom request</span>
+                  {% endif %}
+                </p>
+                <p>
+                  {% if service_request.service_price_snapshot %}
+                    ${{ '%.2f'|format(service_request.service_price_snapshot) }}
+                  {% else %}
+                    <span class="request-muted">No saved price</span>
+                  {% endif %}
+                </p>
+                <p>Quantity: <strong>{{ service_request.quantity }}</strong></p>
+              </div>
             </div>
+
+            <div class="request-section-divider"></div>
+
+            <div class="request-rich-panel" style="margin-bottom:16px;">
+              <h4>Request Details</h4>
+              {% if service_request.request_details %}
+                <p>{{ service_request.request_details }}</p>
+              {% else %}
+                <p class="request-muted">No additional request details provided.</p>
+              {% endif %}
+            </div>
+
+            <div class="request-grid-2">
+              <div class="request-info-block">
+                <h4>Preferred Date</h4>
+                {% if service_request.preferred_date_text %}
+                  <p>{{ service_request.preferred_date_text }}</p>
+                {% else %}
+                  <p class="request-muted">Not provided</p>
+                {% endif %}
+              </div>
+
+              <div class="request-info-block">
+                <h4>Preferred Time</h4>
+                {% if service_request.preferred_time_text %}
+                  <p>{{ service_request.preferred_time_text }}</p>
+                {% else %}
+                  <p class="request-muted">Not provided</p>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if service_request.service_description_snapshot %}
+              <div class="request-section-divider"></div>
+
+              <div class="request-rich-panel">
+                <h4>Saved Service Description</h4>
+                <p>{{ service_request.service_description_snapshot }}</p>
+              </div>
+            {% endif %}
+          </div>
         </div>
 
-        <div>
-            <div class="card" style="margin-bottom:20px;">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Update Status</h3>
-                    <p class="text-muted">Keep the request moving with simple status updates.</p>
-
-                    <form method="POST" action="{{ url_for('update_request_status', request_id=service_request.id, lang=lang) }}">
-                        <div class="form-group" style="margin-bottom:12px;">
-                            <label for="status"><strong>Status</strong></label>
-                            <select name="status" id="status" class="form-control">
-                                <option value="requested" {% if service_request.status == 'requested' %}selected{% endif %}>Requested</option>
-                                <option value="approved" {% if service_request.status == 'approved' %}selected{% endif %}>Approved</option>
-                                <option value="in_progress" {% if service_request.status == 'in_progress' %}selected{% endif %}>In Progress</option>
-                                <option value="completed" {% if service_request.status == 'completed' %}selected{% endif %}>Completed</option>
-                                <option value="cancelled" {% if service_request.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                            </select>
-                        </div>
-
-                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="submit" class="btn btn-primary">Save Status</button>
-
-                            {% if linked_invoice %}
-                                <a href="/invoice/{{ linked_invoice.id }}{% if lang %}?lang={{ lang }}{% endif %}"
-                                   class="btn btn-secondary">
-                                    Open Linked Invoice
-                                </a>
-                            {% else %}
-                                <a href="{{ url_for('create_invoice_from_request', request_id=service_request.id, lang=lang) }}"
-                                   class="btn btn-secondary">
-                                    Create Invoice
-                                </a>
-                            {% endif %}
-                        </div>
-                    </form>
-                </div>
+        <div class="request-card">
+          <div class="request-card-header">
+            <h3 class="request-card-title">Request Timeline</h3>
+            <div class="request-card-sub">
+              Track status changes and request movement so nothing gets lost between approval, work, and invoicing.
             </div>
+          </div>
 
-            <div class="card" style="margin-bottom:20px;">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Request Meta</h3>
-                    <p style="margin:0 0 8px 0;"><strong>Request ID:</strong> #{{ service_request.id }}</p>
-                    <p style="margin:0 0 8px 0;"><strong>Source:</strong> {{ service_request.source|title }}</p>
-                    <p style="margin:0 0 8px 0;"><strong>Type:</strong> {{ service_request.request_type|replace('_', ' ')|title }}</p>
-                    <p style="margin:0 0 8px 0;">
-                        <strong>Submitted:</strong>
-                        {% if service_request.created_at %}
-                            {{ service_request.created_at.strftime("%Y-%m-%d %I:%M %p") }}
-                        {% else %}
+          <div class="request-card-body">
+            {% if request_events and request_events|length > 0 %}
+              <div class="request-timeline">
+                {% for event in request_events %}
+                  <div class="request-timeline-item">
+                    <div class="request-timeline-dot"></div>
+
+                    <div class="request-timeline-card">
+                      <div class="request-timeline-top">
+                        <strong>{{ event.event_type|replace('_', ' ')|title }}</strong>
+                        <span class="request-muted">
+                          {% if event.created_at %}
+                            {{ event.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                          {% else %}
                             —
-                        {% endif %}
-                    </p>
-                    <p style="margin:0;">
-                        <strong>Last Updated:</strong>
-                        {% if service_request.updated_at %}
-                            {{ service_request.updated_at.strftime("%Y-%m-%d %I:%M %p") }}
-                        {% else %}
-                            —
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
+                          {% endif %}
+                        </span>
+                      </div>
 
-            {% if linked_invoice %}
-            <div class="card" style="margin-bottom:20px;">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Linked Invoice</h3>
+                      {% if event.old_value or event.new_value %}
+                        <p style="margin:0 0 8px 0; line-height:1.65;">
+                          {% if event.old_value %}{{ event.old_value }}{% else %}—{% endif %}
+                          →
+                          {% if event.new_value %}{{ event.new_value }}{% else %}—{% endif %}
+                        </p>
+                      {% endif %}
 
-                    <p style="margin:0 0 8px 0;">
-                        <strong>{{ linked_invoice.invoice_number }}</strong>
-                    </p>
-
-                    <p style="margin:0 0 8px 0;">
-                        Status: {{ linked_invoice.status }}
-                    </p>
-
-                    <p style="margin:0 0 12px 0;">
-                        Amount: ${{ '%.2f'|format(linked_invoice.amount) }}
-                    </p>
-
-                    <a href="/invoice/{{ linked_invoice.id }}{% if lang %}?lang={{ lang }}{% endif %}"
-                       class="btn btn-secondary">
-                        Open Invoice
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="card" style="margin-bottom:20px;">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Public Booking Link</h3>
-
-                    <p class="text-muted" style="margin:0 0 10px 0;">
-                        Share this link directly if you want a client to browse services and submit a request without going through an invoice first.
-                    </p>
-
-                    <div style="padding:10px 12px; border-radius:14px; background:rgba(15,23,42,0.04); border:1px solid rgba(148,163,184,0.16); font-size:13px; line-height:1.6; word-break:break-all; margin-bottom:12px;">
-                        {{ public_booking_url }}
+                      {% if event.note %}
+                        <p class="request-muted" style="margin:0; line-height:1.65;">{{ event.note }}</p>
+                      {% endif %}
                     </div>
-
-                    <a href="{{ public_booking_url }}" target="_blank" rel="noopener" class="btn btn-secondary">
-                        Open Public Services Page
-                    </a>
-                </div>
-            </div>
-
-            {% if service_request.cancel_requested_by_client or service_request.cancel_reason %}
-            <div class="card">
-                <div class="card-body">
-                    <h3 style="margin-top:0;">Cancellation Notes</h3>
-
-                    {% if service_request.cancel_requested_by_client %}
-                        <p style="margin:0 0 8px 0;"><strong>Client has requested cancellation.</strong></p>
-                    {% endif %}
-
-                    {% if service_request.cancel_reason %}
-                        <p style="margin:0;">{{ service_request.cancel_reason }}</p>
-                    {% else %}
-                        <p class="text-muted" style="margin:0;">No cancellation reason was provided.</p>
-                    {% endif %}
-                </div>
-            </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="request-muted" style="margin-bottom:0;">No request activity has been logged yet.</p>
             {% endif %}
+          </div>
         </div>
+      </div>
+
+      <div class="request-side-stack">
+        <div class="request-card">
+          <div class="request-card-header">
+            <h3 class="request-card-title">Update Status</h3>
+            <div class="request-card-sub">
+              Keep the request moving with simple status updates and a direct next step into invoicing when needed.
+            </div>
+          </div>
+
+          <div class="request-card-body">
+            <form method="POST" action="{{ url_for('update_request_status', request_id=service_request.id, lang=lang) }}" class="request-action-form">
+              <div>
+                <label for="status">Status</label>
+                <select name="status" id="status" class="form-control">
+                  <option value="requested" {% if service_request.status == 'requested' %}selected{% endif %}>Requested</option>
+                  <option value="approved" {% if service_request.status == 'approved' %}selected{% endif %}>Approved</option>
+                  <option value="in_progress" {% if service_request.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                  <option value="completed" {% if service_request.status == 'completed' %}selected{% endif %}>Completed</option>
+                  <option value="cancelled" {% if service_request.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+              </div>
+
+              <div class="request-action-buttons">
+                <button type="submit" class="btn btn-brand">Save Status</button>
+
+                {% if linked_invoice %}
+                  <a href="/invoice/{{ linked_invoice.id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    Open Linked Invoice
+                  </a>
+                {% else %}
+                  <a href="{{ url_for('create_invoice_from_request', request_id=service_request.id, lang=lang) }}" class="btn btn-secondary">
+                    Create Invoice
+                  </a>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="request-side-highlight">
+          <strong>Professional flow</strong>
+          <p>
+            A clean service request should move naturally from inquiry to approval to invoice. This page is your control point for that whole transition.
+          </p>
+        </div>
+
+        <div class="request-card">
+          <div class="request-card-header">
+            <h3 class="request-card-title">Request Meta</h3>
+          </div>
+
+          <div class="request-card-body">
+            <div class="request-meta-list">
+              <div class="request-meta-row">
+                <div class="request-meta-label">Request ID</div>
+                <div class="request-meta-value">#{{ service_request.id }}</div>
+              </div>
+
+              <div class="request-meta-row">
+                <div class="request-meta-label">Source</div>
+                <div class="request-meta-value">{{ service_request.source|title }}</div>
+              </div>
+
+              <div class="request-meta-row">
+                <div class="request-meta-label">Type</div>
+                <div class="request-meta-value">{{ service_request.request_type|replace('_', ' ')|title }}</div>
+              </div>
+
+              <div class="request-meta-row">
+                <div class="request-meta-label">Submitted</div>
+                <div class="request-meta-value">
+                  {% if service_request.created_at %}
+                    {{ service_request.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="request-meta-row">
+                <div class="request-meta-label">Last Updated</div>
+                <div class="request-meta-value">
+                  {% if service_request.updated_at %}
+                    {{ service_request.updated_at.strftime("%Y-%m-%d %I:%M %p") }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if linked_invoice %}
+          <div class="request-card">
+            <div class="request-card-header">
+              <h3 class="request-card-title">Linked Invoice</h3>
+              <div class="request-card-sub">
+                This request has already been converted into an invoice inside your workflow.
+              </div>
+            </div>
+
+            <div class="request-card-body">
+              <div class="request-meta-list">
+                <div class="request-meta-row">
+                  <div class="request-meta-label">Invoice</div>
+                  <div class="request-meta-value">{{ linked_invoice.invoice_number }}</div>
+                </div>
+
+                <div class="request-meta-row">
+                  <div class="request-meta-label">Status</div>
+                  <div class="request-meta-value">{{ linked_invoice.status }}</div>
+                </div>
+
+                <div class="request-meta-row">
+                  <div class="request-meta-label">Amount</div>
+                  <div class="request-meta-value">${{ '%.2f'|format(linked_invoice.amount) }}</div>
+                </div>
+              </div>
+
+              <div style="margin-top:14px;">
+                <a href="/invoice/{{ linked_invoice.id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                  Open Invoice
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="request-card">
+          <div class="request-card-header">
+            <h3 class="request-card-title">Public Booking Link</h3>
+            <div class="request-card-sub">
+              Share this directly if you want a client to browse services and submit a request without starting from an invoice.
+            </div>
+          </div>
+
+          <div class="request-card-body">
+            <div class="request-link-box">{{ public_booking_url }}</div>
+
+            <div style="margin-top:14px;">
+              <a href="{{ public_booking_url }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                Open Public Services Page
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {% if service_request.cancel_requested_by_client or service_request.cancel_reason %}
+          <div class="request-card">
+            <div class="request-card-header">
+              <h3 class="request-card-title">Cancellation Notes</h3>
+            </div>
+
+            <div class="request-card-body">
+              {% if service_request.cancel_requested_by_client %}
+                <p style="margin:0 0 8px 0;"><strong>Client has requested cancellation.</strong></p>
+              {% endif %}
+
+              {% if service_request.cancel_reason %}
+                <p style="margin:0; line-height:1.7;">{{ service_request.cancel_reason }}</p>
+              {% else %}
+                <p class="request-muted" style="margin:0;">No cancellation reason was provided.</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
