@@ -906,54 +906,53 @@ def init_db():
         """
     )
 
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS notifications (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            notification_type TEXT NOT NULL,
-            title TEXT NOT NULL,
-            body TEXT,
-            link_url TEXT,
-            is_read BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
+cursor.execute(
+    """
+    CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        notification_type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT,
+        link_url TEXT,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+)
 
+cursor.execute(
+    """
+    CREATE TABLE IF NOT EXISTS business_followers (
+        id SERIAL PRIMARY KEY,
+        client_user_id INTEGER NOT NULL,
+        business_user_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(client_user_id, business_user_id)
+    );
+    """
+)
 
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS business_followers (
-            id SERIAL PRIMARY KEY,
-            client_user_id INTEGER NOT NULL,
-            business_user_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(client_user_id, business_user_id)
-        );
-        """
-    )
+cursor.execute(
+    """
+    CREATE INDEX IF NOT EXISTS business_followers_client_idx
+    ON business_followers(client_user_id);
+    """
+)
 
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS business_followers_client_idx
-        ON business_followers(client_user_id);
-        """
-    )
+cursor.execute(
+    """
+    CREATE INDEX IF NOT EXISTS business_followers_business_idx
+    ON business_followers(business_user_id);
+    """
+)
 
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS business_followers_business_idx
-        ON business_followers(business_user_id);
-        """
-    )
-        """
-    )
-
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS notifications_user_read_idx
-        ON notifications(user_id, is_read, created_at DESC);
-        """
-    )
+cursor.execute(
+    """
+    CREATE INDEX IF NOT EXISTS notifications_user_read_idx
+    ON notifications(user_id, is_read, created_at DESC);
+    """
+)
 
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
     cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
