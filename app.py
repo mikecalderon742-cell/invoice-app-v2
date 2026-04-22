@@ -906,67 +906,67 @@ def init_db():
         """
     )
 
-cursor.execute(
-    """
-    CREATE TABLE IF NOT EXISTS notifications (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        notification_type TEXT NOT NULL,
-        title TEXT NOT NULL,
-        body TEXT,
-        link_url TEXT,
-        is_read BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """
-)
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS notifications (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            notification_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            body TEXT,
+            link_url TEXT,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
 
-cursor.execute(
-    """
-    CREATE TABLE IF NOT EXISTS business_followers (
-        id SERIAL PRIMARY KEY,
-        client_user_id INTEGER NOT NULL,
-        business_user_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(client_user_id, business_user_id)
-    );
-    """
-)
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS business_followers (
+            id SERIAL PRIMARY KEY,
+            client_user_id INTEGER NOT NULL,
+            business_user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(client_user_id, business_user_id)
+        );
+        """
+    )
 
-cursor.execute(
-    """
-    CREATE INDEX IF NOT EXISTS business_followers_client_idx
-    ON business_followers(client_user_id);
-    """
-)
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS business_followers_client_idx
+        ON business_followers(client_user_id);
+        """
+    )
 
-cursor.execute(
-    """
-    CREATE INDEX IF NOT EXISTS business_followers_business_idx
-    ON business_followers(business_user_id);
-    """
-)
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS business_followers_business_idx
+        ON business_followers(business_user_id);
+        """
+    )
 
-cursor.execute(
-    """
-    CREATE INDEX IF NOT EXISTS notifications_user_read_idx
-    ON notifications(user_id, is_read, created_at DESC);
-    """
-)
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS notifications_user_read_idx
+        ON notifications(user_id, is_read, created_at DESC);
+        """
+    )
 
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_charges_enabled BOOLEAN DEFAULT FALSE;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_payouts_enabled BOOLEAN DEFAULT FALSE;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_details_submitted BOOLEAN DEFAULT FALSE;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_onboarded_at TIMESTAMP;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_last_status_sync TIMESTAMP;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_product_id TEXT;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_original_transaction_id TEXT;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_transaction_id TEXT;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_last_purchase_at TIMESTAMP;")
-cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en';")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_charges_enabled BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_payouts_enabled BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_details_submitted BOOLEAN DEFAULT FALSE;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_onboarded_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_connect_last_status_sync TIMESTAMP;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_product_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_original_transaction_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_transaction_id TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_last_purchase_at TIMESTAMP;")
+    cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en';")
 
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_number TEXT;")
     cursor.execute("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;")
@@ -1009,6 +1009,7 @@ cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT
         WHERE stripe_payment_intent_id IS NOT NULL;
         """
     )
+
     cursor.execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS payments_stripe_cs_unique
@@ -1016,6 +1017,7 @@ cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT
         WHERE stripe_checkout_session_id IS NOT NULL;
         """
     )
+
     cursor.execute(
         """
         CREATE UNIQUE INDEX IF NOT EXISTS invoices_public_token_unique
@@ -1023,25 +1025,30 @@ cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT DEFAULT
         WHERE public_token IS NOT NULL;
         """
     )
+
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS invoice_events_invoice_created_idx
         ON invoice_events(invoice_id, created_at DESC);
         """
     )
+
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS invoices_last_viewed_idx
         ON invoices(last_viewed_at DESC);
         """
     )
+
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS invoices_last_reminder_idx
         ON invoices(last_reminder_sent_at DESC);
         """
     )
+
     cursor.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT;")
+
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS services_user_created_idx
