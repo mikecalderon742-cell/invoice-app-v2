@@ -98,7 +98,888 @@
                                     </a>
                                 </td>
                             </tr>
-                            {% endfor %}
+                            {% endfor %{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .requests-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .requests-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    padding: 28px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.18), transparent 32%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.12), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.98), rgba(15,23,42,0.96));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 24px 60px rgba(2,6,23,0.20);
+    color: #f8fafc;
+  }
+
+  .requests-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .requests-hero h1 {
+    margin: 0 0 10px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    color: #ffffff;
+  }
+
+  .requests-hero p {
+    margin: 0;
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(248,250,252,0.84);
+  }
+
+  .requests-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .requests-stat {
+    border-radius: 22px;
+    padding: 18px;
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 14px 36px rgba(15,23,42,0.08);
+  }
+
+  .requests-stat.total {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 40%),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+  }
+
+  .requests-stat.requested {
+    background:
+      radial-gradient(circle at top right, rgba(249,115,22,0.16), transparent 40%),
+      linear-gradient(180deg, rgba(255,247,237,0.96), rgba(255,237,213,0.92));
+    border-color: rgba(249,115,22,0.22);
+  }
+
+  .requests-stat.progress {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 40%),
+      linear-gradient(180deg, rgba(239,246,255,0.96), rgba(219,234,254,0.92));
+    border-color: rgba(58,139,255,0.20);
+  }
+
+  .requests-stat.completed {
+    background:
+      radial-gradient(circle at top right, rgba(16,185,129,0.18), transparent 40%),
+      linear-gradient(180deg, rgba(236,253,245,0.96), rgba(220,252,231,0.92));
+    border-color: rgba(16,185,129,0.22);
+  }
+
+  .requests-stat-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .requests-stat-value {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: #0f172a;
+  }
+
+  .requests-stat-sub {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #475569;
+  }
+
+  .requests-filter-card,
+  .requests-table-card {
+    border-radius: 24px;
+    background: rgba(255,255,255,0.94);
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 18px 44px rgba(15,23,42,0.06);
+    overflow: hidden;
+  }
+
+  body.dark .requests-filter-card,
+  body.dark .requests-table-card {
+    background: rgba(15,23,42,0.92);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 18px 44px rgba(2,6,23,0.34);
+  }
+
+  .requests-filter-inner {
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .requests-filter-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .requests-filter-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  body.dark .requests-filter-title {
+    color: #f8fafc;
+  }
+
+  .requests-filter-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .requests-filter-sub {
+    color: #94a3b8;
+  }
+
+  .requests-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .requests-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    border: 1px solid rgba(148,163,184,0.16);
+    background: #f8fafc;
+    color: #334155;
+  }
+
+  .requests-filter-pill:hover {
+    transform: translateY(-1px);
+  }
+
+  .requests-filter-pill.active-all {
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 14px 30px rgba(37,99,235,0.22);
+  }
+
+  .requests-filter-pill.active-requested {
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 14px 30px rgba(234,88,12,0.20);
+  }
+
+  .requests-filter-pill.active-approved,
+  .requests-filter-pill.active-progress {
+    background: linear-gradient(135deg, #3A8BFF, #1d4ed8);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 14px 30px rgba(37,99,235,0.20);
+  }
+
+  .requests-filter-pill.active-completed {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 14px 30px rgba(22,163,74,0.20);
+  }
+
+  .requests-filter-pill.active-cancelled {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 14px 30px rgba(100,116,139,0.20);
+  }
+
+  body.dark .requests-filter-pill {
+    background: rgba(2,6,23,0.72);
+    color: #e2e8f0;
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  .requests-table-header {
+    padding: 22px 22px 10px;
+  }
+
+  .requests-table-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  body.dark .requests-table-title {
+    color: #f8fafc;
+  }
+
+  .requests-table-sub {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .requests-table-sub {
+    color: #94a3b8;
+  }
+
+  .requests-table-scroll {
+    overflow-x: auto;
+    padding: 16px 22px 22px;
+  }
+
+  .requests-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .requests-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    background: rgba(248,250,252,0.96);
+    padding: 14px 14px;
+    border-bottom: 1px solid rgba(148,163,184,0.18);
+  }
+
+  body.dark .requests-table thead th {
+    color: #94a3b8;
+    background: rgba(2,6,23,0.88);
+    border-bottom-color: rgba(148,163,184,0.16);
+  }
+
+  .requests-table tbody td {
+    padding: 16px 14px;
+    border-bottom: 1px solid rgba(226,232,240,0.86);
+    vertical-align: top;
+  }
+
+  body.dark .requests-table tbody td {
+    border-bottom-color: rgba(51,65,85,0.86);
+  }
+
+  .requests-table tbody tr:hover {
+    background: rgba(58,139,255,0.035);
+  }
+
+  body.dark .requests-table tbody tr:hover {
+    background: rgba(58,139,255,0.08);
+  }
+
+  .request-id-block {
+    display: grid;
+    gap: 5px;
+  }
+
+  .request-id-main {
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  body.dark .request-id-main {
+    color: #f8fafc;
+  }
+
+  .request-id-sub {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  body.dark .request-id-sub {
+    color: #94a3b8;
+  }
+
+  .request-client {
+    display: grid;
+    gap: 4px;
+  }
+
+  .request-client strong {
+    font-size: 14px;
+    color: #0f172a;
+  }
+
+  body.dark .request-client strong {
+    color: #f8fafc;
+  }
+
+  .request-client-meta {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  body.dark .request-client-meta {
+    color: #94a3b8;
+  }
+
+  .request-service {
+    display: grid;
+    gap: 6px;
+  }
+
+  .request-service-title {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  body.dark .request-service-title {
+    color: #f8fafc;
+  }
+
+  .request-service-meta {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  body.dark .request-service-meta {
+    color: #94a3b8;
+  }
+
+  .request-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .request-status-pill.requested {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid rgba(249,115,22,0.18);
+  }
+
+  .request-status-pill.approved {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid rgba(59,130,246,0.16);
+  }
+
+  .request-status-pill.in_progress {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid rgba(14,165,233,0.16);
+  }
+
+  .request-status-pill.completed {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid rgba(34,197,94,0.16);
+  }
+
+  .request-status-pill.cancelled {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid rgba(148,163,184,0.18);
+  }
+
+  body.dark .request-status-pill.requested {
+    background: rgba(154,52,18,0.26);
+    color: #fdba74;
+    border-color: rgba(251,146,60,0.22);
+  }
+
+  body.dark .request-status-pill.approved {
+    background: rgba(29,78,216,0.24);
+    color: #bfdbfe;
+    border-color: rgba(96,165,250,0.22);
+  }
+
+  body.dark .request-status-pill.in_progress {
+    background: rgba(3,105,161,0.24);
+    color: #bae6fd;
+    border-color: rgba(56,189,248,0.22);
+  }
+
+  body.dark .request-status-pill.completed {
+    background: rgba(22,101,52,0.26);
+    color: #bbf7d0;
+    border-color: rgba(74,222,128,0.22);
+  }
+
+  body.dark .request-status-pill.cancelled {
+    background: rgba(71,85,105,0.28);
+    color: #cbd5e1;
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  .request-date {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #475569;
+    white-space: nowrap;
+  }
+
+  body.dark .request-date {
+    color: #cbd5e1;
+  }
+
+  .request-open-btn {
+    min-height: 38px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .requests-empty {
+    padding: 32px 22px 26px;
+  }
+
+  .requests-empty-card {
+    border-radius: 22px;
+    padding: 26px 22px;
+    text-align: center;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.08), transparent 36%),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+    border: 1px dashed rgba(148,163,184,0.30);
+  }
+
+  body.dark .requests-empty-card {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 36%),
+      linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.90));
+    border-color: rgba(148,163,184,0.24);
+  }
+
+  .requests-empty-card h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  body.dark .requests-empty-card h3 {
+    color: #f8fafc;
+  }
+
+  .requests-empty-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .requests-empty-card p {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 980px) {
+    .requests-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .requests-hero {
+      padding: 22px 18px;
+      border-radius: 24px;
+    }
+
+    .requests-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .requests-filter-inner,
+    .requests-table-header,
+    .requests-table-scroll,
+    .requests-empty {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .requests-filter-pills {
+      gap: 8px;
+    }
+  }
+</style>
+
+<div class="page-shell">
+  <div class="requests-shell">
+    <div class="requests-hero">
+      <div class="requests-hero-badge">
+        {% if lang == 'es' %}
+          Flujo de solicitudes
+        {% elif lang == 'zh' %}
+          请求流程
+        {% else %}
+          Request Workflow
+        {% endif %}
+      </div>
+
+      <h1>
+        {% if lang == 'es' %}
+          Solicitudes de servicio
+        {% elif lang == 'zh' %}
+          服务请求
+        {% else %}
+          Service Requests
+        {% endif %}
+      </h1>
+
+      <p>
+        {% if lang == 'es' %}
+          Haz seguimiento a nuevas solicitudes, revisa detalles rápidamente y mueve cada trabajo desde el primer interés hasta la factura final.
+        {% elif lang == 'zh' %}
+          跟踪新的服务请求，快速查看详情，并将每项工作从初步意向推进到最终开票。
+        {% else %}
+          Track incoming requests, review details quickly, and move each job from first interest to final invoice.
+        {% endif %}
+      </p>
+    </div>
+
+    {% set requested_count = requests_list|selectattr('status', 'equalto', 'requested')|list|length %}
+    {% set in_progress_count = requests_list|selectattr('status', 'equalto', 'in_progress')|list|length %}
+    {% set completed_count = requests_list|selectattr('status', 'equalto', 'completed')|list|length %}
+
+    <div class="requests-stats">
+      <div class="requests-stat total">
+        <div class="requests-stat-label">
+          {% if lang == 'es' %}Total{% elif lang == 'zh' %}总数{% else %}Total{% endif %}
+        </div>
+        <div class="requests-stat-value">{{ requests_list|length }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Vista actual de todas tus solicitudes.
+          {% elif lang == 'zh' %}
+            当前视图中的全部请求。
+          {% else %}
+            All requests in your current view.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="requests-stat requested">
+        <div class="requests-stat-label">
+          {% if lang == 'es' %}Nuevas{% elif lang == 'zh' %}新请求{% else %}Requested{% endif %}
+        </div>
+        <div class="requests-stat-value">{{ requested_count }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Solicitudes que todavía necesitan revisión.
+          {% elif lang == 'zh' %}
+            仍需查看和处理的请求。
+          {% else %}
+            Requests that still need review.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="requests-stat progress">
+        <div class="requests-stat-label">
+          {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+        </div>
+        <div class="requests-stat-value">{{ in_progress_count }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Trabajos activos que ya van avanzando.
+          {% elif lang == 'zh' %}
+            已经推进中的活跃工作。
+          {% else %}
+            Active jobs already moving forward.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="requests-stat completed">
+        <div class="requests-stat-label">
+          {% if lang == 'es' %}Completadas{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+        </div>
+        <div class="requests-stat-value">{{ completed_count }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Solicitudes ya terminadas o cerradas.
+          {% elif lang == 'zh' %}
+            已完成或已结束的请求。
+          {% else %}
+            Requests that have already been finished.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="requests-filter-card">
+      <div class="requests-filter-inner">
+        <div class="requests-filter-top">
+          <div>
+            <h2 class="requests-filter-title">
+              {% if lang == 'es' %}
+                Filtrar solicitudes
+              {% elif lang == 'zh' %}
+                筛选请求
+              {% else %}
+                Filter Requests
+              {% endif %}
+            </h2>
+            <div class="requests-filter-sub">
+              {% if lang == 'es' %}
+                Enfócate en la etapa exacta que quieres revisar sin perder el ritmo.
+              {% elif lang == 'zh' %}
+                聚焦到您当前最想查看的请求阶段。
+              {% else %}
+                Focus on the exact stage you want to review without losing momentum.
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="requests-filter-pills">
+          <a href="{{ url_for('requests_page', lang=lang) }}"
+             class="requests-filter-pill {% if not selected_status %}active-all{% endif %}">
+            {% if lang == 'es' %}Todas{% elif lang == 'zh' %}全部{% else %}All{% endif %}
+          </a>
+
+          <a href="{{ url_for('requests_page', status='requested', lang=lang) }}"
+             class="requests-filter-pill {% if selected_status == 'requested' %}active-requested{% endif %}">
+            {% if lang == 'es' %}Solicitadas{% elif lang == 'zh' %}已请求{% else %}Requested{% endif %}
+          </a>
+
+          <a href="{{ url_for('requests_page', status='approved', lang=lang) }}"
+             class="requests-filter-pill {% if selected_status == 'approved' %}active-approved{% endif %}">
+            {% if lang == 'es' %}Aprobadas{% elif lang == 'zh' %}已批准{% else %}Approved{% endif %}
+          </a>
+
+          <a href="{{ url_for('requests_page', status='in_progress', lang=lang) }}"
+             class="requests-filter-pill {% if selected_status == 'in_progress' %}active-progress{% endif %}">
+            {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+          </a>
+
+          <a href="{{ url_for('requests_page', status='completed', lang=lang) }}"
+             class="requests-filter-pill {% if selected_status == 'completed' %}active-completed{% endif %}">
+            {% if lang == 'es' %}Completadas{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+          </a>
+
+          <a href="{{ url_for('requests_page', status='cancelled', lang=lang) }}"
+             class="requests-filter-pill {% if selected_status == 'cancelled' %}active-cancelled{% endif %}">
+            {% if lang == 'es' %}Canceladas{% elif lang == 'zh' %}已取消{% else %}Cancelled{% endif %}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="requests-table-card">
+      {% if requests_list and requests_list|length > 0 %}
+        <div class="requests-table-header">
+          <h2 class="requests-table-title">
+            {% if lang == 'es' %}
+              Solicitudes en vista
+            {% elif lang == 'zh' %}
+              当前请求列表
+            {% else %}
+              Requests in View
+            {% endif %}
+          </h2>
+          <p class="requests-table-sub">
+            {% if lang == 'es' %}
+              Abre cualquier solicitud para revisar detalles, actualizar estado y continuar con la siguiente acción.
+            {% elif lang == 'zh' %}
+              打开任意请求以查看详情、更新状态并继续下一步操作。
+            {% else %}
+              Open any request to review details, update status, and move to the next action.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="requests-table-scroll">
+          <table class="requests-table">
+            <thead>
+              <tr>
+                <th>{% if lang == 'es' %}Solicitud{% elif lang == 'zh' %}请求{% else %}Request{% endif %}</th>
+                <th>{% if lang == 'es' %}Cliente{% elif lang == 'zh' %}客户{% else %}Client{% endif %}</th>
+                <th>{% if lang == 'es' %}Servicio{% elif lang == 'zh' %}服务{% else %}Service{% endif %}</th>
+                <th>{% if lang == 'es' %}Estado{% elif lang == 'zh' %}状态{% else %}Status{% endif %}</th>
+                <th>{% if lang == 'es' %}Enviada{% elif lang == 'zh' %}提交时间{% else %}Submitted{% endif %}</th>
+                <th>{% if lang == 'es' %}Acción{% elif lang == 'zh' %}操作{% else %}Action{% endif %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in requests_list %}
+              <tr>
+                <td>
+                  <div class="request-id-block">
+                    <div class="request-id-main">#{{ req.id }}</div>
+                    <div class="request-id-sub">
+                      {% if lang == 'es' %}
+                        Solicitud registrada
+                      {% elif lang == 'zh' %}
+                        已记录请求
+                      {% else %}
+                        Logged request
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="request-client">
+                    <strong>{{ req.client_name }}</strong>
+                    <div class="request-client-meta">{{ req.client_email }}</div>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="request-service">
+                    <div class="request-service-title">
+                      {% if req.service_title_snapshot %}
+                        {{ req.service_title_snapshot }}
+                      {% else %}
+                        {% if lang == 'es' %}
+                          Solicitud personalizada
+                        {% elif lang == 'zh' %}
+                          自定义请求
+                        {% else %}
+                          Custom request
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                    <div class="request-service-meta">
+                      {% if req.quantity %}
+                        {% if lang == 'es' %}
+                          Cantidad: {{ req.quantity }}
+                        {% elif lang == 'zh' %}
+                          数量：{{ req.quantity }}
+                        {% else %}
+                          Quantity: {{ req.quantity }}
+                        {% endif %}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <span class="request-status-pill {{ req.status }}">
+                    {% if req.status == 'requested' %}
+                      {% if lang == 'es' %}Solicitada{% elif lang == 'zh' %}已请求{% else %}Requested{% endif %}
+                    {% elif req.status == 'approved' %}
+                      {% if lang == 'es' %}Aprobada{% elif lang == 'zh' %}已批准{% else %}Approved{% endif %}
+                    {% elif req.status == 'in_progress' %}
+                      {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+                    {% elif req.status == 'completed' %}
+                      {% if lang == 'es' %}Completada{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+                    {% elif req.status == 'cancelled' %}
+                      {% if lang == 'es' %}Cancelada{% elif lang == 'zh' %}已取消{% else %}Cancelled{% endif %}
+                    {% else %}
+                      {{ req.status }}
+                    {% endif %}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="request-date">
+                    {% if req.created_at %}
+                      {{ req.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </div>
+                </td>
+
+                <td>
+                  <a href="{{ url_for('request_detail_page', request_id=req.id, lang=lang) }}"
+                     class="btn btn-brand request-open-btn">
+                    {% if lang == 'es' %}
+                      Abrir
+                    {% elif lang == 'zh' %}
+                      打开
+                    {% else %}
+                      Open
+                    {% endif %}
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="requests-empty">
+          <div class="requests-empty-card">
+            <h3>
+              {% if lang == 'es' %}
+                Todavía no hay solicitudes de servicio
+              {% elif lang == 'zh' %}
+                还没有服务请求
+              {% else %}
+                No service requests yet
+              {% endif %}
+            </h3>
+            <p>
+              {% if lang == 'es' %}
+                Cuando tu flujo de solicitudes empiece a recibir interés, aquí aparecerán nuevas solicitudes para revisar, aprobar y convertir en trabajo real.
+              {% elif lang == 'zh' %}
+                当您的请求流程开始收到客户兴趣时，新的服务请求会出现在这里，方便您查看、批准并推进成真实工作。
+              {% else %}
+                Once your request flow starts bringing in interest, new service requests will appear here for review, approval, and real follow-through.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
                         </tbody>
                     </table>
                 </div>
