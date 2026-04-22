@@ -7,7 +7,7 @@
 <html lang="{{ lang or 'en' }}">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}{{ business_profile.business_name or "BillBeam" }}{% endblock %}</title>
+    <title>{% block title %}{{ (public_business_profile.business_name if is_public_view and public_business_profile is defined and public_business_profile else business_profile.business_name) or "BillBeam" }}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="{% block meta_description %}BillBeam helps freelancers and small businesses create polished invoices, track payments, and manage clients with confidence.{% endblock %}">
     <meta name="theme-color" content="{{ business_profile.brand_color or '#020617' }}">
@@ -583,14 +583,15 @@ body.dark .autism-ribbon {
 
 <nav class="navbar">
     <div class="nav-left">
-        {% if business_profile.logo_url %}
-            <img src="{{ business_profile.logo_url }}"
-                 alt="Logo"
-                 style="height:28px; width:28px; object-fit:cover; border-radius:6px;">
-        {% endif %}
+        {% set nav_logo_url = (public_business_profile.logo_url if is_public_view and public_business_profile is defined and public_business_profile else business_profile.logo_url) %}
+{% if nav_logo_url %}
+    <img src="{{ nav_logo_url }}"
+         alt="Logo"
+         style="height:28px; width:28px; object-fit:cover; border-radius:6px;">
+{% endif %}
         <span class="logo nav-brand-text">
-            {{ business_profile.business_name or "BillBeam" }}
-        </span>
+    {{ (public_business_profile.business_name if is_public_view and public_business_profile is defined and public_business_profile else business_profile.business_name) or "BillBeam" }}
+</span>
     </div>
 
     <div class="nav-right">
