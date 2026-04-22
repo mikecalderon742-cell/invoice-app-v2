@@ -150,6 +150,13 @@ app.config["MAX_SERVICE_IMAGE_UPLOAD_BYTES"] = int(
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 ALLOWED_IMAGE_MIMETYPES = {"image/png", "image/jpeg", "image/webp"}
 
+INVOICE_IMAGE_UPLOAD_ROOT = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads", "invoice_images")
+os.makedirs(INVOICE_IMAGE_UPLOAD_ROOT, exist_ok=True)
+
+app.config["MAX_INVOICE_IMAGE_UPLOAD_BYTES"] = int(
+    os.environ.get("MAX_INVOICE_IMAGE_UPLOAD_BYTES", str(5 * 1024 * 1024))
+)
+
 
 # -------------------------
 # TIME / PARSING HELPERS
@@ -541,6 +548,73 @@ def save_uploaded_service_image(file_storage, user_id: int, service_id: int | No
 
     public_url = build_service_image_public_url(filename)
     return public_url, None
+
+
+def build_invoice_image_public_url(filename: str) -> str:
+    base_url = (APP_BASE_URL or request.host_url.rstrip("/")).rstrip("/")
+    return f"{base_url}/uploads/invoice_images/{filename}"
+
+
+def save_uploaded_invoice_image(file_storage, user_id: int, invoice_id: int):
+    if not file_storage or not getattr(file_storage, "filename", ""):
+        return None, "No invoice image file was selected."
+
+    original_name = (file_storage.filename or "").strip()
+    if not allowed_logo_file(original_name):
+        return None, "Invoice image must be a PNG, JPG, JPEG, or WEBP image."
+
+    mimetype = (file_storage.mimetype or "").lower().strip()
+    if mimetype not in ALLOWED_IMAGE_MIMETYPES:
+        return None, "Unsupported invoice image file type."
+
+    safe_name = secure_filename(original_name)
+    ext = safe_name.rsplit(".", 1)[1].lower()
+
+    file_storage.stream.seek(0, os.SEEK_END)
+    file_size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+
+    if file_size <= 0:
+        return None, "Uploaded invoice image file is empty."
+
+    if file_size > app.config["MAX_INVOICE_IMAGE_UPLOAD_BYTES"]:
+        return None, "Invoice image file is too large. Please upload an image under 5 MB."
+
+    unique_suffix = secrets.token_hex(6)
+    filename = f"user_{user_id}_invoice_{invoice_id}_{unique_suffix}.{ext}"
+    destination_path = os.path.join(INVOICE_IMAGE_UPLOAD_ROOT, filename)
+
+    try:
+        file_storage.save(destination_path)
+    except Exception as e:
+        logger.exception(
+            "Failed saving uploaded invoice image for user_id=%s invoice_id=%s: %s",
+            user_id,
+            invoice_id,
+            e,
+        )
+        return None, "Could not save the uploaded invoice image."
+
+    public_url = build_invoice_image_public_url(filename)
+    return public_url, None
+
+
+def get_invoice_image_urls(invoice_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT image_url
+        FROM invoice_images
+        WHERE invoice_id = %s
+        ORDER BY created_at ASC, id ASC
+        """,
+        (invoice_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return [row[0] for row in rows if row and row[0]]
 
 
 # -------------------------
@@ -1048,6 +1122,24 @@ def init_db():
     )
 
     cursor.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT;")
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS invoice_images (
+            id SERIAL PRIMARY KEY,
+            invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+            image_url TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS invoice_images_invoice_idx
+        ON invoice_images(invoice_id, created_at ASC);
+        """
+    )
 
     cursor.execute(
         """
@@ -4860,7 +4952,12 @@ def preview_invoice():
     notes = request.form.get("invoice_notes") or ""
     terms = request.form.get("invoice_terms") or "Payment due within 30 days."
     template_style = request.form.get("template_style") or "modern"
-    signature_data = request.form.get("signature_data") or ""
+    signature_data = request.form.get("signature_data") or None
+
+    uploaded_invoice_files = [
+        f for f in request.files.getlist("attachments")
+        if f and getattr(f, "filename", "").strip()
+    ]
 
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
@@ -5104,6 +5201,22 @@ def save():
             (invoice_id, desc, amt),
         )
 
+    invoice_image_errors = []
+
+    for uploaded_file in uploaded_invoice_files:
+        image_url, image_error = save_uploaded_invoice_image(uploaded_file, user_id, invoice_id)
+        if image_error:
+            invoice_image_errors.append(image_error)
+            continue
+
+        cursor.execute(
+            """
+            INSERT INTO invoice_images (invoice_id, image_url)
+            VALUES (%s, %s)
+            """,
+            (invoice_id, image_url),
+        )
+
     conn.commit()
     cursor.close()
     conn.close()
@@ -5137,6 +5250,11 @@ def save():
 # -------------------------
 # INVOICES DASHBOARD
 # -------------------------
+@app.route("/uploads/invoice_images/<path:filename>")
+def uploaded_invoice_image(filename):
+    return send_from_directory(INVOICE_IMAGE_UPLOAD_ROOT, filename)
+
+
 @app.route("/invoices")
 @login_required
 def invoices_page():
@@ -6651,7 +6769,8 @@ def public_invoice(token):
     conn.close()
 
     pdf_url = f"/history-pdf/{invoice_id}"
-    invoice_events = get_invoice_events(invoice_id, public_only=True)
+    invoice_events = get_invoice_events(invoice_id, public_only=False)
+    invoice_image_urls = get_invoice_image_urls(invoice_id)
 
     return render_template(
         "public_invoice.html",
@@ -6677,6 +6796,7 @@ def public_invoice(token):
         public_token=token,
         signature_data=signature_data,
         invoice_events=invoice_events,
+        invoice_image_urls=invoice_image_urls,
         percent_paid=percent_paid,
         payment_summary=payment_summary,
         view_summary=view_summary,

@@ -1015,6 +1015,69 @@
     }
   }
 
+  .invoice-images-card {
+    margin-bottom: 20px;
+  }
+
+  .invoice-images-intro {
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .invoice-images-intro {
+    color: #94a3b8;
+  }
+
+  .invoice-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .invoice-image-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  }
+
+  body.dark .invoice-image-item {
+    background: rgba(15, 23, 42, 0.48);
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+  }
+
+  .invoice-image-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .invoice-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    background: rgba(15, 23, 42, 0.08);
+  }
+
+  .invoice-image-caption {
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #475569;
+  }
+
+  body.dark .invoice-image-caption {
+    color: #cbd5e1;
+  }
+
   .powered-by {
     text-align: center;
     margin-top: 22px;
@@ -1756,6 +1819,53 @@
       </table>
     </div>
   </div>
+
+  {% if invoice_image_urls and invoice_image_urls|length > 0 %}
+    <div class="public-card public-card-wide invoice-images-card">
+      <div class="card-title">
+        {% if lang == 'es' %}
+          Fotos adjuntas
+        {% elif lang == 'zh' %}
+          附加图片
+        {% else %}
+          Attached Photos
+        {% endif %}
+      </div>
+
+      <div class="invoice-images-intro">
+        {% if lang == 'es' %}
+          Estas imágenes fueron adjuntadas a esta factura como referencia visual del trabajo, producto o documentación relacionada.
+        {% elif lang == 'zh' %}
+          这些图片作为该发票的视觉参考一并附上，可用于展示工作内容、产品情况或相关记录。
+        {% else %}
+          These images were attached to this invoice as visual reference for the work, product, or related documentation.
+        {% endif %}
+      </div>
+
+      <div class="invoice-images-grid">
+        {% for image_url in invoice_image_urls %}
+          <div class="invoice-image-item">
+            <a href="{{ image_url }}" target="_blank" rel="noopener" class="invoice-image-link">
+              <img
+                src="{{ image_url }}"
+                alt="{% if lang == 'es' %}Foto adjunta de factura {{ loop.index }}{% elif lang == 'zh' %}发票附件图片 {{ loop.index }}{% else %}Invoice attachment {{ loop.index }}{% endif %}"
+                class="invoice-image"
+              >
+              <div class="invoice-image-caption">
+                {% if lang == 'es' %}
+                  Foto {{ loop.index }}
+                {% elif lang == 'zh' %}
+                  图片 {{ loop.index }}
+                {% else %}
+                  Photo {{ loop.index }}
+                {% endif %}
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
 
   <div class="public-grid">
     <div class="public-card">
