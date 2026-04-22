@@ -918,6 +918,33 @@ def init_db():
             is_read BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS business_followers (
+            id SERIAL PRIMARY KEY,
+            client_user_id INTEGER NOT NULL,
+            business_user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(client_user_id, business_user_id)
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS business_followers_client_idx
+        ON business_followers(client_user_id);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS business_followers_business_idx
+        ON business_followers(business_user_id);
+        """
+    )
         """
     )
 
@@ -1363,6 +1390,222 @@ def login_required(view_func):
     return wrapped_view
 
 
+# =========================
+# CLIENT ACCOUNT SYSTEM
+# =========================
+
+@app.route("/client/register", methods=["GET", "POST"])
+def client_register():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = (request.form.get("password") or "").strip()
+
+        if not email or not password:
+            return render_template("client_register.html", error="Email and password required")
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return render_template("client_register.html", error="Account already exists")
+
+        password_hash = generate_password_hash(password)
+
+        cur.execute(
+            """
+            INSERT INTO users (email, password_hash, plan, is_active)
+            VALUES (%s, %s, 'free', TRUE)
+            RETURNING id
+            """,
+            (email, password_hash),
+        )
+        user_id = cur.fetchone()[0]
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        session["user_id"] = user_id
+        return redirect(url_for("client_dashboard"))
+
+    return render_template("client_register.html")
+
+
+@app.route("/client/login", methods=["GET", "POST"])
+def client_login():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = (request.form.get("password") or "").strip()
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, password_hash FROM users WHERE email = %s",
+            (email,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row or not check_password_hash(row[1], password):
+            return render_template("client_login.html", error="Invalid login")
+
+        session["user_id"] = row[0]
+        return redirect(url_for("client_dashboard"))
+
+    return render_template("client_login.html")
+
+
+@app.route("/client/dashboard")
+@login_required
+def client_dashboard():
+    user = get_current_user()
+    return render_template("client_dashboard.html", user=user)
+
+
+# =========================
+# BUSINESS DISCOVERY
+# =========================
+
+@app.route("/search")
+def business_search():
+    query = (request.args.get("q") or "").strip()
+    results = []
+
+    if query:
+        results = search_businesses_by_name(query)
+
+    return render_template("business_search.html", results=results, query=query)
+
+
+@app.route("/business/<int:user_id>")
+def business_profile(user_id):
+    profile = get_business_profile_by_user_id(user_id)
+    services = get_user_services(user_id)
+
+    return render_template(
+        "business_profile.html",
+        profile=profile,
+        services=services,
+        business_user_id=user_id,
+    )
+
+
+# =========================
+# FOLLOW SYSTEM
+# =========================
+
+@app.route("/follow/<int:user_id>", methods=["POST"])
+@login_required
+def follow_business(user_id):
+    client = get_current_user()
+    client_id = client["id"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO business_followers (client_user_id, business_user_id)
+        VALUES (%s, %s)
+        ON CONFLICT DO NOTHING
+        """,
+        (client_id, user_id),
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for("business_profile", user_id=user_id))
+
+
+@app.route("/unfollow/<int:user_id>", methods=["POST"])
+@login_required
+def unfollow_business(user_id):
+    client = get_current_user()
+    client_id = client["id"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        DELETE FROM business_followers
+        WHERE client_user_id = %s AND business_user_id = %s
+        """,
+        (client_id, user_id),
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(url_for("business_profile", user_id=user_id))
+
+
+# =========================
+# SERVICE REQUEST (CLIENT SIDE)
+# =========================
+
+@app.route("/request-service/<int:service_id>", methods=["POST"])
+def request_service(service_id):
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip()
+
+    if not name or not email:
+        return redirect(request.referrer or "/")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT user_id, name, description, price FROM services WHERE id = %s",
+        (service_id,),
+    )
+    service = cur.fetchone()
+
+    if not service:
+        cur.close()
+        conn.close()
+        return redirect("/")
+
+    business_user_id, title, description, price = service
+
+    cur.execute(
+        """
+        INSERT INTO service_requests (
+            user_id,
+            service_id,
+            service_title_snapshot,
+            service_description_snapshot,
+            service_price_snapshot,
+            client_name,
+            client_email
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+            business_user_id,
+            service_id,
+            title,
+            description,
+            price,
+            name,
+            email,
+        ),
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect(request.referrer or "/")
+
+
 def get_plan_for_current_user():
     user = get_current_user()
     return normalize_plan_key(user.get("plan") or "free")
@@ -1767,6 +2010,154 @@ def get_dashboard_receivables_metrics(user_id: int):
 def plan_allows(required_plan: str) -> bool:
     user_plan = get_plan_for_current_user()
     return PLAN_LEVELS.get(user_plan, 0) >= PLAN_LEVELS.get(required_plan, 0)
+
+
+# =========================
+# BILLBEAM CONVERSION + CLIENT SYSTEM HELPERS
+# =========================
+
+# -------------------------
+# TRIAL / FIRST 3 INVOICES SYSTEM
+# -------------------------
+def get_user_invoice_count_this_month(user_id: int) -> int:
+    if not user_id:
+        return 0
+
+    now = now_local()
+    month_start = datetime(now.year, now.month, 1)
+    next_month = (month_start + timedelta(days=32)).replace(day=1)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM invoices
+        WHERE user_id = %s
+          AND created_at >= %s
+          AND created_at < %s
+        """,
+        (user_id, month_start, next_month),
+    )
+    count = cur.fetchone()[0] or 0
+    cur.close()
+    conn.close()
+
+    return int(count)
+
+
+def is_user_in_trial_full_experience(user_id: int) -> bool:
+    """
+    FULL experience for first 3 invoices
+    """
+    return get_user_invoice_count_this_month(user_id) < 3
+
+
+def should_prompt_upgrade(user_id: int) -> bool:
+    """
+    After 3 invoices → soft prompt (NOT blocking)
+    """
+    return get_user_invoice_count_this_month(user_id) >= 3
+
+
+# -------------------------
+# FEATURE ACCESS (NON-BREAKING OVERRIDES)
+# -------------------------
+def can_use_branding_full(user_or_plan=None) -> bool:
+    user = get_current_user()
+    if user.get("id") and is_user_in_trial_full_experience(user["id"]):
+        return True
+    return can_use_branding(user_or_plan)
+
+
+def can_send_full_experience(user_or_plan=None) -> bool:
+    user = get_current_user()
+    if user.get("id") and is_user_in_trial_full_experience(user["id"]):
+        return True
+    return can_email_invoices(user_or_plan)
+
+
+# -------------------------
+# BUSINESS DISCOVERY HELPERS
+# -------------------------
+def search_businesses_by_name(query: str, limit: int = 20):
+    query = (query or "").strip().lower()
+    if not query:
+        return []
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT bp.user_id, bp.business_name, bp.logo_url
+        FROM business_profile bp
+        WHERE LOWER(bp.business_name) LIKE %s
+        ORDER BY bp.business_name ASC
+        LIMIT %s
+        """,
+        (f"%{query}%", limit),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    results = []
+    for user_id, name, logo_url in rows:
+        results.append({
+            "user_id": user_id,
+            "business_name": name or "",
+            "logo_url": logo_url or "",
+        })
+
+    return results
+
+
+# -------------------------
+# FOLLOW SYSTEM HELPERS
+# -------------------------
+def is_following_business(client_user_id: int, business_user_id: int) -> bool:
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT 1 FROM business_followers
+        WHERE client_user_id = %s AND business_user_id = %s
+        LIMIT 1
+        """,
+        (client_user_id, business_user_id),
+    )
+    exists = cur.fetchone() is not None
+    cur.close()
+    conn.close()
+    return exists
+
+
+# -------------------------
+# SERVICE REQUEST HELPERS (SAFE WRAPPERS)
+# -------------------------
+def create_service_request_safe(data: dict):
+    """
+    Wrapper so routes stay clean later
+    """
+    return create_service_request(**data)
+
+
+# -------------------------
+# REMOTE SIGNATURE HELPERS (HOOKS ONLY)
+# -------------------------
+def invoice_requires_signature(invoice: dict) -> bool:
+    """
+    Determine if invoice needs signature
+    (future-safe hook)
+    """
+    return not bool(invoice.get("signature_data"))
+
+
+def should_show_signature_pad(invoice: dict) -> bool:
+    """
+    Used on public invoice page
+    """
+    return invoice_requires_signature(invoice)
 
 
 def check_invoice_quota_or_reason():
