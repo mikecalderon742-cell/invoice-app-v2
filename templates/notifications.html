@@ -1,105 +1,660 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="page-shell">
-    <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
-        <div>
-            <h1 style="margin-bottom:8px;">
-                {% if lang == 'es' %}
-                    Notificaciones
-                {% elif lang == 'zh' %}
-                    通知
-                {% else %}
-                    Notifications
-                {% endif %}
-            </h1>
-            <p class="text-muted" style="max-width:760px;">
-                {% if lang == 'es' %}
-                    Mantente al día con nuevas solicitudes y actividad importante del sistema.
-                {% elif lang == 'zh' %}
-                    及时了解新的请求和重要系统活动。
-                {% else %}
-                    Stay up to date with new requests and important system activity.
-                {% endif %}
-            </p>
-        </div>
+<style>
+  .notifications-shell {
+    display: grid;
+    gap: 20px;
+  }
 
-        <div>
-            <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                {% if lang == 'es' %}
-                    Volver al panel
-                {% elif lang == 'zh' %}
-                    返回面板
-                {% else %}
-                    Back to Dashboard
-                {% endif %}
-            </a>
+  .notifications-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    padding: 28px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.22), transparent 32%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.14), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.98), rgba(15,23,42,0.96));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 24px 60px rgba(2,6,23,0.18);
+    color: #f8fafc;
+  }
+
+  .notifications-hero::before {
+    content: "";
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);
+    pointer-events: none;
+  }
+
+  .notifications-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .notifications-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .notifications-title {
+    margin: 0 0 8px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    color: #ffffff;
+  }
+
+  .notifications-subcopy {
+    max-width: 760px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(248,250,252,0.84);
+  }
+
+  .notifications-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .notifications-hero-actions .btn {
+    min-height: 42px;
+  }
+
+  .notifications-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .notifications-stat {
+    border-radius: 22px;
+    padding: 18px;
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 14px 36px rgba(15,23,42,0.06);
+  }
+
+  .notifications-stat.total {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 42%),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+  }
+
+  .notifications-stat.unread {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 42%),
+      linear-gradient(180deg, rgba(239,246,255,0.96), rgba(219,234,254,0.92));
+    border-color: rgba(96,165,250,0.24);
+  }
+
+  .notifications-stat.read {
+    background:
+      radial-gradient(circle at top right, rgba(148,163,184,0.12), transparent 42%),
+      linear-gradient(180deg, rgba(248,250,252,0.96), rgba(241,245,249,0.96));
+  }
+
+  .notifications-stat-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .notifications-stat-value {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: #0f172a;
+  }
+
+  .notifications-stat-copy {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #475569;
+  }
+
+  .notifications-list-card {
+    border-radius: 26px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.08), transparent 38%),
+      linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.96));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 20px 48px rgba(15,23,42,0.06);
+    overflow: hidden;
+  }
+
+  .notifications-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 22px 22px 14px;
+  }
+
+  .notifications-list-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .notifications-list-sub {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  .notifications-list-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.04);
+    border: 1px solid rgba(148,163,184,0.16);
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+  }
+
+  .notifications-list-body {
+    display: grid;
+    gap: 12px;
+    padding: 0 22px 22px;
+  }
+
+  .notification-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+    text-decoration: none;
+    color: inherit;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(148,163,184,0.16);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  }
+
+  .notification-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(15,23,42,0.08);
+  }
+
+  .notification-item.unread {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 42%),
+      linear-gradient(180deg, rgba(239,246,255,0.98), rgba(248,250,252,0.98));
+    border-color: rgba(96,165,250,0.26);
+  }
+
+  .notification-item.read {
+    background: rgba(15,23,42,0.03);
+  }
+
+  .notification-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 10px 20px rgba(15,23,42,0.08);
+  }
+
+  .notification-item.unread .notification-icon {
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    color: #ffffff;
+  }
+
+  .notification-item.read .notification-icon {
+    background: rgba(148,163,184,0.16);
+    color: #475569;
+  }
+
+  .notification-main {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+  }
+
+  .notification-topline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .notification-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .notification-body {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #475569;
+    word-break: break-word;
+  }
+
+  .notification-time {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+    align-self: center;
+  }
+
+  .notification-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #3A8BFF;
+    box-shadow: 0 0 0 6px rgba(58,139,255,0.12);
+    margin-top: 4px;
+  }
+
+  .notifications-empty {
+    border-radius: 26px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.08), transparent 38%),
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+    border: 1px dashed rgba(148,163,184,0.28);
+    box-shadow: 0 20px 48px rgba(15,23,42,0.05);
+    padding: 34px 24px;
+    text-align: center;
+  }
+
+  .notifications-empty h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  .notifications-empty p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .notifications-stat.total {
+      background:
+        radial-gradient(circle at top right, rgba(58,139,255,0.18), transparent 42%),
+        linear-gradient(180deg, rgba(30,41,59,0.92), rgba(15,23,42,0.92));
+    }
+
+    .notifications-stat.unread {
+      background:
+        radial-gradient(circle at top right, rgba(58,139,255,0.22), transparent 42%),
+        linear-gradient(180deg, rgba(30,58,138,0.38), rgba(15,23,42,0.92));
+      border-color: rgba(96,165,250,0.24);
+    }
+
+    .notifications-stat.read {
+      background:
+        radial-gradient(circle at top right, rgba(148,163,184,0.16), transparent 42%),
+        linear-gradient(180deg, rgba(30,41,59,0.92), rgba(15,23,42,0.92));
+    }
+
+    .notifications-stat-label,
+    .notifications-list-sub,
+    .notification-time,
+    .notifications-empty p {
+      color: #94a3b8;
+    }
+
+    .notifications-stat-value,
+    .notifications-list-title,
+    .notification-title,
+    .notifications-empty h3 {
+      color: #f8fafc;
+    }
+
+    .notifications-stat-copy,
+    .notification-body {
+      color: #cbd5e1;
+    }
+
+    .notifications-list-card {
+      background:
+        radial-gradient(circle at top right, rgba(58,139,255,0.12), transparent 38%),
+        linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
+      border-color: rgba(148,163,184,0.16);
+      box-shadow: 0 22px 52px rgba(2,6,23,0.80);
+    }
+
+    .notifications-list-meta {
+      background: rgba(15,23,42,0.58);
+      border-color: rgba(148,163,184,0.16);
+      color: #cbd5e1;
+    }
+
+    .notification-item.unread {
+      background:
+        radial-gradient(circle at top right, rgba(58,139,255,0.16), transparent 42%),
+        linear-gradient(180deg, rgba(30,41,59,0.96), rgba(15,23,42,0.96));
+      border-color: rgba(96,165,250,0.24);
+    }
+
+    .notification-item.read {
+      background: rgba(15,23,42,0.52);
+      border-color: rgba(148,163,184,0.14);
+    }
+
+    .notification-item.read .notification-icon {
+      background: rgba(148,163,184,0.16);
+      color: #cbd5e1;
+    }
+
+    .notifications-empty {
+      background:
+        radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 38%),
+        linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
+      border-color: rgba(148,163,184,0.20);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .notifications-hero {
+      padding: 22px 18px;
+      border-radius: 24px;
+    }
+
+    .notifications-summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .notifications-list-header,
+    .notifications-list-body {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .notification-item {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .notification-time {
+      grid-column: 2;
+      justify-self: start;
+      white-space: normal;
+    }
+
+    .notifications-hero-actions {
+      width: 100%;
+    }
+
+    .notifications-hero-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="page-shell notifications-shell">
+    <div class="notifications-hero">
+        <div class="notifications-hero-inner">
+            <div>
+                <div class="notifications-kicker">
+                    {% if lang == 'es' %}
+                        ✨ Centro de actividad
+                    {% elif lang == 'zh' %}
+                        ✨ 活动中心
+                    {% else %}
+                        ✨ Activity Center
+                    {% endif %}
+                </div>
+
+                <h1 class="notifications-title">
+                    {% if lang == 'es' %}
+                        Notificaciones
+                    {% elif lang == 'zh' %}
+                        通知
+                    {% else %}
+                        Notifications
+                    {% endif %}
+                </h1>
+
+                <p class="notifications-subcopy">
+                    {% if lang == 'es' %}
+                        Mantente al día con nuevas solicitudes, actividad importante y movimientos recientes dentro de tu flujo de trabajo.
+                    {% elif lang == 'zh' %}
+                        及时查看新的请求、重要活动以及工作流程中的最新动态。
+                    {% else %}
+                        Stay up to date with new requests, important activity, and recent movement across your workflow.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="notifications-hero-actions">
+                <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}
+                        Volver al panel
+                    {% elif lang == 'zh' %}
+                        返回面板
+                    {% else %}
+                        Back to Dashboard
+                    {% endif %}
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            {% if notifications and notifications|length > 0 %}
-                <div style="display:grid; gap:12px;">
-                    {% for n in notifications %}
-                    <a href="{{ url_for('mark_notification_read_page', notification_id=n.id, lang=lang) }}"
-                       style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start; text-decoration:none; color:inherit; padding:16px 18px; border-radius:18px; background:{% if not n.is_read %}rgba(58,139,255,0.08){% else %}rgba(15,23,42,0.04){% endif %}; border:1px solid rgba(148,163,184,0.16);">
-                        <div style="min-width:0;">
-                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
-                                <strong>{{ n.title }}</strong>
-                                {% if not n.is_read %}
-                                <span class="signal-pill viewed">
-                                    {% if lang == 'es' %}
-                                        Nueva
-                                    {% elif lang == 'zh' %}
-                                        新通知
-                                    {% else %}
-                                        New
-                                    {% endif %}
-                                </span>
-                                {% endif %}
-                            </div>
+    {% set unread_notifications = notifications|rejectattr('is_read')|list if notifications else [] %}
+    {% set read_notifications = notifications|selectattr('is_read')|list if notifications else [] %}
 
-                            {% if n.body %}
-                            <div class="text-muted" style="font-size:13px; line-height:1.6;">
-                                {{ n.body }}
-                            </div>
-                            {% endif %}
-                        </div>
+    <div class="notifications-summary-grid">
+        <div class="notifications-stat total">
+            <div class="notifications-stat-label">
+                {% if lang == 'es' %}
+                    Total
+                {% elif lang == 'zh' %}
+                    总数
+                {% else %}
+                    Total
+                {% endif %}
+            </div>
+            <div class="notifications-stat-value">{{ notifications|length if notifications else 0 }}</div>
+            <div class="notifications-stat-copy">
+                {% if lang == 'es' %}
+                    Todo lo que ha llegado a tu centro de actividad.
+                {% elif lang == 'zh' %}
+                    您活动中心中收到的全部内容。
+                {% else %}
+                    Everything that has come into your activity center.
+                {% endif %}
+            </div>
+        </div>
 
-                        <div style="font-size:12px; color:#64748b; white-space:nowrap;">
-                            {% if n.created_at %}
-                                {{ n.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+        <div class="notifications-stat unread">
+            <div class="notifications-stat-label">
+                {% if lang == 'es' %}
+                    Nuevas
+                {% elif lang == 'zh' %}
+                    新通知
+                {% else %}
+                    Unread
+                {% endif %}
+            </div>
+            <div class="notifications-stat-value">{{ unread_notifications|length }}</div>
+            <div class="notifications-stat-copy">
+                {% if lang == 'es' %}
+                    Lo más reciente que todavía necesita tu atención.
+                {% elif lang == 'zh' %}
+                    最近收到、仍需要您查看的内容。
+                {% else %}
+                    The newest items that still need your attention.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="notifications-stat read">
+            <div class="notifications-stat-label">
+                {% if lang == 'es' %}
+                    Revisadas
+                {% elif lang == 'zh' %}
+                    已查看
+                {% else %}
+                    Read
+                {% endif %}
+            </div>
+            <div class="notifications-stat-value">{{ read_notifications|length }}</div>
+            <div class="notifications-stat-copy">
+                {% if lang == 'es' %}
+                    Actividad que ya quedó registrada y revisada.
+                {% elif lang == 'zh' %}
+                    已经查看并记录下来的活动。
+                {% else %}
+                    Activity that has already been reviewed and logged.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if notifications and notifications|length > 0 %}
+    <div class="notifications-list-card">
+        <div class="notifications-list-header">
+            <div>
+                <h2 class="notifications-list-title">
+                    {% if lang == 'es' %}
+                        Actividad reciente
+                    {% elif lang == 'zh' %}
+                        最近活动
+                    {% else %}
+                        Recent Activity
+                    {% endif %}
+                </h2>
+                <p class="notifications-list-sub">
+                    {% if lang == 'es' %}
+                        Abre cualquier notificación para marcarla como leída y entrar al siguiente paso.
+                    {% elif lang == 'zh' %}
+                        打开任意通知即可将其标记为已读，并进入下一步。
+                    {% else %}
+                        Open any notification to mark it as read and move into the next step.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="notifications-list-meta">
+                {% if lang == 'es' %}
+                    {{ notifications|length }} elemento{{ '' if notifications|length == 1 else 's' }}
+                {% elif lang == 'zh' %}
+                    {{ notifications|length }} 条通知
+                {% else %}
+                    {{ notifications|length }} item{{ '' if notifications|length == 1 else 's' }}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="notifications-list-body">
+            {% for n in notifications %}
+            <a href="{{ url_for('mark_notification_read_page', notification_id=n.id, lang=lang) }}"
+               class="notification-item {% if not n.is_read %}unread{% else %}read{% endif %}">
+                <div class="notification-icon">
+                    {% if not n.is_read %}
+                        ✦
+                    {% else %}
+                        ✓
+                    {% endif %}
+                </div>
+
+                <div class="notification-main">
+                    <div class="notification-topline">
+                        <div class="notification-title">{{ n.title }}</div>
+
+                        {% if not n.is_read %}
+                        <span class="signal-pill viewed">
+                            {% if lang == 'es' %}
+                                Nueva
+                            {% elif lang == 'zh' %}
+                                新通知
                             {% else %}
-                                —
+                                New
                             {% endif %}
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div style="padding:8px 0;">
-                    <h3 style="margin:0 0 8px 0;">
-                        {% if lang == 'es' %}
-                            No hay notificaciones
-                        {% elif lang == 'zh' %}
-                            暂无通知
-                        {% else %}
-                            No notifications
+                        </span>
                         {% endif %}
-                    </h3>
-                    <p class="text-muted" style="margin-bottom:0;">
-                        {% if lang == 'es' %}
-                            Cuando entren nuevas solicitudes u ocurra actividad importante, aparecerá aquí.
-                        {% elif lang == 'zh' %}
-                            当有新请求或重要活动时，会显示在这里。
-                        {% else %}
-                            When new requests or important activity come in, they will appear here.
-                        {% endif %}
-                    </p>
+                    </div>
+
+                    {% if n.body %}
+                    <div class="notification-body">
+                        {{ n.body }}
+                    </div>
+                    {% endif %}
                 </div>
-            {% endif %}
+
+                <div class="notification-time">
+                    {% if n.created_at %}
+                        {{ n.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
         </div>
     </div>
+    {% else %}
+    <div class="notifications-empty">
+        <h3>
+            {% if lang == 'es' %}
+                No hay notificaciones
+            {% elif lang == 'zh' %}
+                暂无通知
+            {% else %}
+                No notifications
+            {% endif %}
+        </h3>
+        <p>
+            {% if lang == 'es' %}
+                Cuando entren nuevas solicitudes o suceda actividad importante, aparecerá aquí con una vista mucho más clara y fácil de revisar.
+            {% elif lang == 'zh' %}
+                当有新请求或重要活动时，它们会显示在这里，并且会更清晰、更容易查看。
+            {% else %}
+                When new requests or important activity come in, they will appear here with a much clearer and easier-to-scan view.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
