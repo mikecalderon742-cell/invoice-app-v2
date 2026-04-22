@@ -1,0 +1,747 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Acceso cliente · BillBeam
+  {% elif lang == 'zh' %}
+    客户登录 · BillBeam
+  {% else %}
+    Client Login · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Inicia sesión como cliente en BillBeam para descubrir negocios, personalizar tu espacio y volver a tus servicios favoritos.
+  {% elif lang == 'zh' %}
+    以客户身份登录 BillBeam，查找商家、自定义您的空间，并快速返回您喜欢的服务。
+  {% else %}
+    Sign in as a client on BillBeam to discover businesses, personalize your space, and get back to your favorite services.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
+
+<style>
+  .client-auth-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .client-auth-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.24), transparent 24%),
+      radial-gradient(circle at 88% 20%, rgba(59,130,246,0.22), transparent 24%),
+      radial-gradient(circle at 84% 84%, rgba(37,99,235,0.16), transparent 28%),
+      linear-gradient(135deg, #60a5fa 0%, #3b82f6 30%, #2563eb 58%, #151B54 100%);
+    border: 1px solid rgba(147,197,253,0.24);
+    box-shadow:
+      0 28px 90px rgba(37,99,235,0.22),
+      0 12px 30px rgba(21,27,84,0.16),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+    color: #fff;
+    isolation: isolate;
+  }
+
+  body.dark .client-auth-hero {
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.16), transparent 24%),
+      radial-gradient(circle at 88% 20%, rgba(59,130,246,0.16), transparent 24%),
+      radial-gradient(circle at 84% 84%, rgba(96,165,250,0.10), transparent 28%),
+      linear-gradient(135deg, #1d4ed8 0%, #1e40af 30%, #1d4ed8 56%, #0f172a 100%);
+    border-color: rgba(96,165,250,0.18);
+    box-shadow:
+      0 30px 90px rgba(2,6,23,0.86),
+      0 0 0 1px rgba(96,165,250,0.08),
+      inset 0 1px 0 rgba(191,219,254,0.06);
+  }
+
+  .client-auth-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.16), transparent 38%),
+      linear-gradient(180deg, rgba(255,255,255,0.08), transparent 34%);
+    z-index: 0;
+  }
+
+  .client-auth-hero-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 18px;
+  }
+
+  .client-auth-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .client-auth-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(34px, 4.8vw, 54px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    max-width: 760px;
+  }
+
+  .client-auth-title .accent {
+    color: #dbeafe;
+    text-shadow:
+      0 0 16px rgba(255,255,255,0.14),
+      0 12px 30px rgba(191,219,254,0.16);
+  }
+
+  .client-auth-copy {
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(239,246,255,0.9);
+  }
+
+  .client-auth-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .client-auth-card,
+  .client-auth-side {
+    border-radius: 28px;
+    padding: 22px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.012);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .client-auth-card,
+  body.dark .client-auth-side {
+    background: rgba(2,6,23,0.8);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .client-auth-card-head,
+  .client-auth-side-head {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .client-auth-card-head h2,
+  .client-auth-side-head h3 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.025em;
+  }
+
+  .client-auth-card-head p,
+  .client-auth-side-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #64748b;
+  }
+
+  body.dark .client-auth-card-head p,
+  body.dark .client-auth-side-head p {
+    color: #94a3b8;
+  }
+
+  .client-auth-form {
+    display: grid;
+    gap: 14px;
+  }
+
+  .client-auth-field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .client-auth-field label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .client-auth-field label {
+    color: #94a3b8;
+  }
+
+  .client-auth-field input {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.24);
+    background: rgba(255,255,255,0.96);
+    color: #0f172a;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .client-auth-field input:focus {
+    border-color: rgba(58,139,255,0.55);
+    box-shadow: 0 0 0 4px rgba(58,139,255,0.12);
+  }
+
+  body.dark .client-auth-field input {
+    background: rgba(15,23,42,0.82);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .client-auth-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .client-auth-actions .btn {
+    min-height: 46px;
+    border-radius: 16px;
+  }
+
+  .client-auth-error {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(239,68,68,0.10);
+    border: 1px solid rgba(239,68,68,0.18);
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .client-auth-error {
+    background: rgba(127,29,29,0.24);
+    border-color: rgba(248,113,113,0.2);
+    color: #fecaca;
+  }
+
+  .client-auth-link-row {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  .client-auth-link-row a {
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .client-auth-link-row a:hover {
+    text-decoration: underline;
+  }
+
+  body.dark .client-auth-link-row {
+    color: #94a3b8;
+  }
+
+  .client-auth-note-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .client-auth-note {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+    font-size: 13px;
+    line-height: 1.72;
+    color: #475569;
+  }
+
+  body.dark .client-auth-note {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+    color: #cbd5e1;
+  }
+
+  .client-auth-avatar-card {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.94));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 14px 34px rgba(15,23,42,0.05);
+    display: grid;
+    gap: 14px;
+  }
+
+  body.dark .client-auth-avatar-card {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.06), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.88), rgba(15,23,42,0.9));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 18px 40px rgba(2,6,23,0.72);
+  }
+
+  .client-auth-avatar-preview {
+    width: 78px;
+    height: 78px;
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    font-size: 34px;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      0 14px 30px rgba(15,23,42,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.14);
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    color: #ffffff;
+  }
+
+  .client-auth-avatar-copy {
+    font-size: 13px;
+    line-height: 1.72;
+    color: #64748b;
+  }
+
+  .client-auth-avatar-copy strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 15px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  body.dark .client-auth-avatar-copy {
+    color: #94a3b8;
+  }
+
+  body.dark .client-auth-avatar-copy strong {
+    color: #f8fafc;
+  }
+
+  .client-auth-avatar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .client-auth-avatar-chip {
+    appearance: none;
+    border: 1px solid rgba(148,163,184,0.22);
+    background: rgba(255,255,255,0.95);
+    color: #0f172a;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .client-auth-avatar-chip:hover,
+  .client-auth-avatar-chip.active {
+    transform: translateY(-1px);
+    border-color: rgba(58,139,255,0.35);
+    box-shadow: 0 0 0 4px rgba(58,139,255,0.10);
+  }
+
+  body.dark .client-auth-avatar-chip {
+    background: rgba(15,23,42,0.84);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.2);
+  }
+
+  @media (max-width: 980px) {
+    .client-auth-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .client-auth-hero,
+    .client-auth-card,
+    .client-auth-side {
+      padding: 18px;
+      border-radius: 22px;
+    }
+
+    .client-auth-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .client-auth-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="client-auth-shell">
+
+  <section class="client-auth-hero reveal">
+    <div class="client-auth-hero-content">
+      <div class="client-auth-kicker">
+        {% if lang == 'es' %}
+          Acceso cliente · BillBeam
+        {% elif lang == 'zh' %}
+          客户登录 · BillBeam
+        {% else %}
+          Client Login · BillBeam
+        {% endif %}
+      </div>
+
+      <h1 class="client-auth-title">
+        {% if lang == 'es' %}
+          Vuelve a tu <span class="accent">espacio</span> como cliente
+        {% elif lang == 'zh' %}
+          回到您的 <span class="accent">客户空间</span>
+        {% else %}
+          Return to your client <span class="accent">space</span>
+        {% endif %}
+      </h1>
+
+      <div class="client-auth-copy">
+        {% if lang == 'es' %}
+          Entra para descubrir negocios, ajustar tus preferencias y volver rápidamente a una experiencia hecha para sentirse moderna, simple y agradable.
+        {% elif lang == 'zh' %}
+          登录后可查找商家、调整您的偏好，并快速回到一个现代、简单、舒适的客户体验。
+        {% else %}
+          Sign in to discover businesses, adjust your preferences, and quickly return to an experience designed to feel modern, simple, and enjoyable.
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <div class="client-auth-grid">
+
+    <section class="client-auth-card fade-in-up">
+      <div class="client-auth-card-head">
+        <h2>
+          {% if lang == 'es' %}
+            Iniciar sesión
+          {% elif lang == 'zh' %}
+            登录
+          {% else %}
+            Sign in
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            Usa tu cuenta de cliente para acceder a tu panel personalizado y a la experiencia de descubrimiento.
+          {% elif lang == 'zh' %}
+            使用您的客户账户访问个性化面板和商家发现体验。
+          {% else %}
+            Use your client account to access your personalized dashboard and discovery experience.
+          {% endif %}
+        </p>
+      </div>
+
+      {% if error %}
+      <div class="client-auth-error">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="/client/login{% if lang %}?lang={{ lang }}{% endif %}" class="client-auth-form">
+        <div class="client-auth-field">
+          <label for="email">
+            {% if lang == 'es' %}
+              Correo electrónico
+            {% elif lang == 'zh' %}
+              邮箱
+            {% else %}
+              Email address
+            {% endif %}
+          </label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="client-auth-field">
+          <label for="password">
+            {% if lang == 'es' %}
+              Contraseña
+            {% elif lang == 'zh' %}
+              密码
+            {% else %}
+              Password
+            {% endif %}
+          </label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="{% if lang == 'es' %}Tu contraseña{% elif lang == 'zh' %}您的密码{% else %}Your password{% endif %}"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+
+        <div class="client-auth-actions">
+          <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}
+              Explorar primero
+            {% elif lang == 'zh' %}
+              先去浏览
+            {% else %}
+              Explore First
+            {% endif %}
+          </a>
+
+          <button type="submit" class="btn btn-brand">
+            {% if lang == 'es' %}
+              Entrar
+            {% elif lang == 'zh' %}
+              登录
+            {% else %}
+              Sign In
+            {% endif %}
+          </button>
+        </div>
+      </form>
+
+      <div class="client-auth-link-row">
+        {% if lang == 'es' %}
+          ¿Aún no tienes cuenta? <a href="/client/register{% if lang %}?lang={{ lang }}{% endif %}">Crea tu cuenta de cliente</a>
+        {% elif lang == 'zh' %}
+          还没有账户？<a href="/client/register{% if lang %}?lang={{ lang }}{% endif %}">创建客户账户</a>
+        {% else %}
+          Do not have an account yet? <a href="/client/register{% if lang %}?lang={{ lang }}{% endif %}">Create your client account</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <aside class="client-auth-side">
+      <div class="client-auth-side-head">
+        <h3>
+          {% if lang == 'es' %}
+            Lo bueno de entrar como cliente
+          {% elif lang == 'zh' %}
+            作为客户登录的好处
+          {% else %}
+            Why sign in as a client
+          {% endif %}
+        </h3>
+        <p>
+          {% if lang == 'es' %}
+            Tu experiencia se vuelve más personal, más rápida y más cómoda cada vez que vuelves.
+          {% elif lang == 'zh' %}
+            您的体验会在每次回来时变得更个性化、更快速、更舒适。
+          {% else %}
+            Your experience becomes more personal, faster, and more comfortable every time you come back.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="client-auth-note-list">
+        <div class="client-auth-note">
+          {% if lang == 'es' %}
+            Guarda tus preferencias visuales y haz que el espacio se sienta más tuyo.
+          {% elif lang == 'zh' %}
+            保存您的视觉偏好，让整个空间更像是为您准备的。
+          {% else %}
+            Save your visual preferences and make the space feel more like yours.
+          {% endif %}
+        </div>
+
+        <div class="client-auth-note">
+          {% if lang == 'es' %}
+            Vuelve más rápido a los negocios y servicios que te interesan.
+          {% elif lang == 'zh' %}
+            更快返回您感兴趣的商家和服务。
+          {% else %}
+            Get back faster to the businesses and services you care about.
+          {% endif %}
+        </div>
+
+        <div class="client-auth-note">
+          {% if lang == 'es' %}
+            Construye una experiencia de cliente moderna, ligera y fácil de usar.
+          {% elif lang == 'zh' %}
+            构建一个现代、轻盈、易用的客户体验。
+          {% else %}
+            Build a client experience that feels modern, light, and easy to use.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="client-auth-avatar-card">
+        <div class="client-auth-avatar-preview" id="loginAvatarPreview">
+          <span id="loginAvatarEmoji">✨</span>
+        </div>
+
+        <div class="client-auth-avatar-copy">
+          <strong>
+            {% if lang == 'es' %}
+              Tu identidad cliente
+            {% elif lang == 'zh' %}
+              您的客户身份
+            {% else %}
+              Your client identity
+            {% endif %}
+          </strong>
+          <div>
+            {% if lang == 'es' %}
+              Incluso antes de entrar, BillBeam puede sentirse más tuyo. Elige un estilo rápido y, cuando vuelvas a tu panel, tu espacio se sentirá más personal.
+            {% elif lang == 'zh' %}
+              即使在登录前，BillBeam 也可以更像是为您准备的。快速选择一个风格，回到面板后您的空间会更有个性。
+            {% else %}
+              Even before you sign in, BillBeam can feel more like yours. Pick a quick style, and when you return to your dashboard your space will already feel more personal.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="client-auth-avatar-row" id="loginAvatarEmojiRow">
+          <button type="button" class="client-auth-avatar-chip active" data-avatar-emoji="✨">✨</button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-emoji="😎">😎</button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-emoji="🚀">🚀</button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-emoji="🎯">🎯</button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-emoji="💼">💼</button>
+        </div>
+
+        <div class="client-auth-avatar-row" id="loginAvatarToneRow">
+          <button type="button" class="client-auth-avatar-chip active" data-avatar-tone="blue">
+            {% if lang == 'es' %}Azul{% elif lang == 'zh' %}蓝色{% else %}Blue{% endif %}
+          </button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-tone="sunset">
+            {% if lang == 'es' %}Atardecer{% elif lang == 'zh' %}日落{% else %}Sunset{% endif %}
+          </button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-tone="mint">
+            {% if lang == 'es' %}Mint{% elif lang == 'zh' %}薄荷{% else %}Mint{% endif %}
+          </button>
+          <button type="button" class="client-auth-avatar-chip" data-avatar-tone="midnight">
+            {% if lang == 'es' %}Noche{% elif lang == 'zh' %}午夜{% else %}Midnight{% endif %}
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const storageKey = "billbeam_client_preferences_v1";
+  const emojiButtons = Array.from(document.querySelectorAll("#loginAvatarEmojiRow .client-auth-avatar-chip"));
+  const toneButtons = Array.from(document.querySelectorAll("#loginAvatarToneRow .client-auth-avatar-chip"));
+  const avatarEmoji = document.getElementById("loginAvatarEmoji");
+  const avatarPreview = document.getElementById("loginAvatarPreview");
+
+  const defaults = {
+    avatarEmoji: "✨",
+    avatarTone: "blue"
+  };
+
+  function setActive(buttons, value, key) {
+    buttons.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset[key] === value);
+    });
+  }
+
+  function getSelected(buttons, key, fallback) {
+    const active = buttons.find((btn) => btn.classList.contains("active"));
+    return active ? active.dataset[key] : fallback;
+  }
+
+  function getAvatarBackground(tone) {
+    const map = {
+      blue: "linear-gradient(135deg, #60a5fa, #2563eb)",
+      sunset: "linear-gradient(135deg, #fb7185, #f59e0b)",
+      mint: "linear-gradient(135deg, #34d399, #14b8a6)",
+      midnight: "linear-gradient(135deg, #334155, #0f172a)"
+    };
+    return map[tone] || map.blue;
+  }
+
+  function updateAvatarPreview() {
+    const selectedEmoji = getSelected(emojiButtons, "avatarEmoji", defaults.avatarEmoji);
+    const selectedTone = getSelected(toneButtons, "avatarTone", defaults.avatarTone);
+
+    if (avatarEmoji) avatarEmoji.textContent = selectedEmoji;
+    if (avatarPreview) avatarPreview.style.background = getAvatarBackground(selectedTone);
+  }
+
+  function persistAvatarChoices() {
+    let current = {};
+    try {
+      current = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    } catch (e) {
+      current = {};
+    }
+
+    current.avatarEmoji = getSelected(emojiButtons, "avatarEmoji", defaults.avatarEmoji);
+    current.avatarTone = getSelected(toneButtons, "avatarTone", defaults.avatarTone);
+
+    localStorage.setItem(storageKey, JSON.stringify(current));
+  }
+
+  function loadAvatarChoices() {
+    try {
+      const prefs = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      setActive(emojiButtons, prefs.avatarEmoji || defaults.avatarEmoji, "avatarEmoji");
+      setActive(toneButtons, prefs.avatarTone || defaults.avatarTone, "avatarTone");
+    } catch (e) {
+      setActive(emojiButtons, defaults.avatarEmoji, "avatarEmoji");
+      setActive(toneButtons, defaults.avatarTone, "avatarTone");
+    }
+    updateAvatarPreview();
+  }
+
+  emojiButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(emojiButtons, btn.dataset.avatarEmoji, "avatarEmoji");
+      updateAvatarPreview();
+      persistAvatarChoices();
+    });
+  });
+
+  toneButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(toneButtons, btn.dataset.avatarTone, "avatarTone");
+      updateAvatarPreview();
+      persistAvatarChoices();
+    });
+  });
+
+  loadAvatarChoices();
+});
+</script>
+{% endblock %}

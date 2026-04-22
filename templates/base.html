@@ -159,6 +159,90 @@
         border-color: rgba(148, 163, 184, 0.5);
     }
 
+    .client-avatar-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.05);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        font-size: 13px;
+        min-width: 0;
+        max-width: 260px;
+    }
+
+    body.dark .client-avatar-pill {
+        background: rgba(15, 23, 42, 0.7);
+        border-color: rgba(148, 163, 184, 0.55);
+    }
+
+    .client-avatar-pill-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+        flex: 0 0 auto;
+        color: #ffffff;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+    }
+
+    .client-avatar-pill-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+    }
+
+    .sidebar-client-identity {
+        display: grid;
+        gap: 10px;
+        padding: 0 24px 14px;
+        margin-top: -2px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .sidebar-client-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: fit-content;
+        max-width: 100%;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #ffffff;
+        font-size: 13px;
+        min-width: 0;
+    }
+
+    .sidebar-client-chip-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+        flex: 0 0 auto;
+        color: #ffffff;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+    }
+
+    .sidebar-client-chip-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+    }
+
     .nav-primary-link {
         font-weight: 600;
     }
@@ -374,6 +458,7 @@ body.dark .autism-ribbon {
 </head>
 
 <body class="light fade-out">
+{% set is_client_area = request.path.startswith('/client') %}
 
 <div class="bg-doodles" aria-hidden="true">
     <svg class="doodle doodle-top-right" viewBox="0 0 220 140">
@@ -427,6 +512,17 @@ body.dark .autism-ribbon {
         <h3>{{ business_profile.business_name or "BillBeam" }}</h3>
     </div>
 
+    {% if is_authenticated and is_client_area %}
+    <div class="sidebar-client-identity">
+        <div class="sidebar-client-chip">
+            <span class="sidebar-client-chip-icon" id="sidebarClientAvatarIcon">✨</span>
+            <span class="sidebar-client-chip-text" id="sidebarClientAvatarText">
+                {{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}
+            </span>
+        </div>
+    </div>
+    {% endif %}
+
     {% if is_authenticated %}
         <a href="/{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}
@@ -444,6 +540,15 @@ body.dark .autism-ribbon {
                 发票历史
             {% else %}
                 Invoice History
+            {% endif %}
+        </a>
+        <a href="/client/dashboard{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}
+                Panel de cliente
+            {% elif lang == 'zh' %}
+                客户面板
+            {% else %}
+                Client Dashboard
             {% endif %}
         </a>
         <a href="/clients{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
@@ -471,6 +576,15 @@ body.dark .autism-ribbon {
                 搜索
             {% else %}
                 Search
+            {% endif %}
+        </a>
+        <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}
+                Descubrir negocios
+            {% elif lang == 'zh' %}
+                查找商家
+            {% else %}
+                Discover Businesses
             {% endif %}
         </a>
         <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
@@ -566,6 +680,24 @@ body.dark .autism-ribbon {
         <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}Crear cuenta{% else %}Sign Up{% endif %}
         </a>
+        <a href="/client/login{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}
+                Acceso cliente
+            {% elif lang == 'zh' %}
+                客户登录
+            {% else %}
+                Client Login
+            {% endif %}
+        </a>
+        <a href="/client/register{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+            {% if lang == 'es' %}
+                Registro cliente
+            {% elif lang == 'zh' %}
+                客户注册
+            {% else %}
+                Client Sign Up
+            {% endif %}
+        </a>
     {% endif %}
 
     <div class="sidebar-controls">
@@ -625,6 +757,15 @@ body.dark .autism-ribbon {
                     </span>
                 </span>
 
+                {% if is_client_area %}
+                <span class="client-avatar-pill">
+                    <span class="client-avatar-pill-icon" id="navClientAvatarIcon">✨</span>
+                    <span class="client-avatar-pill-text" id="navClientAvatarText">
+                        {{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}
+                    </span>
+                </span>
+                {% endif %}
+
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
                     {% if lang == 'es' %}
                         Panel
@@ -635,6 +776,16 @@ body.dark .autism-ribbon {
                     {% endif %}
                 </a>
 
+                <a href="/client/dashboard{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
+                    {% if lang == 'es' %}
+                        Cliente
+                    {% elif lang == 'zh' %}
+                        客户中心
+                    {% else %}
+                        Client
+                    {% endif %}
+                </a>
+
                 <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
                     {% if lang == 'es' %}
                         Servicios
@@ -642,6 +793,16 @@ body.dark .autism-ribbon {
                         服务
                     {% else %}
                         Services
+                    {% endif %}
+                </a>
+
+                <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
+                    {% if lang == 'es' %}
+                        Negocios
+                    {% elif lang == 'zh' %}
+                        商家
+                    {% else %}
+                        Businesses
                     {% endif %}
                 </a>
 
@@ -673,6 +834,16 @@ body.dark .autism-ribbon {
                 </a>
                 <a href="/register{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
                     {% if lang == 'es' %}Crear cuenta{% else %}Sign Up{% endif %}
+                </a>
+
+                <a href="/client/login{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
+                    {% if lang == 'es' %}
+                        Cliente
+                    {% elif lang == 'zh' %}
+                        客户
+                    {% else %}
+                        Client
+                    {% endif %}
                 </a>
 
                 <div class="lang-toggle">
@@ -1059,6 +1230,57 @@ document.addEventListener("DOMContentLoaded", function () {
         document.body.style.setProperty('--x', e.clientX + 'px');
         document.body.style.setProperty('--y', e.clientY + 'px');
     });
+
+    const clientPrefsStorageKey = "billbeam_client_preferences_v1";
+    const navClientAvatarIcon = document.getElementById("navClientAvatarIcon");
+    const navClientAvatarText = document.getElementById("navClientAvatarText");
+    const sidebarClientAvatarIcon = document.getElementById("sidebarClientAvatarIcon");
+    const sidebarClientAvatarText = document.getElementById("sidebarClientAvatarText");
+
+    function getClientAvatarBackground(tone) {
+        const map = {
+            blue: "linear-gradient(135deg, #60a5fa, #2563eb)",
+            sunset: "linear-gradient(135deg, #fb7185, #f59e0b)",
+            mint: "linear-gradient(135deg, #34d399, #14b8a6)",
+            midnight: "linear-gradient(135deg, #334155, #0f172a)",
+            rose: "linear-gradient(135deg, #f472b6, #ec4899)"
+        };
+        return map[tone] || map.blue;
+    }
+
+    function applyClientIdentityChrome() {
+        let prefs = {};
+        try {
+            prefs = JSON.parse(localStorage.getItem(clientPrefsStorageKey) || "{}");
+        } catch (e) {
+            prefs = {};
+        }
+
+        const displayName = prefs.displayName || "{{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}";
+        const avatarEmoji = prefs.avatarEmoji || "✨";
+        const avatarTone = prefs.avatarTone || "blue";
+        const background = getClientAvatarBackground(avatarTone);
+
+        if (navClientAvatarIcon) {
+            navClientAvatarIcon.textContent = avatarEmoji;
+            navClientAvatarIcon.style.background = background;
+        }
+
+        if (sidebarClientAvatarIcon) {
+            sidebarClientAvatarIcon.textContent = avatarEmoji;
+            sidebarClientAvatarIcon.style.background = background;
+        }
+
+        if (navClientAvatarText) {
+            navClientAvatarText.textContent = displayName;
+        }
+
+        if (sidebarClientAvatarText) {
+            sidebarClientAvatarText.textContent = displayName;
+        }
+    }
+
+    applyClientIdentityChrome();
 
     const aiHelper = document.getElementById("aiHelper");
     const aiMessages = document.getElementById("aiHelperMessages");

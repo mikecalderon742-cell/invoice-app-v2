@@ -261,9 +261,9 @@
 
         <p class="public-request-success-copy">
           {% if lang == 'es' %}
-            Tu solicitud fue registrada correctamente con {{ public_business_profile.business_name or "BillBeam" }}. El negocio podrá revisarla, actualizar su estado y continuar contigo desde aquí.
+            Tu solicitud fue registrada correctamente con {{ public_business_profile.business_name or "BillBeam" }}. El negocio ahora podrá revisarla, actualizar su estado y continuar contigo desde aquí.
           {% elif lang == 'zh' %}
-            您的请求已成功提交到 {{ public_business_profile.business_name or "BillBeam" }}。商家可以查看、更新状态并继续与您联系。
+            您的请求已成功提交到 {{ public_business_profile.business_name or "BillBeam" }}。商家现在可以查看、更新状态并继续与您沟通。
           {% else %}
             Your request was recorded successfully with {{ public_business_profile.business_name or "BillBeam" }}. The business can now review it, update the status, and continue from there.
           {% endif %}
@@ -362,6 +362,16 @@
               查看更多服务
             {% else %}
               View More Services
+            {% endif %}
+          </a>
+
+          <a href="{{ url_for('public_business_page', user_id=public_user_id, lang=lang) }}" class="btn btn-secondary">
+            {% if lang == 'es' %}
+              Volver al perfil
+            {% elif lang == 'zh' %}
+              返回商家主页
+            {% else %}
+              Back to Business Profile
             {% endif %}
           </a>
         </div>

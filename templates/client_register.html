@@ -1,0 +1,747 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Registro cliente · BillBeam
+  {% elif lang == 'zh' %}
+    客户注册 · BillBeam
+  {% else %}
+    Client Sign Up · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Crea tu cuenta de cliente en BillBeam para descubrir negocios, personalizar tu experiencia y volver fácilmente a los servicios que te interesan.
+  {% elif lang == 'zh' %}
+    在 BillBeam 创建您的客户账户，用于查找商家、自定义体验并轻松返回您喜欢的服务。
+  {% else %}
+    Create your client account on BillBeam to discover businesses, personalize your experience, and easily return to the services you care about.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
+
+<style>
+  .client-register-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .client-register-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.24), transparent 24%),
+      radial-gradient(circle at 88% 20%, rgba(59,130,246,0.22), transparent 24%),
+      radial-gradient(circle at 84% 84%, rgba(37,99,235,0.16), transparent 28%),
+      linear-gradient(135deg, #60a5fa 0%, #3b82f6 30%, #2563eb 58%, #151B54 100%);
+    border: 1px solid rgba(147,197,253,0.24);
+    box-shadow:
+      0 28px 90px rgba(37,99,235,0.22),
+      0 12px 30px rgba(21,27,84,0.16),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+    color: #fff;
+    isolation: isolate;
+  }
+
+  body.dark .client-register-hero {
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.16), transparent 24%),
+      radial-gradient(circle at 88% 20%, rgba(59,130,246,0.16), transparent 24%),
+      radial-gradient(circle at 84% 84%, rgba(96,165,250,0.10), transparent 28%),
+      linear-gradient(135deg, #1d4ed8 0%, #1e40af 30%, #1d4ed8 56%, #0f172a 100%);
+    border-color: rgba(96,165,250,0.18);
+    box-shadow:
+      0 30px 90px rgba(2,6,23,0.86),
+      0 0 0 1px rgba(96,165,250,0.08),
+      inset 0 1px 0 rgba(191,219,254,0.06);
+  }
+
+  .client-register-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.16), transparent 38%),
+      linear-gradient(180deg, rgba(255,255,255,0.08), transparent 34%);
+    z-index: 0;
+  }
+
+  .client-register-hero-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 18px;
+  }
+
+  .client-register-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .client-register-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(34px, 4.8vw, 54px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    max-width: 760px;
+  }
+
+  .client-register-title .accent {
+    color: #dbeafe;
+    text-shadow:
+      0 0 16px rgba(255,255,255,0.14),
+      0 12px 30px rgba(191,219,254,0.16);
+  }
+
+  .client-register-copy {
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(239,246,255,0.9);
+  }
+
+  .client-register-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .client-register-card,
+  .client-register-side {
+    border-radius: 28px;
+    padding: 22px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.012);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .client-register-card,
+  body.dark .client-register-side {
+    background: rgba(2,6,23,0.8);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .client-register-card-head,
+  .client-register-side-head {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .client-register-card-head h2,
+  .client-register-side-head h3 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.025em;
+  }
+
+  .client-register-card-head p,
+  .client-register-side-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #64748b;
+  }
+
+  body.dark .client-register-card-head p,
+  body.dark .client-register-side-head p {
+    color: #94a3b8;
+  }
+
+  .client-register-form {
+    display: grid;
+    gap: 14px;
+  }
+
+  .client-register-field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .client-register-field label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .client-register-field label {
+    color: #94a3b8;
+  }
+
+  .client-register-field input {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.24);
+    background: rgba(255,255,255,0.96);
+    color: #0f172a;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .client-register-field input:focus {
+    border-color: rgba(58,139,255,0.55);
+    box-shadow: 0 0 0 4px rgba(58,139,255,0.12);
+  }
+
+  body.dark .client-register-field input {
+    background: rgba(15,23,42,0.82);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .client-register-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .client-register-actions .btn {
+    min-height: 46px;
+    border-radius: 16px;
+  }
+
+  .client-register-error {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(239,68,68,0.10);
+    border: 1px solid rgba(239,68,68,0.18);
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  body.dark .client-register-error {
+    background: rgba(127,29,29,0.24);
+    border-color: rgba(248,113,113,0.2);
+    color: #fecaca;
+  }
+
+  .client-register-link-row {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  .client-register-link-row a {
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .client-register-link-row a:hover {
+    text-decoration: underline;
+  }
+
+  body.dark .client-register-link-row {
+    color: #94a3b8;
+  }
+
+  .client-register-note-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .client-register-note {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+    font-size: 13px;
+    line-height: 1.72;
+    color: #475569;
+  }
+
+  body.dark .client-register-note {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+    color: #cbd5e1;
+  }
+
+  .client-register-avatar-card {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.94));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 14px 34px rgba(15,23,42,0.05);
+    display: grid;
+    gap: 14px;
+  }
+
+  body.dark .client-register-avatar-card {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.06), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.88), rgba(15,23,42,0.9));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 18px 40px rgba(2,6,23,0.72);
+  }
+
+  .client-register-avatar-preview {
+    width: 78px;
+    height: 78px;
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    font-size: 34px;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      0 14px 30px rgba(15,23,42,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.14);
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    color: #ffffff;
+  }
+
+  .client-register-avatar-copy {
+    font-size: 13px;
+    line-height: 1.72;
+    color: #64748b;
+  }
+
+  .client-register-avatar-copy strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 15px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+
+  body.dark .client-register-avatar-copy {
+    color: #94a3b8;
+  }
+
+  body.dark .client-register-avatar-copy strong {
+    color: #f8fafc;
+  }
+
+  .client-register-avatar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .client-register-avatar-chip {
+    appearance: none;
+    border: 1px solid rgba(148,163,184,0.22);
+    background: rgba(255,255,255,0.95);
+    color: #0f172a;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .client-register-avatar-chip:hover,
+  .client-register-avatar-chip.active {
+    transform: translateY(-1px);
+    border-color: rgba(58,139,255,0.35);
+    box-shadow: 0 0 0 4px rgba(58,139,255,0.10);
+  }
+
+  body.dark .client-register-avatar-chip {
+    background: rgba(15,23,42,0.84);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.2);
+  }
+
+  @media (max-width: 980px) {
+    .client-register-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .client-register-hero,
+    .client-register-card,
+    .client-register-side {
+      padding: 18px;
+      border-radius: 22px;
+    }
+
+    .client-register-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .client-register-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="client-register-shell">
+
+  <section class="client-register-hero reveal">
+    <div class="client-register-hero-content">
+      <div class="client-register-kicker">
+        {% if lang == 'es' %}
+          Registro cliente · BillBeam
+        {% elif lang == 'zh' %}
+          客户注册 · BillBeam
+        {% else %}
+          Client Sign Up · BillBeam
+        {% endif %}
+      </div>
+
+      <h1 class="client-register-title">
+        {% if lang == 'es' %}
+          Crea tu <span class="accent">espacio</span> como cliente
+        {% elif lang == 'zh' %}
+          创建您的 <span class="accent">客户空间</span>
+        {% else %}
+          Create your client <span class="accent">space</span>
+        {% endif %}
+      </h1>
+
+      <div class="client-register-copy">
+        {% if lang == 'es' %}
+          Únete gratis para descubrir negocios, guardar tus preferencias y disfrutar una experiencia moderna y agradable cada vez que vuelvas.
+        {% elif lang == 'zh' %}
+          免费加入，查找商家、保存偏好，并在每次回来时享受现代、舒适的客户体验。
+        {% else %}
+          Join for free to discover businesses, save your preferences, and enjoy a modern, welcoming experience every time you return.
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <div class="client-register-grid">
+
+    <section class="client-register-card fade-in-up">
+      <div class="client-register-card-head">
+        <h2>
+          {% if lang == 'es' %}
+            Crear cuenta
+          {% elif lang == 'zh' %}
+            创建账户
+          {% else %}
+            Create account
+          {% endif %}
+        </h2>
+        <p>
+          {% if lang == 'es' %}
+            Tu cuenta de cliente es gratuita y te da acceso a una experiencia personalizada dentro de BillBeam.
+          {% elif lang == 'zh' %}
+            您的客户账户是免费的，可让您进入个性化的 BillBeam 体验。
+          {% else %}
+            Your client account is free and gives you access to a more personalized BillBeam experience.
+          {% endif %}
+        </p>
+      </div>
+
+      {% if error %}
+      <div class="client-register-error">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="/client/register{% if lang %}?lang={{ lang }}{% endif %}" class="client-register-form">
+        <div class="client-register-field">
+          <label for="email">
+            {% if lang == 'es' %}
+              Correo electrónico
+            {% elif lang == 'zh' %}
+              邮箱
+            {% else %}
+              Email address
+            {% endif %}
+          </label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="client-register-field">
+          <label for="password">
+            {% if lang == 'es' %}
+              Contraseña
+            {% elif lang == 'zh' %}
+              密码
+            {% else %}
+              Password
+            {% endif %}
+          </label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="{% if lang == 'es' %}Crea una contraseña{% elif lang == 'zh' %}创建一个密码{% else %}Create a password{% endif %}"
+            required
+            autocomplete="new-password"
+          >
+        </div>
+
+        <div class="client-register-actions">
+          <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+            {% if lang == 'es' %}
+              Explorar primero
+            {% elif lang == 'zh' %}
+              先去浏览
+            {% else %}
+              Explore First
+            {% endif %}
+          </a>
+
+          <button type="submit" class="btn btn-brand">
+            {% if lang == 'es' %}
+              Crear cuenta
+            {% elif lang == 'zh' %}
+              创建账户
+            {% else %}
+              Create Account
+            {% endif %}
+          </button>
+        </div>
+      </form>
+
+      <div class="client-register-link-row">
+        {% if lang == 'es' %}
+          ¿Ya tienes cuenta? <a href="/client/login{% if lang %}?lang={{ lang }}{% endif %}">Inicia sesión</a>
+        {% elif lang == 'zh' %}
+          已有账户？<a href="/client/login{% if lang %}?lang={{ lang }}{% endif %}">立即登录</a>
+        {% else %}
+          Already have an account? <a href="/client/login{% if lang %}?lang={{ lang }}{% endif %}">Sign in</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <aside class="client-register-side">
+      <div class="client-register-side-head">
+        <h3>
+          {% if lang == 'es' %}
+            Lo que obtienes como cliente
+          {% elif lang == 'zh' %}
+            作为客户您将获得
+          {% else %}
+            What you get as a client
+          {% endif %}
+        </h3>
+        <p>
+          {% if lang == 'es' %}
+            Una experiencia gratis, moderna y cada vez más personalizada.
+          {% elif lang == 'zh' %}
+            一个免费、现代、并且会越来越个性化的体验。
+          {% else %}
+            A free, modern experience that gets more personal over time.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="client-register-note-list">
+        <div class="client-register-note">
+          {% if lang == 'es' %}
+            Descubre negocios por nombre y entra a perfiles que se sienten reales, claros y profesionales.
+          {% elif lang == 'zh' %}
+            通过名称查找商家，并进入真实、清晰、专业的商家主页。
+          {% else %}
+            Discover businesses by name and enter profiles that feel real, clear, and professional.
+          {% endif %}
+        </div>
+
+        <div class="client-register-note">
+          {% if lang == 'es' %}
+            Guarda preferencias para que tu espacio se vea y se sienta más como tú quieres.
+          {% elif lang == 'zh' %}
+            保存偏好，让您的空间更符合您的喜好。
+          {% else %}
+            Save preferences so your space looks and feels more the way you want it to.
+          {% endif %}
+        </div>
+
+        <div class="client-register-note">
+          {% if lang == 'es' %}
+            Mantén una experiencia ligera, rápida y agradable sin costo para el cliente.
+          {% elif lang == 'zh' %}
+            在零成本的前提下，享受轻盈、快速、舒适的客户体验。
+          {% else %}
+            Keep a light, fast, enjoyable experience at zero cost to the client.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="client-register-avatar-card">
+        <div class="client-register-avatar-preview" id="registerAvatarPreview">
+          <span id="registerAvatarEmoji">✨</span>
+        </div>
+
+        <div class="client-register-avatar-copy">
+          <strong>
+            {% if lang == 'es' %}
+              Tu identidad cliente
+            {% elif lang == 'zh' %}
+              您的客户身份
+            {% else %}
+              Your client identity
+            {% endif %}
+          </strong>
+          <div>
+            {% if lang == 'es' %}
+              Empieza con una vibra que se sienta tuya. Cuando entres a tu panel, BillBeam ya podrá sentirse más personal desde el primer momento.
+            {% elif lang == 'zh' %}
+              从一个更像您的风格开始。进入面板后，BillBeam 会从第一刻起更有您的感觉。
+            {% else %}
+              Start with a vibe that feels like you. When you enter your dashboard, BillBeam can already feel more personal from the very beginning.
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="client-register-avatar-row" id="registerAvatarEmojiRow">
+          <button type="button" class="client-register-avatar-chip active" data-avatar-emoji="✨">✨</button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-emoji="😎">😎</button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-emoji="🚀">🚀</button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-emoji="🎯">🎯</button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-emoji="💼">💼</button>
+        </div>
+
+        <div class="client-register-avatar-row" id="registerAvatarToneRow">
+          <button type="button" class="client-register-avatar-chip active" data-avatar-tone="blue">
+            {% if lang == 'es' %}Azul{% elif lang == 'zh' %}蓝色{% else %}Blue{% endif %}
+          </button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-tone="sunset">
+            {% if lang == 'es' %}Atardecer{% elif lang == 'zh' %}日落{% else %}Sunset{% endif %}
+          </button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-tone="mint">
+            {% if lang == 'es' %}Mint{% elif lang == 'zh' %}薄荷{% else %}Mint{% endif %}
+          </button>
+          <button type="button" class="client-register-avatar-chip" data-avatar-tone="midnight">
+            {% if lang == 'es' %}Noche{% elif lang == 'zh' %}午夜{% else %}Midnight{% endif %}
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const storageKey = "billbeam_client_preferences_v1";
+  const emojiButtons = Array.from(document.querySelectorAll("#registerAvatarEmojiRow .client-register-avatar-chip"));
+  const toneButtons = Array.from(document.querySelectorAll("#registerAvatarToneRow .client-register-avatar-chip"));
+  const avatarEmoji = document.getElementById("registerAvatarEmoji");
+  const avatarPreview = document.getElementById("registerAvatarPreview");
+
+  const defaults = {
+    avatarEmoji: "✨",
+    avatarTone: "blue"
+  };
+
+  function setActive(buttons, value, key) {
+    buttons.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset[key] === value);
+    });
+  }
+
+  function getSelected(buttons, key, fallback) {
+    const active = buttons.find((btn) => btn.classList.contains("active"));
+    return active ? active.dataset[key] : fallback;
+  }
+
+  function getAvatarBackground(tone) {
+    const map = {
+      blue: "linear-gradient(135deg, #60a5fa, #2563eb)",
+      sunset: "linear-gradient(135deg, #fb7185, #f59e0b)",
+      mint: "linear-gradient(135deg, #34d399, #14b8a6)",
+      midnight: "linear-gradient(135deg, #334155, #0f172a)"
+    };
+    return map[tone] || map.blue;
+  }
+
+  function updateAvatarPreview() {
+    const selectedEmoji = getSelected(emojiButtons, "avatarEmoji", defaults.avatarEmoji);
+    const selectedTone = getSelected(toneButtons, "avatarTone", defaults.avatarTone);
+
+    if (avatarEmoji) avatarEmoji.textContent = selectedEmoji;
+    if (avatarPreview) avatarPreview.style.background = getAvatarBackground(selectedTone);
+  }
+
+  function persistAvatarChoices() {
+    let current = {};
+    try {
+      current = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    } catch (e) {
+      current = {};
+    }
+
+    current.avatarEmoji = getSelected(emojiButtons, "avatarEmoji", defaults.avatarEmoji);
+    current.avatarTone = getSelected(toneButtons, "avatarTone", defaults.avatarTone);
+
+    localStorage.setItem(storageKey, JSON.stringify(current));
+  }
+
+  function loadAvatarChoices() {
+    try {
+      const prefs = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      setActive(emojiButtons, prefs.avatarEmoji || defaults.avatarEmoji, "avatarEmoji");
+      setActive(toneButtons, prefs.avatarTone || defaults.avatarTone, "avatarTone");
+    } catch (e) {
+      setActive(emojiButtons, defaults.avatarEmoji, "avatarEmoji");
+      setActive(toneButtons, defaults.avatarTone, "avatarTone");
+    }
+    updateAvatarPreview();
+  }
+
+  emojiButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(emojiButtons, btn.dataset.avatarEmoji, "avatarEmoji");
+      updateAvatarPreview();
+      persistAvatarChoices();
+    });
+  });
+
+  toneButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(toneButtons, btn.dataset.avatarTone, "avatarTone");
+      updateAvatarPreview();
+      persistAvatarChoices();
+    });
+  });
+
+  loadAvatarChoices();
+});
+</script>
+{% endblock %}

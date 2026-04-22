@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 
+{% block title %}
+  {% if lang == 'es' %}
+    Solicitud #{{ service_request.id }} · {{ business_profile.business_name or "BillBeam" }}
+  {% elif lang == 'zh' %}
+    请求 #{{ service_request.id }} · {{ business_profile.business_name or "BillBeam" }}
+  {% else %}
+    Request #{{ service_request.id }} · {{ business_profile.business_name or "BillBeam" }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Revisa los detalles de la solicitud, actualiza su estado y conviértela en factura desde una vista clara y profesional.
+  {% elif lang == 'zh' %}
+    查看请求详情、更新状态，并从清晰专业的页面将其转换为发票。
+  {% else %}
+    Review request details, update status, and turn the request into an invoice from a clear professional view.
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 <style>
   .request-detail-shell {
@@ -515,15 +535,47 @@
   <div class="request-detail-shell">
     <div class="request-detail-topbar">
       <div class="request-detail-title-wrap">
-        <div class="request-detail-kicker">BillBeam Request Flow</div>
-        <h1 class="request-detail-title">Request #{{ service_request.id }}</h1>
+        <div class="request-detail-kicker">
+          {% if lang == 'es' %}
+            Flujo de solicitudes BillBeam
+          {% elif lang == 'zh' %}
+            BillBeam 请求流程
+          {% else %}
+            BillBeam Request Flow
+          {% endif %}
+        </div>
+
+        <h1 class="request-detail-title">
+          {% if lang == 'es' %}
+            Solicitud #{{ service_request.id }}
+          {% elif lang == 'zh' %}
+            请求 #{{ service_request.id }}
+          {% else %}
+            Request #{{ service_request.id }}
+          {% endif %}
+        </h1>
+
         <div class="request-detail-subcopy">
-          Review request details, update the status, and move the job forward without losing the bigger picture.
+          {% if lang == 'es' %}
+            Revisa los detalles, actualiza el estado y mueve este trabajo al siguiente paso sin perder el contexto general.
+          {% elif lang == 'zh' %}
+            查看详情、更新状态，并在不失去整体背景的情况下将这项工作推进到下一步。
+          {% else %}
+            Review the details, update the status, and move this work to the next step without losing the bigger picture.
+          {% endif %}
         </div>
       </div>
 
       <div>
-        <a href="{{ url_for('requests_page', lang=lang) }}" class="btn btn-secondary">Back to Requests</a>
+        <a href="{{ url_for('requests_page', lang=lang) }}" class="btn btn-secondary">
+          {% if lang == 'es' %}
+            Volver a solicitudes
+          {% elif lang == 'zh' %}
+            返回请求列表
+          {% else %}
+            Back to Requests
+          {% endif %}
+        </a>
       </div>
     </div>
 
@@ -531,98 +583,240 @@
       <div class="request-column">
         <div class="request-card">
           <div class="request-card-header">
-            <h3 class="request-card-title">Request Overview</h3>
+            <h3 class="request-card-title">
+              {% if lang == 'es' %}
+                Resumen de la solicitud
+              {% elif lang == 'zh' %}
+                请求概览
+              {% else %}
+                Request Overview
+              {% endif %}
+            </h3>
+
             <div class="request-card-sub">
-              A clean view of the client, requested service, details, and timing so you can decide the next move quickly.
+              {% if lang == 'es' %}
+                Una vista clara del cliente, el servicio solicitado, los detalles y el momento esperado para decidir rápido el siguiente paso.
+              {% elif lang == 'zh' %}
+                清晰查看客户、所请求的服务、需求细节和时间安排，方便快速决定下一步。
+              {% else %}
+                A clean view of the client, requested service, details, and timing so you can decide the next move quickly.
+              {% endif %}
             </div>
           </div>
 
           <div class="request-card-body">
             <div class="request-status-banner">
               <div class="request-status-copy">
-                <div class="request-status-label">Current Status</div>
+                <div class="request-status-label">
+                  {% if lang == 'es' %}
+                    Estado actual
+                  {% elif lang == 'zh' %}
+                    当前状态
+                  {% else %}
+                    Current Status
+                  {% endif %}
+                </div>
 
                 {% if service_request.status == 'requested' %}
-                  <span class="request-pill requested">Requested</span>
+                  <span class="request-pill requested">
+                    {% if lang == 'es' %}Solicitada{% elif lang == 'zh' %}已请求{% else %}Requested{% endif %}
+                  </span>
                 {% elif service_request.status == 'approved' %}
-                  <span class="request-pill approved">Approved</span>
+                  <span class="request-pill approved">
+                    {% if lang == 'es' %}Aprobada{% elif lang == 'zh' %}已批准{% else %}Approved{% endif %}
+                  </span>
                 {% elif service_request.status == 'in_progress' %}
-                  <span class="request-pill in_progress">In Progress</span>
+                  <span class="request-pill in_progress">
+                    {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+                  </span>
                 {% elif service_request.status == 'completed' %}
-                  <span class="request-pill completed">Completed</span>
+                  <span class="request-pill completed">
+                    {% if lang == 'es' %}Completada{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+                  </span>
                 {% elif service_request.status == 'cancelled' %}
-                  <span class="request-pill cancelled">Cancelled</span>
+                  <span class="request-pill cancelled">
+                    {% if lang == 'es' %}Cancelada{% elif lang == 'zh' %}已取消{% else %}Cancelled{% endif %}
+                  </span>
                 {% else %}
                   <span class="request-pill default">{{ service_request.status }}</span>
                 {% endif %}
               </div>
 
               <div class="request-muted" style="font-size:13px;">
-                Keep this updated so your request inbox stays clear and actionable.
+                {% if lang == 'es' %}
+                  Mantén esto actualizado para que tu bandeja de solicitudes siga clara y accionable.
+                {% elif lang == 'zh' %}
+                  保持这里的状态更新，这样您的请求队列会一直清晰且易于处理。
+                {% else %}
+                  Keep this updated so your request inbox stays clear and actionable.
+                {% endif %}
               </div>
             </div>
 
             <div class="request-grid-2">
               <div class="request-info-block">
-                <h4>Client</h4>
+                <h4>
+                  {% if lang == 'es' %}
+                    Cliente
+                  {% elif lang == 'zh' %}
+                    客户
+                  {% else %}
+                    Client
+                  {% endif %}
+                </h4>
+
                 <p><strong>{{ service_request.client_name }}</strong></p>
                 <p>{{ service_request.client_email }}</p>
                 <p>
                   {% if service_request.client_phone %}
                     {{ service_request.client_phone }}
                   {% else %}
-                    <span class="request-muted">No phone provided</span>
+                    <span class="request-muted">
+                      {% if lang == 'es' %}
+                        Sin teléfono
+                      {% elif lang == 'zh' %}
+                        未提供电话
+                      {% else %}
+                        No phone provided
+                      {% endif %}
+                    </span>
                   {% endif %}
                 </p>
               </div>
 
               <div class="request-info-block">
-                <h4>Service</h4>
+                <h4>
+                  {% if lang == 'es' %}
+                    Servicio
+                  {% elif lang == 'zh' %}
+                    服务
+                  {% else %}
+                    Service
+                  {% endif %}
+                </h4>
+
                 <p>
                   {% if service_request.service_title_snapshot %}
                     <strong>{{ service_request.service_title_snapshot }}</strong>
                   {% else %}
-                    <span class="request-muted">Custom request</span>
+                    <span class="request-muted">
+                      {% if lang == 'es' %}
+                        Solicitud personalizada
+                      {% elif lang == 'zh' %}
+                        自定义请求
+                      {% else %}
+                        Custom request
+                      {% endif %}
+                    </span>
                   {% endif %}
                 </p>
+
                 <p>
                   {% if service_request.service_price_snapshot %}
                     ${{ '%.2f'|format(service_request.service_price_snapshot) }}
                   {% else %}
-                    <span class="request-muted">No saved price</span>
+                    <span class="request-muted">
+                      {% if lang == 'es' %}
+                        Sin precio guardado
+                      {% elif lang == 'zh' %}
+                        未保存价格
+                      {% else %}
+                        No saved price
+                      {% endif %}
+                    </span>
                   {% endif %}
                 </p>
-                <p>Quantity: <strong>{{ service_request.quantity }}</strong></p>
+
+                <p>
+                  {% if lang == 'es' %}
+                    Cantidad: <strong>{{ service_request.quantity }}</strong>
+                  {% elif lang == 'zh' %}
+                    数量：<strong>{{ service_request.quantity }}</strong>
+                  {% else %}
+                    Quantity: <strong>{{ service_request.quantity }}</strong>
+                  {% endif %}
+                </p>
               </div>
             </div>
 
             <div class="request-section-divider"></div>
 
             <div class="request-rich-panel" style="margin-bottom:16px;">
-              <h4>Request Details</h4>
+              <h4>
+                {% if lang == 'es' %}
+                  Detalles de la solicitud
+                {% elif lang == 'zh' %}
+                  请求详情
+                {% else %}
+                  Request Details
+                {% endif %}
+              </h4>
+
               {% if service_request.request_details %}
                 <p>{{ service_request.request_details }}</p>
               {% else %}
-                <p class="request-muted">No additional request details provided.</p>
+                <p class="request-muted">
+                  {% if lang == 'es' %}
+                    No se agregaron detalles extra.
+                  {% elif lang == 'zh' %}
+                    没有提供额外说明。
+                  {% else %}
+                    No additional request details provided.
+                  {% endif %}
+                </p>
               {% endif %}
             </div>
 
             <div class="request-grid-2">
               <div class="request-info-block">
-                <h4>Preferred Date</h4>
+                <h4>
+                  {% if lang == 'es' %}
+                    Fecha preferida
+                  {% elif lang == 'zh' %}
+                    偏好日期
+                  {% else %}
+                    Preferred Date
+                  {% endif %}
+                </h4>
+
                 {% if service_request.preferred_date_text %}
                   <p>{{ service_request.preferred_date_text }}</p>
                 {% else %}
-                  <p class="request-muted">Not provided</p>
+                  <p class="request-muted">
+                    {% if lang == 'es' %}
+                      No especificada
+                    {% elif lang == 'zh' %}
+                      未提供
+                    {% else %}
+                      Not provided
+                    {% endif %}
+                  </p>
                 {% endif %}
               </div>
 
               <div class="request-info-block">
-                <h4>Preferred Time</h4>
+                <h4>
+                  {% if lang == 'es' %}
+                    Hora preferida
+                  {% elif lang == 'zh' %}
+                    偏好时间
+                  {% else %}
+                    Preferred Time
+                  {% endif %}
+                </h4>
+
                 {% if service_request.preferred_time_text %}
                   <p>{{ service_request.preferred_time_text }}</p>
                 {% else %}
-                  <p class="request-muted">Not provided</p>
+                  <p class="request-muted">
+                    {% if lang == 'es' %}
+                      No especificada
+                    {% elif lang == 'zh' %}
+                      未提供
+                    {% else %}
+                      Not provided
+                    {% endif %}
+                  </p>
                 {% endif %}
               </div>
             </div>
@@ -631,7 +825,15 @@
               <div class="request-section-divider"></div>
 
               <div class="request-rich-panel">
-                <h4>Saved Service Description</h4>
+                <h4>
+                  {% if lang == 'es' %}
+                    Descripción guardada del servicio
+                  {% elif lang == 'zh' %}
+                    已保存的服务描述
+                  {% else %}
+                    Saved Service Description
+                  {% endif %}
+                </h4>
                 <p>{{ service_request.service_description_snapshot }}</p>
               </div>
             {% endif %}
@@ -640,9 +842,24 @@
 
         <div class="request-card">
           <div class="request-card-header">
-            <h3 class="request-card-title">Request Timeline</h3>
+            <h3 class="request-card-title">
+              {% if lang == 'es' %}
+                Historial de la solicitud
+              {% elif lang == 'zh' %}
+                请求时间线
+              {% else %}
+                Request Timeline
+              {% endif %}
+            </h3>
+
             <div class="request-card-sub">
-              Track status changes and request movement so nothing gets lost between approval, work, and invoicing.
+              {% if lang == 'es' %}
+                Sigue los cambios de estado y el movimiento de la solicitud para que nada se pierda entre aprobación, trabajo y facturación.
+              {% elif lang == 'zh' %}
+                跟踪状态变化和请求推进过程，避免在批准、执行和开票之间丢失关键信息。
+              {% else %}
+                Track status changes and request movement so nothing gets lost between approval, work, and invoicing.
+              {% endif %}
             </div>
           </div>
 
@@ -681,7 +898,15 @@
                 {% endfor %}
               </div>
             {% else %}
-              <p class="request-muted" style="margin-bottom:0;">No request activity has been logged yet.</p>
+              <p class="request-muted" style="margin-bottom:0;">
+                {% if lang == 'es' %}
+                  Todavía no hay actividad registrada para esta solicitud.
+                {% elif lang == 'zh' %}
+                  这条请求还没有记录任何活动。
+                {% else %}
+                  No request activity has been logged yet.
+                {% endif %}
+              </p>
             {% endif %}
           </div>
         </div>
@@ -690,35 +915,89 @@
       <div class="request-side-stack">
         <div class="request-card">
           <div class="request-card-header">
-            <h3 class="request-card-title">Update Status</h3>
+            <h3 class="request-card-title">
+              {% if lang == 'es' %}
+                Actualizar estado
+              {% elif lang == 'zh' %}
+                更新状态
+              {% else %}
+                Update Status
+              {% endif %}
+            </h3>
+
             <div class="request-card-sub">
-              Keep the request moving with simple status updates and a direct next step into invoicing when needed.
+              {% if lang == 'es' %}
+                Mantén esta solicitud en movimiento con cambios simples de estado y un siguiente paso directo hacia la factura cuando corresponda.
+              {% elif lang == 'zh' %}
+                通过简单的状态更新让这条请求继续推进，并在合适的时候直接进入开票步骤。
+              {% else %}
+                Keep the request moving with simple status updates and a direct next step into invoicing when needed.
+              {% endif %}
             </div>
           </div>
 
           <div class="request-card-body">
             <form method="POST" action="{{ url_for('update_request_status', request_id=service_request.id, lang=lang) }}" class="request-action-form">
               <div>
-                <label for="status">Status</label>
+                <label for="status">
+                  {% if lang == 'es' %}
+                    Estado
+                  {% elif lang == 'zh' %}
+                    状态
+                  {% else %}
+                    Status
+                  {% endif %}
+                </label>
+
                 <select name="status" id="status" class="form-control">
-                  <option value="requested" {% if service_request.status == 'requested' %}selected{% endif %}>Requested</option>
-                  <option value="approved" {% if service_request.status == 'approved' %}selected{% endif %}>Approved</option>
-                  <option value="in_progress" {% if service_request.status == 'in_progress' %}selected{% endif %}>In Progress</option>
-                  <option value="completed" {% if service_request.status == 'completed' %}selected{% endif %}>Completed</option>
-                  <option value="cancelled" {% if service_request.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                  <option value="requested" {% if service_request.status == 'requested' %}selected{% endif %}>
+                    {% if lang == 'es' %}Solicitada{% elif lang == 'zh' %}已请求{% else %}Requested{% endif %}
+                  </option>
+                  <option value="approved" {% if service_request.status == 'approved' %}selected{% endif %}>
+                    {% if lang == 'es' %}Aprobada{% elif lang == 'zh' %}已批准{% else %}Approved{% endif %}
+                  </option>
+                  <option value="in_progress" {% if service_request.status == 'in_progress' %}selected{% endif %}>
+                    {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+                  </option>
+                  <option value="completed" {% if service_request.status == 'completed' %}selected{% endif %}>
+                    {% if lang == 'es' %}Completada{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+                  </option>
+                  <option value="cancelled" {% if service_request.status == 'cancelled' %}selected{% endif %}>
+                    {% if lang == 'es' %}Cancelada{% elif lang == 'zh' %}已取消{% else %}Cancelled{% endif %}
+                  </option>
                 </select>
               </div>
 
               <div class="request-action-buttons">
-                <button type="submit" class="btn btn-brand">Save Status</button>
+                <button type="submit" class="btn btn-brand">
+                  {% if lang == 'es' %}
+                    Guardar estado
+                  {% elif lang == 'zh' %}
+                    保存状态
+                  {% else %}
+                    Save Status
+                  {% endif %}
+                </button>
 
                 {% if linked_invoice %}
                   <a href="/invoice/{{ linked_invoice.id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                    Open Linked Invoice
+                    {% if lang == 'es' %}
+                      Abrir factura vinculada
+                    {% elif lang == 'zh' %}
+                      打开关联发票
+                    {% else %}
+                      Open Linked Invoice
+                    {% endif %}
                   </a>
                 {% else %}
                   <a href="{{ url_for('create_invoice_from_request', request_id=service_request.id, lang=lang) }}" class="btn btn-secondary">
-                    Create Invoice
+                    {% if lang == 'es' %}
+                      Crear factura
+                    {% elif lang == 'zh' %}
+                      创建发票
+                    {% else %}
+                      Create Invoice
+                    {% endif %}
                   </a>
                 {% endif %}
               </div>
@@ -727,36 +1006,66 @@
         </div>
 
         <div class="request-side-highlight">
-          <strong>Professional flow</strong>
+          <strong>
+            {% if lang == 'es' %}
+              Flujo profesional
+            {% elif lang == 'zh' %}
+              专业流程
+            {% else %}
+              Professional flow
+            {% endif %}
+          </strong>
           <p>
-            A clean service request should move naturally from inquiry to approval to invoice. This page is your control point for that whole transition.
+            {% if lang == 'es' %}
+              Una solicitud clara debería moverse naturalmente de consulta a aprobación y luego a factura. Esta página es tu punto de control para toda esa transición.
+            {% elif lang == 'zh' %}
+              一条清晰的服务请求应该自然地从咨询走向批准，再进入发票流程。这个页面就是您控制整个过渡的中心点。
+            {% else %}
+              A clean service request should move naturally from inquiry to approval to invoice. This page is your control point for that whole transition.
+            {% endif %}
           </p>
         </div>
 
         <div class="request-card">
           <div class="request-card-header">
-            <h3 class="request-card-title">Request Meta</h3>
+            <h3 class="request-card-title">
+              {% if lang == 'es' %}
+                Metadatos de la solicitud
+              {% elif lang == 'zh' %}
+                请求元数据
+              {% else %}
+                Request Meta
+              {% endif %}
+            </h3>
           </div>
 
           <div class="request-card-body">
             <div class="request-meta-list">
               <div class="request-meta-row">
-                <div class="request-meta-label">Request ID</div>
+                <div class="request-meta-label">
+                  {% if lang == 'es' %}ID{% elif lang == 'zh' %}请求 ID{% else %}Request ID{% endif %}
+                </div>
                 <div class="request-meta-value">#{{ service_request.id }}</div>
               </div>
 
               <div class="request-meta-row">
-                <div class="request-meta-label">Source</div>
+                <div class="request-meta-label">
+                  {% if lang == 'es' %}Origen{% elif lang == 'zh' %}来源{% else %}Source{% endif %}
+                </div>
                 <div class="request-meta-value">{{ service_request.source|title }}</div>
               </div>
 
               <div class="request-meta-row">
-                <div class="request-meta-label">Type</div>
+                <div class="request-meta-label">
+                  {% if lang == 'es' %}Tipo{% elif lang == 'zh' %}类型{% else %}Type{% endif %}
+                </div>
                 <div class="request-meta-value">{{ service_request.request_type|replace('_', ' ')|title }}</div>
               </div>
 
               <div class="request-meta-row">
-                <div class="request-meta-label">Submitted</div>
+                <div class="request-meta-label">
+                  {% if lang == 'es' %}Enviada{% elif lang == 'zh' %}提交时间{% else %}Submitted{% endif %}
+                </div>
                 <div class="request-meta-value">
                   {% if service_request.created_at %}
                     {{ service_request.created_at.strftime("%Y-%m-%d %I:%M %p") }}
@@ -767,7 +1076,9 @@
               </div>
 
               <div class="request-meta-row">
-                <div class="request-meta-label">Last Updated</div>
+                <div class="request-meta-label">
+                  {% if lang == 'es' %}Actualizada{% elif lang == 'zh' %}最后更新{% else %}Last Updated{% endif %}
+                </div>
                 <div class="request-meta-value">
                   {% if service_request.updated_at %}
                     {{ service_request.updated_at.strftime("%Y-%m-%d %I:%M %p") }}
@@ -783,33 +1094,60 @@
         {% if linked_invoice %}
           <div class="request-card">
             <div class="request-card-header">
-              <h3 class="request-card-title">Linked Invoice</h3>
+              <h3 class="request-card-title">
+                {% if lang == 'es' %}
+                  Factura vinculada
+                {% elif lang == 'zh' %}
+                  已关联发票
+                {% else %}
+                  Linked Invoice
+                {% endif %}
+              </h3>
+
               <div class="request-card-sub">
-                This request has already been converted into an invoice inside your workflow.
+                {% if lang == 'es' %}
+                  Esta solicitud ya fue convertida en factura dentro de tu flujo de trabajo.
+                {% elif lang == 'zh' %}
+                  这条请求已经在您的流程中转换成发票。
+                {% else %}
+                  This request has already been converted into an invoice inside your workflow.
+                {% endif %}
               </div>
             </div>
 
             <div class="request-card-body">
               <div class="request-meta-list">
                 <div class="request-meta-row">
-                  <div class="request-meta-label">Invoice</div>
+                  <div class="request-meta-label">
+                    {% if lang == 'es' %}Factura{% elif lang == 'zh' %}发票{% else %}Invoice{% endif %}
+                  </div>
                   <div class="request-meta-value">{{ linked_invoice.invoice_number }}</div>
                 </div>
 
                 <div class="request-meta-row">
-                  <div class="request-meta-label">Status</div>
+                  <div class="request-meta-label">
+                    {% if lang == 'es' %}Estado{% elif lang == 'zh' %}状态{% else %}Status{% endif %}
+                  </div>
                   <div class="request-meta-value">{{ linked_invoice.status }}</div>
                 </div>
 
                 <div class="request-meta-row">
-                  <div class="request-meta-label">Amount</div>
+                  <div class="request-meta-label">
+                    {% if lang == 'es' %}Importe{% elif lang == 'zh' %}金额{% else %}Amount{% endif %}
+                  </div>
                   <div class="request-meta-value">${{ '%.2f'|format(linked_invoice.amount) }}</div>
                 </div>
               </div>
 
               <div style="margin-top:14px;">
                 <a href="/invoice/{{ linked_invoice.id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
-                  Open Invoice
+                  {% if lang == 'es' %}
+                    Abrir factura
+                  {% elif lang == 'zh' %}
+                    打开发票
+                  {% else %}
+                    Open Invoice
+                  {% endif %}
                 </a>
               </div>
             </div>
@@ -818,9 +1156,24 @@
 
         <div class="request-card">
           <div class="request-card-header">
-            <h3 class="request-card-title">Public Booking Link</h3>
+            <h3 class="request-card-title">
+              {% if lang == 'es' %}
+                Enlace público de servicios
+              {% elif lang == 'zh' %}
+                公开服务链接
+              {% else %}
+                Public Booking Link
+              {% endif %}
+            </h3>
+
             <div class="request-card-sub">
-              Share this directly if you want a client to browse services and submit a request without starting from an invoice.
+              {% if lang == 'es' %}
+                Compártelo directamente si quieres que un cliente explore servicios y envíe una solicitud sin comenzar desde una factura.
+              {% elif lang == 'zh' %}
+                如果您希望客户无需从发票开始就能浏览服务并提交请求，可以直接分享这个链接。
+              {% else %}
+                Share this directly if you want a client to browse services and submit a request without starting from an invoice.
+              {% endif %}
             </div>
           </div>
 
@@ -829,7 +1182,13 @@
 
             <div style="margin-top:14px;">
               <a href="{{ public_booking_url }}" target="_blank" rel="noopener" class="btn btn-secondary">
-                Open Public Services Page
+                {% if lang == 'es' %}
+                  Abrir página pública
+                {% elif lang == 'zh' %}
+                  打开公开页面
+                {% else %}
+                  Open Public Services Page
+                {% endif %}
               </a>
             </div>
           </div>
@@ -838,18 +1197,44 @@
         {% if service_request.cancel_requested_by_client or service_request.cancel_reason %}
           <div class="request-card">
             <div class="request-card-header">
-              <h3 class="request-card-title">Cancellation Notes</h3>
+              <h3 class="request-card-title">
+                {% if lang == 'es' %}
+                  Notas de cancelación
+                {% elif lang == 'zh' %}
+                  取消备注
+                {% else %}
+                  Cancellation Notes
+                {% endif %}
+              </h3>
             </div>
 
             <div class="request-card-body">
               {% if service_request.cancel_requested_by_client %}
-                <p style="margin:0 0 8px 0;"><strong>Client has requested cancellation.</strong></p>
+                <p style="margin:0 0 8px 0;">
+                  <strong>
+                    {% if lang == 'es' %}
+                      El cliente solicitó cancelar.
+                    {% elif lang == 'zh' %}
+                      客户已请求取消。
+                    {% else %}
+                      Client has requested cancellation.
+                    {% endif %}
+                  </strong>
+                </p>
               {% endif %}
 
               {% if service_request.cancel_reason %}
                 <p style="margin:0; line-height:1.7;">{{ service_request.cancel_reason }}</p>
               {% else %}
-                <p class="request-muted" style="margin:0;">No cancellation reason was provided.</p>
+                <p class="request-muted" style="margin:0;">
+                  {% if lang == 'es' %}
+                    No se dejó una razón de cancelación.
+                  {% elif lang == 'zh' %}
+                    未提供取消原因。
+                  {% else %}
+                    No cancellation reason was provided.
+                  {% endif %}
+                </p>
               {% endif %}
             </div>
           </div>

@@ -151,6 +151,13 @@
     line-height: 1;
   }
 
+  .requests-stat-sub {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
   .requests-filter-card,
   .requests-table-card,
   .requests-empty-card {
@@ -424,6 +431,7 @@
   }
 
   body.dark .requests-stat-label,
+  body.dark .requests-stat-sub,
   body.dark .requests-filter-title,
   body.dark .requests-filter-meta,
   body.dark .request-id-sub,
@@ -527,6 +535,7 @@
   <div class="requests-shell">
 
     {% set requested_count = requests_list|selectattr('status', 'equalto', 'requested')|list|length if requests_list else 0 %}
+    {% set approved_count = requests_list|selectattr('status', 'equalto', 'approved')|list|length if requests_list else 0 %}
     {% set in_progress_count = requests_list|selectattr('status', 'equalto', 'in_progress')|list|length if requests_list else 0 %}
     {% set completed_count = requests_list|selectattr('status', 'equalto', 'completed')|list|length if requests_list else 0 %}
 
@@ -583,6 +592,15 @@
           {% if lang == 'es' %}Total{% elif lang == 'zh' %}总数{% else %}Total{% endif %}
         </div>
         <div class="requests-stat-value">{{ requests_list|length if requests_list else 0 }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Todas las solicitudes visibles en esta vista.
+          {% elif lang == 'zh' %}
+            当前视图中可见的全部请求。
+          {% else %}
+            All requests visible in this view.
+          {% endif %}
+        </div>
       </div>
 
       <div class="requests-stat requested">
@@ -590,13 +608,31 @@
           {% if lang == 'es' %}Nuevas{% elif lang == 'zh' %}新请求{% else %}Requested{% endif %}
         </div>
         <div class="requests-stat-value">{{ requested_count }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Solicitudes esperando revisión o respuesta.
+          {% elif lang == 'zh' %}
+            正在等待查看或回复的请求。
+          {% else %}
+            Requests waiting for review or response.
+          {% endif %}
+        </div>
       </div>
 
       <div class="requests-stat progress">
         <div class="requests-stat-label">
-          {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+          {% if lang == 'es' %}Aprobadas + progreso{% elif lang == 'zh' %}已批准 + 进行中{% else %}Approved + Progress{% endif %}
         </div>
-        <div class="requests-stat-value">{{ in_progress_count }}</div>
+        <div class="requests-stat-value">{{ approved_count + in_progress_count }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Trabajo que ya avanzó más allá de la etapa inicial.
+          {% elif lang == 'zh' %}
+            已经超出初始阶段的工作。
+          {% else %}
+            Work that has moved beyond the initial stage.
+          {% endif %}
+        </div>
       </div>
 
       <div class="requests-stat completed">
@@ -604,6 +640,15 @@
           {% if lang == 'es' %}Completadas{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
         </div>
         <div class="requests-stat-value">{{ completed_count }}</div>
+        <div class="requests-stat-sub">
+          {% if lang == 'es' %}
+            Solicitudes ya terminadas dentro del flujo.
+          {% elif lang == 'zh' %}
+            已在流程中完成的请求。
+          {% else %}
+            Requests already completed in the workflow.
+          {% endif %}
+        </div>
       </div>
     </div>
 

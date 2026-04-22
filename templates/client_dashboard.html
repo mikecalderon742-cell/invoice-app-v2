@@ -1,0 +1,1414 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Panel de cliente · BillBeam
+  {% elif lang == 'zh' %}
+    客户面板 · BillBeam
+  {% else %}
+    Client Dashboard · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Tu espacio como cliente en BillBeam para descubrir negocios, personalizar tu experiencia y volver rápidamente a lo que te interesa.
+  {% elif lang == 'zh' %}
+    您在 BillBeam 的客户空间，可用于发现商家、自定义体验并快速返回您关心的内容。
+  {% else %}
+    Your BillBeam client space to discover businesses, personalize your experience, and quickly get back to what matters.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
+
+<style>
+  .client-dashboard-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .client-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.24), transparent 24%),
+      radial-gradient(circle at 88% 20%, rgba(59,130,246,0.22), transparent 24%),
+      radial-gradient(circle at 84% 84%, rgba(37,99,235,0.16), transparent 28%),
+      linear-gradient(135deg, #60a5fa 0%, #3b82f6 30%, #2563eb 58%, #151B54 100%);
+    border: 1px solid rgba(147,197,253,0.24);
+    box-shadow:
+      0 28px 90px rgba(37,99,235,0.22),
+      0 12px 30px rgba(21,27,84,0.16),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+    color: #fff;
+    isolation: isolate;
+  }
+
+  body.dark .client-hero {
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.16), transparent 24%),
+      radial-gradient(circle at 88% 20%, rgba(59,130,246,0.16), transparent 24%),
+      radial-gradient(circle at 84% 84%, rgba(96,165,250,0.10), transparent 28%),
+      linear-gradient(135deg, #1d4ed8 0%, #1e40af 30%, #1d4ed8 56%, #0f172a 100%);
+    border-color: rgba(96,165,250,0.18);
+    box-shadow:
+      0 30px 90px rgba(2,6,23,0.86),
+      0 0 0 1px rgba(96,165,250,0.08),
+      inset 0 1px 0 rgba(191,219,254,0.06);
+  }
+
+  .client-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.16), transparent 38%),
+      linear-gradient(180deg, rgba(255,255,255,0.08), transparent 34%);
+    z-index: 0;
+  }
+
+  .client-hero-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 18px;
+  }
+
+  .client-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .client-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(34px, 4.8vw, 54px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    max-width: 820px;
+  }
+
+  .client-title .accent {
+    color: #dbeafe;
+    text-shadow:
+      0 0 16px rgba(255,255,255,0.14),
+      0 12px 30px rgba(191,219,254,0.16);
+  }
+
+  .client-copy {
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(239,246,255,0.9);
+  }
+
+  .client-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .client-hero-actions .btn {
+    min-height: 46px;
+    border-radius: 16px;
+  }
+
+  .client-hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .client-metric {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.10),
+      0 10px 24px rgba(21,27,84,0.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .client-metric-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(219,234,254,0.82);
+    margin-bottom: 8px;
+  }
+
+  .client-metric-value {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #ffffff;
+  }
+
+  .client-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .client-main,
+  .client-side {
+    display: grid;
+    gap: 20px;
+  }
+
+  .client-card {
+    border-radius: 28px;
+    padding: 22px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.012);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .client-card {
+    background: rgba(2,6,23,0.8);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .client-card-head {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .client-card-head h2,
+  .client-card-head h3 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.025em;
+  }
+
+  .client-card-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.72;
+    color: #64748b;
+  }
+
+  body.dark .client-card-head p {
+    color: #94a3b8;
+  }
+
+  .customize-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .client-avatar-builder {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding: 18px;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.94));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 14px 34px rgba(15,23,42,0.05);
+  }
+
+  body.dark .client-avatar-builder {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.06), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.88), rgba(15,23,42,0.9));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 18px 40px rgba(2,6,23,0.72);
+  }
+
+  .client-avatar-preview-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .client-avatar-preview {
+    width: 78px;
+    height: 78px;
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    font-size: 34px;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      0 14px 30px rgba(15,23,42,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.14);
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    color: #ffffff;
+    flex: 0 0 auto;
+  }
+
+  .client-avatar-preview-copy {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  .client-avatar-preview-copy strong {
+    font-size: 15px;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+
+  body.dark .client-avatar-preview-copy {
+    color: #94a3b8;
+  }
+
+  body.dark .client-avatar-preview-copy strong {
+    color: #f8fafc;
+  }
+
+  .customize-row {
+    display: grid;
+    gap: 8px;
+  }
+
+  .customize-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .customize-label {
+    color: #94a3b8;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .chip-btn {
+    appearance: none;
+    border: 1px solid rgba(148,163,184,0.22);
+    background: rgba(255,255,255,0.95);
+    color: #0f172a;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .chip-btn:hover,
+  .chip-btn.active {
+    transform: translateY(-1px);
+    border-color: rgba(58,139,255,0.35);
+    box-shadow: 0 0 0 4px rgba(58,139,255,0.10);
+  }
+
+  body.dark .chip-btn {
+    background: rgba(15,23,42,0.84);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.2);
+  }
+
+  .client-input,
+  .client-select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.24);
+    background: rgba(255,255,255,0.96);
+    color: #0f172a;
+    font-size: 14px;
+    outline: none;
+  }
+
+  body.dark .client-input,
+  body.dark .client-select {
+    background: rgba(15,23,42,0.82);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .client-save-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .client-save-row .btn {
+    min-height: 44px;
+    border-radius: 14px;
+  }
+
+  .client-preview {
+    border-radius: 24px;
+    padding: 18px;
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.08), transparent 28%),
+      linear-gradient(135deg, rgba(255,255,255,0.94), rgba(248,250,252,0.96));
+    border: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 14px 34px rgba(15,23,42,0.05);
+  }
+
+  body.dark .client-preview {
+    background:
+      radial-gradient(circle at top right, rgba(58,139,255,0.14), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(252,220,42,0.06), transparent 28%),
+      linear-gradient(135deg, rgba(2,6,23,0.88), rgba(15,23,42,0.9));
+    border-color: rgba(148,163,184,0.16);
+    box-shadow: 0 18px 40px rgba(2,6,23,0.72);
+  }
+
+  .preview-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(58,139,255,0.12);
+    border: 1px solid rgba(58,139,255,0.18);
+    color: #1d4ed8;
+  }
+
+  body.dark .preview-badge {
+    background: rgba(59,130,246,0.16);
+    border-color: rgba(96,165,250,0.18);
+    color: #bfdbfe;
+  }
+
+  .preview-card {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(148,163,184,0.16);
+  }
+
+  body.dark .preview-card {
+    background: rgba(15,23,42,0.52);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .preview-name {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .preview-sub {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .preview-sub {
+    color: #94a3b8;
+  }
+
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .quick-link {
+    display: grid;
+    gap: 8px;
+    padding: 18px;
+    border-radius: 22px;
+    text-decoration: none;
+    color: inherit;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+
+  .quick-link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(58,139,255,0.2);
+    box-shadow: 0 12px 28px rgba(15,23,42,0.05);
+  }
+
+  body.dark .quick-link {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  body.dark .quick-link:hover {
+    border-color: rgba(96,165,250,0.22);
+    box-shadow: 0 14px 30px rgba(2,6,23,0.5);
+  }
+
+  .quick-link-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .quick-link-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .quick-link-copy {
+    color: #94a3b8;
+  }
+
+  .client-note-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .client-note {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+  }
+
+  body.dark .client-note {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+    color: #cbd5e1;
+  }
+
+  .client-mini-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .client-mini-kpi {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  body.dark .client-mini-kpi {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .client-mini-kpi-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  body.dark .client-mini-kpi-label {
+    color: #94a3b8;
+  }
+
+  .client-mini-kpi-value {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  @media (max-width: 980px) {
+    .client-grid,
+    .client-hero-metrics,
+    .quick-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .client-hero,
+    .client-card {
+      padding: 18px;
+      border-radius: 22px;
+    }
+
+    .client-hero-actions,
+    .client-save-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .client-hero-actions .btn,
+    .client-save-row .btn {
+      width: 100%;
+    }
+
+    .client-mini-kpi-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="client-dashboard-shell">
+
+  <section class="client-hero reveal">
+    <div class="client-hero-content">
+      <div class="client-kicker">
+        {% if lang == 'es' %}
+          Espacio del cliente · BillBeam
+        {% elif lang == 'zh' %}
+          客户空间 · BillBeam
+        {% else %}
+          Client Space · BillBeam
+        {% endif %}
+      </div>
+
+      <h1 class="client-title">
+        {% if lang == 'es' %}
+          Bienvenido a tu <span class="accent">experiencia</span> como cliente
+        {% elif lang == 'zh' %}
+          欢迎来到您的 <span class="accent">客户体验</span>
+        {% else %}
+          Welcome to your client <span class="accent">experience</span>
+        {% endif %}
+      </h1>
+
+      <div class="client-copy">
+        {% if lang == 'es' %}
+          Descubre negocios, guarda tus preferencias visuales y usa BillBeam como un espacio moderno, rápido y agradable para volver a los servicios que más te interesan.
+        {% elif lang == 'zh' %}
+          发现商家，保存您的视觉偏好，并将 BillBeam 用作一个现代、快速、令人愉快的空间，以便返回您最关心的服务。
+        {% else %}
+          Discover businesses, save your visual preferences, and use BillBeam as a modern, fast, enjoyable space to come back to the services you care about most.
+        {% endif %}
+      </div>
+
+      <div class="client-hero-actions">
+        <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-brand">
+          {% if lang == 'es' %}
+            Descubrir negocios
+          {% elif lang == 'zh' %}
+            查找商家
+          {% else %}
+            Discover Businesses
+          {% endif %}
+        </a>
+
+        <a href="/client/login{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+          {% if lang == 'es' %}
+            Cambiar cuenta
+          {% elif lang == 'zh' %}
+            切换账户
+          {% else %}
+            Switch Account
+          {% endif %}
+        </a>
+      </div>
+
+      <div class="client-hero-metrics">
+        <div class="client-metric">
+          <div class="client-metric-label">
+            {% if lang == 'es' %}
+              Experiencia
+            {% elif lang == 'zh' %}
+              体验
+            {% else %}
+              Experience
+            {% endif %}
+          </div>
+          <div class="client-metric-value" id="clientExperienceValue">
+            {% if lang == 'es' %}
+              Personalizada
+            {% elif lang == 'zh' %}
+              已个性化
+            {% else %}
+              Personalized
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="client-metric">
+          <div class="client-metric-label">
+            {% if lang == 'es' %}
+              Vista preferida
+            {% elif lang == 'zh' %}
+              偏好视图
+            {% else %}
+              Preferred View
+            {% endif %}
+          </div>
+          <div class="client-metric-value" id="clientViewValue">Comfort</div>
+        </div>
+
+        <div class="client-metric">
+          <div class="client-metric-label">
+            {% if lang == 'es' %}
+              Estilo
+            {% elif lang == 'zh' %}
+              风格
+            {% else %}
+              Style
+            {% endif %}
+          </div>
+          <div class="client-metric-value" id="clientStyleValue">
+            {% if lang == 'es' %}
+              Moderno
+            {% elif lang == 'zh' %}
+              现代
+            {% else %}
+              Modern
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="client-grid">
+
+    <div class="client-main">
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h2>
+            {% if lang == 'es' %}
+              Personaliza tu espacio
+            {% elif lang == 'zh' %}
+              自定义您的空间
+            {% else %}
+              Customize your space
+            {% endif %}
+          </h2>
+          <p>
+            {% if lang == 'es' %}
+              Ajusta tu experiencia como cliente con preferencias visuales y de navegación que hacen que todo se sienta más tuyo.
+            {% elif lang == 'zh' %}
+              使用视觉和浏览偏好来调整您的客户体验，让整个空间更像是为您打造的。
+            {% else %}
+              Tune your client experience with visual and browsing preferences that make everything feel more like yours.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="client-avatar-builder">
+          <div class="client-avatar-preview-wrap">
+            <div class="client-avatar-preview" id="clientAvatarPreview">
+              <span id="clientAvatarEmoji">✨</span>
+            </div>
+            <div class="client-avatar-preview-copy">
+              <strong>
+                {% if lang == 'es' %}
+                  Tu avatar
+                {% elif lang == 'zh' %}
+                  您的头像
+                {% else %}
+                  Your avatar
+                {% endif %}
+              </strong>
+              <div>
+                {% if lang == 'es' %}
+                  Elige un estilo rápido que haga tu panel más personal y más divertido de usar.
+                {% elif lang == 'zh' %}
+                  选择一个快速风格，让您的面板更有个性，也更有趣。
+                {% else %}
+                  Pick a quick style that makes your dashboard feel more personal and more fun to use.
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="customize-row">
+            <div class="customize-label">
+              {% if lang == 'es' %}
+                Emoji del avatar
+              {% elif lang == 'zh' %}
+                头像表情
+              {% else %}
+                Avatar emoji
+              {% endif %}
+            </div>
+            <div class="chip-row" id="clientAvatarEmojiChips">
+              <button type="button" class="chip-btn active" data-avatar-emoji="✨">✨</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="😎">😎</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="🚀">🚀</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="🎯">🎯</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="💼">💼</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="🌊">🌊</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="🔥">🔥</button>
+              <button type="button" class="chip-btn" data-avatar-emoji="🛠️">🛠️</button>
+            </div>
+          </div>
+
+          <div class="customize-row">
+            <div class="customize-label">
+              {% if lang == 'es' %}
+                Fondo del avatar
+              {% elif lang == 'zh' %}
+                头像背景
+              {% else %}
+                Avatar background
+              {% endif %}
+            </div>
+            <div class="chip-row" id="clientAvatarToneChips">
+              <button type="button" class="chip-btn active" data-avatar-tone="blue">
+                {% if lang == 'es' %}Azul{% elif lang == 'zh' %}蓝色{% else %}Blue{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-avatar-tone="sunset">
+                {% if lang == 'es' %}Atardecer{% elif lang == 'zh' %}日落{% else %}Sunset{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-avatar-tone="mint">
+                {% if lang == 'es' %}Mint{% elif lang == 'zh' %}薄荷{% else %}Mint{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-avatar-tone="midnight">
+                {% if lang == 'es' %}Noche{% elif lang == 'zh' %}午夜{% else %}Midnight{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-avatar-tone="rose">
+                {% if lang == 'es' %}Rose{% elif lang == 'zh' %}玫瑰{% else %}Rose{% endif %}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="customize-grid">
+          <div class="customize-row">
+            <div class="customize-label">
+              {% if lang == 'es' %}
+                Nombre visible
+              {% elif lang == 'zh' %}
+                显示名称
+              {% else %}
+                Display name
+              {% endif %}
+            </div>
+            <input
+              id="clientDisplayName"
+              class="client-input"
+              type="text"
+              value="{{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}"
+              placeholder="{% if lang == 'es' %}Cómo quieres que te vea BillBeam{% elif lang == 'zh' %}您希望 BillBeam 如何称呼您{% else %}How you want BillBeam to greet you{% endif %}"
+            >
+          </div>
+
+          <div class="customize-row">
+            <div class="customize-label">
+              {% if lang == 'es' %}
+                Ambiente visual
+              {% elif lang == 'zh' %}
+                视觉氛围
+              {% else %}
+                Visual vibe
+              {% endif %}
+            </div>
+            <div class="chip-row" id="clientVibeChips">
+              <button type="button" class="chip-btn active" data-vibe="Modern">
+                {% if lang == 'es' %}Moderno{% elif lang == 'zh' %}现代{% else %}Modern{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-vibe="Soft">
+                {% if lang == 'es' %}Suave{% elif lang == 'zh' %}柔和{% else %}Soft{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-vibe="Bold">
+                {% if lang == 'es' %}Atrevido{% elif lang == 'zh' %}大胆{% else %}Bold{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-vibe="Minimal">
+                {% if lang == 'es' %}Minimal{% elif lang == 'zh' %}极简{% else %}Minimal{% endif %}
+              </button>
+            </div>
+          </div>
+
+          <div class="customize-row">
+            <div class="customize-label">
+              {% if lang == 'es' %}
+                Vista preferida
+              {% elif lang == 'zh' %}
+                偏好视图
+              {% else %}
+                Preferred view
+              {% endif %}
+            </div>
+            <div class="chip-row" id="clientViewChips">
+              <button type="button" class="chip-btn active" data-view="Comfort">
+                {% if lang == 'es' %}Cómoda{% elif lang == 'zh' %}舒适{% else %}Comfort{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-view="Compact">
+                {% if lang == 'es' %}Compacta{% elif lang == 'zh' %}紧凑{% else %}Compact{% endif %}
+              </button>
+              <button type="button" class="chip-btn" data-view="Focused">
+                {% if lang == 'es' %}Enfocada{% elif lang == 'zh' %}专注{% else %}Focused{% endif %}
+              </button>
+            </div>
+          </div>
+
+          <div class="customize-row">
+            <div class="customize-label">
+              {% if lang == 'es' %}
+                Página de inicio
+              {% elif lang == 'zh' %}
+                首页偏好
+              {% else %}
+                Home preference
+              {% endif %}
+            </div>
+            <select id="clientHomeSelect" class="client-select">
+              <option value="discover">
+                {% if lang == 'es' %}Descubrir negocios{% elif lang == 'zh' %}查找商家{% else %}Discover Businesses{% endif %}
+              </option>
+              <option value="followed">
+                {% if lang == 'es' %}Negocios seguidos{% elif lang == 'zh' %}已关注商家{% else %}Followed Businesses{% endif %}
+              </option>
+              <option value="services">
+                {% if lang == 'es' %}Servicios destacados{% elif lang == 'zh' %}精选服务{% else %}Featured Services{% endif %}
+              </option>
+            </select>
+          </div>
+
+          <div class="client-save-row">
+            <button type="button" class="btn btn-secondary" id="clientResetPrefs">
+              {% if lang == 'es' %}
+                Restablecer
+              {% elif lang == 'zh' %}
+                重置
+              {% else %}
+                Reset
+              {% endif %}
+            </button>
+            <button type="button" class="btn btn-brand" id="clientSavePrefs">
+              {% if lang == 'es' %}
+                Guardar preferencias
+              {% elif lang == 'zh' %}
+                保存偏好
+              {% else %}
+                Save Preferences
+              {% endif %}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h2>
+            {% if lang == 'es' %}
+              Accesos rápidos
+            {% elif lang == 'zh' %}
+              快速入口
+            {% else %}
+              Quick access
+            {% endif %}
+          </h2>
+          <p>
+            {% if lang == 'es' %}
+              Muévete rápido entre las partes más útiles de la experiencia del cliente.
+            {% elif lang == 'zh' %}
+              快速进入客户体验中最有用的部分。
+            {% else %}
+              Move quickly between the most useful parts of the client experience.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="quick-grid">
+          <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="quick-link">
+            <div class="quick-link-title">
+              {% if lang == 'es' %}
+                Descubrir negocios
+              {% elif lang == 'zh' %}
+                查找商家
+              {% else %}
+                Discover Businesses
+              {% endif %}
+            </div>
+            <div class="quick-link-copy">
+              {% if lang == 'es' %}
+                Encuentra empresas por nombre y explora sus servicios desde una experiencia moderna y fácil de navegar.
+              {% elif lang == 'zh' %}
+                按名称查找商家，并在一个现代、易用的体验中浏览他们的服务。
+              {% else %}
+                Find companies by name and explore their services from a modern, easy-to-navigate experience.
+              {% endif %}
+            </div>
+          </a>
+
+          <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="quick-link">
+            <div class="quick-link-title">
+              {% if lang == 'es' %}
+                Volver a explorar
+              {% elif lang == 'zh' %}
+                继续探索
+              {% else %}
+                Keep exploring
+              {% endif %}
+            </div>
+            <div class="quick-link-copy">
+              {% if lang == 'es' %}
+                Vuelve a la búsqueda para seguir descubriendo negocios que encajen contigo.
+              {% elif lang == 'zh' %}
+                返回搜索页面，继续寻找适合您的商家。
+              {% else %}
+                Jump back into search and keep discovering businesses that fit what you need.
+              {% endif %}
+            </div>
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="client-side">
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h3>
+            {% if lang == 'es' %}
+              Vista previa de tu estilo
+            {% elif lang == 'zh' %}
+              您的风格预览
+            {% else %}
+              Your style preview
+            {% endif %}
+          </h3>
+          <p>
+            {% if lang == 'es' %}
+              Una pequeña vista rápida de cómo quieres que se sienta tu experiencia como cliente.
+            {% elif lang == 'zh' %}
+              快速预览您希望客户体验呈现的感觉。
+            {% else %}
+              A quick preview of how you want your client experience to feel.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="client-preview">
+          <div class="preview-top">
+            <span class="preview-badge" id="clientPreviewBadge">
+              {% if lang == 'es' %}
+                Perfil cliente
+              {% elif lang == 'zh' %}
+                客户档案
+              {% else %}
+                Client profile
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="preview-card">
+            <div class="preview-name" id="clientPreviewName">
+              {{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}
+            </div>
+            <div class="preview-sub" id="clientPreviewSub">
+              {% if lang == 'es' %}
+                Experiencia moderna, clara y pensada para que todo se sienta sencillo.
+              {% elif lang == 'zh' %}
+                现代、清晰、流畅的体验，让一切都感觉简单自然。
+              {% else %}
+                A modern, clear experience designed to make everything feel easy.
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h3>
+            {% if lang == 'es' %}
+              Tu espacio ahora
+            {% elif lang == 'zh' %}
+              您当前的空间
+            {% else %}
+              Your space right now
+            {% endif %}
+          </h3>
+        </div>
+
+        <div class="client-mini-kpi-grid">
+          <div class="client-mini-kpi">
+            <div class="client-mini-kpi-label">
+              {% if lang == 'es' %}
+                Descubrir
+              {% elif lang == 'zh' %}
+                发现
+              {% else %}
+                Discover
+              {% endif %}
+            </div>
+            <div class="client-mini-kpi-value">
+              {% if lang == 'es' %}
+                Listo
+              {% elif lang == 'zh' %}
+                已就绪
+              {% else %}
+                Ready
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="client-mini-kpi">
+            <div class="client-mini-kpi-label">
+              {% if lang == 'es' %}
+                Personalización
+              {% elif lang == 'zh' %}
+                个性化
+              {% else %}
+                Personalization
+              {% endif %}
+            </div>
+            <div class="client-mini-kpi-value" id="clientPersonalizationState">
+              {% if lang == 'es' %}
+                Activa
+              {% elif lang == 'zh' %}
+                已开启
+              {% else %}
+                Active
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h3>
+            {% if lang == 'es' %}
+              Lo que hace mejor esta experiencia
+            {% elif lang == 'zh' %}
+              让这个体验更好的地方
+            {% else %}
+              What makes this experience better
+            {% endif %}
+          </h3>
+        </div>
+
+        <div class="client-note-list">
+          <div class="client-note">
+            {% if lang == 'es' %}
+              Navegación simple para que encontrar un negocio no se sienta pesado.
+            {% elif lang == 'zh' %}
+              简洁导航，让查找商家变得轻松自然。
+            {% else %}
+              Simple navigation so finding a business feels smooth instead of heavy.
+            {% endif %}
+          </div>
+
+          <div class="client-note">
+            {% if lang == 'es' %}
+              Preferencias guardadas para que el espacio se sienta más personal cada vez que vuelvas.
+            {% elif lang == 'zh' %}
+              保存偏好，让您每次回来时都感觉这个空间更像是为您准备的。
+            {% else %}
+              Saved preferences so the space feels more personal each time you return.
+            {% endif %}
+          </div>
+
+          <div class="client-note">
+            {% if lang == 'es' %}
+              Una base lista para seguir creciendo con negocios, servicios y solicitudes.
+            {% elif lang == 'zh' %}
+              一个已经准备好继续扩展到商家、服务和请求流程的基础体验。
+            {% else %}
+              A strong base that is ready to grow with businesses, services, and request flows.
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const storageKey = "billbeam_client_preferences_v1";
+
+  const displayNameInput = document.getElementById("clientDisplayName");
+  const homeSelect = document.getElementById("clientHomeSelect");
+  const saveBtn = document.getElementById("clientSavePrefs");
+  const resetBtn = document.getElementById("clientResetPrefs");
+
+  const previewName = document.getElementById("clientPreviewName");
+  const previewSub = document.getElementById("clientPreviewSub");
+  const previewBadge = document.getElementById("clientPreviewBadge");
+
+  const vibeValue = document.getElementById("clientStyleValue");
+  const viewValue = document.getElementById("clientViewValue");
+  const experienceValue = document.getElementById("clientExperienceValue");
+  const personalizationState = document.getElementById("clientPersonalizationState");
+
+  const vibeButtons = Array.from(document.querySelectorAll("#clientVibeChips .chip-btn"));
+  const viewButtons = Array.from(document.querySelectorAll("#clientViewChips .chip-btn"));
+
+  const avatarPreview = document.getElementById("clientAvatarPreview");
+  const avatarEmoji = document.getElementById("clientAvatarEmoji");
+  const avatarEmojiButtons = Array.from(document.querySelectorAll("#clientAvatarEmojiChips .chip-btn"));
+  const avatarToneButtons = Array.from(document.querySelectorAll("#clientAvatarToneChips .chip-btn"));
+
+  const defaults = {
+    displayName: displayNameInput ? displayNameInput.value : "Client",
+    vibe: "Modern",
+    view: "Comfort",
+    home: "discover",
+    avatarEmoji: "✨",
+    avatarTone: "blue"
+  };
+
+  function getSelectedValue(buttons, fallback) {
+    const active = buttons.find((btn) => btn.classList.contains("active"));
+    return active ? active.dataset[buttons === vibeButtons ? "vibe" : "view"] : fallback;
+  }
+
+  function setActive(buttons, value, key) {
+    buttons.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset[key] === value);
+    });
+  }
+
+  function getAvatarToneValue() {
+    const active = avatarToneButtons.find((btn) => btn.classList.contains("active"));
+    return active ? active.dataset.avatarTone : defaults.avatarTone;
+  }
+
+  function getAvatarEmojiValue() {
+    const active = avatarEmojiButtons.find((btn) => btn.classList.contains("active"));
+    return active ? active.dataset.avatarEmoji : defaults.avatarEmoji;
+  }
+
+  function getAvatarBackground(tone) {
+    const map = {
+      blue: "linear-gradient(135deg, #60a5fa, #2563eb)",
+      sunset: "linear-gradient(135deg, #fb7185, #f59e0b)",
+      mint: "linear-gradient(135deg, #34d399, #14b8a6)",
+      midnight: "linear-gradient(135deg, #334155, #0f172a)",
+      rose: "linear-gradient(135deg, #f472b6, #ec4899)"
+    };
+    return map[tone] || map.blue;
+  }
+
+  function buildPreviewText(vibe, view) {
+    const map = {
+      Modern: {
+        en: "A modern, polished experience designed to feel smooth and premium.",
+        es: "Una experiencia moderna y pulida pensada para sentirse fluida y premium.",
+        zh: "现代、精致、流畅且高级的体验。"
+      },
+      Soft: {
+        en: "A softer, calmer experience that feels welcoming and easy to explore.",
+        es: "Una experiencia más suave y tranquila que se siente acogedora y fácil de explorar.",
+        zh: "更柔和、更平静、更容易探索的体验。"
+      },
+      Bold: {
+        en: "A more expressive experience with stronger energy and a sharper feel.",
+        es: "Una experiencia más expresiva con más energía y una sensación más marcada.",
+        zh: "更有表现力、更有能量、更有个性的体验。"
+      },
+      Minimal: {
+        en: "A cleaner, more focused experience with less noise and more clarity.",
+        es: "Una experiencia más limpia y enfocada, con menos ruido y más claridad.",
+        zh: "更干净、更专注、更清晰的体验。"
+      }
+    };
+
+    const language = "{{ lang }}";
+    const textSet = map[vibe] || map.Modern;
+    const base = textSet[language] || textSet.en;
+
+    if (view === "Compact") {
+      return base + (language === "es"
+        ? " Optimizada para ir directo al punto."
+        : language === "zh"
+        ? " 并更适合快速浏览。"
+        : " Optimized for getting straight to the point.");
+    }
+
+    if (view === "Focused") {
+      return base + (language === "es"
+        ? " Diseñada para menos distracción y más intención."
+        : language === "zh"
+        ? " 更少干扰，更专注。"
+        : " Designed for less distraction and more intention.");
+    }
+
+    return base;
+  }
+
+  function updatePreview() {
+    const vibe = getSelectedValue(vibeButtons, defaults.vibe);
+    const view = getSelectedValue(viewButtons, defaults.view);
+    const name = (displayNameInput && displayNameInput.value.trim()) || defaults.displayName;
+    const home = homeSelect ? homeSelect.value : defaults.home;
+    const selectedAvatarEmoji = getAvatarEmojiValue();
+    const selectedAvatarTone = getAvatarToneValue();
+
+    if (previewName) previewName.textContent = name;
+    if (previewSub) previewSub.textContent = buildPreviewText(vibe, view);
+    if (vibeValue) vibeValue.textContent = vibe;
+    if (viewValue) viewValue.textContent = view;
+    if (experienceValue) {
+      experienceValue.textContent =
+        home === "discover" ? ( "{{ 'Exploration-first' if lang == 'en' else ('Exploración primero' if lang == 'es' else '探索优先') }}" ) :
+        home === "followed" ? ( "{{ 'Relationship-first' if lang == 'en' else ('Relación primero' if lang == 'es' else '关系优先') }}" ) :
+        ( "{{ 'Service-first' if lang == 'en' else ('Servicio primero' if lang == 'es' else '服务优先') }}" );
+    }
+    if (previewBadge) {
+      previewBadge.textContent =
+        "{{ 'Client profile' if lang == 'en' else ('Perfil cliente' if lang == 'es' else '客户档案') }}" + " · " + vibe;
+    }
+
+    if (avatarEmoji) avatarEmoji.textContent = selectedAvatarEmoji;
+    if (avatarPreview) avatarPreview.style.background = getAvatarBackground(selectedAvatarTone);
+  }
+
+  function savePrefs() {
+    const payload = {
+      displayName: (displayNameInput && displayNameInput.value.trim()) || defaults.displayName,
+      vibe: getSelectedValue(vibeButtons, defaults.vibe),
+      view: getSelectedValue(viewButtons, defaults.view),
+      home: homeSelect ? homeSelect.value : defaults.home,
+      avatarEmoji: getAvatarEmojiValue(),
+      avatarTone: getAvatarToneValue()
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify(payload));
+
+    if (personalizationState) {
+      personalizationState.textContent = "{{ 'Saved' if lang == 'en' else ('Guardada' if lang == 'es' else '已保存') }}";
+    }
+
+    updatePreview();
+  }
+
+  function loadPrefs() {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) {
+        updatePreview();
+        return;
+      }
+
+      const prefs = JSON.parse(raw);
+
+      if (displayNameInput && prefs.displayName) displayNameInput.value = prefs.displayName;
+      if (homeSelect && prefs.home) homeSelect.value = prefs.home;
+
+      setActive(vibeButtons, prefs.vibe || defaults.vibe, "vibe");
+      setActive(viewButtons, prefs.view || defaults.view, "view");
+      setActive(avatarEmojiButtons, prefs.avatarEmoji || defaults.avatarEmoji, "avatarEmoji");
+      setActive(avatarToneButtons, prefs.avatarTone || defaults.avatarTone, "avatarTone");
+
+      if (personalizationState) {
+        personalizationState.textContent = "{{ 'Saved' if lang == 'en' else ('Guardada' if lang == 'es' else '已保存') }}";
+      }
+
+      updatePreview();
+    } catch (e) {
+      updatePreview();
+    }
+  }
+
+  vibeButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(vibeButtons, btn.dataset.vibe, "vibe");
+      updatePreview();
+    });
+  });
+
+  viewButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(viewButtons, btn.dataset.view, "view");
+      updatePreview();
+    });
+  });
+
+  avatarEmojiButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(avatarEmojiButtons, btn.dataset.avatarEmoji, "avatarEmoji");
+      updatePreview();
+    });
+  });
+
+  avatarToneButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(avatarToneButtons, btn.dataset.avatarTone, "avatarTone");
+      updatePreview();
+    });
+  });
+
+  if (displayNameInput) {
+    displayNameInput.addEventListener("input", updatePreview);
+  }
+
+  if (homeSelect) {
+    homeSelect.addEventListener("change", updatePreview);
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener("click", savePrefs);
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function () {
+      localStorage.removeItem(storageKey);
+
+      if (displayNameInput) displayNameInput.value = defaults.displayName;
+      if (homeSelect) homeSelect.value = defaults.home;
+
+      setActive(vibeButtons, defaults.vibe, "vibe");
+      setActive(viewButtons, defaults.view, "view");
+      setActive(avatarEmojiButtons, defaults.avatarEmoji, "avatarEmoji");
+      setActive(avatarToneButtons, defaults.avatarTone, "avatarTone");
+
+      if (personalizationState) {
+        personalizationState.textContent = "{{ 'Active' if lang == 'en' else ('Activa' if lang == 'es' else '已开启') }}";
+      }
+
+      updatePreview();
+    });
+  }
+
+  loadPrefs();
+});
+</script>
+{% endblock %}

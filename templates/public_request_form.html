@@ -194,6 +194,16 @@
     color: #f8fafc;
   }
 
+  .public-request-help {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  body.dark .public-request-help {
+    color: #94a3b8;
+  }
+
   .public-request-field input,
   .public-request-field textarea {
     width: 100%;
@@ -232,11 +242,34 @@
     line-height: 1.65;
   }
 
+  .public-request-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
   .public-request-actions {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     margin-top: 6px;
+  }
+
+  .public-request-note {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(58,139,255,0.08), rgba(252,220,42,0.10));
+    border: 1px solid rgba(148,163,184,0.15);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #475569;
+    margin-bottom: 16px;
+  }
+
+  body.dark .public-request-note {
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.08));
+    border-color: rgba(148,163,184,0.16);
+    color: #cbd5e1;
   }
 
   .public-request-side-hero {
@@ -442,6 +475,10 @@
   }
 
   @media (max-width: 640px) {
+    .public-request-form-grid {
+      grid-template-columns: 1fr;
+    }
+
     .public-request-actions {
       flex-direction: column;
     }
@@ -535,95 +572,129 @@
             </div>
           {% endif %}
 
+          <div class="public-request-note">
+            {% if lang == 'es' %}
+              Mientras más claro seas desde el principio, más fácil será para el negocio revisar tu solicitud y avanzar contigo.
+            {% elif lang == 'zh' %}
+              您一开始提供的信息越清晰，商家就越容易查看您的请求并继续推进。
+            {% else %}
+              The clearer you are from the start, the easier it is for the business to review your request and move forward with you.
+            {% endif %}
+          </div>
+
           <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}" class="public-request-form">
-            <div class="public-request-field">
-              <label for="client_name">
-                {% if lang == 'es' %}
-                  Tu nombre
-                {% elif lang == 'zh' %}
-                  您的姓名
-                {% else %}
-                  Your Name
-                {% endif %}
-              </label>
-              <input type="text" id="client_name" name="client_name" value="{{ form_data.client_name }}">
+            <div class="public-request-form-grid">
+              <div class="public-request-field">
+                <label for="client_name">
+                  {% if lang == 'es' %}
+                    Tu nombre
+                  {% elif lang == 'zh' %}
+                    您的姓名
+                  {% else %}
+                    Your Name
+                  {% endif %}
+                </label>
+                <input type="text" id="client_name" name="client_name" value="{{ form_data.client_name }}">
+                <div class="public-request-help">
+                  {% if lang == 'es' %}
+                    Así sabrán cómo dirigirse a ti.
+                  {% elif lang == 'zh' %}
+                    这样商家会知道如何称呼您。
+                  {% else %}
+                    This helps them know how to address you.
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="public-request-field">
+                <label for="client_email">
+                  {% if lang == 'es' %}
+                    Tu correo
+                  {% elif lang == 'zh' %}
+                    您的邮箱
+                  {% else %}
+                    Your Email
+                  {% endif %}
+                </label>
+                <input type="email" id="client_email" name="client_email" value="{{ form_data.client_email }}">
+                <div class="public-request-help">
+                  {% if lang == 'es' %}
+                    Para que el negocio pueda responderte con facilidad.
+                  {% elif lang == 'zh' %}
+                    方便商家轻松回复您。
+                  {% else %}
+                    So the business can reply back to you easily.
+                  {% endif %}
+                </div>
+              </div>
             </div>
 
-            <div class="public-request-field">
-              <label for="client_email">
-                {% if lang == 'es' %}
-                  Tu correo
-                {% elif lang == 'zh' %}
-                  您的邮箱
-                {% else %}
-                  Your Email
-                {% endif %}
-              </label>
-              <input type="email" id="client_email" name="client_email" value="{{ form_data.client_email }}">
+            <div class="public-request-form-grid">
+              <div class="public-request-field">
+                <label for="client_phone">
+                  {% if lang == 'es' %}
+                    Tu teléfono
+                  {% elif lang == 'zh' %}
+                    您的电话
+                  {% else %}
+                    Your Phone
+                  {% endif %}
+                </label>
+                <input type="text" id="client_phone" name="client_phone" value="{{ form_data.client_phone }}">
+              </div>
+
+              <div class="public-request-field">
+                <label for="quantity">
+                  {% if lang == 'es' %}
+                    Cantidad
+                  {% elif lang == 'zh' %}
+                    数量
+                  {% else %}
+                    Quantity
+                  {% endif %}
+                </label>
+                <input type="number" id="quantity" name="quantity" min="1" step="1" value="{{ form_data.quantity }}">
+              </div>
             </div>
 
-            <div class="public-request-field">
-              <label for="client_phone">
-                {% if lang == 'es' %}
-                  Tu teléfono
-                {% elif lang == 'zh' %}
-                  您的电话
-                {% else %}
-                  Your Phone
-                {% endif %}
-              </label>
-              <input type="text" id="client_phone" name="client_phone" value="{{ form_data.client_phone }}">
-            </div>
+            <div class="public-request-form-grid">
+              <div class="public-request-field">
+                <label for="preferred_date_text">
+                  {% if lang == 'es' %}
+                    Fecha preferida
+                  {% elif lang == 'zh' %}
+                    偏好日期
+                  {% else %}
+                    Preferred Date
+                  {% endif %}
+                </label>
+                <input
+                  type="text"
+                  id="preferred_date_text"
+                  name="preferred_date_text"
+                  value="{{ form_data.preferred_date_text }}"
+                  placeholder="{% if lang == 'es' %}Ej. próxima semana{% elif lang == 'zh' %}例如：下周{% else %}Example: next week{% endif %}"
+                >
+              </div>
 
-            <div class="public-request-field">
-              <label for="quantity">
-                {% if lang == 'es' %}
-                  Cantidad
-                {% elif lang == 'zh' %}
-                  数量
-                {% else %}
-                  Quantity
-                {% endif %}
-              </label>
-              <input type="number" id="quantity" name="quantity" min="1" step="1" value="{{ form_data.quantity }}">
-            </div>
-
-            <div class="public-request-field">
-              <label for="preferred_date_text">
-                {% if lang == 'es' %}
-                  Fecha preferida
-                {% elif lang == 'zh' %}
-                  偏好日期
-                {% else %}
-                  Preferred Date
-                {% endif %}
-              </label>
-              <input
-                type="text"
-                id="preferred_date_text"
-                name="preferred_date_text"
-                value="{{ form_data.preferred_date_text }}"
-                placeholder="{% if lang == 'es' %}Ej. próxima semana{% elif lang == 'zh' %}例如：下周{% else %}Example: next week{% endif %}"
-              >
-            </div>
-
-            <div class="public-request-field">
-              <label for="preferred_time_text">
-                {% if lang == 'es' %}
-                  Hora preferida
-                {% elif lang == 'zh' %}
-                  偏好时间
-                {% else %}
-                  Preferred Time
-                {% endif %}
-              </label>
-              <input
-                type="text"
-                id="preferred_time_text"
-                name="preferred_time_text"
-                value="{{ form_data.preferred_time_text }}"
-                placeholder="{% if lang == 'es' %}Ej. por la tarde{% elif lang == 'zh' %}例如：下午{% else %}Example: afternoon{% endif %}"
-              >
+              <div class="public-request-field">
+                <label for="preferred_time_text">
+                  {% if lang == 'es' %}
+                    Hora preferida
+                  {% elif lang == 'zh' %}
+                    偏好时间
+                  {% else %}
+                    Preferred Time
+                  {% endif %}
+                </label>
+                <input
+                  type="text"
+                  id="preferred_time_text"
+                  name="preferred_time_text"
+                  value="{{ form_data.preferred_time_text }}"
+                  placeholder="{% if lang == 'es' %}Ej. por la tarde{% elif lang == 'zh' %}例如：下午{% else %}Example: afternoon{% endif %}"
+                >
+              </div>
             </div>
 
             <div class="public-request-field">
@@ -642,6 +713,15 @@
                 rows="6"
                 placeholder="{% if lang == 'es' %}Comparte cualquier detalle útil para el negocio{% elif lang == 'zh' %}填写对商家有帮助的补充说明{% else %}Share any useful details for the business{% endif %}"
               >{{ form_data.request_details }}</textarea>
+              <div class="public-request-help">
+                {% if lang == 'es' %}
+                  Incluye lo que necesitas, el contexto, el lugar o cualquier detalle que ayude a responderte mejor.
+                {% elif lang == 'zh' %}
+                  可以补充您的需求、背景、地点或任何有助于商家更好回复您的信息。
+                {% else %}
+                  Include what you need, the context, the location, or anything that helps them respond more accurately.
+                {% endif %}
+              </div>
             </div>
 
             <div class="public-request-actions">

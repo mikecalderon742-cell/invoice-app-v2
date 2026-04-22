@@ -1,0 +1,790 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if lang == 'es' %}
+    Descubrir negocios · BillBeam
+  {% elif lang == 'zh' %}
+    查找商家 · BillBeam
+  {% else %}
+    Discover Businesses · BillBeam
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if lang == 'es' %}
+    Busca negocios en BillBeam, descubre sus servicios y entra a una experiencia moderna pensada para clientes.
+  {% elif lang == 'zh' %}
+    在 BillBeam 中搜索商家，查看他们的服务，并进入专为客户设计的现代体验。
+  {% else %}
+    Search businesses on BillBeam, explore their services, and enter a polished client-focused experience.
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set lang = lang or request.args.get('lang') or session.get('lang', 'en') %}
+{% if lang not in ['en', 'es', 'zh'] %}
+  {% set lang = 'en' %}
+{% endif %}
+
+<style>
+  .discover-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .discover-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.24), transparent 24%),
+      radial-gradient(circle at 88% 22%, rgba(59,130,246,0.22), transparent 24%),
+      radial-gradient(circle at 82% 84%, rgba(37,99,235,0.15), transparent 28%),
+      linear-gradient(135deg, #60a5fa 0%, #3b82f6 32%, #2563eb 62%, #151B54 100%);
+    border: 1px solid rgba(147,197,253,0.24);
+    box-shadow:
+      0 28px 90px rgba(37,99,235,0.22),
+      0 12px 30px rgba(21,27,84,0.16),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+    color: #fff;
+    isolation: isolate;
+  }
+
+  body.dark .discover-hero {
+    background:
+      radial-gradient(circle at 12% 18%, rgba(125,211,252,0.16), transparent 24%),
+      radial-gradient(circle at 88% 22%, rgba(59,130,246,0.16), transparent 24%),
+      radial-gradient(circle at 82% 84%, rgba(96,165,250,0.10), transparent 28%),
+      linear-gradient(135deg, #1d4ed8 0%, #1e40af 30%, #1d4ed8 56%, #0f172a 100%);
+    border-color: rgba(96,165,250,0.18);
+    box-shadow:
+      0 30px 90px rgba(2,6,23,0.86),
+      0 0 0 1px rgba(96,165,250,0.08),
+      inset 0 1px 0 rgba(191,219,254,0.06);
+  }
+
+  .discover-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.16), transparent 38%),
+      linear-gradient(180deg, rgba(255,255,255,0.08), transparent 34%);
+    z-index: 0;
+  }
+
+  .discover-hero-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 18px;
+  }
+
+  .discover-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  .discover-title {
+    margin: 0;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(34px, 4.8vw, 54px);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    max-width: 820px;
+  }
+
+  .discover-title .accent {
+    color: #dbeafe;
+    text-shadow:
+      0 0 16px rgba(255,255,255,0.14),
+      0 12px 30px rgba(191,219,254,0.16);
+  }
+
+  .discover-copy {
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(239,246,255,0.9);
+  }
+
+  .discover-search-card {
+    margin-top: -6px;
+    border-radius: 28px;
+    padding: 22px;
+    background: rgba(255,255,255,0.86);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.06),
+      0 0 0 1px rgba(15,23,42,0.012);
+    backdrop-filter: blur(10px);
+  }
+
+  body.dark .discover-search-card {
+    background: rgba(2,6,23,0.8);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .discover-search-head {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .discover-search-head h2 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.025em;
+  }
+
+  .discover-search-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .discover-search-head p {
+    color: #94a3b8;
+  }
+
+  .discover-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .discover-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .discover-field label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  body.dark .discover-field label {
+    color: #94a3b8;
+  }
+
+  .discover-field input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.28);
+    background: rgba(255,255,255,0.95);
+    color: #0f172a;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+
+  .discover-field input:focus {
+    border-color: rgba(58,139,255,0.55);
+    box-shadow: 0 0 0 4px rgba(58,139,255,0.12);
+  }
+
+  body.dark .discover-field input {
+    background: rgba(15,23,42,0.8);
+    color: #f8fafc;
+    border-color: rgba(148,163,184,0.22);
+  }
+
+  .discover-btn {
+    min-height: 50px;
+    padding: 0 18px;
+    border-radius: 16px;
+  }
+
+  .discover-support-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .discover-support-card {
+    padding: 18px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 18px 42px rgba(15,23,42,0.05),
+      0 0 0 1px rgba(15,23,42,0.012);
+  }
+
+  body.dark .discover-support-card {
+    background: rgba(2,6,23,0.78);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 20px 48px rgba(2,6,23,0.78),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .discover-support-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .discover-support-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .discover-support-card p {
+    color: #94a3b8;
+  }
+
+  .discover-results-shell {
+    display: grid;
+    gap: 16px;
+  }
+
+  .discover-results-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .discover-results-top h2 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.025em;
+  }
+
+  .discover-results-meta {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  body.dark .discover-results-meta {
+    color: #94a3b8;
+  }
+
+  .business-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .business-card {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 26px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.012);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+
+  .business-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 26px 56px rgba(15,23,42,0.09),
+      0 0 0 1px rgba(58,139,255,0.08);
+    border-color: rgba(58,139,255,0.18);
+  }
+
+  body.dark .business-card {
+    background: rgba(2,6,23,0.8);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  body.dark .business-card:hover {
+    border-color: rgba(96,165,250,0.22);
+    box-shadow:
+      0 28px 58px rgba(2,6,23,0.92),
+      0 0 0 1px rgba(96,165,250,0.08);
+  }
+
+  .business-card-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .business-logo {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 1px solid rgba(148,163,184,0.18);
+    background: rgba(241,245,249,0.8);
+    flex: 0 0 auto;
+  }
+
+  .business-logo-placeholder {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    background: linear-gradient(135deg, rgba(58,139,255,0.14), rgba(252,220,42,0.18));
+    border: 1px solid rgba(148,163,184,0.18);
+    flex: 0 0 auto;
+  }
+
+  body.dark .business-logo-placeholder {
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgba(58,139,255,0.16), rgba(252,220,42,0.08));
+  }
+
+  .business-top-text {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+  }
+
+  .business-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+    word-break: break-word;
+  }
+
+  body.dark .business-name {
+    color: #f8fafc;
+  }
+
+  .business-sub {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  body.dark .business-sub {
+    color: #94a3b8;
+  }
+
+  .business-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .business-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(58,139,255,0.1);
+    border: 1px solid rgba(58,139,255,0.16);
+    color: #1d4ed8;
+  }
+
+  body.dark .business-chip {
+    background: rgba(59,130,246,0.16);
+    border-color: rgba(96,165,250,0.18);
+    color: #bfdbfe;
+  }
+
+  .business-open {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2563eb;
+  }
+
+  body.dark .business-open {
+    color: #93c5fd;
+  }
+
+  .discover-empty {
+    padding: 28px 24px;
+    border-radius: 26px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow:
+      0 20px 48px rgba(15,23,42,0.055),
+      0 0 0 1px rgba(15,23,42,0.012);
+  }
+
+  body.dark .discover-empty {
+    background: rgba(2,6,23,0.8);
+    border-color: rgba(148,163,184,0.16);
+    box-shadow:
+      0 22px 52px rgba(2,6,23,0.8),
+      0 0 0 1px rgba(59,130,246,0.05);
+  }
+
+  .discover-empty h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    letter-spacing: -0.025em;
+  }
+
+  .discover-empty p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #64748b;
+    max-width: 760px;
+  }
+
+  body.dark .discover-empty p {
+    color: #94a3b8;
+  }
+
+  @media (max-width: 980px) {
+    .discover-support-grid,
+    .business-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .discover-hero,
+    .discover-search-card,
+    .discover-support-card,
+    .business-card,
+    .discover-empty {
+      padding: 18px;
+      border-radius: 22px;
+    }
+
+    .discover-form {
+      grid-template-columns: 1fr;
+    }
+
+    .discover-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="discover-shell">
+
+  <section class="discover-hero reveal">
+    <div class="discover-hero-content">
+      <div class="discover-kicker">
+        {% if lang == 'es' %}
+          Experiencia cliente · BillBeam
+        {% elif lang == 'zh' %}
+          客户体验 · BillBeam
+        {% else %}
+          Client Experience · BillBeam
+        {% endif %}
+      </div>
+
+      <h1 class="discover-title">
+        {% if lang == 'es' %}
+          Encuentra negocios y explora sus <span class="accent">servicios</span>
+        {% elif lang == 'zh' %}
+          查找商家并浏览他们的 <span class="accent">服务</span>
+        {% else %}
+          Find businesses and explore their <span class="accent">services</span>
+        {% endif %}
+      </h1>
+
+      <div class="discover-copy">
+        {% if lang == 'es' %}
+          Busca por nombre, abre un perfil profesional y descubre servicios, detalles y próximos pasos desde una experiencia pensada para que el cliente se sienta cómodo desde el primer toque.
+        {% elif lang == 'zh' %}
+          按名称搜索，打开专业商家主页，并在一个从第一步就让客户感觉顺畅的体验中查看服务、细节和下一步。
+        {% else %}
+          Search by name, open a polished business profile, and explore services, details, and next steps from an experience designed to feel smooth from the very first tap.
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="discover-search-card fade-in-up">
+    <div class="discover-search-head">
+      <h2>
+        {% if lang == 'es' %}
+          Buscar un negocio
+        {% elif lang == 'zh' %}
+          搜索商家
+        {% else %}
+          Search for a business
+        {% endif %}
+      </h2>
+      <p>
+        {% if lang == 'es' %}
+          Introduce el nombre del negocio que quieres encontrar. Los clientes pueden usar esta página para descubrir servicios y comenzar una relación con la empresa correcta.
+        {% elif lang == 'zh' %}
+          输入您要查找的商家名称。客户可以通过这里发现服务并与合适的商家建立联系。
+        {% else %}
+          Enter the business name you want to find. Clients can use this page to discover services and start a relationship with the right business.
+        {% endif %}
+      </p>
+    </div>
+
+    <form method="get" action="/business-search" class="discover-form">
+      <div class="discover-field">
+        <label for="q">
+          {% if lang == 'es' %}
+            Nombre del negocio
+          {% elif lang == 'zh' %}
+            商家名称
+          {% else %}
+            Business Name
+          {% endif %}
+        </label>
+        <input
+          id="q"
+          type="text"
+          name="q"
+          value="{{ query or '' }}"
+          placeholder="{% if lang == 'es' %}Ej. Blue Horizon Pool Care{% elif lang == 'zh' %}例如：Blue Horizon Pool Care{% else %}e.g. Blue Horizon Pool Care{% endif %}"
+          autocomplete="off"
+        >
+        <input type="hidden" name="lang" value="{{ lang }}">
+      </div>
+
+      <button type="submit" class="btn btn-brand discover-btn">
+        {% if lang == 'es' %}
+          Buscar
+        {% elif lang == 'zh' %}
+          搜索
+        {% else %}
+          Search
+        {% endif %}
+      </button>
+    </form>
+  </section>
+
+  <section class="discover-support-grid">
+    <div class="discover-support-card">
+      <h3>
+        {% if lang == 'es' %}
+          Encuentra rápido
+        {% elif lang == 'zh' %}
+          快速查找
+        {% else %}
+          Find quickly
+        {% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Busca un negocio por nombre y entra a su perfil sin fricción ni pasos confusos.
+        {% elif lang == 'zh' %}
+          通过名称搜索商家，顺畅进入他们的主页，无需繁琐步骤。
+        {% else %}
+          Search for a business by name and move straight into their profile without friction or confusing steps.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="discover-support-card">
+      <h3>
+        {% if lang == 'es' %}
+          Explora servicios
+        {% elif lang == 'zh' %}
+          浏览服务
+        {% else %}
+          Explore services
+        {% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Descubre lo que ofrece cada negocio desde una vista limpia y moderna que se siente profesional.
+        {% elif lang == 'zh' %}
+          从一个干净、现代、专业的页面中查看每个商家提供的服务。
+        {% else %}
+          Discover what each business offers from a clean, modern view that feels genuinely professional.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="discover-support-card">
+      <h3>
+        {% if lang == 'es' %}
+          Sigue con confianza
+        {% elif lang == 'zh' %}
+          自信继续
+        {% else %}
+          Continue with confidence
+        {% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Da el siguiente paso con claridad: ver perfil, seguir el negocio o pedir un servicio.
+        {% elif lang == 'zh' %}
+          清楚地进入下一步：查看主页、关注商家或请求服务。
+        {% else %}
+          Move confidently into the next step: view the profile, follow the business, or request a service.
+        {% endif %}
+      </p>
+    </div>
+  </section>
+
+  {% if query %}
+    <section class="discover-results-shell">
+      <div class="discover-results-top">
+        <h2>
+          {% if lang == 'es' %}
+            Resultados
+          {% elif lang == 'zh' %}
+            搜索结果
+          {% else %}
+            Results
+          {% endif %}
+        </h2>
+        <div class="discover-results-meta">
+          {% if results and results|length > 0 %}
+            {% if lang == 'es' %}
+              {{ results|length }} negocio{{ '' if results|length == 1 else 's' }} encontrado{{ '' if results|length == 1 else 's' }}
+            {% elif lang == 'zh' %}
+              找到 {{ results|length }} 个商家
+            {% else %}
+              {{ results|length }} business{{ '' if results|length == 1 else 'es' }} found
+            {% endif %}
+          {% else %}
+            {% if lang == 'es' %}
+              Sin coincidencias exactas todavía
+            {% elif lang == 'zh' %}
+              暂无匹配结果
+            {% else %}
+              No matching businesses yet
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      {% if results and results|length > 0 %}
+        <div class="business-grid">
+          {% for business in results %}
+            <a href="/business/{{ business.user_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="business-card">
+              <div class="business-card-top">
+                {% if business.logo_url %}
+                  <img src="{{ business.logo_url }}" alt="{{ business.business_name }}" class="business-logo">
+                {% else %}
+                  <div class="business-logo-placeholder">
+                    {{ (business.business_name or 'B')[:1] }}
+                  </div>
+                {% endif %}
+
+                <div class="business-top-text">
+                  <div class="business-name">{{ business.business_name or "BillBeam Business" }}</div>
+                  <div class="business-sub">
+                    {% if lang == 'es' %}
+                      Perfil de negocio disponible
+                    {% elif lang == 'zh' %}
+                      可查看商家主页
+                    {% else %}
+                      Business profile available
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="business-card-bottom">
+                <span class="business-chip">
+                  {% if lang == 'es' %}
+                    Servicios disponibles
+                  {% elif lang == 'zh' %}
+                    可查看服务
+                  {% else %}
+                    Services available
+                  {% endif %}
+                </span>
+
+                <span class="business-open">
+                  {% if lang == 'es' %}
+                    Abrir perfil →
+                  {% elif lang == 'zh' %}
+                    打开主页 →
+                  {% else %}
+                    Open profile →
+                  {% endif %}
+                </span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="discover-empty">
+          <h3>
+            {% if lang == 'es' %}
+              No encontramos ese negocio todavía
+            {% elif lang == 'zh' %}
+              还没有找到这个商家
+            {% else %}
+              We could not find that business yet
+            {% endif %}
+          </h3>
+          <p>
+            {% if lang == 'es' %}
+              Intenta con otro nombre, una parte del nombre comercial o vuelve más tarde si el negocio acaba de unirse a BillBeam.
+            {% elif lang == 'zh' %}
+              请尝试其他名称、商家名称的一部分，或如果该商家刚加入 BillBeam，请稍后再试。
+            {% else %}
+              Try another name, part of the business name, or check back later if the business recently joined BillBeam.
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="discover-empty">
+      <h3>
+        {% if lang == 'es' %}
+          Empieza buscando un negocio
+        {% elif lang == 'zh' %}
+          先搜索一个商家
+        {% else %}
+          Start by searching for a business
+        {% endif %}
+      </h3>
+      <p>
+        {% if lang == 'es' %}
+          Esta experiencia está diseñada para que los clientes encuentren rápidamente una empresa, revisen sus servicios y sigan adelante desde una interfaz que se siente premium y fácil de usar.
+        {% elif lang == 'zh' %}
+          这个体验专为客户设计，让他们快速找到商家、查看服务，并从一个高级且易用的界面继续下一步。
+        {% else %}
+          This experience is designed so clients can quickly find a business, review its services, and move forward from an interface that feels premium and easy to use.
+        {% endif %}
+      </p>
+    </section>
+  {% endif %}
+
+</div>
+{% endblock %}
