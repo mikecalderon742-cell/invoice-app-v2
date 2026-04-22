@@ -3750,6 +3750,7 @@ def home():
     cursor = conn.cursor()
     user = get_current_user()
     user_id = user["id"]
+
     cursor.execute(
         """
         SELECT id, name, email
@@ -3763,11 +3764,14 @@ def home():
     cursor.close()
     conn.close()
 
+    services = get_user_services(user_id, include_inactive=False)
+
     return render_template(
-    "index.html",
-    clients=clients,
-    lang=get_request_lang(),
-)
+        "index.html",
+        clients=clients,
+        services=services,
+        lang=get_request_lang(),
+    )
 
 
 # -------------------------

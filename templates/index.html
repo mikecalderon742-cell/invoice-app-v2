@@ -35,6 +35,7 @@
 {% set prefill_service_title = request.args.get('prefill_service_title', '') %}
 {% set prefill_service_price = request.args.get('prefill_service_price', '') %}
 {% set service_request_id = request.args.get('service_request_id', '') %}
+{% set saved_services = services if services is defined and services else [] %}
 
 <style>
   .create-shell {
@@ -1265,6 +1266,54 @@
               </div>
             </div>
 
+            {% if saved_services and saved_services|length > 0 %}
+            <div class="field-grid" style="margin-bottom:14px;">
+              <div class="field-group">
+                <label for="saved_service_select">
+                  {% if lang == 'es' %}
+                    Servicio guardado (opcional)
+                  {% elif lang == 'zh' %}
+                    已保存服务（可选）
+                  {% else %}
+                    Saved Service (optional)
+                  {% endif %}
+                </label>
+
+                <select id="saved_service_select" style="padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+                  <option value="">
+                    {% if lang == 'es' %}
+                      -- Seleccionar servicio guardado --
+                    {% elif lang == 'zh' %}
+                      -- 选择已保存服务 --
+                    {% else %}
+                      -- Select saved service --
+                    {% endif %}
+                  </option>
+                  {% for service in saved_services %}
+                    <option
+                      value="{{ service.id }}"
+                      data-service-name="{{ service.name|e }}"
+                      data-service-price="{{ service.price if service.price is not none else 0 }}"
+                      data-service-description="{{ (service.description or '')|e }}"
+                    >
+                      {{ service.name }} — ${{ "{:,.2f}".format(service.price or 0) }}
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <div class="field-help">
+                  {% if lang == 'es' %}
+                    Seleccionar un servicio guardado añadirá automáticamente una línea editable con su nombre y precio.
+                  {% elif lang == 'zh' %}
+                    选择已保存服务后，将自动添加一条可编辑的项目行并带入名称和价格。
+                  {% else %}
+                    Selecting a saved service will automatically add an editable line item with its name and price.
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
             <div class="line-items-toolbar">
               <div class="line-items-hint">
                 {% if lang == 'es' %}
@@ -1621,6 +1670,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const lineItemsBody = document.getElementById("lineItemsBody");
     const addLineItemBtn = document.getElementById("addLineItemBtn");
+    const savedServiceSelect = document.getElementById("saved_service_select");
 
     function createLineItemRow() {
         const tr = document.createElement("tr");
@@ -1681,6 +1731,39 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!lineItemsBody) return;
         const row = createLineItemRow();
         lineItemsBody.appendChild(row);
+        return row;
+    }
+
+    function addSavedServiceToLineItems(serviceName, servicePrice) {
+        if (!lineItemsBody) return;
+
+        const normalizedName = (serviceName || "").trim();
+        const normalizedPrice = Number(servicePrice || 0);
+
+        if (!normalizedName) return;
+
+        const existingRows = Array.from(lineItemsBody.querySelectorAll("tr"));
+        const emptyRow = existingRows.find((row) => {
+            const desc = row.querySelector('input[name="description"]');
+            const amt = row.querySelector('input[name="amount"]');
+            const descVal = desc ? desc.value.trim() : "";
+            const amtVal = amt ? amt.value.trim() : "";
+            return !descVal && !amtVal;
+        });
+
+        const targetRow = emptyRow || addLineItemRow();
+        if (!targetRow) return;
+
+        const descInput = targetRow.querySelector('input[name="description"]');
+        const amtInput = targetRow.querySelector('input[name="amount"]');
+
+        if (descInput) {
+            descInput.value = normalizedName;
+        }
+
+        if (amtInput) {
+            amtInput.value = normalizedPrice > 0 ? normalizedPrice.toFixed(2) : "";
+        }
     }
 
     function ensureInitialLineItems() {
@@ -1697,6 +1780,21 @@ document.addEventListener("DOMContentLoaded", function () {
     if (addLineItemBtn) {
         addLineItemBtn.addEventListener("click", function () {
             addLineItemRow();
+        });
+    }
+
+    if (savedServiceSelect) {
+        savedServiceSelect.addEventListener("change", function () {
+            const selectedOption = this.options[this.selectedIndex];
+            if (!selectedOption || !selectedOption.value) {
+                return;
+            }
+
+            const serviceName = selectedOption.getAttribute("data-service-name") || "";
+            const servicePrice = selectedOption.getAttribute("data-service-price") || "0";
+
+            addSavedServiceToLineItems(serviceName, servicePrice);
+            this.value = "";
         });
     }
 
