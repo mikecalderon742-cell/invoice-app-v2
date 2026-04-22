@@ -5076,6 +5076,11 @@ def save():
     template_style = request.form.get("template_style") or "modern"
     signature_data = request.form.get("signature_data") or None
 
+    uploaded_invoice_files = [
+        f for f in request.files.getlist("attachments")
+        if f and getattr(f, "filename", "").strip()
+    ]
+
     descriptions = request.form.getlist("description")
     amounts = request.form.getlist("amount")
 
