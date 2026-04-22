@@ -136,11 +136,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Render persistent disk mount path
 PERSISTENT_STORAGE_ROOT = os.environ.get("PERSISTENT_STORAGE_ROOT", "/var/data").rstrip("/")
 LOGO_UPLOAD_ROOT = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads", "logos")
+SERVICE_IMAGE_UPLOAD_ROOT = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads", "services")
 
 os.makedirs(LOGO_UPLOAD_ROOT, exist_ok=True)
+os.makedirs(SERVICE_IMAGE_UPLOAD_ROOT, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = LOGO_UPLOAD_ROOT
 app.config["MAX_LOGO_UPLOAD_BYTES"] = int(os.environ.get("MAX_LOGO_UPLOAD_BYTES", str(2 * 1024 * 1024)))
+app.config["MAX_SERVICE_IMAGE_UPLOAD_BYTES"] = int(
+    os.environ.get("MAX_SERVICE_IMAGE_UPLOAD_BYTES", str(4 * 1024 * 1024))
+)
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 ALLOWED_IMAGE_MIMETYPES = {"image/png", "image/jpeg", "image/webp"}
@@ -447,6 +452,11 @@ def build_logo_public_url(filename: str) -> str:
     return f"{base_url}/uploads/logos/{filename}"
 
 
+def build_service_image_public_url(filename: str) -> str:
+    base_url = (APP_BASE_URL or request.host_url.rstrip("/")).rstrip("/")
+    return f"{base_url}/uploads/services/{filename}"
+
+
 def save_uploaded_logo(file_storage, user_id: int):
     if not file_storage or not getattr(file_storage, "filename", ""):
         return None, "No logo file was selected."
@@ -482,6 +492,54 @@ def save_uploaded_logo(file_storage, user_id: int):
         return None, "Could not save the uploaded logo."
 
     public_url = build_logo_public_url(filename)
+    return public_url, None
+
+
+def save_uploaded_service_image(file_storage, user_id: int, service_id: int | None = None):
+    if not file_storage or not getattr(file_storage, "filename", ""):
+        return None, "No service image file was selected."
+
+    original_name = (file_storage.filename or "").strip()
+    if not allowed_logo_file(original_name):
+        return None, "Service image must be a PNG, JPG, JPEG, or WEBP image."
+
+    mimetype = (file_storage.mimetype or "").lower().strip()
+    if mimetype not in ALLOWED_IMAGE_MIMETYPES:
+        return None, "Unsupported service image file type."
+
+    safe_name = secure_filename(original_name)
+    ext = safe_name.rsplit(".", 1)[1].lower()
+
+    file_storage.stream.seek(0, os.SEEK_END)
+    file_size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+
+    if file_size <= 0:
+        return None, "Uploaded service image file is empty."
+
+    if file_size > app.config["MAX_SERVICE_IMAGE_UPLOAD_BYTES"]:
+        return None, "Service image file is too large. Please upload an image under 4 MB."
+
+    unique_suffix = secrets.token_hex(6)
+    if service_id:
+        filename = f"user_{user_id}_service_{service_id}_{unique_suffix}.{ext}"
+    else:
+        filename = f"user_{user_id}_service_{unique_suffix}.{ext}"
+
+    destination_path = os.path.join(SERVICE_IMAGE_UPLOAD_ROOT, filename)
+
+    try:
+        file_storage.save(destination_path)
+    except Exception as e:
+        logger.exception(
+            "Failed saving uploaded service image for user_id=%s service_id=%s: %s",
+            user_id,
+            service_id,
+            e,
+        )
+        return None, "Could not save the uploaded service image."
+
+    public_url = build_service_image_public_url(filename)
     return public_url, None
 
 
@@ -731,6 +789,7 @@ def init_db():
             name TEXT NOT NULL,
             description TEXT,
             price NUMERIC(10,2),
+            image_url TEXT,
             is_active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -956,6 +1015,7 @@ def init_db():
         ON invoices(last_reminder_sent_at DESC);
         """
     )
+    cursor.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT;")
     cursor.execute(
         """
         CREATE INDEX IF NOT EXISTS services_user_created_idx
@@ -2070,7 +2130,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
         if include_inactive:
             cur.execute(
                 """
-                SELECT id, user_id, name, description, price, is_active, created_at
+                SELECT id, user_id, name, description, price, image_url, is_active, created_at
                 FROM services
                 WHERE user_id = %s
                 ORDER BY created_at DESC, id DESC
@@ -2080,7 +2140,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
         else:
             cur.execute(
                 """
-                SELECT id, user_id, name, description, price, is_active, created_at
+                SELECT id, user_id, name, description, price, image_url, is_active, created_at
                 FROM services
                 WHERE user_id = %s AND is_active = TRUE
                 ORDER BY created_at DESC, id DESC
@@ -2094,7 +2154,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
         conn.close()
 
     services = []
-    for service_id, service_user_id, name, description, price, is_active, created_at in rows:
+    for service_id, service_user_id, name, description, price, image_url, is_active, created_at in rows:
         services.append(
             {
                 "id": service_id,
@@ -2102,6 +2162,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
                 "name": name or "",
                 "description": description or "",
                 "price": float(price or 0),
+                "image_url": image_url or "",
                 "is_active": bool(is_active),
                 "created_at": created_at,
             }
@@ -2115,7 +2176,7 @@ def get_service_by_id(service_id: int, user_id: int):
     try:
         cur.execute(
             """
-            SELECT id, user_id, name, description, price, is_active, created_at
+            SELECT id, user_id, name, description, price, image_url, is_active, created_at
             FROM services
             WHERE id = %s AND user_id = %s
             LIMIT 1
@@ -2136,22 +2197,29 @@ def get_service_by_id(service_id: int, user_id: int):
         "name": row[2] or "",
         "description": row[3] or "",
         "price": float(row[4] or 0),
-        "is_active": bool(row[5]),
-        "created_at": row[6],
+        "image_url": row[5] or "",
+        "is_active": bool(row[6]),
+        "created_at": row[7],
     }
 
 
-def create_user_service(user_id: int, name: str, description: str = "", price: float = 0.0):
+def create_user_service(
+    user_id: int,
+    name: str,
+    description: str = "",
+    price: float = 0.0,
+    image_url: str = "",
+):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute(
             """
-            INSERT INTO services (user_id, name, description, price, is_active, created_at)
-            VALUES (%s, %s, %s, %s, TRUE, %s)
+            INSERT INTO services (user_id, name, description, price, image_url, is_active, created_at)
+            VALUES (%s, %s, %s, %s, %s, TRUE, %s)
             RETURNING id
             """,
-            (user_id, name.strip(), description.strip(), price, now_local()),
+            (user_id, name.strip(), description.strip(), price, image_url.strip(), now_local()),
         )
         new_id = cur.fetchone()[0]
         conn.commit()
@@ -2164,20 +2232,41 @@ def create_user_service(user_id: int, name: str, description: str = "", price: f
         conn.close()
 
 
-def update_user_service(service_id: int, user_id: int, name: str, description: str = "", price: float = 0.0):
+def update_user_service(
+    service_id: int,
+    user_id: int,
+    name: str,
+    description: str = "",
+    price: float = 0.0,
+    image_url: str | None = None,
+):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        cur.execute(
-            """
-            UPDATE services
-            SET name = %s,
-                description = %s,
-                price = %s
-            WHERE id = %s AND user_id = %s
-            """,
-            (name.strip(), description.strip(), price, service_id, user_id),
-        )
+        if image_url is None:
+            cur.execute(
+                """
+                UPDATE services
+                SET name = %s,
+                    description = %s,
+                    price = %s
+                WHERE id = %s AND user_id = %s
+                """,
+                (name.strip(), description.strip(), price, service_id, user_id),
+            )
+        else:
+            cur.execute(
+                """
+                UPDATE services
+                SET name = %s,
+                    description = %s,
+                    price = %s,
+                    image_url = %s
+                WHERE id = %s AND user_id = %s
+                """,
+                (name.strip(), description.strip(), price, image_url.strip(), service_id, user_id),
+            )
+
         conn.commit()
         return cur.rowcount > 0
     except Exception:
@@ -4163,12 +4252,30 @@ def create_service_route():
             )
         )
 
+    uploaded_service_image = request.files.get("service_image")
+    uploaded_service_image_url = ""
+
+    if uploaded_service_image and (uploaded_service_image.filename or "").strip():
+        uploaded_service_image_url, image_error = save_uploaded_service_image(
+            uploaded_service_image,
+            user_id,
+            None,
+        )
+        if image_error:
+            return redirect(
+                lang_url_for(
+                    "services_page",
+                    service_error=image_error,
+                )
+            )
+
     try:
         create_user_service(
             user_id=user_id,
             name=validation["name"],
             description=validation["description"],
             price=validation["price"],
+            image_url=uploaded_service_image_url,
         )
     except Exception:
         logger.exception("Failed creating service for user_id=%s", user_id)
@@ -4218,6 +4325,24 @@ def update_service_route(service_id):
             )
         )
 
+    uploaded_service_image = request.files.get("service_image")
+    final_service_image_url = None
+
+    if uploaded_service_image and (uploaded_service_image.filename or "").strip():
+        final_service_image_url, image_error = save_uploaded_service_image(
+            uploaded_service_image,
+            user_id,
+            service_id,
+        )
+        if image_error:
+            return redirect(
+                lang_url_for(
+                    "services_page",
+                    edit=service_id,
+                    service_error=image_error,
+                )
+            )
+
     try:
         updated = update_user_service(
             service_id=service_id,
@@ -4225,6 +4350,7 @@ def update_service_route(service_id):
             name=validation["name"],
             description=validation["description"],
             price=validation["price"],
+            image_url=final_service_image_url,
         )
         if not updated:
             return redirect(
@@ -4958,6 +5084,14 @@ def uploaded_logo(filename):
     if not safe_filename:
         return "", 404
     return send_from_directory(LOGO_UPLOAD_ROOT, safe_filename)
+
+
+@app.route("/uploads/services/<path:filename>")
+def uploaded_service_image(filename):
+    safe_filename = os.path.basename(filename or "")
+    if not safe_filename:
+        return "", 404
+    return send_from_directory(SERVICE_IMAGE_UPLOAD_ROOT, safe_filename)
 
 
 # -------------------------

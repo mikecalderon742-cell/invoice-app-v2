@@ -363,41 +363,53 @@
                 linear-gradient(180deg, rgba(255,255,255,.97), rgba(250,248,255,.96));
         }
 
-        .service-card-media {
-            position: relative;
-            height: 132px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255,255,255,.78);
-            font-size: .86rem;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            overflow: hidden;
-        }
+.service-card-media {
+    position: relative;
+    height: 132px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,.78);
+    font-size: .86rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    overflow: hidden;
+    background-color: #0f172a;
+}
 
-        .service-card-media::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(135deg, rgba(255,255,255,.16), transparent 36%),
-                linear-gradient(180deg, rgba(255,255,255,.06), transparent 44%);
-            pointer-events: none;
-        }
+.service-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
 
-        .service-card-media::after {
-            content: "";
-            position: absolute;
-            right: -26px;
-            bottom: -30px;
-            width: 116px;
-            height: 116px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.10);
-            pointer-events: none;
-        }
+.service-card-media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.16), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 44%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.service-card-media::after {
+    content: "";
+    position: absolute;
+    right: -26px;
+    bottom: -30px;
+    width: 116px;
+    height: 116px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.10);
+    pointer-events: none;
+    z-index: 2;
+}
 
         .service-card.theme-ocean .service-card-media {
             background:
@@ -837,10 +849,10 @@
 
             <div class="services-form-wrap">
                 {% if edit_service %}
-                    <form method="POST" action="{{ url_for('update_service_route', service_id=edit_service.id, lang=current_lang) }}">
-                {% else %}
-                    <form method="POST" action="{{ url_for('create_service_route', lang=current_lang) }}">
-                {% endif %}
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('update_service_route', service_id=edit_service.id, lang=current_lang) }}">
+{% else %}
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_service_route', lang=current_lang) }}">
+{% endif %}
                     <input type="hidden" name="lang" value="{{ current_lang }}">
 
                     <div class="services-form-grid">
@@ -894,6 +906,46 @@
                         </div>
                     </div>
 
+                   <div class="services-field">
+    <label class="services-label" for="service_image">
+        {% if current_lang == 'es' %}
+            Foto del servicio
+        {% elif current_lang == 'zh' %}
+            服务图片
+        {% else %}
+            Service Photo
+        {% endif %}
+    </label>
+
+    <input
+        class="services-input"
+        id="service_image"
+        name="service_image"
+        type="file"
+        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+    >
+
+    <div class="services-mini-note" style="margin-top: 2px;">
+        {% if current_lang == 'es' %}
+            Sube una imagen limpia para que este servicio se vea más profesional en tu catálogo y en la vista pública.
+        {% elif current_lang == 'zh' %}
+            上传一张清晰的图片，让该服务在您的目录和公开页面中看起来更专业。
+        {% else %}
+            Upload a clean image so this service looks more professional in your catalog and on the public page.
+        {% endif %}
+    </div>
+
+    {% if edit_service and edit_service.image_url %}
+        <div style="margin-top: 12px;">
+            <img
+                src="{{ edit_service.image_url }}"
+                alt="{{ edit_service.name }}"
+                style="width: 100%; max-width: 280px; height: 180px; object-fit: cover; border-radius: 18px; border: 1px solid rgba(148,163,184,.20); box-shadow: 0 10px 24px rgba(15,23,42,.10);"
+            >
+        </div>
+    {% endif %}
+</div>
+
                     <div class="services-form-actions">
                         {% if edit_service %}
                             <button type="submit" class="services-btn services-btn-primary">
@@ -930,14 +982,22 @@
                         {% set service_theme = loop.cycle('theme-ocean', 'theme-emerald', 'theme-violet') %}
                         <article class="service-card {{ service_theme }}">
                             <div class="service-card-media">
-                                {% if current_lang == 'es' %}
-                                    Presentación visual
-                                {% elif current_lang == 'zh' %}
-                                    视觉展示
-                                {% else %}
-                                    Visual presentation
-                                {% endif %}
-                            </div>
+    {% if service.image_url %}
+        <img
+            src="{{ service.image_url }}"
+            alt="{{ service.name }}"
+            style="width: 100%; height: 100%; object-fit: cover; display: block;"
+        >
+    {% else %}
+        {% if current_lang == 'es' %}
+            Sin foto
+        {% elif current_lang == 'zh' %}
+            暂无图片
+        {% else %}
+            No photo yet
+        {% endif %}
+    {% endif %}
+</div>
 
                             <div class="service-card-inner">
                                 <div class="service-card-top">

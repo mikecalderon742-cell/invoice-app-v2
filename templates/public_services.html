@@ -241,14 +241,24 @@
   .public-service-card-media {
     position: relative;
     height: 144px;
+    overflow: hidden;
     background:
       radial-gradient(circle at top right, rgba(58,139,255,0.24), transparent 34%),
       radial-gradient(circle at bottom left, rgba(252,220,42,0.18), transparent 28%),
       linear-gradient(135deg, color-mix(in srgb, var(--accent) 84%, #0f172a 16%), color-mix(in srgb, var(--accent-dark, #151B54) 82%, #0f172a 18%));
-    display: flex;
-    align-items: flex-end;
-    padding: 16px 18px;
-    color: rgba(255,255,255,0.92);
+  }
+
+  .public-service-card-media.has-photo {
+    background: #0f172a;
+  }
+
+  .public-service-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 1;
   }
 
   .public-service-card-media::before {
@@ -259,6 +269,7 @@
       linear-gradient(135deg, rgba(255,255,255,0.18), transparent 34%),
       linear-gradient(180deg, rgba(255,255,255,0.06), transparent 44%);
     pointer-events: none;
+    z-index: 2;
   }
 
   .public-service-card-media::after {
@@ -271,6 +282,17 @@
     border-radius: 999px;
     background: rgba(255,255,255,0.10);
     pointer-events: none;
+    z-index: 2;
+  }
+
+  .public-service-media-inner {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px 18px;
+    color: rgba(255,255,255,0.92);
   }
 
   .public-service-media-label {
@@ -481,6 +503,9 @@
 
     .public-service-card-media {
       height: 126px;
+    }
+
+    .public-service-media-inner {
       padding: 14px 16px;
     }
 
@@ -609,15 +634,34 @@
     <div class="public-services-grid">
       {% for service in public_services %}
         <article class="public-service-card">
-          <div class="public-service-card-media">
-            <div class="public-service-media-label">
-              {% if lang == 'es' %}
-                Servicio destacado
-              {% elif lang == 'zh' %}
-                精选服务
-              {% else %}
-                Featured Service
-              {% endif %}
+          <div class="public-service-card-media {% if service.image_url %}has-photo{% endif %}">
+            {% if service.image_url %}
+              <img
+                src="{{ service.image_url }}"
+                alt="{{ service.name }}"
+              >
+            {% endif %}
+
+            <div class="public-service-media-inner">
+              <div class="public-service-media-label">
+                {% if service.image_url %}
+                  {% if lang == 'es' %}
+                    Servicio destacado
+                  {% elif lang == 'zh' %}
+                    精选服务
+                  {% else %}
+                    Featured Service
+                  {% endif %}
+                {% else %}
+                  {% if lang == 'es' %}
+                    Sin foto
+                  {% elif lang == 'zh' %}
+                    暂无图片
+                  {% else %}
+                    No photo yet
+                  {% endif %}
+                {% endif %}
+              </div>
             </div>
           </div>
 
