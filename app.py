@@ -1476,7 +1476,7 @@ def client_dashboard():
 # BUSINESS DISCOVERY
 # =========================
 
-@app.route("/search")
+@app.route("/business-search")
 def business_search():
     query = (request.args.get("q") or "").strip()
     results = []
@@ -6788,8 +6788,8 @@ def invoice_detail(invoice_id):
     percent_paid = float(payment_summary.get("percent_paid") or 0)
     view_summary = get_invoice_view_summary(invoice_id)
 
-    invoice_public_summary = get_invoice_by_public_token(token)
-    owner_user_id = invoice_public_summary["user_id"] if invoice_public_summary else None
+    token = get_or_create_public_token(invoice_id)
+    owner_user_id = user_id
     owner_plan = get_user_plan_by_user_id(owner_user_id) if owner_user_id else "free"
 
     is_paid_in_full = payment_summary.get("is_paid_in_full", False)
@@ -6853,7 +6853,7 @@ def invoice_detail(invoice_id):
             status,
             payment_summary,
             view_summary,
-            None,
+            last_reminder_sent_at,
         ),
     )
 

@@ -1044,10 +1044,10 @@
         </div>
 
         <form id="invoiceForm"
-          <input type="hidden" name="service_request_id" value="{{ service_request_id }}">
-              method="POST"
-              action="/save{% if lang %}?lang={{ lang }}{% endif %}"
-              enctype="multipart/form-data">
+      method="POST"
+      action="/save{% if lang %}?lang={{ lang }}{% endif %}"
+      enctype="multipart/form-data">
+  <input type="hidden" name="service_request_id" value="{{ service_request_id }}">
 
           <div class="form-section">
             <div class="form-section-header">
