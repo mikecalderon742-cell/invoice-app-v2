@@ -1499,10 +1499,60 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const loadingForms = document.querySelectorAll("form[data-loading-submit='true']");
+    const allForms = document.querySelectorAll("form");
 
-    loadingForms.forEach((form) => {
-        form.addEventListener("submit", function (e) {
+    function getLoadingText(originalText, form, button) {
+        if (button && button.dataset.loadingText) {
+            return button.dataset.loadingText;
+        }
+
+        if (form && form.dataset.loadingText) {
+            return form.dataset.loadingText;
+        }
+
+        const text = (originalText || "").toLowerCase();
+
+        if (text.includes("send") || text.includes("enviar")) {
+            return "{{ 'Enviando...' if lang == 'es' else ('正在发送...' if lang == 'zh' else 'Sending...') }}";
+        }
+
+        if (text.includes("save") || text.includes("update") || text.includes("guardar") || text.includes("actualizar")) {
+            return "{{ 'Guardando...' if lang == 'es' else ('正在保存...' if lang == 'zh' else 'Saving...') }}";
+        }
+
+        if (text.includes("delete") || text.includes("remove") || text.includes("eliminar") || text.includes("borrar")) {
+            return "{{ 'Eliminando...' if lang == 'es' else ('正在删除...' if lang == 'zh' else 'Removing...') }}";
+        }
+
+        if (text.includes("pay") || text.includes("pagar")) {
+            return "{{ 'Abriendo pago...' if lang == 'es' else ('正在打开付款...' if lang == 'zh' else 'Opening payment...') }}";
+        }
+
+        if (text.includes("request") || text.includes("book") || text.includes("solicitar") || text.includes("reservar")) {
+            return "{{ 'Enviando solicitud...' if lang == 'es' else ('正在提交请求...' if lang == 'zh' else 'Submitting request...') }}";
+        }
+
+        if (text.includes("login") || text.includes("sign in") || text.includes("iniciar sesión")) {
+            return "{{ 'Iniciando sesión...' if lang == 'es' else ('正在登录...' if lang == 'zh' else 'Signing in...') }}";
+        }
+
+        if (text.includes("register") || text.includes("sign up") || text.includes("create account") || text.includes("crear cuenta")) {
+            return "{{ 'Creando cuenta...' if lang == 'es' else ('正在创建账户...' if lang == 'zh' else 'Creating account...') }}";
+        }
+
+        if (text.includes("upload") || text.includes("subir")) {
+            return "{{ 'Subiendo...' if lang == 'es' else ('正在上传...' if lang == 'zh' else 'Uploading...') }}";
+        }
+
+        return "{{ 'Procesando...' if lang == 'es' else ('处理中...' if lang == 'zh' else 'Working...') }}";
+    }
+
+    allForms.forEach((form) => {
+        if (form.id === "aiHelperForm") {
+            return;
+        }
+
+        form.addEventListener("submit", function () {
             if (form.dataset.loadingSubmitted === "true") {
                 return;
             }
@@ -1511,38 +1561,34 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            e.preventDefault();
-
             form.dataset.loadingSubmitted = "true";
 
             const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
 
             submitButtons.forEach((btn) => {
-                const loadingText =
-                    btn.dataset.loadingText ||
-                    form.dataset.loadingText ||
-                    "Saving...";
+                let originalText = "";
 
                 if (btn.tagName === "BUTTON") {
+                    originalText = btn.innerText.trim();
+
                     if (!btn.dataset.originalText) {
                         btn.dataset.originalText = btn.innerHTML;
                     }
-                    btn.innerHTML = loadingText;
+
+                    btn.innerHTML = getLoadingText(originalText, form, btn);
                 } else if (btn.tagName === "INPUT") {
+                    originalText = btn.value;
+
                     if (!btn.dataset.originalValue) {
                         btn.dataset.originalValue = btn.value;
                     }
-                    btn.value = loadingText;
+
+                    btn.value = getLoadingText(originalText, form, btn);
                 }
 
-                btn.disabled = true;
                 btn.classList.add("is-loading");
                 btn.setAttribute("aria-busy", "true");
             });
-
-            setTimeout(() => {
-                HTMLFormElement.prototype.submit.call(form);
-            }, 120);
         });
     });
 });
