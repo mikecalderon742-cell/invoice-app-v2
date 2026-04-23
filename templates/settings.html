@@ -765,6 +765,73 @@
     }
   }
 
+  .notification-prefs-card {
+    margin-top: 24px;
+  }
+
+  .notification-prefs-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .notification-pref-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 15px 16px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  body.dark .notification-pref-row {
+    background: rgba(15,23,42,0.44);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .notification-pref-copy {
+    display: grid;
+    gap: 4px;
+  }
+
+  .notification-pref-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #0f172a;
+  }
+
+  body.dark .notification-pref-title {
+    color: #f8fafc;
+  }
+
+  .notification-pref-sub {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #64748b;
+    max-width: 640px;
+  }
+
+  body.dark .notification-pref-sub {
+    color: #94a3b8;
+  }
+
+  .notification-pref-toggle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding-top: 2px;
+  }
+
+  .notification-pref-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #3A8BFF;
+    cursor: pointer;
+  }
+
   .security-card {
     margin-top: 24px;
   }
@@ -1625,6 +1692,214 @@
                     {% else %}
                         Important: you can keep using BillBeam without configuring online payments. When you want more features, you can upgrade plans without rebuilding your current workflow.
                     {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="settings-card notification-prefs-card" id="notification-preferences">
+            <h2>
+                {% if lang == 'es' %}
+                    Preferencias de notificaciones
+                {% elif lang == 'zh' %}
+                    通知偏好
+                {% else %}
+                    Notification Preferences
+                {% endif %}
+            </h2>
+
+            <div class="settings-card-sub">
+                {% if lang == 'es' %}
+                    Decide qué actividad quieres ver dentro de BillBeam. Esta sección controla las alertas dentro de la app. Las notificaciones push vendrán después en la fase nativa.
+                {% elif lang == 'zh' %}
+                    选择你希望在 BillBeam 中看到哪些活动提醒。此区域当前控制应用内通知。Push 通知会在后续原生阶段加入。
+                {% else %}
+                    Choose which activity you want to see inside BillBeam. This section currently controls in-app alerts. Push notifications will come later in the native phase.
+                {% endif %}
+            </div>
+
+            <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+                <input type="hidden" name="form_type" value="notification_preferences">
+
+                {% set prefs = notification_preferences or {} %}
+
+                <div class="notification-prefs-grid">
+                    <div class="notification-pref-row">
+                        <div class="notification-pref-copy">
+                            <div class="notification-pref-title">
+                                {% if lang == 'es' %}
+                                    Activar notificaciones
+                                {% elif lang == 'zh' %}
+                                    启用通知
+                                {% else %}
+                                    Enable notifications
+                                {% endif %}
+                            </div>
+                            <div class="notification-pref-sub">
+                                {% if lang == 'es' %}
+                                    Control maestro para toda la actividad de notificaciones dentro de la app.
+                                {% elif lang == 'zh' %}
+                                    应用内所有通知活动的总开关。
+                                {% else %}
+                                    Master control for all notification activity inside the app.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <label class="notification-pref-toggle">
+                            <input type="checkbox" name="notifications_enabled" value="1" {% if prefs.notifications_enabled %}checked{% endif %}>
+                        </label>
+                    </div>
+
+                    <div class="notification-pref-row">
+                        <div class="notification-pref-copy">
+                            <div class="notification-pref-title">
+                                {% if lang == 'es' %}
+                                    Notificaciones dentro de la app
+                                {% elif lang == 'zh' %}
+                                    应用内通知
+                                {% else %}
+                                    In-app notifications
+                                {% endif %}
+                            </div>
+                            <div class="notification-pref-sub">
+                                {% if lang == 'es' %}
+                                    Muestra actividad, alertas y actualizaciones en el centro de notificaciones de BillBeam.
+                                {% elif lang == 'zh' %}
+                                    在 BillBeam 的通知中心显示活动、提醒和更新。
+                                {% else %}
+                                    Show activity, alerts, and updates in BillBeam’s notification center.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <label class="notification-pref-toggle">
+                            <input type="checkbox" name="in_app_enabled" value="1" {% if prefs.in_app_enabled %}checked{% endif %}>
+                        </label>
+                    </div>
+
+                    <div class="notification-pref-row">
+                        <div class="notification-pref-copy">
+                            <div class="notification-pref-title">
+                                {% if lang == 'es' %}
+                                    Alertas de nuevas solicitudes
+                                {% elif lang == 'zh' %}
+                                    新请求提醒
+                                {% else %}
+                                    New request alerts
+                                {% endif %}
+                            </div>
+                            <div class="notification-pref-sub">
+                                {% if lang == 'es' %}
+                                    Recibe actividad cuando entren nuevas solicitudes o nuevos seguidores en tu negocio.
+                                {% elif lang == 'zh' %}
+                                    当有新服务请求或新的关注者时接收提醒。
+                                {% else %}
+                                    Get activity when new service requests or new followers come into your business.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <label class="notification-pref-toggle">
+                            <input type="checkbox" name="business_request_alerts" value="1" {% if prefs.business_request_alerts %}checked{% endif %}>
+                        </label>
+                    </div>
+
+                    <div class="notification-pref-row">
+                        <div class="notification-pref-copy">
+                            <div class="notification-pref-title">
+                                {% if lang == 'es' %}
+                                    Actualizaciones para clientes
+                                {% elif lang == 'zh' %}
+                                    客户更新提醒
+                                {% else %}
+                                    Client request updates
+                                {% endif %}
+                            </div>
+                            <div class="notification-pref-sub">
+                                {% if lang == 'es' %}
+                                    Controla si los clientes reciben actividad dentro de la app cuando sus solicitudes cambian de estado.
+                                {% elif lang == 'zh' %}
+                                    控制客户在请求状态变化时是否在应用内收到提醒。
+                                {% else %}
+                                    Control whether clients receive in-app activity when their request status changes.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <label class="notification-pref-toggle">
+                            <input type="checkbox" name="client_request_updates" value="1" {% if prefs.client_request_updates %}checked{% endif %}>
+                        </label>
+                    </div>
+
+                    <div class="notification-pref-row">
+                        <div class="notification-pref-copy">
+                            <div class="notification-pref-title">
+                                {% if lang == 'es' %}
+                                    Alertas de facturas
+                                {% elif lang == 'zh' %}
+                                    发票提醒
+                                {% else %}
+                                    Invoice alerts
+                                {% endif %}
+                            </div>
+                            <div class="notification-pref-sub">
+                                {% if lang == 'es' %}
+                                    Incluye actividad como vistas de facturas y otros eventos importantes relacionados con ellas.
+                                {% elif lang == 'zh' %}
+                                    包括发票被查看等重要发票活动。
+                                {% else %}
+                                    Includes activity such as invoice views and other important invoice-related events.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <label class="notification-pref-toggle">
+                            <input type="checkbox" name="invoice_alerts" value="1" {% if prefs.invoice_alerts %}checked{% endif %}>
+                        </label>
+                    </div>
+
+                    <div class="notification-pref-row">
+                        <div class="notification-pref-copy">
+                            <div class="notification-pref-title">
+                                {% if lang == 'es' %}
+                                    Alertas de pagos
+                                {% elif lang == 'zh' %}
+                                    收款提醒
+                                {% else %}
+                                    Payment alerts
+                                {% endif %}
+                            </div>
+                            <div class="notification-pref-sub">
+                                {% if lang == 'es' %}
+                                    Muestra actividad cuando una factura recibe un pago parcial o queda pagada por completo.
+                                {% elif lang == 'zh' %}
+                                    当发票收到部分付款或全额付款时显示提醒。
+                                {% else %}
+                                    Show activity when an invoice receives a partial payment or becomes fully paid.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <label class="notification-pref-toggle">
+                            <input type="checkbox" name="payment_alerts" value="1" {% if prefs.payment_alerts %}checked{% endif %}>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}
+                            Guardar preferencias
+                        {% elif lang == 'zh' %}
+                            保存偏好设置
+                        {% else %}
+                            Save Preferences
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+
+            <div class="settings-note">
+                {% if lang == 'es' %}
+                    Nota: las notificaciones push y los permisos del dispositivo todavía no se configuran aquí. Esa parte vendrá en la fase nativa de iPhone/Xcode para que quede bien hecha.
+                {% elif lang == 'zh' %}
+                    说明：Push 通知和设备权限目前还不会在这里配置。这部分会在后续 iPhone/Xcode 原生阶段完成，以确保实现正确。
+                {% else %}
+                    Note: push notifications and device permissions are not configured here yet. That will come in the native iPhone/Xcode phase so it can be done correctly.
                 {% endif %}
             </div>
         </div>

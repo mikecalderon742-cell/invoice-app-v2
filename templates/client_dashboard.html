@@ -1056,21 +1056,56 @@
             </div>
           </div>
 
-          <div class="customize-row">
-            <div class="customize-label">
-              {% if lang == 'es' %}Emoji del avatar{% elif lang == 'zh' %}头像表情{% else %}Avatar emoji{% endif %}
-            </div>
-            <div class="chip-row" id="clientAvatarEmojiChips">
-              <button type="button" class="chip-btn active" data-avatar-emoji="✨">✨</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="😎">😎</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="🚀">🚀</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="🎯">🎯</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="💼">💼</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="🌊">🌊</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="🔥">🔥</button>
-              <button type="button" class="chip-btn" data-avatar-emoji="🛠️">🛠️</button>
-            </div>
-          </div>
+<div class="customize-row">
+  <div class="customize-label">
+    {% if lang == 'es' %}Estilo de avatar{% elif lang == 'zh' %}头像风格{% else %}Avatar style{% endif %}
+  </div>
+
+  <div class="chip-row" id="clientAvatarEmojiChips">
+
+    <!-- Female / Feminine -->
+    <button type="button" class="chip-btn active" data-avatar-emoji="👩">👩</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="👩‍💼">👩‍💼</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="👩‍🎨">👩‍🎨</button>
+
+    <!-- Male / Masculine -->
+    <button type="button" class="chip-btn" data-avatar-emoji="👨">👨</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="👨‍💼">👨‍💼</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="👨‍🔧">👨‍🔧</button>
+
+    <!-- Neutral / Inclusive -->
+    <button type="button" class="chip-btn" data-avatar-emoji="🧑">🧑</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="🧑‍💻">🧑‍💻</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="🧑‍🎨">🧑‍🎨</button>
+
+    <!-- Business / Brand vibe -->
+    <button type="button" class="chip-btn" data-avatar-emoji="💼">💼</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="🏢">🏢</button>
+
+    <!-- Fun / expressive -->
+    <button type="button" class="chip-btn" data-avatar-emoji="😎">😎</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="🔥">🔥</button>
+    <button type="button" class="chip-btn" data-avatar-emoji="🚀">🚀</button>
+
+  </div>
+</div>
+
+<div class="customize-row">
+  <div class="customize-label">
+    {% if lang == 'es' %}Tono de piel{% elif lang == 'zh' %}肤色{% else %}Skin tone{% endif %}
+  </div>
+
+  <div class="chip-row" id="clientAvatarSkinToneChips">
+    <button type="button" class="chip-btn active" data-avatar-skin-tone="">
+      {% if lang == 'es' %}Predeterminado{% elif lang == 'zh' %}默认{% else %}Default{% endif %}
+    </button>
+    <button type="button" class="chip-btn" data-avatar-skin-tone="🏻">🏻</button>
+    <button type="button" class="chip-btn" data-avatar-skin-tone="🏼">🏼</button>
+    <button type="button" class="chip-btn" data-avatar-skin-tone="🏽">🏽</button>
+    <button type="button" class="chip-btn" data-avatar-skin-tone="🏾">🏾</button>
+    <button type="button" class="chip-btn" data-avatar-skin-tone="🏿">🏿</button>
+  </div>
+</div>
 
           <div class="customize-row">
             <div class="customize-label">
@@ -1283,6 +1318,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const avatarPreview = document.getElementById("clientAvatarPreview");
   const avatarEmoji = document.getElementById("clientAvatarEmoji");
   const avatarEmojiButtons = Array.from(document.querySelectorAll("#clientAvatarEmojiChips .chip-btn"));
+  const avatarSkinToneButtons = Array.from(document.querySelectorAll("#clientAvatarSkinToneChips .chip-btn"));
   const avatarToneButtons = Array.from(document.querySelectorAll("#clientAvatarToneChips .chip-btn"));
 
   const defaults = {
@@ -1290,7 +1326,8 @@ document.addEventListener("DOMContentLoaded", function () {
     vibe: "Modern",
     view: "Comfort",
     home: "discover",
-    avatarEmoji: "✨",
+    avatarEmoji: "👩",
+    avatarSkinTone: "",
     avatarTone: "blue"
   };
 
@@ -1313,6 +1350,33 @@ document.addEventListener("DOMContentLoaded", function () {
   function getAvatarEmojiValue() {
     const active = avatarEmojiButtons.find((btn) => btn.classList.contains("active"));
     return active ? active.dataset.avatarEmoji : defaults.avatarEmoji;
+  }
+
+  function getAvatarSkinToneValue() {
+    const active = avatarSkinToneButtons.find((btn) => btn.classList.contains("active"));
+    return active ? btnSafeSkinTone(active) : defaults.avatarSkinTone;
+  }
+
+  function btnSafeSkinTone(btn) {
+    return btn && btn.dataset ? (btn.dataset.avatarSkinTone || "") : "";
+  }
+
+  function applySkinToneToEmoji(baseEmoji, skinTone) {
+    if (!baseEmoji || !skinTone) return baseEmoji;
+
+    const supportedMap = {
+      "👩": `👩${skinTone}`,
+      "👩‍💼": `👩${skinTone}‍💼`,
+      "👩‍🎨": `👩${skinTone}‍🎨`,
+      "👨": `👨${skinTone}`,
+      "👨‍💼": `👨${skinTone}‍💼`,
+      "👨‍🔧": `👨${skinTone}‍🔧`,
+      "🧑": `🧑${skinTone}`,
+      "🧑‍💻": `🧑${skinTone}‍💻`,
+      "🧑‍🎨": `🧑${skinTone}‍🎨`
+    };
+
+    return supportedMap[baseEmoji] || baseEmoji;
   }
 
   function getAvatarBackground(tone) {
@@ -1378,7 +1442,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const view = getSelectedValue(viewButtons, defaults.view);
     const name = (displayNameInput && displayNameInput.value.trim()) || defaults.displayName;
     const home = homeSelect ? homeSelect.value : defaults.home;
-    const selectedAvatarEmoji = getAvatarEmojiValue();
+    const baseAvatarEmoji = getAvatarEmojiValue();
+    const selectedAvatarSkinTone = getAvatarSkinToneValue();
+    const selectedAvatarEmoji = applySkinToneToEmoji(baseAvatarEmoji, selectedAvatarSkinTone);
     const selectedAvatarTone = getAvatarToneValue();
 
     if (previewName) previewName.textContent = name;
@@ -1407,6 +1473,7 @@ document.addEventListener("DOMContentLoaded", function () {
       view: getSelectedValue(viewButtons, defaults.view),
       home: homeSelect ? homeSelect.value : defaults.home,
       avatarEmoji: getAvatarEmojiValue(),
+      avatarSkinTone: getAvatarSkinToneValue(),
       avatarTone: getAvatarToneValue()
     };
 
@@ -1430,6 +1497,7 @@ document.addEventListener("DOMContentLoaded", function () {
       setActive(vibeButtons, prefs.vibe || defaults.vibe, "vibe");
       setActive(viewButtons, prefs.view || defaults.view, "view");
       setActive(avatarEmojiButtons, prefs.avatarEmoji || defaults.avatarEmoji, "avatarEmoji");
+      setActive(avatarSkinToneButtons, (prefs.avatarSkinTone !== undefined ? prefs.avatarSkinTone : defaults.avatarSkinTone), "avatarSkinTone");
       setActive(avatarToneButtons, prefs.avatarTone || defaults.avatarTone, "avatarTone");
 
       updatePreview();
@@ -1455,6 +1523,20 @@ document.addEventListener("DOMContentLoaded", function () {
   avatarEmojiButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
       setActive(avatarEmojiButtons, btn.dataset.avatarEmoji, "avatarEmoji");
+      updatePreview();
+    });
+  });
+
+  avatarSkinToneButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(avatarSkinToneButtons, btnSafeSkinTone(btn), "avatarSkinTone");
+      updatePreview();
+    });
+  });
+
+  avatarToneButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      setActive(avatarToneButtons, btn.dataset.avatarTone, "avatarTone");
       updatePreview();
     });
   });
@@ -1488,6 +1570,7 @@ document.addEventListener("DOMContentLoaded", function () {
       setActive(vibeButtons, defaults.vibe, "vibe");
       setActive(viewButtons, defaults.view, "view");
       setActive(avatarEmojiButtons, defaults.avatarEmoji, "avatarEmoji");
+      setActive(avatarSkinToneButtons, defaults.avatarSkinTone, "avatarSkinTone");
       setActive(avatarToneButtons, defaults.avatarTone, "avatarTone");
 
       updatePreview();

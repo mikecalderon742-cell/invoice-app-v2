@@ -997,6 +997,32 @@ def init_db():
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS notification_preferences (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL UNIQUE,
+            notifications_enabled BOOLEAN DEFAULT TRUE,
+            in_app_enabled BOOLEAN DEFAULT TRUE,
+            push_enabled BOOLEAN DEFAULT FALSE,
+            email_enabled BOOLEAN DEFAULT TRUE,
+            business_request_alerts BOOLEAN DEFAULT TRUE,
+            client_request_updates BOOLEAN DEFAULT TRUE,
+            invoice_alerts BOOLEAN DEFAULT TRUE,
+            payment_alerts BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS notification_preferences_user_idx
+        ON notification_preferences(user_id);
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS business_followers (
             id SERIAL PRIMARY KEY,
             client_user_id INTEGER NOT NULL,
@@ -1707,22 +1733,41 @@ def business_profile(user_id):
 def follow_business(user_id):
     client = get_current_user()
     client_id = client["id"]
+    client_email = (client.get("email") or "").strip()
 
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        """
-        INSERT INTO business_followers (client_user_id, business_user_id)
-        VALUES (%s, %s)
-        ON CONFLICT DO NOTHING
-        """,
-        (client_id, user_id),
-    )
+    try:
+        cur.execute(
+            """
+            INSERT INTO business_followers (client_user_id, business_user_id)
+            VALUES (%s, %s)
+            ON CONFLICT DO NOTHING
+            """,
+            (client_id, user_id),
+        )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        followed_now = cur.rowcount > 0
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+    if followed_now:
+        follower_label = client_email or f"Client #{client_id}"
+        create_notification_if_enabled(
+            user_id=user_id,
+            category="business_request_alerts",
+            notification_type="business_followed",
+            title="New follower",
+            body=f"{follower_label} followed your business.",
+            link_url=f"/business/{user_id}",
+        )
 
     return redirect(url_for("business_profile", user_id=user_id))
 
@@ -2101,7 +2146,7 @@ def record_public_invoice_view(invoice_id: int, token: str):
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT invoice_number, COALESCE(view_count, 0)
+        SELECT user_id, invoice_number, COALESCE(view_count, 0)
         FROM invoices
         WHERE id = %s
         """,
@@ -2113,7 +2158,7 @@ def record_public_invoice_view(invoice_id: int, token: str):
         conn.close()
         return False
 
-    invoice_number, current_count = row
+    owner_user_id, invoice_number, current_count = row
     invoice_number = invoice_number or f"#{invoice_id}"
     now_dt = now_local()
 
@@ -2132,6 +2177,16 @@ def record_public_invoice_view(invoice_id: int, token: str):
     conn.close()
 
     view_summary = get_invoice_view_summary(invoice_id)
+
+    create_notification_if_enabled(
+        user_id=owner_user_id,
+        category="invoice_alerts",
+        notification_type="invoice_viewed",
+        title=f"Invoice {invoice_number} was viewed",
+        body=f"Public invoice link opened. Total views: {view_summary['view_count']}.",
+        link_url=f"/invoices/{invoice_id}",
+    )
+
     log_invoice_event(
         invoice_id=invoice_id,
         event_type="invoice_viewed",
@@ -3415,6 +3470,231 @@ def mark_notification_read(notification_id, user_id):
         conn.close()
 
 
+def mark_all_notifications_read(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE user_id = %s AND is_read = FALSE
+            """,
+            (user_id,),
+        )
+        conn.commit()
+        return int(cur.rowcount or 0)
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed marking all notifications read for user %s: %s", user_id, e)
+        return 0
+    finally:
+        cur.close()
+        conn.close()
+
+
+def ensure_notification_preferences(user_id: int):
+    if not user_id:
+        return None
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO notification_preferences (
+                user_id,
+                notifications_enabled,
+                in_app_enabled,
+                push_enabled,
+                email_enabled,
+                business_request_alerts,
+                client_request_updates,
+                invoice_alerts,
+                payment_alerts,
+                created_at,
+                updated_at
+            )
+            VALUES (%s, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, %s, %s)
+            ON CONFLICT (user_id) DO NOTHING
+            """,
+            (user_id, now_local(), now_local()),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed ensuring notification preferences for user %s: %s", user_id, e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+    return get_notification_preferences(user_id)
+
+
+def get_notification_preferences(user_id: int):
+    if not user_id:
+        return {
+            "user_id": None,
+            "notifications_enabled": True,
+            "in_app_enabled": True,
+            "push_enabled": False,
+            "email_enabled": True,
+            "business_request_alerts": True,
+            "client_request_updates": True,
+            "invoice_alerts": True,
+            "payment_alerts": True,
+        }
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT
+                user_id,
+                notifications_enabled,
+                in_app_enabled,
+                push_enabled,
+                email_enabled,
+                business_request_alerts,
+                client_request_updates,
+                invoice_alerts,
+                payment_alerts
+            FROM notification_preferences
+            WHERE user_id = %s
+            LIMIT 1
+            """,
+            (user_id,),
+        )
+        row = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+    if not row:
+        return ensure_notification_preferences(user_id)
+
+    return {
+        "user_id": row[0],
+        "notifications_enabled": bool(row[1]),
+        "in_app_enabled": bool(row[2]),
+        "push_enabled": bool(row[3]),
+        "email_enabled": bool(row[4]),
+        "business_request_alerts": bool(row[5]),
+        "client_request_updates": bool(row[6]),
+        "invoice_alerts": bool(row[7]),
+        "payment_alerts": bool(row[8]),
+    }
+
+
+def notification_category_enabled(user_id: int, category: str) -> bool:
+    prefs = get_notification_preferences(user_id)
+    if not prefs:
+        return True
+
+    if not prefs.get("notifications_enabled", True):
+        return False
+
+    if not prefs.get("in_app_enabled", True):
+        return False
+
+    category_map = {
+        "business_request_alerts": "business_request_alerts",
+        "client_request_updates": "client_request_updates",
+        "invoice_alerts": "invoice_alerts",
+        "payment_alerts": "payment_alerts",
+    }
+
+    pref_key = category_map.get((category or "").strip())
+    if not pref_key:
+        return True
+
+    return bool(prefs.get(pref_key, True))
+
+
+def create_notification_if_enabled(
+    user_id,
+    category,
+    notification_type,
+    title,
+    body="",
+    link_url="",
+):
+    if not user_id:
+        return None
+
+    if not notification_category_enabled(user_id, category):
+        return None
+
+    return create_notification(
+        user_id=user_id,
+        notification_type=notification_type,
+        title=title,
+        body=body,
+        link_url=link_url,
+    )
+
+
+def update_notification_preferences(user_id: int, updates: dict):
+    if not user_id:
+        return None
+
+    ensure_notification_preferences(user_id)
+
+    allowed_keys = {
+        "notifications_enabled",
+        "in_app_enabled",
+        "push_enabled",
+        "email_enabled",
+        "business_request_alerts",
+        "client_request_updates",
+        "invoice_alerts",
+        "payment_alerts",
+    }
+
+    clean_updates = {}
+    for key, value in (updates or {}).items():
+        if key in allowed_keys:
+            clean_updates[key] = bool(value)
+
+    if not clean_updates:
+        return get_notification_preferences(user_id)
+
+    set_clauses = []
+    values = []
+
+    for key, value in clean_updates.items():
+        set_clauses.append(f"{key} = %s")
+        values.append(value)
+
+    set_clauses.append("updated_at = %s")
+    values.append(now_local())
+    values.append(user_id)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            f"""
+            UPDATE notification_preferences
+            SET {", ".join(set_clauses)}
+            WHERE user_id = %s
+            """,
+            tuple(values),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed updating notification preferences for user %s: %s", user_id, e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+    return get_notification_preferences(user_id)
+
+
 def create_service_request(
     user_id,
     service_id,
@@ -3529,8 +3809,9 @@ def create_service_request(
             note="Service request submitted",
         )
 
-        create_notification(
+        create_notification_if_enabled(
             user_id=user_id,
+            category="business_request_alerts",
             notification_type="service_request_created",
             title=f"New service request from {client_name}",
             body=(service_title or "Custom request"),
@@ -3695,6 +3976,42 @@ def update_service_request_status(request_id, user_id, new_status):
             old_value=old_status,
             new_value=new_status,
         )
+
+        client_user_id = None
+        if client_email:
+            cur.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE LOWER(email) = LOWER(%s)
+                LIMIT 1
+                """,
+                (client_email,),
+            )
+            client_user_row = cur.fetchone()
+            if client_user_row:
+                client_user_id = client_user_row[0]
+
+        status_label_map = {
+            "requested": "Requested",
+            "approved": "Approved",
+            "in_progress": "In Progress",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+        }
+        status_label = status_label_map.get(new_status, new_status.replace("_", " ").title())
+        service_label = (service_title or "Your request").strip() if service_title else "Your request"
+
+        if client_user_id:
+            create_notification_if_enabled(
+                user_id=client_user_id,
+                category="client_request_updates",
+                notification_type="service_request_status_updated",
+                title=f"Request #{request_id} updated",
+                body=f"{service_label} is now {status_label}.",
+                link_url=f"/client/dashboard",
+            )
+
 
         if old_status != new_status and client_email:
             email_success, email_error = send_client_service_request_status_email(
@@ -4358,6 +4675,16 @@ def mark_notification_read_page(notification_id):
             return redirect(f"{link_url}&lang={get_request_lang()}")
         return redirect(f"{link_url}?lang={get_request_lang()}")
 
+    return lang_redirect("notifications_page")
+
+
+@app.route("/notifications/read-all", methods=["POST"])
+@login_required
+def mark_all_notifications_read_page():
+    user = get_current_user()
+    user_id = user["id"]
+
+    mark_all_notifications_read(user_id)
     return lang_redirect("notifications_page")
 
 
@@ -5903,6 +6230,7 @@ def settings():
     feedback_message = None
     feedback_type = None
     editing_service = None
+    notification_preferences = get_notification_preferences(user_id)
 
     if request.method == "POST":
         form_type = (request.form.get("form_type") or "profile").strip().lower()
@@ -5952,6 +6280,39 @@ def settings():
 
                     feedback_message = "Password updated successfully."
                     feedback_type = "success"
+
+        elif form_type == "notification_preferences":
+            def _checked(name: str) -> bool:
+                return (request.form.get(name) or "").strip().lower() in ("1", "true", "yes", "on")
+
+            notifications_enabled = _checked("notifications_enabled")
+            in_app_enabled = _checked("in_app_enabled")
+            business_request_alerts = _checked("business_request_alerts")
+            client_request_updates = _checked("client_request_updates")
+            invoice_alerts = _checked("invoice_alerts")
+            payment_alerts = _checked("payment_alerts")
+
+            # Push + email stay stored for future expansion,
+            # but we are not surfacing them in this UI yet.
+            updated_prefs = update_notification_preferences(
+                user_id,
+                {
+                    "notifications_enabled": notifications_enabled,
+                    "in_app_enabled": in_app_enabled,
+                    "business_request_alerts": business_request_alerts,
+                    "client_request_updates": client_request_updates,
+                    "invoice_alerts": invoice_alerts,
+                    "payment_alerts": payment_alerts,
+                },
+            )
+
+            if updated_prefs:
+                notification_preferences = updated_prefs
+                feedback_message = "Notification preferences updated successfully."
+                feedback_type = "success"
+            else:
+                feedback_message = "Notification preferences could not be updated."
+                feedback_type = "error"
 
         elif form_type == "service_add":
             service_name = (request.form.get("service_name") or "").strip()
@@ -6060,6 +6421,10 @@ def settings():
                         profile=profile,
                         feedback_message=feedback_message,
                         feedback_type=feedback_type,
+                        notification_preferences=notification_preferences,
+                        current_plan=resolve_plan_key(user),
+                        payment_setup=get_user_payment_setup(user_id),
+                        lang=lang,
                         payment_setup=sync_stripe_connect_status_for_user(user_id),
                         current_plan=normalize_plan_key(user.get("plan") or "free"),
                         lang=lang,
@@ -6118,6 +6483,7 @@ def settings():
         lang=lang,
         services=services,
         editing_service=editing_service,
+        notification_preferences=notification_preferences,
     )
 
 
@@ -6319,6 +6685,15 @@ def add_payment(invoice_id):
             )
 
             if balance > 0.0001:
+                create_notification_if_enabled(
+                    user_id=user_id,
+                    category="payment_alerts",
+                    notification_type="partial_payment_received",
+                    title=f"Partial payment received for {inv_label}",
+                    body=f"Total paid is now {format_currency(total_paid)}. Remaining balance: {format_currency(balance)}.",
+                    link_url=f"/invoices/{invoice_id_db}",
+                )
+
                 log_invoice_event(
                     invoice_id=invoice_id_db,
                     event_type="partial_payment_received",
@@ -6327,6 +6702,15 @@ def add_payment(invoice_id):
                     visibility="both",
                 )
             else:
+                create_notification_if_enabled(
+                    user_id=user_id,
+                    category="payment_alerts",
+                    notification_type="final_payment_received",
+                    title=f"Invoice {inv_label} paid in full",
+                    body=f"A payment of {format_currency(pay_amount)} completed this invoice.",
+                    link_url=f"/invoices/{invoice_id_db}",
+                )
+
                 log_invoice_event(
                     invoice_id=invoice_id_db,
                     event_type="final_payment_received",
@@ -8296,12 +8680,13 @@ def _record_invoice_payment_from_checkout_session(session_obj):
                 (payment_intent_id, invoice_id),
             )
 
-        cur.execute("SELECT amount, invoice_number FROM invoices WHERE id = %s", (invoice_id,))
+        cur.execute("SELECT user_id, amount, invoice_number FROM invoices WHERE id = %s", (invoice_id,))
         inv = cur.fetchone()
 
         if inv:
-            inv_total = float(inv[0] or 0)
-            invoice_number = inv[1] or f"#{invoice_id}"
+            owner_user_id = inv[0]
+            inv_total = float(inv[1] or 0)
+            invoice_number = inv[2] or f"#{invoice_id}"
 
             cur.execute(
                 "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE invoice_id = %s",
@@ -8333,6 +8718,15 @@ def _record_invoice_payment_from_checkout_session(session_obj):
             )
 
             if balance > 0.0001:
+                create_notification_if_enabled(
+                    user_id=owner_user_id,
+                    category="payment_alerts",
+                    notification_type="partial_payment_received",
+                    title=f"Partial payment received for {invoice_number}",
+                    body=f"Total paid is now {format_currency(total_paid_now)}. Remaining balance: {format_currency(balance)}.",
+                    link_url=f"/invoices/{invoice_id}",
+                )
+
                 log_invoice_event(
                     invoice_id=invoice_id,
                     event_type="partial_payment_received",
@@ -8341,6 +8735,15 @@ def _record_invoice_payment_from_checkout_session(session_obj):
                     visibility="both",
                 )
             else:
+                create_notification_if_enabled(
+                    user_id=owner_user_id,
+                    category="payment_alerts",
+                    notification_type="final_payment_received",
+                    title=f"Invoice {invoice_number} paid in full",
+                    body="Stripe payment received and this invoice is now fully paid.",
+                    link_url=f"/invoices/{invoice_id}",
+                )
+
                 log_invoice_event(
                     invoice_id=invoice_id,
                     event_type="final_payment_received",

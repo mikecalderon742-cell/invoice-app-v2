@@ -190,8 +190,51 @@
 
   .notifications-list-body {
     display: grid;
-    gap: 12px;
+    gap: 18px;
     padding: 0 22px 22px;
+  }
+
+  .notifications-group {
+    display: grid;
+    gap: 12px;
+  }
+
+  .notifications-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+  }
+
+  .notifications-group-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .notifications-group-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.05);
+    border: 1px solid rgba(148,163,184,0.16);
+    font-size: 12px;
+    font-weight: 800;
+    color: #475569;
+  }
+
+  .notifications-group-list {
+    display: grid;
+    gap: 12px;
   }
 
   .notification-item {
@@ -258,6 +301,90 @@
     flex-wrap: wrap;
   }
 
+  .notification-type-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1;
+    border: 1px solid rgba(148,163,184,0.16);
+    background: rgba(15,23,42,0.04);
+    color: #475569;
+  }
+
+  .notification-type-chip.request {
+    background: rgba(59,130,246,0.10);
+    color: #1d4ed8;
+    border-color: rgba(59,130,246,0.18);
+  }
+
+  .notification-type-chip.invoice {
+    background: rgba(14,165,233,0.10);
+    color: #0369a1;
+    border-color: rgba(14,165,233,0.18);
+  }
+
+  .notification-type-chip.payment {
+    background: rgba(34,197,94,0.10);
+    color: #166534;
+    border-color: rgba(34,197,94,0.18);
+  }
+
+  .notification-type-chip.follow {
+    background: rgba(168,85,247,0.10);
+    color: #7e22ce;
+    border-color: rgba(168,85,247,0.18);
+  }
+
+  .notification-type-chip.general {
+    background: rgba(148,163,184,0.14);
+    color: #475569;
+    border-color: rgba(148,163,184,0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .notification-type-chip {
+      background: rgba(15,23,42,0.56);
+      color: #cbd5e1;
+      border-color: rgba(148,163,184,0.18);
+    }
+
+    .notification-type-chip.request {
+      background: rgba(30,64,175,0.34);
+      color: #dbeafe;
+      border-color: rgba(96,165,250,0.24);
+    }
+
+    .notification-type-chip.invoice {
+      background: rgba(8,47,73,0.55);
+      color: #bae6fd;
+      border-color: rgba(56,189,248,0.24);
+    }
+
+    .notification-type-chip.payment {
+      background: rgba(20,83,45,0.55);
+      color: #dcfce7;
+      border-color: rgba(74,222,128,0.24);
+    }
+
+    .notification-type-chip.follow {
+      background: rgba(88,28,135,0.48);
+      color: #f3e8ff;
+      border-color: rgba(192,132,252,0.24);
+    }
+
+    .notification-type-chip.general {
+      background: rgba(51,65,85,0.58);
+      color: #e2e8f0;
+      border-color: rgba(148,163,184,0.18);
+    }
+  }
+
   .notification-title {
     font-size: 15px;
     font-weight: 800;
@@ -318,6 +445,59 @@
     margin-right: auto;
   }
 
+  .notifications-empty-grid {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px;
+    text-align: left;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .notifications-empty-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  .notifications-empty-item-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3A8BFF, #2563eb);
+    box-shadow: 0 8px 18px rgba(37,99,235,0.18);
+  }
+
+  .notifications-empty-item-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .notifications-empty-item-title {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: #0f172a;
+  }
+
+  .notifications-empty-item-sub {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #64748b;
+  }
+
   @media (prefers-color-scheme: dark) {
     .notifications-stat.total {
       background:
@@ -341,19 +521,22 @@
     .notifications-stat-label,
     .notifications-list-sub,
     .notification-time,
-    .notifications-empty p {
+    .notifications-empty p,
+    .notifications-group-title {
       color: #94a3b8;
     }
 
     .notifications-stat-value,
     .notifications-list-title,
     .notification-title,
-    .notifications-empty h3 {
+    .notifications-empty h3,
+    .notifications-empty-item-title {
       color: #f8fafc;
     }
 
     .notifications-stat-copy,
-    .notification-body {
+    .notification-body,
+    .notifications-empty-item-sub {
       color: #cbd5e1;
     }
 
@@ -369,6 +552,12 @@
       background: rgba(15,23,42,0.58);
       border-color: rgba(148,163,184,0.16);
       color: #cbd5e1;
+    }
+
+    .notifications-group-count {
+      background: rgba(15,23,42,0.58);
+      border-color: rgba(148,163,184,0.16);
+      color: #e2e8f0;
     }
 
     .notification-item.unread {
@@ -393,6 +582,11 @@
         radial-gradient(circle at top right, rgba(58,139,255,0.10), transparent 38%),
         linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
       border-color: rgba(148,163,184,0.20);
+    }
+
+    .notifications-empty-item {
+      background: rgba(15,23,42,0.52);
+      border-color: rgba(148,163,184,0.16);
     }
   }
 
@@ -468,6 +662,20 @@
             </div>
 
             <div class="notifications-hero-actions">
+                {% if unread_notifications and unread_notifications|length > 0 %}
+                <form method="POST" action="{{ url_for('mark_all_notifications_read_page', lang=lang) }}" style="margin:0;">
+                    <button type="submit" class="btn btn-secondary">
+                        {% if lang == 'es' %}
+                            Marcar todo como leído
+                        {% elif lang == 'zh' %}
+                            全部标记为已读
+                        {% else %}
+                            Mark All Read
+                        {% endif %}
+                    </button>
+                </form>
+                {% endif %}
+
                 <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
                     {% if lang == 'es' %}
                         Volver al panel
@@ -588,72 +796,325 @@
         </div>
 
         <div class="notifications-list-body">
-            {% for n in notifications %}
-            <a href="{{ url_for('mark_notification_read_page', notification_id=n.id, lang=lang) }}"
-               class="notification-item {% if not n.is_read %}unread{% else %}read{% endif %}">
-                <div class="notification-icon">
-                    {% if not n.is_read %}
-                        ✦
-                    {% else %}
-                        ✓
-                    {% endif %}
-                </div>
 
-                <div class="notification-main">
-                    <div class="notification-topline">
-                        <div class="notification-title">{{ n.title }}</div>
-
-                        {% if not n.is_read %}
-                        <span class="signal-pill viewed">
-                            {% if lang == 'es' %}
-                                Nueva
-                            {% elif lang == 'zh' %}
-                                新通知
-                            {% else %}
-                                New
-                            {% endif %}
-                        </span>
+            {% if unread_notifications and unread_notifications|length > 0 %}
+            <div class="notifications-group">
+                <div class="notifications-group-header">
+                    <h3 class="notifications-group-title">
+                        {% if lang == 'es' %}
+                            Nuevas
+                        {% elif lang == 'zh' %}
+                            新通知
+                        {% else %}
+                            Unread
                         {% endif %}
-                    </div>
-
-                    {% if n.body %}
-                    <div class="notification-body">
-                        {{ n.body }}
-                    </div>
-                    {% endif %}
+                    </h3>
+                    <span class="notifications-group-count">{{ unread_notifications|length }}</span>
                 </div>
 
-                <div class="notification-time">
-                    {% if n.created_at %}
-                        {{ n.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                <div class="notifications-group-list">
+                    {% for n in unread_notifications %}
+                    {% set notification_type = n.notification_type or 'general' %}
+
+                    {% if notification_type in ['service_request_created', 'service_request_status_updated'] %}
+                        {% set notification_icon = '🛠️' %}
+                        {% set notification_group = 'request' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Solicitud' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '请求' %}
+                        {% else %}
+                            {% set notification_label = 'Request' %}
+                        {% endif %}
+                    {% elif notification_type in ['invoice_viewed'] %}
+                        {% set notification_icon = '📄' %}
+                        {% set notification_group = 'invoice' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Factura' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '发票' %}
+                        {% else %}
+                            {% set notification_label = 'Invoice' %}
+                        {% endif %}
+                    {% elif notification_type in ['partial_payment_received', 'final_payment_received', 'stripe_payment_received'] %}
+                        {% set notification_icon = '💸' %}
+                        {% set notification_group = 'payment' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Pago' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '收款' %}
+                        {% else %}
+                            {% set notification_label = 'Payment' %}
+                        {% endif %}
+                    {% elif notification_type in ['business_followed'] %}
+                        {% set notification_icon = '⭐' %}
+                        {% set notification_group = 'follow' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Seguimiento' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '关注' %}
+                        {% else %}
+                            {% set notification_label = 'Follow' %}
+                        {% endif %}
                     {% else %}
-                        —
+                        {% set notification_icon = '🔔' %}
+                        {% set notification_group = 'general' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Actividad' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '动态' %}
+                        {% else %}
+                            {% set notification_label = 'Activity' %}
+                        {% endif %}
                     {% endif %}
+
+                    <a href="{{ url_for('mark_notification_read_page', notification_id=n.id, lang=lang) }}"
+                       class="notification-item unread">
+                        <div class="notification-icon">
+                            {{ notification_icon }}
+                        </div>
+
+                        <div class="notification-main">
+                            <div class="notification-topline">
+                                <div class="notification-title">{{ n.title }}</div>
+
+                                <span class="notification-type-chip {{ notification_group }}">
+                                    {{ notification_label }}
+                                </span>
+
+                                <span class="signal-pill viewed">
+                                    {% if lang == 'es' %}
+                                        Nueva
+                                    {% elif lang == 'zh' %}
+                                        新通知
+                                    {% else %}
+                                        New
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            {% if n.body %}
+                            <div class="notification-body">
+                                {{ n.body }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="notification-time">
+                            {% if n.created_at %}
+                                {{ n.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if read_notifications and read_notifications|length > 0 %}
+            <div class="notifications-group">
+                <div class="notifications-group-header">
+                    <h3 class="notifications-group-title">
+                        {% if lang == 'es' %}
+                            Revisadas
+                        {% elif lang == 'zh' %}
+                            已查看
+                        {% else %}
+                            Earlier
+                        {% endif %}
+                    </h3>
+                    <span class="notifications-group-count">{{ read_notifications|length }}</span>
+                </div>
+
+                <div class="notifications-group-list">
+                    {% for n in read_notifications %}
+                    {% set notification_type = n.notification_type or 'general' %}
+
+                    {% if notification_type in ['service_request_created', 'service_request_status_updated'] %}
+                        {% set notification_icon = '🛠️' %}
+                        {% set notification_group = 'request' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Solicitud' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '请求' %}
+                        {% else %}
+                            {% set notification_label = 'Request' %}
+                        {% endif %}
+                    {% elif notification_type in ['invoice_viewed'] %}
+                        {% set notification_icon = '📄' %}
+                        {% set notification_group = 'invoice' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Factura' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '发票' %}
+                        {% else %}
+                            {% set notification_label = 'Invoice' %}
+                        {% endif %}
+                    {% elif notification_type in ['partial_payment_received', 'final_payment_received', 'stripe_payment_received'] %}
+                        {% set notification_icon = '💸' %}
+                        {% set notification_group = 'payment' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Pago' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '收款' %}
+                        {% else %}
+                            {% set notification_label = 'Payment' %}
+                        {% endif %}
+                    {% elif notification_type in ['business_followed'] %}
+                        {% set notification_icon = '⭐' %}
+                        {% set notification_group = 'follow' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Seguimiento' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '关注' %}
+                        {% else %}
+                            {% set notification_label = 'Follow' %}
+                        {% endif %}
+                    {% else %}
+                        {% set notification_icon = '🔔' %}
+                        {% set notification_group = 'general' %}
+                        {% if lang == 'es' %}
+                            {% set notification_label = 'Actividad' %}
+                        {% elif lang == 'zh' %}
+                            {% set notification_label = '动态' %}
+                        {% else %}
+                            {% set notification_label = 'Activity' %}
+                        {% endif %}
+                    {% endif %}
+
+                    <a href="{{ url_for('mark_notification_read_page', notification_id=n.id, lang=lang) }}"
+                       class="notification-item read">
+                        <div class="notification-icon">
+                            {{ notification_icon }}
+                        </div>
+
+                        <div class="notification-main">
+                            <div class="notification-topline">
+                                <div class="notification-title">{{ n.title }}</div>
+
+                                <span class="notification-type-chip {{ notification_group }}">
+                                    {{ notification_label }}
+                                </span>
+                            </div>
+
+                            {% if n.body %}
+                            <div class="notification-body">
+                                {{ n.body }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="notification-time">
+                            {% if n.created_at %}
+                                {{ n.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
         </div>
     </div>
     {% else %}
     <div class="notifications-empty">
         <h3>
             {% if lang == 'es' %}
-                No hay notificaciones
+                Tu centro de actividad está listo
             {% elif lang == 'zh' %}
-                暂无通知
+                您的活动中心已准备就绪
             {% else %}
-                No notifications
+                Your activity center is ready
             {% endif %}
         </h3>
         <p>
             {% if lang == 'es' %}
-                Cuando entren nuevas solicitudes o suceda actividad importante, aparecerá aquí con una vista mucho más clara y fácil de revisar.
+                Todavía no hay actividad para mostrar, pero este espacio está listo para ayudarte a seguir solicitudes, pagos, vistas de facturas y otros movimientos importantes sin tener que adivinar qué pasó.
             {% elif lang == 'zh' %}
-                当有新请求或重要活动时，它们会显示在这里，并且会更清晰、更容易查看。
+                这里暂时还没有可显示的活动，但这个空间已经准备好帮助您跟踪请求、收款、发票查看以及其他重要动态，而不必猜测发生了什么。
             {% else %}
-                When new requests or important activity come in, they will appear here with a much clearer and easier-to-scan view.
+                There is no activity to show yet, but this space is ready to help you track requests, payments, invoice views, and other important movement without guessing what happened.
             {% endif %}
         </p>
+
+        <div class="notifications-empty-grid">
+            <div class="notifications-empty-item">
+                <div class="notifications-empty-item-icon">🛠️</div>
+                <div class="notifications-empty-item-copy">
+                    <div class="notifications-empty-item-title">
+                        {% if lang == 'es' %}
+                            Nuevas solicitudes
+                        {% elif lang == 'zh' %}
+                            新请求
+                        {% else %}
+                            New requests
+                        {% endif %}
+                    </div>
+                    <div class="notifications-empty-item-sub">
+                        {% if lang == 'es' %}
+                            Cuando llegue una nueva solicitud o cambie su estado, aparecerá aquí para que todo se sienta más inmediato.
+                        {% elif lang == 'zh' %}
+                            当有新请求到来或请求状态变化时，它会显示在这里，让整个流程更及时。
+                        {% else %}
+                            When a new request comes in or its status changes, it will appear here so everything feels more immediate.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="notifications-empty-item">
+                <div class="notifications-empty-item-icon">📄</div>
+                <div class="notifications-empty-item-copy">
+                    <div class="notifications-empty-item-title">
+                        {% if lang == 'es' %}
+                            Actividad de facturas
+                        {% elif lang == 'zh' %}
+                            发票动态
+                        {% else %}
+                            Invoice activity
+                        {% endif %}
+                    </div>
+                    <div class="notifications-empty-item-sub">
+                        {% if lang == 'es' %}
+                            Vistas de facturas y otros eventos importantes también aparecerán aquí para darte más claridad.
+                        {% elif lang == 'zh' %}
+                            发票查看和其他重要发票活动也会显示在这里，帮助您更清晰地了解情况。
+                        {% else %}
+                            Invoice views and other important invoice-related activity will also appear here to give you more clarity.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="notifications-empty-item">
+                <div class="notifications-empty-item-icon">💸</div>
+                <div class="notifications-empty-item-copy">
+                    <div class="notifications-empty-item-title">
+                        {% if lang == 'es' %}
+                            Cobros y pagos
+                        {% elif lang == 'zh' %}
+                            收款与付款动态
+                        {% else %}
+                            Payments and money movement
+                        {% endif %}
+                    </div>
+                    <div class="notifications-empty-item-sub">
+                        {% if lang == 'es' %}
+                            Cuando una factura reciba un pago parcial o quede saldada, esta área te lo mostrará claramente.
+                        {% elif lang == 'zh' %}
+                            当发票收到部分付款或被全额付清时，这里会清楚地显示出来。
+                        {% else %}
+                            When an invoice receives a partial payment or gets paid in full, this area will show it clearly.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     {% endif %}
 </div>
