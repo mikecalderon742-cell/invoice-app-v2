@@ -12,11 +12,11 @@
 
 {% block meta_description %}
   {% if lang == 'es' %}
-    Tu espacio como cliente en BillBeam para descubrir negocios, personalizar tu experiencia y volver rápidamente a lo que te interesa.
+    Tu espacio como cliente en BillBeam para descubrir negocios, volver a los que sigues y mantenerte al tanto de tus solicitudes.
   {% elif lang == 'zh' %}
-    您在 BillBeam 的客户空间，可用于发现商家、自定义体验并快速返回您关心的内容。
+    您在 BillBeam 的客户空间，可用于发现商家、返回已关注的商家并跟踪您的请求。
   {% else %}
-    Your BillBeam client space to discover businesses, personalize your experience, and quickly get back to what matters.
+    Your BillBeam client space to discover businesses, return to followed businesses, and stay on top of your requests.
   {% endif %}
 {% endblock %}
 
@@ -25,6 +25,10 @@
 {% if lang not in ['en', 'es', 'zh'] %}
   {% set lang = 'en' %}
 {% endif %}
+
+{% set followed_count = followed_businesses|length if followed_businesses is defined and followed_businesses else 0 %}
+{% set request_count = client_requests|length if client_requests is defined and client_requests else 0 %}
+{% set open_request_count = client_requests|selectattr('status', 'in', ['requested', 'approved', 'in_progress'])|list|length if client_requests is defined and client_requests else 0 %}
 
 <style>
   .client-dashboard-shell {
@@ -166,7 +170,7 @@
 
   .client-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
     gap: 20px;
     align-items: start;
   }
@@ -220,9 +224,179 @@
     color: #94a3b8;
   }
 
+  .business-list,
+  .request-list,
+  .client-note-list,
   .customize-grid {
     display: grid;
     gap: 14px;
+  }
+
+  .business-card,
+  .request-card {
+    border-radius: 22px;
+    padding: 18px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  body.dark .business-card,
+  body.dark .request-card {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+  }
+
+  .business-top,
+  .request-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .business-left,
+  .request-left {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .business-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: rgba(15,23,42,0.06);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  body.dark .business-logo {
+    background: rgba(2,6,23,0.7);
+    border-color: rgba(148,163,184,0.14);
+  }
+
+  .business-name,
+  .request-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    word-break: break-word;
+  }
+
+  body.dark .business-name,
+  body.dark .request-title {
+    color: #f8fafc;
+  }
+
+  .business-meta,
+  .request-meta,
+  .request-sub,
+  .empty-copy {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #64748b;
+  }
+
+  body.dark .business-meta,
+  body.dark .request-meta,
+  body.dark .request-sub,
+  body.dark .empty-copy {
+    color: #94a3b8;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .status-pill.requested {
+    background: #ffedd5;
+    color: #9a3412;
+    border-color: #fdba74;
+  }
+
+  .status-pill.approved {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+  }
+
+  .status-pill.in_progress {
+    background: #ede9fe;
+    color: #6d28d9;
+    border-color: #c4b5fd;
+  }
+
+  .status-pill.completed {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+  }
+
+  .status-pill.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fca5a5;
+  }
+
+  body.dark .status-pill.requested {
+    background: rgba(154,52,18,0.28);
+    color: #fdba74;
+    border-color: rgba(253,186,116,0.28);
+  }
+
+  body.dark .status-pill.approved {
+    background: rgba(29,78,216,0.26);
+    color: #bfdbfe;
+    border-color: rgba(147,197,253,0.30);
+  }
+
+  body.dark .status-pill.in_progress {
+    background: rgba(109,40,217,0.24);
+    color: #ddd6fe;
+    border-color: rgba(196,181,253,0.28);
+  }
+
+  body.dark .status-pill.completed {
+    background: rgba(22,101,52,0.28);
+    color: #bbf7d0;
+    border-color: rgba(134,239,172,0.28);
+  }
+
+  body.dark .status-pill.cancelled {
+    background: rgba(127,29,29,0.30);
+    color: #fecaca;
+    border-color: rgba(252,165,165,0.28);
+  }
+
+  .business-actions,
+  .request-actions,
+  .client-hero-actions,
+  .client-save-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .business-actions .btn,
+  .request-actions .btn {
+    min-height: 40px;
+    border-radius: 14px;
   }
 
   .client-avatar-builder {
@@ -362,19 +536,6 @@
     border-color: rgba(148,163,184,0.22);
   }
 
-  .client-save-row {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-
-  .client-save-row .btn {
-    min-height: 44px;
-    border-radius: 14px;
-  }
-
   .client-preview {
     border-radius: 24px;
     padding: 18px;
@@ -455,56 +616,6 @@
     color: #94a3b8;
   }
 
-  .quick-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .quick-link {
-    display: grid;
-    gap: 8px;
-    padding: 18px;
-    border-radius: 22px;
-    text-decoration: none;
-    color: inherit;
-    background: rgba(15,23,42,0.03);
-    border: 1px solid rgba(148,163,184,0.14);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  }
-
-  .quick-link:hover {
-    transform: translateY(-2px);
-    border-color: rgba(58,139,255,0.2);
-    box-shadow: 0 12px 28px rgba(15,23,42,0.05);
-  }
-
-  body.dark .quick-link {
-    background: rgba(15,23,42,0.45);
-    border-color: rgba(148,163,184,0.16);
-  }
-
-  body.dark .quick-link:hover {
-    border-color: rgba(96,165,250,0.22);
-    box-shadow: 0 14px 30px rgba(2,6,23,0.5);
-  }
-
-  .quick-link-title {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .quick-link-copy {
-    font-size: 13px;
-    line-height: 1.7;
-    color: #64748b;
-  }
-
-  body.dark .quick-link-copy {
-    color: #94a3b8;
-  }
-
   .client-note-list {
     display: grid;
     gap: 12px;
@@ -562,10 +673,22 @@
     letter-spacing: -0.02em;
   }
 
+  .empty-state-block {
+    padding: 18px;
+    border-radius: 20px;
+    background: rgba(15,23,42,0.03);
+    border: 1px solid rgba(148,163,184,0.14);
+  }
+
+  body.dark .empty-state-block {
+    background: rgba(15,23,42,0.45);
+    border-color: rgba(148,163,184,0.16);
+  }
+
   @media (max-width: 980px) {
     .client-grid,
     .client-hero-metrics,
-    .quick-grid {
+    .client-mini-kpi-grid {
       grid-template-columns: 1fr;
     }
   }
@@ -578,18 +701,18 @@
     }
 
     .client-hero-actions,
-    .client-save-row {
+    .client-save-row,
+    .business-actions,
+    .request-actions {
       flex-direction: column;
       align-items: stretch;
     }
 
     .client-hero-actions .btn,
-    .client-save-row .btn {
+    .client-save-row .btn,
+    .business-actions .btn,
+    .request-actions .btn {
       width: 100%;
-    }
-
-    .client-mini-kpi-grid {
-      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -620,11 +743,11 @@
 
       <div class="client-copy">
         {% if lang == 'es' %}
-          Descubre negocios, guarda tus preferencias visuales y usa BillBeam como un espacio moderno, rápido y agradable para volver a los servicios que más te interesan.
+          Descubre negocios, vuelve rápido a los que sigues y mantente al tanto de tus solicitudes desde un solo espacio mucho más útil.
         {% elif lang == 'zh' %}
-          发现商家，保存您的视觉偏好，并将 BillBeam 用作一个现代、快速、令人愉快的空间，以便返回您最关心的服务。
+          在一个更实用的空间中发现商家、快速返回已关注的商家，并跟踪您的请求。
         {% else %}
-          Discover businesses, save your visual preferences, and use BillBeam as a modern, fast, enjoyable space to come back to the services you care about most.
+          Discover businesses, quickly return to the ones you follow, and keep up with your requests from one much more useful space.
         {% endif %}
       </div>
 
@@ -653,57 +776,23 @@
       <div class="client-hero-metrics">
         <div class="client-metric">
           <div class="client-metric-label">
-            {% if lang == 'es' %}
-              Experiencia
-            {% elif lang == 'zh' %}
-              体验
-            {% else %}
-              Experience
-            {% endif %}
+            {% if lang == 'es' %}Negocios seguidos{% elif lang == 'zh' %}已关注商家{% else %}Followed Businesses{% endif %}
           </div>
-          <div class="client-metric-value" id="clientExperienceValue">
-            {% if lang == 'es' %}
-              Personalizada
-            {% elif lang == 'zh' %}
-              已个性化
-            {% else %}
-              Personalized
-            {% endif %}
-          </div>
+          <div class="client-metric-value">{{ followed_count }}</div>
         </div>
 
         <div class="client-metric">
           <div class="client-metric-label">
-            {% if lang == 'es' %}
-              Vista preferida
-            {% elif lang == 'zh' %}
-              偏好视图
-            {% else %}
-              Preferred View
-            {% endif %}
+            {% if lang == 'es' %}Solicitudes totales{% elif lang == 'zh' %}请求总数{% else %}Total Requests{% endif %}
           </div>
-          <div class="client-metric-value" id="clientViewValue">Comfort</div>
+          <div class="client-metric-value">{{ request_count }}</div>
         </div>
 
         <div class="client-metric">
           <div class="client-metric-label">
-            {% if lang == 'es' %}
-              Estilo
-            {% elif lang == 'zh' %}
-              风格
-            {% else %}
-              Style
-            {% endif %}
+            {% if lang == 'es' %}Solicitudes abiertas{% elif lang == 'zh' %}进行中的请求{% else %}Open Requests{% endif %}
           </div>
-          <div class="client-metric-value" id="clientStyleValue">
-            {% if lang == 'es' %}
-              Moderno
-            {% elif lang == 'zh' %}
-              现代
-            {% else %}
-              Modern
-            {% endif %}
-          </div>
+          <div class="client-metric-value">{{ open_request_count }}</div>
         </div>
       </div>
     </div>
@@ -717,13 +806,224 @@
         <div class="client-card-head">
           <h2>
             {% if lang == 'es' %}
+              Negocios que sigues
+            {% elif lang == 'zh' %}
+              您关注的商家
+            {% else %}
+              Businesses you follow
+            {% endif %}
+          </h2>
+          <p>
+            {% if lang == 'es' %}
+              Vuelve rápido a las empresas que ya te interesan para ver servicios, seguir explorando o enviar nuevas solicitudes.
+            {% elif lang == 'zh' %}
+              快速返回您已经感兴趣的商家，查看服务、继续浏览或提交新的请求。
+            {% else %}
+              Quickly return to businesses you already care about to view services, keep browsing, or submit new requests.
+            {% endif %}
+          </p>
+        </div>
+
+        {% if followed_businesses %}
+          <div class="business-list">
+            {% for business in followed_businesses %}
+              <div class="business-card">
+                <div class="business-top">
+                  <div class="business-left">
+                    {% if business.logo_url %}
+                      <img src="{{ business.logo_url }}" alt="{{ business.business_name }}" class="business-logo">
+                    {% else %}
+                      <div class="business-logo"></div>
+                    {% endif %}
+
+                    <div>
+                      <h3 class="business-name">{{ business.business_name }}</h3>
+
+                      <div class="business-meta">
+                        {% if business.email %}{{ business.email }}{% endif %}
+                        {% if business.website %}
+                          {% if business.email %} · {% endif %}
+                          {{ business.website }}
+                        {% endif %}
+                      </div>
+
+                      {% if business.followed_at %}
+                        <div class="business-meta">
+                          {% if lang == 'es' %}
+                            Siguiendo desde {{ business.followed_at.strftime("%Y-%m-%d") }}
+                          {% elif lang == 'zh' %}
+                            关注时间：{{ business.followed_at.strftime("%Y-%m-%d") }}
+                          {% else %}
+                            Following since {{ business.followed_at.strftime("%Y-%m-%d") }}
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="business-actions" style="margin-top:14px;">
+                  <a href="{{ business.services_url }}" class="btn btn-brand">
+                    {% if lang == 'es' %}Ver servicios{% elif lang == 'zh' %}查看服务{% else %}View Services{% endif %}
+                  </a>
+                  <a href="{{ business.profile_url }}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Abrir perfil{% elif lang == 'zh' %}打开资料{% else %}Open Profile{% endif %}
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state-block">
+            <div class="empty-copy">
+              {% if lang == 'es' %}
+                Todavía no sigues ningún negocio. Cuando sigas uno, aparecerá aquí para que volver sea mucho más fácil.
+              {% elif lang == 'zh' %}
+                您还没有关注任何商家。关注后，它们会显示在这里，方便您快速返回。
+              {% else %}
+                You are not following any businesses yet. Once you follow one, it will appear here so it is much easier to come back.
+              {% endif %}
+            </div>
+            <div style="margin-top:14px;">
+              <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                {% if lang == 'es' %}Buscar negocios{% elif lang == 'zh' %}查找商家{% else %}Find Businesses{% endif %}
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h2>
+            {% if lang == 'es' %}
+              Tus solicitudes
+            {% elif lang == 'zh' %}
+              您的请求
+            {% else %}
+              Your requests
+            {% endif %}
+          </h2>
+          <p>
+            {% if lang == 'es' %}
+              Mantente al tanto de lo que ya pediste, qué negocio lo recibió y en qué etapa va cada solicitud.
+            {% elif lang == 'zh' %}
+              跟踪您已提交的请求、接收请求的商家以及每个请求当前所处的阶段。
+            {% else %}
+              Keep up with what you already requested, which business received it, and what stage each request is in.
+            {% endif %}
+          </p>
+        </div>
+
+        {% if client_requests %}
+          <div class="request-list">
+            {% for req in client_requests %}
+              <div class="request-card">
+                <div class="request-top">
+                  <div class="request-left">
+                    {% if req.business_logo_url %}
+                      <img src="{{ req.business_logo_url }}" alt="{{ req.business_name }}" class="business-logo">
+                    {% else %}
+                      <div class="business-logo"></div>
+                    {% endif %}
+
+                    <div>
+                      <h3 class="request-title">
+                        {{ req.service_title_snapshot or (lang == 'es' and 'Solicitud personalizada' or (lang == 'zh' and '自定义请求' or 'Custom request')) }}
+                      </h3>
+
+                      <div class="request-meta">
+                        {{ req.business_name }}
+                        {% if req.created_at %}
+                          · {{ req.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                        {% endif %}
+                      </div>
+
+                      {% if req.request_details %}
+                        <div class="request-sub" style="margin-top:6px;">
+                          {{ req.request_details[:180] }}{% if req.request_details|length > 180 %}…{% endif %}
+                        </div>
+                      {% endif %}
+
+                      <div class="request-meta" style="margin-top:6px;">
+                        {% if lang == 'es' %}
+                          Cantidad: {{ req.quantity }}
+                        {% elif lang == 'zh' %}
+                          数量：{{ req.quantity }}
+                        {% else %}
+                          Quantity: {{ req.quantity }}
+                        {% endif %}
+                        {% if req.preferred_date_text %}
+                          ·
+                          {% if lang == 'es' %}Fecha:{% elif lang == 'zh' %}日期：{% else %}Date:{% endif %}
+                          {{ req.preferred_date_text }}
+                        {% endif %}
+                        {% if req.preferred_time_text %}
+                          ·
+                          {% if lang == 'es' %}Hora:{% elif lang == 'zh' %}时间：{% else %}Time:{% endif %}
+                          {{ req.preferred_time_text }}
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span class="status-pill {{ req.status }}">
+                      {% if req.status == 'requested' %}
+                        {% if lang == 'es' %}Solicitada{% elif lang == 'zh' %}已请求{% else %}Requested{% endif %}
+                      {% elif req.status == 'approved' %}
+                        {% if lang == 'es' %}Aprobada{% elif lang == 'zh' %}已批准{% else %}Approved{% endif %}
+                      {% elif req.status == 'in_progress' %}
+                        {% if lang == 'es' %}En progreso{% elif lang == 'zh' %}进行中{% else %}In Progress{% endif %}
+                      {% elif req.status == 'completed' %}
+                        {% if lang == 'es' %}Completada{% elif lang == 'zh' %}已完成{% else %}Completed{% endif %}
+                      {% elif req.status == 'cancelled' %}
+                        {% if lang == 'es' %}Cancelada{% elif lang == 'zh' %}已取消{% else %}Cancelled{% endif %}
+                      {% else %}
+                        {{ req.status }}
+                      {% endif %}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="request-actions" style="margin-top:14px;">
+                  <a href="/book/{{ req.business_user_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
+                    {% if lang == 'es' %}Volver al negocio{% elif lang == 'zh' %}返回商家{% else %}Back to Business{% endif %}
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state-block">
+            <div class="empty-copy">
+              {% if lang == 'es' %}
+                Aún no tienes solicitudes registradas. Cuando pidas un servicio, aparecerá aquí para que puedas seguirlo fácilmente.
+              {% elif lang == 'zh' %}
+                您还没有任何已记录的请求。提交服务请求后，它会显示在这里，方便您跟踪。
+              {% else %}
+                You do not have any recorded requests yet. Once you request a service, it will appear here so you can track it easily.
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </section>
+
+    </div>
+
+    <div class="client-side">
+
+      <section class="client-card">
+        <div class="client-card-head">
+          <h3>
+            {% if lang == 'es' %}
               Personaliza tu espacio
             {% elif lang == 'zh' %}
               自定义您的空间
             {% else %}
               Customize your space
             {% endif %}
-          </h2>
+          </h3>
           <p>
             {% if lang == 'es' %}
               Ajusta tu experiencia como cliente con preferencias visuales y de navegación que hacen que todo se sienta más tuyo.
@@ -742,13 +1042,7 @@
             </div>
             <div class="client-avatar-preview-copy">
               <strong>
-                {% if lang == 'es' %}
-                  Tu avatar
-                {% elif lang == 'zh' %}
-                  您的头像
-                {% else %}
-                  Your avatar
-                {% endif %}
+                {% if lang == 'es' %}Tu avatar{% elif lang == 'zh' %}您的头像{% else %}Your avatar{% endif %}
               </strong>
               <div>
                 {% if lang == 'es' %}
@@ -764,13 +1058,7 @@
 
           <div class="customize-row">
             <div class="customize-label">
-              {% if lang == 'es' %}
-                Emoji del avatar
-              {% elif lang == 'zh' %}
-                头像表情
-              {% else %}
-                Avatar emoji
-              {% endif %}
+              {% if lang == 'es' %}Emoji del avatar{% elif lang == 'zh' %}头像表情{% else %}Avatar emoji{% endif %}
             </div>
             <div class="chip-row" id="clientAvatarEmojiChips">
               <button type="button" class="chip-btn active" data-avatar-emoji="✨">✨</button>
@@ -786,30 +1074,14 @@
 
           <div class="customize-row">
             <div class="customize-label">
-              {% if lang == 'es' %}
-                Fondo del avatar
-              {% elif lang == 'zh' %}
-                头像背景
-              {% else %}
-                Avatar background
-              {% endif %}
+              {% if lang == 'es' %}Fondo del avatar{% elif lang == 'zh' %}头像背景{% else %}Avatar background{% endif %}
             </div>
             <div class="chip-row" id="clientAvatarToneChips">
-              <button type="button" class="chip-btn active" data-avatar-tone="blue">
-                {% if lang == 'es' %}Azul{% elif lang == 'zh' %}蓝色{% else %}Blue{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-avatar-tone="sunset">
-                {% if lang == 'es' %}Atardecer{% elif lang == 'zh' %}日落{% else %}Sunset{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-avatar-tone="mint">
-                {% if lang == 'es' %}Mint{% elif lang == 'zh' %}薄荷{% else %}Mint{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-avatar-tone="midnight">
-                {% if lang == 'es' %}Noche{% elif lang == 'zh' %}午夜{% else %}Midnight{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-avatar-tone="rose">
-                {% if lang == 'es' %}Rose{% elif lang == 'zh' %}玫瑰{% else %}Rose{% endif %}
-              </button>
+              <button type="button" class="chip-btn active" data-avatar-tone="blue">{% if lang == 'es' %}Azul{% elif lang == 'zh' %}蓝色{% else %}Blue{% endif %}</button>
+              <button type="button" class="chip-btn" data-avatar-tone="sunset">{% if lang == 'es' %}Atardecer{% elif lang == 'zh' %}日落{% else %}Sunset{% endif %}</button>
+              <button type="button" class="chip-btn" data-avatar-tone="mint">{% if lang == 'es' %}Mint{% elif lang == 'zh' %}薄荷{% else %}Mint{% endif %}</button>
+              <button type="button" class="chip-btn" data-avatar-tone="midnight">{% if lang == 'es' %}Noche{% elif lang == 'zh' %}午夜{% else %}Midnight{% endif %}</button>
+              <button type="button" class="chip-btn" data-avatar-tone="rose">{% if lang == 'es' %}Rose{% elif lang == 'zh' %}玫瑰{% else %}Rose{% endif %}</button>
             </div>
           </div>
         </div>
@@ -817,113 +1089,57 @@
         <div class="customize-grid">
           <div class="customize-row">
             <div class="customize-label">
-              {% if lang == 'es' %}
-                Nombre visible
-              {% elif lang == 'zh' %}
-                显示名称
-              {% else %}
-                Display name
-              {% endif %}
+              {% if lang == 'es' %}Nombre visible{% elif lang == 'zh' %}显示名称{% else %}Display name{% endif %}
             </div>
             <input
               id="clientDisplayName"
               class="client-input"
               type="text"
-              value="{{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}"
+              value="{{ user.email.split('@')[0] if user and user.email else 'Client' }}"
               placeholder="{% if lang == 'es' %}Cómo quieres que te vea BillBeam{% elif lang == 'zh' %}您希望 BillBeam 如何称呼您{% else %}How you want BillBeam to greet you{% endif %}"
             >
           </div>
 
           <div class="customize-row">
             <div class="customize-label">
-              {% if lang == 'es' %}
-                Ambiente visual
-              {% elif lang == 'zh' %}
-                视觉氛围
-              {% else %}
-                Visual vibe
-              {% endif %}
+              {% if lang == 'es' %}Ambiente visual{% elif lang == 'zh' %}视觉氛围{% else %}Visual vibe{% endif %}
             </div>
             <div class="chip-row" id="clientVibeChips">
-              <button type="button" class="chip-btn active" data-vibe="Modern">
-                {% if lang == 'es' %}Moderno{% elif lang == 'zh' %}现代{% else %}Modern{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-vibe="Soft">
-                {% if lang == 'es' %}Suave{% elif lang == 'zh' %}柔和{% else %}Soft{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-vibe="Bold">
-                {% if lang == 'es' %}Atrevido{% elif lang == 'zh' %}大胆{% else %}Bold{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-vibe="Minimal">
-                {% if lang == 'es' %}Minimal{% elif lang == 'zh' %}极简{% else %}Minimal{% endif %}
-              </button>
+              <button type="button" class="chip-btn active" data-vibe="Modern">{% if lang == 'es' %}Moderno{% elif lang == 'zh' %}现代{% else %}Modern{% endif %}</button>
+              <button type="button" class="chip-btn" data-vibe="Soft">{% if lang == 'es' %}Suave{% elif lang == 'zh' %}柔和{% else %}Soft{% endif %}</button>
+              <button type="button" class="chip-btn" data-vibe="Bold">{% if lang == 'es' %}Atrevido{% elif lang == 'zh' %}大胆{% else %}Bold{% endif %}</button>
+              <button type="button" class="chip-btn" data-vibe="Minimal">{% if lang == 'es' %}Minimal{% elif lang == 'zh' %}极简{% else %}Minimal{% endif %}</button>
             </div>
           </div>
 
           <div class="customize-row">
             <div class="customize-label">
-              {% if lang == 'es' %}
-                Vista preferida
-              {% elif lang == 'zh' %}
-                偏好视图
-              {% else %}
-                Preferred view
-              {% endif %}
+              {% if lang == 'es' %}Vista preferida{% elif lang == 'zh' %}偏好视图{% else %}Preferred view{% endif %}
             </div>
             <div class="chip-row" id="clientViewChips">
-              <button type="button" class="chip-btn active" data-view="Comfort">
-                {% if lang == 'es' %}Cómoda{% elif lang == 'zh' %}舒适{% else %}Comfort{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-view="Compact">
-                {% if lang == 'es' %}Compacta{% elif lang == 'zh' %}紧凑{% else %}Compact{% endif %}
-              </button>
-              <button type="button" class="chip-btn" data-view="Focused">
-                {% if lang == 'es' %}Enfocada{% elif lang == 'zh' %}专注{% else %}Focused{% endif %}
-              </button>
+              <button type="button" class="chip-btn active" data-view="Comfort">{% if lang == 'es' %}Cómoda{% elif lang == 'zh' %}舒适{% else %}Comfort{% endif %}</button>
+              <button type="button" class="chip-btn" data-view="Compact">{% if lang == 'es' %}Compacta{% elif lang == 'zh' %}紧凑{% else %}Compact{% endif %}</button>
+              <button type="button" class="chip-btn" data-view="Focused">{% if lang == 'es' %}Enfocada{% elif lang == 'zh' %}专注{% else %}Focused{% endif %}</button>
             </div>
           </div>
 
           <div class="customize-row">
             <div class="customize-label">
-              {% if lang == 'es' %}
-                Página de inicio
-              {% elif lang == 'zh' %}
-                首页偏好
-              {% else %}
-                Home preference
-              {% endif %}
+              {% if lang == 'es' %}Página de inicio{% elif lang == 'zh' %}首页偏好{% else %}Home preference{% endif %}
             </div>
             <select id="clientHomeSelect" class="client-select">
-              <option value="discover">
-                {% if lang == 'es' %}Descubrir negocios{% elif lang == 'zh' %}查找商家{% else %}Discover Businesses{% endif %}
-              </option>
-              <option value="followed">
-                {% if lang == 'es' %}Negocios seguidos{% elif lang == 'zh' %}已关注商家{% else %}Followed Businesses{% endif %}
-              </option>
-              <option value="services">
-                {% if lang == 'es' %}Servicios destacados{% elif lang == 'zh' %}精选服务{% else %}Featured Services{% endif %}
-              </option>
+              <option value="discover">{% if lang == 'es' %}Descubrir negocios{% elif lang == 'zh' %}查找商家{% else %}Discover Businesses{% endif %}</option>
+              <option value="followed">{% if lang == 'es' %}Negocios seguidos{% elif lang == 'zh' %}已关注商家{% else %}Followed Businesses{% endif %}</option>
+              <option value="requests">{% if lang == 'es' %}Tus solicitudes{% elif lang == 'zh' %}您的请求{% else %}Your Requests{% endif %}</option>
             </select>
           </div>
 
           <div class="client-save-row">
             <button type="button" class="btn btn-secondary" id="clientResetPrefs">
-              {% if lang == 'es' %}
-                Restablecer
-              {% elif lang == 'zh' %}
-                重置
-              {% else %}
-                Reset
-              {% endif %}
+              {% if lang == 'es' %}Restablecer{% elif lang == 'zh' %}重置{% else %}Reset{% endif %}
             </button>
             <button type="button" class="btn btn-brand" id="clientSavePrefs">
-              {% if lang == 'es' %}
-                Guardar preferencias
-              {% elif lang == 'zh' %}
-                保存偏好
-              {% else %}
-                Save Preferences
-              {% endif %}
+              {% if lang == 'es' %}Guardar preferencias{% elif lang == 'zh' %}保存偏好{% else %}Save Preferences{% endif %}
             </button>
           </div>
         </div>
@@ -931,85 +1147,8 @@
 
       <section class="client-card">
         <div class="client-card-head">
-          <h2>
-            {% if lang == 'es' %}
-              Accesos rápidos
-            {% elif lang == 'zh' %}
-              快速入口
-            {% else %}
-              Quick access
-            {% endif %}
-          </h2>
-          <p>
-            {% if lang == 'es' %}
-              Muévete rápido entre las partes más útiles de la experiencia del cliente.
-            {% elif lang == 'zh' %}
-              快速进入客户体验中最有用的部分。
-            {% else %}
-              Move quickly between the most useful parts of the client experience.
-            {% endif %}
-          </p>
-        </div>
-
-        <div class="quick-grid">
-          <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="quick-link">
-            <div class="quick-link-title">
-              {% if lang == 'es' %}
-                Descubrir negocios
-              {% elif lang == 'zh' %}
-                查找商家
-              {% else %}
-                Discover Businesses
-              {% endif %}
-            </div>
-            <div class="quick-link-copy">
-              {% if lang == 'es' %}
-                Encuentra empresas por nombre y explora sus servicios desde una experiencia moderna y fácil de navegar.
-              {% elif lang == 'zh' %}
-                按名称查找商家，并在一个现代、易用的体验中浏览他们的服务。
-              {% else %}
-                Find companies by name and explore their services from a modern, easy-to-navigate experience.
-              {% endif %}
-            </div>
-          </a>
-
-          <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="quick-link">
-            <div class="quick-link-title">
-              {% if lang == 'es' %}
-                Volver a explorar
-              {% elif lang == 'zh' %}
-                继续探索
-              {% else %}
-                Keep exploring
-              {% endif %}
-            </div>
-            <div class="quick-link-copy">
-              {% if lang == 'es' %}
-                Vuelve a la búsqueda para seguir descubriendo negocios que encajen contigo.
-              {% elif lang == 'zh' %}
-                返回搜索页面，继续寻找适合您的商家。
-              {% else %}
-                Jump back into search and keep discovering businesses that fit what you need.
-              {% endif %}
-            </div>
-          </a>
-        </div>
-      </section>
-
-    </div>
-
-    <div class="client-side">
-
-      <section class="client-card">
-        <div class="client-card-head">
           <h3>
-            {% if lang == 'es' %}
-              Vista previa de tu estilo
-            {% elif lang == 'zh' %}
-              您的风格预览
-            {% else %}
-              Your style preview
-            {% endif %}
+            {% if lang == 'es' %}Vista previa de tu estilo{% elif lang == 'zh' %}您的风格预览{% else %}Your style preview{% endif %}
           </h3>
           <p>
             {% if lang == 'es' %}
@@ -1025,19 +1164,13 @@
         <div class="client-preview">
           <div class="preview-top">
             <span class="preview-badge" id="clientPreviewBadge">
-              {% if lang == 'es' %}
-                Perfil cliente
-              {% elif lang == 'zh' %}
-                客户档案
-              {% else %}
-                Client profile
-              {% endif %}
+              {% if lang == 'es' %}Perfil cliente{% elif lang == 'zh' %}客户档案{% else %}Client profile{% endif %}
             </span>
           </div>
 
           <div class="preview-card">
             <div class="preview-name" id="clientPreviewName">
-              {{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}
+              {{ user.email.split('@')[0] if user and user.email else 'Client' }}
             </div>
             <div class="preview-sub" id="clientPreviewSub">
               {% if lang == 'es' %}
@@ -1055,57 +1188,23 @@
       <section class="client-card">
         <div class="client-card-head">
           <h3>
-            {% if lang == 'es' %}
-              Tu espacio ahora
-            {% elif lang == 'zh' %}
-              您当前的空间
-            {% else %}
-              Your space right now
-            {% endif %}
+            {% if lang == 'es' %}Tu espacio ahora{% elif lang == 'zh' %}您当前的空间{% else %}Your space right now{% endif %}
           </h3>
         </div>
 
         <div class="client-mini-kpi-grid">
           <div class="client-mini-kpi">
             <div class="client-mini-kpi-label">
-              {% if lang == 'es' %}
-                Descubrir
-              {% elif lang == 'zh' %}
-                发现
-              {% else %}
-                Discover
-              {% endif %}
+              {% if lang == 'es' %}Seguidos{% elif lang == 'zh' %}已关注{% else %}Followed{% endif %}
             </div>
-            <div class="client-mini-kpi-value">
-              {% if lang == 'es' %}
-                Listo
-              {% elif lang == 'zh' %}
-                已就绪
-              {% else %}
-                Ready
-              {% endif %}
-            </div>
+            <div class="client-mini-kpi-value">{{ followed_count }}</div>
           </div>
 
           <div class="client-mini-kpi">
             <div class="client-mini-kpi-label">
-              {% if lang == 'es' %}
-                Personalización
-              {% elif lang == 'zh' %}
-                个性化
-              {% else %}
-                Personalization
-              {% endif %}
+              {% if lang == 'es' %}Activas{% elif lang == 'zh' %}活跃请求{% else %}Active requests{% endif %}
             </div>
-            <div class="client-mini-kpi-value" id="clientPersonalizationState">
-              {% if lang == 'es' %}
-                Activa
-              {% elif lang == 'zh' %}
-                已开启
-              {% else %}
-                Active
-              {% endif %}
-            </div>
+            <div class="client-mini-kpi-value">{{ open_request_count }}</div>
           </div>
         </div>
       </section>
@@ -1126,31 +1225,31 @@
         <div class="client-note-list">
           <div class="client-note">
             {% if lang == 'es' %}
-              Navegación simple para que encontrar un negocio no se sienta pesado.
+              Ahora los negocios que sigues tienen un lugar claro para volver a encontrarlos.
             {% elif lang == 'zh' %}
-              简洁导航，让查找商家变得轻松自然。
+              现在您关注的商家有了一个清晰的地方，方便您再次找到它们。
             {% else %}
-              Simple navigation so finding a business feels smooth instead of heavy.
+              The businesses you follow now have a clear place so you can find them again.
             {% endif %}
           </div>
 
           <div class="client-note">
             {% if lang == 'es' %}
-              Preferencias guardadas para que el espacio se sienta más personal cada vez que vuelvas.
+              Tus solicitudes ya no quedan en el aire. También puedes revisarlas desde aquí.
             {% elif lang == 'zh' %}
-              保存偏好，让您每次回来时都感觉这个空间更像是为您准备的。
+              您的请求不会再“消失”了。现在也可以从这里查看它们。
             {% else %}
-              Saved preferences so the space feels more personal each time you return.
+              Your requests no longer feel like they disappear. You can review them here too.
             {% endif %}
           </div>
 
           <div class="client-note">
             {% if lang == 'es' %}
-              Una base lista para seguir creciendo con negocios, servicios y solicitudes.
+              Esta base ya deja el lado cliente mucho más listo para crecer con seguimiento, cancelaciones y avisos.
             {% elif lang == 'zh' %}
-              一个已经准备好继续扩展到商家、服务和请求流程的基础体验。
+              这个基础已经让客户端更适合继续扩展到跟踪、取消和通知。
             {% else %}
-              A strong base that is ready to grow with businesses, services, and request flows.
+              This foundation makes the client side much more ready to grow into tracking, cancellations, and notifications.
             {% endif %}
           </div>
         </div>
@@ -1284,14 +1383,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (previewName) previewName.textContent = name;
     if (previewSub) previewSub.textContent = buildPreviewText(vibe, view);
-    if (vibeValue) vibeValue.textContent = vibe;
-    if (viewValue) viewValue.textContent = view;
-    if (experienceValue) {
-      experienceValue.textContent =
-        home === "discover" ? ( "{{ 'Exploration-first' if lang == 'en' else ('Exploración primero' if lang == 'es' else '探索优先') }}" ) :
-        home === "followed" ? ( "{{ 'Relationship-first' if lang == 'en' else ('Relación primero' if lang == 'es' else '关系优先') }}" ) :
-        ( "{{ 'Service-first' if lang == 'en' else ('Servicio primero' if lang == 'es' else '服务优先') }}" );
-    }
+
     if (previewBadge) {
       previewBadge.textContent =
         "{{ 'Client profile' if lang == 'en' else ('Perfil cliente' if lang == 'es' else '客户档案') }}" + " · " + vibe;
@@ -1299,6 +1391,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (avatarEmoji) avatarEmoji.textContent = selectedAvatarEmoji;
     if (avatarPreview) avatarPreview.style.background = getAvatarBackground(selectedAvatarTone);
+
+    if (home === "followed") {
+      const followedSection = document.querySelector(".business-list, .empty-state-block");
+      if (followedSection && !window.__billbeam_scrolled_home_pref) {
+        window.__billbeam_scrolled_home_pref = true;
+      }
+    }
   }
 
   function savePrefs() {
@@ -1312,11 +1411,6 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     localStorage.setItem(storageKey, JSON.stringify(payload));
-
-    if (personalizationState) {
-      personalizationState.textContent = "{{ 'Saved' if lang == 'en' else ('Guardada' if lang == 'es' else '已保存') }}";
-    }
-
     updatePreview();
   }
 
@@ -1337,10 +1431,6 @@ document.addEventListener("DOMContentLoaded", function () {
       setActive(viewButtons, prefs.view || defaults.view, "view");
       setActive(avatarEmojiButtons, prefs.avatarEmoji || defaults.avatarEmoji, "avatarEmoji");
       setActive(avatarToneButtons, prefs.avatarTone || defaults.avatarTone, "avatarTone");
-
-      if (personalizationState) {
-        personalizationState.textContent = "{{ 'Saved' if lang == 'en' else ('Guardada' if lang == 'es' else '已保存') }}";
-      }
 
       updatePreview();
     } catch (e) {
@@ -1399,10 +1489,6 @@ document.addEventListener("DOMContentLoaded", function () {
       setActive(viewButtons, defaults.view, "view");
       setActive(avatarEmojiButtons, defaults.avatarEmoji, "avatarEmoji");
       setActive(avatarToneButtons, defaults.avatarTone, "avatarTone");
-
-      if (personalizationState) {
-        personalizationState.textContent = "{{ 'Active' if lang == 'en' else ('Activa' if lang == 'es' else '已开启') }}";
-      }
 
       updatePreview();
     });

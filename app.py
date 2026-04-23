@@ -1561,7 +1561,113 @@ def client_login():
 @login_required
 def client_dashboard():
     user = get_current_user()
-    return render_template("client_dashboard.html", user=user)
+    client_user_id = user["id"]
+    lang = get_request_lang()
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT
+                bf.business_user_id,
+                COALESCE(bp.business_name, u.email, 'Business') AS business_name,
+                bp.logo_url,
+                bp.email,
+                bp.phone,
+                bp.website,
+                bp.address,
+                bf.created_at
+            FROM business_followers bf
+            LEFT JOIN business_profile bp
+                ON bp.user_id = bf.business_user_id
+            LEFT JOIN users u
+                ON u.id = bf.business_user_id
+            WHERE bf.client_user_id = %s
+            ORDER BY COALESCE(bp.business_name, u.email, 'Business') ASC
+            """,
+            (client_user_id,),
+        )
+        followed_rows = cur.fetchall()
+
+        cur.execute(
+            """
+            SELECT
+                sr.id,
+                sr.user_id,
+                COALESCE(bp.business_name, u.email, 'Business') AS business_name,
+                bp.logo_url,
+                sr.service_title_snapshot,
+                sr.service_price_snapshot,
+                sr.status,
+                sr.request_details,
+                sr.preferred_date_text,
+                sr.preferred_time_text,
+                sr.quantity,
+                sr.created_at,
+                sr.updated_at
+            FROM service_requests sr
+            LEFT JOIN business_profile bp
+                ON bp.user_id = sr.user_id
+            LEFT JOIN users u
+                ON u.id = sr.user_id
+            WHERE LOWER(COALESCE(sr.client_email, '')) = LOWER(%s)
+            ORDER BY sr.created_at DESC, sr.id DESC
+            LIMIT 100
+            """,
+            (user.get("email") or "",),
+        )
+        request_rows = cur.fetchall()
+
+    finally:
+        cur.close()
+        conn.close()
+
+    followed_businesses = []
+    for row in followed_rows:
+        followed_businesses.append(
+            {
+                "business_user_id": row[0],
+                "business_name": row[1] or "Business",
+                "logo_url": row[2] or "",
+                "email": row[3] or "",
+                "phone": row[4] or "",
+                "website": row[5] or "",
+                "address": row[6] or "",
+                "followed_at": row[7],
+                "services_url": url_for("public_services_page", user_id=row[0], lang=lang),
+                "profile_url": url_for("business_profile", user_id=row[0], lang=lang),
+            }
+        )
+
+    client_requests = []
+    for row in request_rows:
+        client_requests.append(
+            {
+                "id": row[0],
+                "business_user_id": row[1],
+                "business_name": row[2] or "Business",
+                "business_logo_url": row[3] or "",
+                "service_title_snapshot": row[4] or "",
+                "service_price_snapshot": float(row[5] or 0),
+                "status": row[6] or "requested",
+                "request_details": row[7] or "",
+                "preferred_date_text": row[8] or "",
+                "preferred_time_text": row[9] or "",
+                "quantity": int(row[10] or 1),
+                "created_at": row[11],
+                "updated_at": row[12],
+            }
+        )
+
+    return render_template(
+        "client_dashboard.html",
+        user=user,
+        lang=lang,
+        followed_businesses=followed_businesses,
+        client_requests=client_requests,
+    )
 
 
 # =========================
@@ -1650,58 +1756,66 @@ def unfollow_business(user_id):
 # =========================
 
 @app.route("/request-service/<int:service_id>", methods=["POST"])
+@login_required
 def request_service(service_id):
-    name = (request.form.get("name") or "").strip()
-    email = (request.form.get("email") or "").strip()
+    client_user = get_current_user()
+    lang = get_request_lang()
 
-    if not name or not email:
-        return redirect(request.referrer or "/")
+    client_name = (request.form.get("client_name") or request.form.get("name") or "").strip()
+    client_email = (request.form.get("client_email") or request.form.get("email") or client_user.get("email") or "").strip()
+    client_phone = (request.form.get("client_phone") or "").strip()
+    request_details = (request.form.get("request_details") or "").strip()
+    preferred_date_text = (request.form.get("preferred_date_text") or "").strip()
+    preferred_time_text = (request.form.get("preferred_time_text") or "").strip()
+
+    quantity_raw = (request.form.get("quantity") or "1").strip()
+    try:
+        quantity = max(1, int(quantity_raw))
+    except ValueError:
+        quantity = 1
+
+    if not client_name or not client_email:
+        return redirect(request.referrer or url_for("client_dashboard", lang=lang))
 
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT user_id, name, description, price FROM services WHERE id = %s",
-        (service_id,),
-    )
-    service = cur.fetchone()
+    try:
+        cur.execute(
+            """
+            SELECT user_id
+            FROM services
+            WHERE id = %s AND is_active = TRUE
+            """,
+            (service_id,),
+        )
+        row = cur.fetchone()
 
-    if not service:
+        if not row:
+            return redirect(request.referrer or url_for("client_dashboard", lang=lang))
+
+        business_user_id = row[0]
+
+    finally:
         cur.close()
         conn.close()
-        return redirect("/")
 
-    business_user_id, title, description, price = service
-
-    cur.execute(
-        """
-        INSERT INTO service_requests (
-            user_id,
-            service_id,
-            service_title_snapshot,
-            service_description_snapshot,
-            service_price_snapshot,
-            client_name,
-            client_email
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """,
-        (
-            business_user_id,
-            service_id,
-            title,
-            description,
-            price,
-            name,
-            email,
-        ),
+    request_id = create_service_request(
+        user_id=business_user_id,
+        service_id=service_id,
+        client_name=client_name,
+        client_email=client_email,
+        client_phone=client_phone,
+        request_details=request_details,
+        preferred_date_text=preferred_date_text,
+        preferred_time_text=preferred_time_text,
+        quantity=quantity,
     )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    if not request_id:
+        return redirect(request.referrer or url_for("client_dashboard", lang=lang))
 
-    return redirect(request.referrer or "/")
+    return redirect(url_for("client_dashboard", lang=lang))
 
 
 def get_plan_for_current_user():
