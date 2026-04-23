@@ -6261,13 +6261,9 @@ def settings():
                 if not row or not row[0]:
                     feedback_message = "Unable to update password for this account."
                     feedback_type = "error"
-                    cursor.close()
-                    conn.close()
                 elif not check_password_hash(row[0], current_password):
                     feedback_message = "Your current password is incorrect."
                     feedback_type = "error"
-                    cursor.close()
-                    conn.close()
                 else:
                     new_password_hash = generate_password_hash(new_password)
                     cursor.execute(
@@ -6275,34 +6271,25 @@ def settings():
                         (new_password_hash, user_id),
                     )
                     conn.commit()
-                    cursor.close()
-                    conn.close()
-
                     feedback_message = "Password updated successfully."
                     feedback_type = "success"
+
+                cursor.close()
+                conn.close()
 
         elif form_type == "notification_preferences":
             def _checked(name: str) -> bool:
                 return (request.form.get(name) or "").strip().lower() in ("1", "true", "yes", "on")
 
-            notifications_enabled = _checked("notifications_enabled")
-            in_app_enabled = _checked("in_app_enabled")
-            business_request_alerts = _checked("business_request_alerts")
-            client_request_updates = _checked("client_request_updates")
-            invoice_alerts = _checked("invoice_alerts")
-            payment_alerts = _checked("payment_alerts")
-
-            # Push + email stay stored for future expansion,
-            # but we are not surfacing them in this UI yet.
             updated_prefs = update_notification_preferences(
                 user_id,
                 {
-                    "notifications_enabled": notifications_enabled,
-                    "in_app_enabled": in_app_enabled,
-                    "business_request_alerts": business_request_alerts,
-                    "client_request_updates": client_request_updates,
-                    "invoice_alerts": invoice_alerts,
-                    "payment_alerts": payment_alerts,
+                    "notifications_enabled": _checked("notifications_enabled"),
+                    "in_app_enabled": _checked("in_app_enabled"),
+                    "business_request_alerts": _checked("business_request_alerts"),
+                    "client_request_updates": _checked("client_request_updates"),
+                    "invoice_alerts": _checked("invoice_alerts"),
+                    "payment_alerts": _checked("payment_alerts"),
                 },
             )
 
@@ -6315,49 +6302,36 @@ def settings():
                 feedback_type = "error"
 
         elif form_type == "service_add":
-            service_name = (request.form.get("service_name") or "").strip()
-            service_description = (request.form.get("service_description") or "").strip()
-            service_price = parse_float(request.form.get("service_price"), default=0.0)
+            name = (request.form.get("service_name") or "").strip()
+            desc = (request.form.get("service_description") or "").strip()
+            price = parse_float(request.form.get("service_price"), default=0.0)
 
-            if not service_name:
+            if not name:
                 feedback_message = "Service name is required."
                 feedback_type = "error"
             else:
-                create_user_service(
-                    user_id=user_id,
-                    name=service_name,
-                    description=service_description,
-                    price=service_price,
-                )
+                create_user_service(user_id=user_id, name=name, description=desc, price=price)
                 feedback_message = "Service added successfully."
                 feedback_type = "success"
 
         elif form_type == "service_update":
-            service_id_raw = (request.form.get("service_id") or "").strip()
-            service_name = (request.form.get("service_name") or "").strip()
-            service_description = (request.form.get("service_description") or "").strip()
-            service_price = parse_float(request.form.get("service_price"), default=0.0)
-
             try:
-                service_id = int(service_id_raw)
-            except ValueError:
+                service_id = int(request.form.get("service_id"))
+            except:
                 service_id = None
+
+            name = (request.form.get("service_name") or "").strip()
+            desc = (request.form.get("service_description") or "").strip()
+            price = parse_float(request.form.get("service_price"), default=0.0)
 
             if not service_id:
                 feedback_message = "Invalid service selected."
                 feedback_type = "error"
-            elif not service_name:
+            elif not name:
                 feedback_message = "Service name is required."
                 feedback_type = "error"
             else:
-                updated = update_user_service(
-                    service_id=service_id,
-                    user_id=user_id,
-                    name=service_name,
-                    description=service_description,
-                    price=service_price,
-                )
-                if updated:
+                if update_user_service(service_id, user_id, name, desc, price):
                     feedback_message = "Service updated successfully."
                     feedback_type = "success"
                 else:
@@ -6365,26 +6339,18 @@ def settings():
                     feedback_type = "error"
 
         elif form_type == "service_toggle":
-            service_id_raw = (request.form.get("service_id") or "").strip()
-            next_active_raw = (request.form.get("next_active") or "").strip().lower()
-
             try:
-                service_id = int(service_id_raw)
-            except ValueError:
+                service_id = int(request.form.get("service_id"))
+            except:
                 service_id = None
 
-            next_active = next_active_raw in ("1", "true", "yes", "on")
+            next_active = (request.form.get("next_active") or "").lower() in ("1", "true", "yes", "on")
 
             if not service_id:
                 feedback_message = "Invalid service selected."
                 feedback_type = "error"
             else:
-                updated = set_user_service_active(
-                    service_id=service_id,
-                    user_id=user_id,
-                    is_active=next_active,
-                )
-                if updated:
+                if set_user_service_active(service_id, user_id, next_active):
                     feedback_message = "Service status updated successfully."
                     feedback_type = "success"
                 else:
@@ -6392,39 +6358,22 @@ def settings():
                     feedback_type = "error"
 
         else:
-            business_name = (request.form.get("business_name") or "").strip()
-            email = (request.form.get("email") or "").strip()
-            phone = (request.form.get("phone") or "").strip()
-            website = (request.form.get("website") or "").strip()
-            address = (request.form.get("address") or "").strip()
-            logo_url = (request.form.get("logo_url") or "").strip()
-            brand_color = (request.form.get("brand_color") or "").strip() or DEFAULT_BRAND_COLOR
-            accent_color = (request.form.get("accent_color") or "").strip() or DEFAULT_ACCENT_COLOR
-            default_terms = (request.form.get("default_terms") or "").strip()
-            default_notes = (request.form.get("default_notes") or "").strip()
-            language = normalize_lang(request.form.get("language") or user.get("language") or "en")
-
+            # PROFILE SAVE
             uploaded_logo_file = request.files.get("logo_file")
             uploaded_logo_url = None
 
             if uploaded_logo_file and (uploaded_logo_file.filename or "").strip():
                 uploaded_logo_url, logo_error = save_uploaded_logo(uploaded_logo_file, user_id)
-                if logo_error:
-                    profile = get_business_profile()
-                    feedback_message = logo_error
-                    feedback_type = "error"
 
+                if logo_error:
                     services = get_user_services(user_id, include_inactive=True)
 
                     return render_template(
                         "settings.html",
-                        profile=profile,
-                        feedback_message=feedback_message,
-                        feedback_type=feedback_type,
+                        profile=get_business_profile(),
+                        feedback_message=logo_error,
+                        feedback_type="error",
                         notification_preferences=notification_preferences,
-                        current_plan=resolve_plan_key(user),
-                        payment_setup=get_user_payment_setup(user_id),
-                        lang=lang,
                         payment_setup=sync_stripe_connect_status_for_user(user_id),
                         current_plan=normalize_plan_key(user.get("plan") or "free"),
                         lang=lang,
@@ -6432,43 +6381,40 @@ def settings():
                         editing_service=editing_service,
                     )
 
-            final_logo_url = uploaded_logo_url or logo_url
+            final_logo = uploaded_logo_url or (request.form.get("logo_url") or "").strip()
 
-            data = {
-                "business_name": business_name or DEFAULT_BUSINESS_NAME,
-                "email": email,
-                "phone": phone,
-                "website": website,
-                "address": address,
-                "logo_url": final_logo_url,
-                "brand_color": brand_color,
-                "accent_color": accent_color,
-                "default_terms": default_terms,
-                "default_notes": default_notes,
-            }
-
-            upsert_business_profile(data)
+            upsert_business_profile({
+                "business_name": request.form.get("business_name") or DEFAULT_BUSINESS_NAME,
+                "email": request.form.get("email"),
+                "phone": request.form.get("phone"),
+                "website": request.form.get("website"),
+                "address": request.form.get("address"),
+                "logo_url": final_logo,
+                "brand_color": request.form.get("brand_color") or DEFAULT_BRAND_COLOR,
+                "accent_color": request.form.get("accent_color") or DEFAULT_ACCENT_COLOR,
+                "default_terms": request.form.get("default_terms"),
+                "default_notes": request.form.get("default_notes"),
+            })
 
             conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
+            cur = conn.cursor()
+            cur.execute(
                 "UPDATE users SET language = %s WHERE id = %s",
-                (language, user_id),
+                (normalize_lang(request.form.get("language") or lang), user_id),
             )
             conn.commit()
-            cursor.close()
+            cur.close()
             conn.close()
 
             profile = get_business_profile()
             feedback_message = "Business profile updated successfully."
             feedback_type = "success"
-            lang = language
 
-    edit_service_id = request.args.get("edit_service")
-    if edit_service_id:
+    edit_id = request.args.get("edit_service")
+    if edit_id:
         try:
-            editing_service = get_service_by_id(int(edit_service_id), user_id)
-        except ValueError:
+            editing_service = get_service_by_id(int(edit_id), user_id)
+        except:
             editing_service = None
 
     services = get_user_services(user_id, include_inactive=True)
