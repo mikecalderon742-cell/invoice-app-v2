@@ -4658,11 +4658,13 @@ def notifications_page():
     user_id = user["id"]
     lang = get_request_lang()
 
+    notification_preferences = ensure_notification_preferences(user_id)
     notifications = get_notifications_for_user(user_id, unread_only=False, limit=100)
 
     return render_template(
         "notifications.html",
         notifications=notifications,
+        notification_preferences=notification_preferences,
         lang=lang,
     )
 
@@ -4698,6 +4700,26 @@ def mark_all_notifications_read_page():
     user_id = user["id"]
 
     mark_all_notifications_read(user_id)
+    return lang_redirect("notifications_page")
+
+
+@app.route("/notifications/preferences", methods=["POST"])
+@login_required
+def update_notification_preferences_page():
+    user = get_current_user()
+    user_id = user["id"]
+
+    updates = {
+        "notifications_enabled": request.form.get("notifications_enabled") == "on",
+        "in_app_enabled": request.form.get("in_app_enabled") == "on",
+        "email_enabled": request.form.get("email_enabled") == "on",
+        "business_request_alerts": request.form.get("business_request_alerts") == "on",
+        "client_request_updates": request.form.get("client_request_updates") == "on",
+        "invoice_alerts": request.form.get("invoice_alerts") == "on",
+        "payment_alerts": request.form.get("payment_alerts") == "on",
+    }
+
+    update_notification_preferences(user_id, updates)
     return lang_redirect("notifications_page")
 
 
