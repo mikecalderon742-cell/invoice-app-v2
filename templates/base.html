@@ -1325,6 +1325,24 @@ document.addEventListener("DOMContentLoaded", function () {
         return map[tone] || map.blue;
     }
 
+    function applySkinToneToClientEmoji(baseEmoji, skinTone) {
+        if (!baseEmoji || !skinTone) return baseEmoji;
+
+        const supportedMap = {
+            "👩": `👩${skinTone}`,
+            "👩‍💼": `👩${skinTone}‍💼`,
+            "👩‍🎨": `👩${skinTone}‍🎨`,
+            "👨": `👨${skinTone}`,
+            "👨‍💼": `👨${skinTone}‍💼`,
+            "👨‍🔧": `👨${skinTone}‍🔧`,
+            "🧑": `🧑${skinTone}`,
+            "🧑‍💻": `🧑${skinTone}‍💻`,
+            "🧑‍🎨": `🧑${skinTone}‍🎨`
+        };
+
+        return supportedMap[baseEmoji] || baseEmoji;
+    }
+
     function applyClientIdentityChrome() {
         let prefs = {};
         try {
@@ -1334,7 +1352,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const displayName = prefs.displayName || "{{ current_user.email.split('@')[0] if current_user and current_user.email else 'Client' }}";
-        const avatarEmoji = prefs.avatarEmoji || "✨";
+        const baseAvatarEmoji = prefs.avatarEmoji || "✨";
+        const avatarSkinTone = prefs.avatarSkinTone || "";
+        const avatarEmoji = applySkinToneToClientEmoji(baseAvatarEmoji, avatarSkinTone);
         const avatarTone = prefs.avatarTone || "blue";
         const background = getClientAvatarBackground(avatarTone);
 
