@@ -3635,8 +3635,15 @@ def create_notification_if_enabled(
     if not user_id:
         return None
 
-    if not notification_category_enabled(user_id, category):
-        return None
+    # Critical business workflow notifications should never disappear silently.
+    critical_types = {
+        "service_request_created",
+        "service_request_status_updated",
+    }
+
+    if notification_type not in critical_types:
+        if not notification_category_enabled(user_id, category):
+            return None
 
     return create_notification(
         user_id=user_id,
