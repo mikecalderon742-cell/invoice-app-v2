@@ -1706,6 +1706,200 @@ def client_dashboard():
     )
 
 
+@app.route("/client/request/<int:request_id>/update", methods=["POST"])
+@login_required
+def client_update_request(request_id):
+    user = get_current_user()
+    user_id = user["id"]
+    user_email = (user.get("email") or "").strip().lower()
+    lang = get_request_lang()
+
+    request_details = (request.form.get("request_details") or "").strip()
+    preferred_date_text = (request.form.get("preferred_date_text") or "").strip()
+    preferred_time_text = (request.form.get("preferred_time_text") or "").strip()
+    quantity_raw = (request.form.get("quantity") or "1").strip()
+
+    try:
+        quantity = max(1, int(quantity_raw))
+    except ValueError:
+        quantity = 1
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT id, user_id, status, service_title_snapshot
+            FROM service_requests
+            WHERE id = %s
+              AND (
+                    client_user_id = %s
+                    OR LOWER(COALESCE(client_email, '')) = LOWER(%s)
+                  )
+            LIMIT 1
+            """,
+            (request_id, user_id, user_email),
+        )
+        row = cur.fetchone()
+
+        if not row:
+            cur.close()
+            conn.close()
+            return redirect(url_for("client_dashboard", lang=lang))
+
+        _, business_user_id, status, service_title = row
+        status = (status or "requested").strip().lower()
+
+        if status not in ("requested", "approved"):
+            cur.close()
+            conn.close()
+            return redirect(url_for("client_dashboard", lang=lang))
+
+        cur.execute(
+            """
+            UPDATE service_requests
+            SET request_details = %s,
+                preferred_date_text = %s,
+                preferred_time_text = %s,
+                quantity = %s,
+                updated_at = %s
+            WHERE id = %s
+            """,
+            (
+                request_details,
+                preferred_date_text,
+                preferred_time_text,
+                quantity,
+                now_local(),
+                request_id,
+            ),
+        )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Client failed updating service request %s: %s", request_id, e)
+        return redirect(url_for("client_dashboard", lang=lang))
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+    create_notification_if_enabled(
+        user_id=business_user_id,
+        category="business_request_alerts",
+        notification_type="service_request_updated_by_client",
+        title="Client updated a request",
+        body=service_title or "A client updated their request details.",
+        link_url=f"/requests/{request_id}",
+    )
+
+    log_service_request_event(
+        request_id,
+        business_user_id,
+        "client_updated",
+        note="Client updated request details.",
+    )
+
+    return redirect(url_for("client_dashboard", lang=lang))
+
+
+@app.route("/client/request/<int:request_id>/cancel", methods=["POST"])
+@login_required
+def client_cancel_request(request_id):
+    user = get_current_user()
+    user_id = user["id"]
+    user_email = (user.get("email") or "").strip().lower()
+    lang = get_request_lang()
+
+    cancel_reason = (request.form.get("cancel_reason") or "").strip()
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT id, user_id, status, service_title_snapshot
+            FROM service_requests
+            WHERE id = %s
+              AND (
+                    client_user_id = %s
+                    OR LOWER(COALESCE(client_email, '')) = LOWER(%s)
+                  )
+            LIMIT 1
+            """,
+            (request_id, user_id, user_email),
+        )
+        row = cur.fetchone()
+
+        if not row:
+            cur.close()
+            conn.close()
+            return redirect(url_for("client_dashboard", lang=lang))
+
+        _, business_user_id, status, service_title = row
+        status = (status or "requested").strip().lower()
+
+        if status in ("completed", "cancelled"):
+            cur.close()
+            conn.close()
+            return redirect(url_for("client_dashboard", lang=lang))
+
+        cur.execute(
+            """
+            UPDATE service_requests
+            SET status = 'cancelled',
+                cancel_requested_by_client = TRUE,
+                cancel_reason = %s,
+                cancelled_at = %s,
+                updated_at = %s
+            WHERE id = %s
+            """,
+            (
+                cancel_reason,
+                now_local(),
+                now_local(),
+                request_id,
+            ),
+        )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Client failed cancelling service request %s: %s", request_id, e)
+        return redirect(url_for("client_dashboard", lang=lang))
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+    create_notification_if_enabled(
+        user_id=business_user_id,
+        category="business_request_alerts",
+        notification_type="service_request_cancelled_by_client",
+        title="Client cancelled a request",
+        body=service_title or "A client cancelled their request.",
+        link_url=f"/requests/{request_id}",
+    )
+
+    log_service_request_event(
+        request_id,
+        business_user_id,
+        "client_cancelled",
+        note=cancel_reason or "Client cancelled the request.",
+    )
+
+    return redirect(url_for("client_dashboard", lang=lang))
+
+
 # =========================
 # BUSINESS DISCOVERY
 # =========================

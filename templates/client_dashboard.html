@@ -990,7 +990,95 @@
                   <a href="/book/{{ req.business_user_id }}{% if lang %}?lang={{ lang }}{% endif %}" class="btn btn-secondary">
                     {% if lang == 'es' %}Volver al negocio{% elif lang == 'zh' %}返回商家{% else %}Back to Business{% endif %}
                   </a>
+
+                  {% if req.status in ['requested', 'approved'] %}
+                    <button type="button" class="btn btn-secondary client-request-edit-toggle" data-request-id="{{ req.id }}">
+                      {% if lang == 'es' %}Editar solicitud{% elif lang == 'zh' %}编辑请求{% else %}Edit Request{% endif %}
+                    </button>
+                  {% endif %}
+
+                  {% if req.status not in ['completed', 'cancelled'] %}
+                    <button type="button" class="btn btn-secondary client-request-cancel-toggle" data-request-id="{{ req.id }}">
+                      {% if lang == 'es' %}Cancelar solicitud{% elif lang == 'zh' %}取消请求{% else %}Cancel Request{% endif %}
+                    </button>
+                  {% endif %}
                 </div>
+
+                {% if req.status in ['requested', 'approved'] %}
+                <form
+                  method="POST"
+                  action="{{ url_for('client_update_request', request_id=req.id, lang=lang) }}"
+                  class="client-request-edit-form"
+                  id="clientRequestEditForm{{ req.id }}"
+                  style="display:none; margin-top:14px;"
+                >
+                  <div class="customize-grid">
+                    <div class="customize-row">
+                      <div class="customize-label">
+                        {% if lang == 'es' %}Detalles{% elif lang == 'zh' %}详情{% else %}Details{% endif %}
+                      </div>
+                      <textarea class="client-input" name="request_details" rows="4">{{ req.request_details }}</textarea>
+                    </div>
+
+                    <div class="customize-row">
+                      <div class="customize-label">
+                        {% if lang == 'es' %}Fecha preferida{% elif lang == 'zh' %}偏好日期{% else %}Preferred Date{% endif %}
+                      </div>
+                      <input class="client-input" type="text" name="preferred_date_text" value="{{ req.preferred_date_text }}">
+                    </div>
+
+                    <div class="customize-row">
+                      <div class="customize-label">
+                        {% if lang == 'es' %}Hora preferida{% elif lang == 'zh' %}偏好时间{% else %}Preferred Time{% endif %}
+                      </div>
+                      <input class="client-input" type="text" name="preferred_time_text" value="{{ req.preferred_time_text }}">
+                    </div>
+
+                    <div class="customize-row">
+                      <div class="customize-label">
+                        {% if lang == 'es' %}Cantidad{% elif lang == 'zh' %}数量{% else %}Quantity{% endif %}
+                      </div>
+                      <input class="client-input" type="number" min="1" step="1" name="quantity" value="{{ req.quantity }}">
+                    </div>
+
+                    <div class="request-actions">
+                      <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}Guardar cambios{% elif lang == 'zh' %}保存更改{% else %}Save Changes{% endif %}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+                {% endif %}
+
+                {% if req.status not in ['completed', 'cancelled'] %}
+                <form
+                  method="POST"
+                  action="{{ url_for('client_cancel_request', request_id=req.id, lang=lang) }}"
+                  class="client-request-cancel-form"
+                  id="clientRequestCancelForm{{ req.id }}"
+                  style="display:none; margin-top:14px;"
+                >
+                  <div class="customize-grid">
+                    <div class="customize-row">
+                      <div class="customize-label">
+                        {% if lang == 'es' %}Motivo de cancelación{% elif lang == 'zh' %}取消原因{% else %}Cancellation Reason{% endif %}
+                      </div>
+                      <textarea
+                        class="client-input"
+                        name="cancel_reason"
+                        rows="3"
+                        placeholder="{% if lang == 'es' %}Opcional: comparte por qué quieres cancelar{% elif lang == 'zh' %}可选：说明取消原因{% else %}Optional: share why you want to cancel{% endif %}"
+                      ></textarea>
+                    </div>
+
+                    <div class="request-actions">
+                      <button type="submit" class="btn btn-secondary">
+                        {% if lang == 'es' %}Confirmar cancelación{% elif lang == 'zh' %}确认取消{% else %}Confirm Cancel{% endif %}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+                {% endif %}
               </div>
             {% endfor %}
           </div>
@@ -1578,6 +1666,26 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   loadPrefs();
+
+  document.querySelectorAll(".client-request-edit-toggle").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const requestId = btn.dataset.requestId;
+      const form = document.getElementById("clientRequestEditForm" + requestId);
+      if (form) {
+        form.style.display = form.style.display === "none" ? "block" : "none";
+      }
+    });
+  });
+
+  document.querySelectorAll(".client-request-cancel-toggle").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const requestId = btn.dataset.requestId;
+      const form = document.getElementById("clientRequestCancelForm" + requestId);
+      if (form) {
+        form.style.display = form.style.display === "none" ? "block" : "none";
+      }
+    });
+  });
 });
 </script>
 {% endblock %}
