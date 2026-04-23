@@ -4805,6 +4805,17 @@ def public_service_request_page(user_id, service_id):
         elif not form_data["client_email"]:
             error = "Client email is required."
         else:
+            current_client_user = get_current_user()
+            client_user_id = current_client_user.get("id") if current_client_user else None
+
+            logger.info(
+                "[PublicServiceRequestSubmit] business_user_id=%s service_id=%s client_user_id=%s client_email=%s",
+                user_id,
+                service_id,
+                client_user_id,
+                form_data["client_email"],
+            )
+
             request_id = create_service_request(
                 user_id=user_id,
                 service_id=service_id,
@@ -4816,6 +4827,14 @@ def public_service_request_page(user_id, service_id):
                 preferred_time_text=form_data["preferred_time_text"],
                 quantity=form_data["quantity"],
                 client_user_id=client_user_id,
+            )
+
+            logger.info(
+                "[PublicServiceRequestCreated] request_id=%s business_user_id=%s service_id=%s client_user_id=%s",
+                request_id,
+                user_id,
+                service_id,
+                client_user_id,
             )
 
             if request_id:
