@@ -4761,18 +4761,18 @@ def public_service_request_page(user_id, service_id):
         elif not form_data["client_email"]:
             error = "Client email is required."
         else:
-    request_id = create_service_request(
-        user_id=business_user_id,
-        service_id=service_id,
-        client_name=client_name,
-        client_email=client_email,
-        client_phone=client_phone,
-        request_details=request_details,
-        preferred_date_text=preferred_date_text,
-        preferred_time_text=preferred_time_text,
-        quantity=quantity,
-        client_user_id=client_user["id"],
-    )
+            request_id = create_service_request(
+                user_id=business_user_id,
+                service_id=service_id,
+                client_name=client_name,
+                client_email=client_email,
+                client_phone=client_phone,
+                request_details=request_details,
+                preferred_date_text=preferred_date_text,
+                preferred_time_text=preferred_time_text,
+                quantity=quantity,
+                client_user_id=client_user["id"],
+            )
 
             if request_id:
                 return redirect(
