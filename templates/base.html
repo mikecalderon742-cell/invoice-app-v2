@@ -1552,7 +1552,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        form.addEventListener("submit", function () {
+        form.addEventListener("submit", function (e) {
             if (form.dataset.loadingSubmitted === "true") {
                 return;
             }
@@ -1561,6 +1561,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            e.preventDefault();
             form.dataset.loadingSubmitted = "true";
 
             const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
@@ -1586,9 +1587,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     btn.value = getLoadingText(originalText, form, btn);
                 }
 
+                btn.disabled = true;
                 btn.classList.add("is-loading");
                 btn.setAttribute("aria-busy", "true");
             });
+
+            setTimeout(() => {
+                HTMLFormElement.prototype.submit.call(form);
+            }, 120);
         });
     });
 });
