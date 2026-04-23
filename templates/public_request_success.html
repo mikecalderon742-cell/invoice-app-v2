@@ -355,6 +355,16 @@
         </div>
 
         <div class="public-request-success-actions">
+          <a href="{{ url_for('client_dashboard', lang=lang) }}" class="btn btn-brand">
+            {% if lang == 'es' %}
+              Volver al panel de cliente
+            {% elif lang == 'zh' %}
+              返回客户面板
+            {% else %}
+              Back to Client Dashboard
+            {% endif %}
+          </a>
+
           <a href="{{ url_for('public_services_page', user_id=public_user_id, lang=lang) }}" class="btn btn-secondary">
             {% if lang == 'es' %}
               Ver más servicios
@@ -365,7 +375,7 @@
             {% endif %}
           </a>
 
-          <a href="{{ url_for('public_services_page', user_id=public_user_id, lang=lang) }}" class="btn btn-secondary">
+          <a href="{{ url_for('business_profile', user_id=public_user_id, lang=lang) }}" class="btn btn-secondary">
             {% if lang == 'es' %}
               Volver al perfil
             {% elif lang == 'zh' %}
