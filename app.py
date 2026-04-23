@@ -4013,7 +4013,7 @@ def update_service_request_status(request_id, user_id, new_status):
             "cancelled": "Cancelled",
         }
         status_label = status_label_map.get(new_status, new_status.replace("_", " ").title())
-        service_label = (service_title or "Your request").strip() if service_title else "Your request"
+        service_label = (service_title_snapshot or "Your request").strip() if service_title_snapshot else "Your request"
 
         if client_user_id:
             create_notification_if_enabled(
@@ -4721,6 +4721,25 @@ def update_notification_preferences_page():
 
     update_notification_preferences(user_id, updates)
     return lang_redirect("notifications_page")
+
+
+@app.route("/api/notifications/summary")
+@login_required
+def api_notifications_summary():
+    user = get_current_user()
+    user_id = user["id"]
+
+    unread_count = get_unread_notification_count_for_user(user_id)
+    latest_notifications = get_notifications_for_user(user_id, unread_only=False, limit=1)
+
+    latest = latest_notifications[0] if latest_notifications else None
+
+    return jsonify(
+        {
+            "unread_count": unread_count,
+            "latest": latest,
+        }
+    )
 
 
 # -------------------------

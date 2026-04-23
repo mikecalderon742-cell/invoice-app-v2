@@ -1604,6 +1604,48 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const notificationBadges = document.querySelectorAll(".notification-badge, .sidebar-notification-badge");
+
+    if (!notificationBadges.length) {
+        return;
+    }
+
+    async function refreshNotificationBadges() {
+        try {
+            const response = await fetch("/api/notifications/summary", {
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const unreadCount = Number(data.unread_count || 0);
+
+            notificationBadges.forEach((badge) => {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount < 100 ? String(unreadCount) : "99+";
+                    badge.style.display = "inline-flex";
+                } else {
+                    badge.textContent = "";
+                    badge.style.display = "none";
+                }
+            });
+        } catch (error) {
+            console.warn("Notification badge refresh failed:", error);
+        }
+    }
+
+    refreshNotificationBadges();
+    setInterval(refreshNotificationBadges, 30000);
+});
+</script>
+
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>
