@@ -4036,6 +4036,30 @@ def request_detail_page(request_id):
     if not service_request:
         return lang_redirect("requests_page")
 
+    # Force-load request details directly from the database so this page
+    # still shows the client notes even if tuple column ordering drifted elsewhere.
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT request_details, preferred_date_text, preferred_time_text
+            FROM service_requests
+            WHERE id = %s AND user_id = %s
+            LIMIT 1
+            """,
+            (request_id, user_id),
+        )
+        detail_row = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+    if detail_row:
+        service_request["request_details"] = detail_row[0] or ""
+        service_request["preferred_date_text"] = detail_row[1] or ""
+        service_request["preferred_time_text"] = detail_row[2] or ""
+
     request_events = get_service_request_events_for_user(request_id, user_id)
     linked_invoice = None
     if service_request.get("invoice_id"):
