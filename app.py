@@ -4766,19 +4766,20 @@ def public_services_page(user_id):
 @app.route("/book/<int:user_id>/service/<int:service_id>", methods=["GET", "POST"])
 def public_service_request_page(user_id, service_id):
     lang = get_request_lang()
-    current_user = get_current_user()
-    client_user_id = current_user.get("id") if current_user and current_user.get("id") else None
-
     business_profile = get_business_profile_by_user_id(user_id)
     service = get_service_by_id(service_id, user_id)
 
     if not business_profile or not service or not service.get("is_active"):
         return render_template("404.html"), 404
 
+    current_client_user = get_current_user()
+    client_user_id = current_client_user.get("id") if current_client_user and current_client_user.get("id") else None
+    client_email_fallback = (current_client_user.get("email") or "").strip() if current_client_user else ""
+
     error = None
     form_data = {
         "client_name": "",
-        "client_email": current_user.get("email") if client_user_id else "",
+        "client_email": client_email_fallback,
         "client_phone": "",
         "request_details": "",
         "preferred_date_text": "",
@@ -4788,7 +4789,7 @@ def public_service_request_page(user_id, service_id):
 
     if request.method == "POST":
         form_data["client_name"] = (request.form.get("client_name") or "").strip()
-        form_data["client_email"] = (request.form.get("client_email") or "").strip()
+        form_data["client_email"] = (request.form.get("client_email") or client_email_fallback or "").strip()
         form_data["client_phone"] = (request.form.get("client_phone") or "").strip()
         form_data["request_details"] = (request.form.get("request_details") or "").strip()
         form_data["preferred_date_text"] = (request.form.get("preferred_date_text") or "").strip()
@@ -4805,19 +4806,8 @@ def public_service_request_page(user_id, service_id):
         elif not form_data["client_email"]:
             error = "Client email is required."
         else:
-            current_client_user = get_current_user()
-            client_user_id = current_client_user.get("id") if current_client_user else None
-
-            logger.info(
-                "[PublicServiceRequestSubmit] business_user_id=%s service_id=%s client_user_id=%s client_email=%s",
-                user_id,
-                service_id,
-                client_user_id,
-                form_data["client_email"],
-            )
-
             request_id = create_service_request(
-                user_id=service["user_id"],
+                user_id=user_id,
                 service_id=service_id,
                 client_name=form_data["client_name"],
                 client_email=form_data["client_email"],
@@ -4827,14 +4817,6 @@ def public_service_request_page(user_id, service_id):
                 preferred_time_text=form_data["preferred_time_text"],
                 quantity=form_data["quantity"],
                 client_user_id=client_user_id,
-            )
-
-            logger.info(
-                "[PublicServiceRequestCreated] request_id=%s business_user_id=%s service_id=%s client_user_id=%s",
-                request_id,
-                user_id,
-                service_id,
-                client_user_id,
             )
 
             if request_id:
