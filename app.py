@@ -1149,6 +1149,15 @@ def init_db():
 
     cursor.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT;")
 
+    cursor.execute("ALTER TABLE service_requests ADD COLUMN IF NOT EXISTS client_user_id INTEGER;")
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS service_requests_client_user_idx
+        ON service_requests(client_user_id);
+        """
+    )
+
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoice_images (
@@ -1638,11 +1647,12 @@ def client_dashboard():
                 ON bp.user_id = sr.user_id
             LEFT JOIN users u
                 ON u.id = sr.user_id
-            WHERE LOWER(COALESCE(sr.client_email, '')) = LOWER(%s)
+            WHERE sr.client_user_id = %s
+               OR LOWER(COALESCE(sr.client_email, '')) = LOWER(%s)
             ORDER BY sr.created_at DESC, sr.id DESC
             LIMIT 100
             """,
-            (user.get("email") or "",),
+            (client_user_id, user.get("email") or ""),
         )
         request_rows = cur.fetchall()
 
@@ -3705,12 +3715,12 @@ def create_service_request(
     preferred_date_text=None,
     preferred_time_text=None,
     quantity=1,
+    client_user_id=None,
 ):
     conn = get_db_connection()
     cur = conn.cursor()
 
     try:
-        # --- Service snapshot ---
         service_title = None
         service_description = None
         service_price = None
@@ -3728,13 +3738,13 @@ def create_service_request(
             if svc:
                 service_title, service_description, service_price = svc
 
-        # --- Match existing client ---
         client_id = find_matching_client(user_id, client_email)
 
         cur.execute(
             """
             INSERT INTO service_requests (
                 user_id,
+                client_user_id,
                 client_id,
                 service_id,
                 status,
@@ -3751,11 +3761,12 @@ def create_service_request(
                 created_at,
                 updated_at
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             RETURNING id
             """,
             (
                 user_id,
+                client_user_id,
                 client_id,
                 service_id,
                 "requested",
@@ -3787,6 +3798,7 @@ def create_service_request(
                 preferred_date_text,
                 preferred_time_text,
                 quantity,
+                client_user_id,
                 created_at
             FROM service_requests
             WHERE id = %s
@@ -4748,17 +4760,18 @@ def public_service_request_page(user_id, service_id):
         elif not form_data["client_email"]:
             error = "Client email is required."
         else:
-            request_id = create_service_request(
-                user_id=user_id,
-                service_id=service_id,
-                client_name=form_data["client_name"],
-                client_email=form_data["client_email"],
-                client_phone=form_data["client_phone"],
-                request_details=form_data["request_details"],
-                preferred_date_text=form_data["preferred_date_text"],
-                preferred_time_text=form_data["preferred_time_text"],
-                quantity=form_data["quantity"],
-            )
+    request_id = create_service_request(
+        user_id=business_user_id,
+        service_id=service_id,
+        client_name=client_name,
+        client_email=client_email,
+        client_phone=client_phone,
+        request_details=request_details,
+        preferred_date_text=preferred_date_text,
+        preferred_time_text=preferred_time_text,
+        quantity=quantity,
+        client_user_id=client_user["id"],
+    )
 
             if request_id:
                 return redirect(
