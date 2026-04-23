@@ -4725,6 +4725,9 @@ def public_services_page(user_id):
 @app.route("/book/<int:user_id>/service/<int:service_id>", methods=["GET", "POST"])
 def public_service_request_page(user_id, service_id):
     lang = get_request_lang()
+    current_user = get_current_user()
+    client_user_id = current_user.get("id") if current_user and current_user.get("id") else None
+
     business_profile = get_business_profile_by_user_id(user_id)
     service = get_service_by_id(service_id, user_id)
 
@@ -4734,7 +4737,7 @@ def public_service_request_page(user_id, service_id):
     error = None
     form_data = {
         "client_name": "",
-        "client_email": "",
+        "client_email": current_user.get("email") if client_user_id else "",
         "client_phone": "",
         "request_details": "",
         "preferred_date_text": "",
@@ -4771,6 +4774,7 @@ def public_service_request_page(user_id, service_id):
                 preferred_date_text=form_data["preferred_date_text"],
                 preferred_time_text=form_data["preferred_time_text"],
                 quantity=form_data["quantity"],
+                client_user_id=client_user_id,
             )
 
             if request_id:
