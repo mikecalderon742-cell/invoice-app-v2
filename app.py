@@ -4817,7 +4817,7 @@ def public_service_request_page(user_id, service_id):
             )
 
             request_id = create_service_request(
-                user_id=user_id,
+                user_id=service["user_id"],
                 service_id=service_id,
                 client_name=form_data["client_name"],
                 client_email=form_data["client_email"],
