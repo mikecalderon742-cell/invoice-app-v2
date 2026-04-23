@@ -3414,7 +3414,8 @@ def update_service_request_status(request_id, user_id, new_status):
     try:
         cur.execute(
             """
-            SELECT status FROM service_requests
+            SELECT status, client_email, client_name, service_title_snapshot
+            FROM service_requests
             WHERE id = %s AND user_id = %s
             """,
             (request_id, user_id),
@@ -3423,7 +3424,7 @@ def update_service_request_status(request_id, user_id, new_status):
         if not row:
             return False
 
-        old_status = row[0]
+        old_status, client_email, client_name, service_title_snapshot = row
 
         timestamp_field = None
         if new_status == "approved":
@@ -3435,6 +3436,8 @@ def update_service_request_status(request_id, user_id, new_status):
         elif new_status == "cancelled":
             timestamp_field = "cancelled_at"
 
+        now_dt = now_local()
+
         if timestamp_field:
             cur.execute(
                 f"""
@@ -3444,7 +3447,7 @@ def update_service_request_status(request_id, user_id, new_status):
                     updated_at = %s
                 WHERE id = %s AND user_id = %s
                 """,
-                (new_status, now_local(), now_local(), request_id, user_id),
+                (new_status, now_dt, now_dt, request_id, user_id),
             )
         else:
             cur.execute(
@@ -3454,7 +3457,7 @@ def update_service_request_status(request_id, user_id, new_status):
                     updated_at = %s
                 WHERE id = %s AND user_id = %s
                 """,
-                (new_status, now_local(), request_id, user_id),
+                (new_status, now_dt, request_id, user_id),
             )
 
         conn.commit()
@@ -3466,6 +3469,24 @@ def update_service_request_status(request_id, user_id, new_status):
             old_value=old_status,
             new_value=new_status,
         )
+
+        if old_status != new_status and client_email:
+            email_success, email_error = send_client_service_request_status_email(
+                business_user_id=user_id,
+                request_id=request_id,
+                client_email=client_email,
+                client_name=client_name,
+                service_title=service_title_snapshot,
+                new_status=new_status,
+            )
+
+            if not email_success:
+                logger.warning(
+                    "Request status updated but client email failed for request_id=%s email=%s error=%s",
+                    request_id,
+                    client_email,
+                    email_error,
+                )
 
         return True
 
@@ -7184,6 +7205,169 @@ def send_invoice_email(invoice_id: int, to_email: str, subject: str, body_text: 
         details=f"{event_title} to {to_email}.",
         visibility="private",
     )
+
+    return True, None
+
+
+def send_basic_email_via_resend(to_email: str, subject: str, body_text: str):
+    api_key = os.environ.get("RESEND_API_KEY")
+    resend_from = os.environ.get("RESEND_FROM")
+
+    if not api_key:
+        return False, "Resend configuration missing: RESEND_API_KEY is not set."
+
+    if not resend_from:
+        return False, (
+            "Resend configuration missing: RESEND_FROM is not set. "
+            "Set RESEND_FROM to something like 'BillBeam <billing@billbeam.com>'."
+        )
+
+    if "gmail.com" in resend_from.lower():
+        return False, (
+            "Resend cannot send from a gmail.com address. "
+            f"Current RESEND_FROM value is: '{resend_from}'. "
+            "Use your verified domain, for example 'BillBeam <billing@yourdomain.com>'."
+        )
+
+    try:
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": resend_from,
+                "to": [to_email],
+                "subject": subject,
+                "text": body_text,
+            },
+            timeout=10,
+        )
+
+        if resp.status_code >= 400:
+            try:
+                data = resp.json()
+                msg = data.get("message", "")
+            except Exception:
+                msg = resp.text
+
+            return False, f"Resend API error {resp.status_code}: {msg or resp.text}"
+
+        return True, None
+
+    except Exception as e:
+        return False, f"Error sending via Resend: {e}"
+
+
+def send_client_service_request_status_email(
+    business_user_id: int,
+    request_id: int,
+    client_email: str,
+    client_name: str,
+    service_title: str,
+    new_status: str,
+):
+    client_email = (client_email or "").strip()
+    if not client_email:
+        return False, "Client email missing."
+
+    business_profile = get_business_profile_by_user_id(business_user_id) or {}
+    business_name = (
+        (business_profile.get("business_name") or DEFAULT_BUSINESS_NAME).strip()
+        or DEFAULT_BUSINESS_NAME
+    )
+    business_email = (business_profile.get("email") or "").strip()
+    business_website = (business_profile.get("website") or "").strip()
+
+    client_name = (client_name or "there").strip()
+    service_title = (service_title or "your request").strip()
+
+    status_label_map = {
+        "requested": "received",
+        "approved": "approved",
+        "in_progress": "in progress",
+        "completed": "completed",
+        "cancelled": "cancelled",
+    }
+    status_label = status_label_map.get(new_status, new_status.replace("_", " "))
+
+    subject = f"{business_name} updated your request"
+    body_lines = [
+        f"Hi {client_name},",
+        "",
+        f"{business_name} updated the status of your request #{request_id}.",
+        f"Service: {service_title}",
+        f"New status: {status_label.title()}",
+        "",
+    ]
+
+    if new_status == "approved":
+        body_lines.append(
+            "Good news — your request has been approved and is ready for the next step."
+        )
+    elif new_status == "in_progress":
+        body_lines.append(
+            "Your request is now in progress."
+        )
+    elif new_status == "completed":
+        body_lines.append(
+            "Your request has been marked as completed."
+        )
+    elif new_status == "cancelled":
+        body_lines.append(
+            "Your request has been marked as cancelled. If you have questions, reply to this email or contact the business directly."
+        )
+    else:
+        body_lines.append(
+            "This is just a quick update to keep you in the loop."
+        )
+
+    footer_lines = ["", "—", business_name]
+
+    if business_email:
+        footer_lines.append(business_email)
+
+    if business_website:
+        footer_lines.append(business_website)
+
+    footer_lines.append("Powered by BillBeam")
+
+    body_text = "\n".join(body_lines + footer_lines)
+
+    if os.environ.get("RESEND_API_KEY"):
+        return send_basic_email_via_resend(
+            to_email=client_email,
+            subject=subject,
+            body_text=body_text,
+        )
+
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_from = os.environ.get("SMTP_FROM") or smtp_user
+
+    if not smtp_host or not smtp_from:
+        return False, (
+            "No email provider available. Configure Resend (RESEND_API_KEY & RESEND_FROM) "
+            "or SMTP (SMTP_HOST & SMTP_FROM)."
+        )
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = f"{business_name} <{smtp_from}>"
+    msg["To"] = client_email
+    msg.set_content(body_text)
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.starttls()
+            if smtp_user and smtp_password:
+                server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+    except Exception as e:
+        return False, f"Error sending email (connection or SMTP error): {e}"
 
     return True, None
 
