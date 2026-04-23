@@ -863,76 +863,22 @@
               ) }}
             </div>
 
-            <form method="post" action="/request-service/{{ service.id }}{% if lang %}?lang={{ lang }}{% endif %}" class="service-form">
-              <div class="service-form-grid">
-                <div class="service-field">
-                  <label for="name_{{ service.id }}">
-                    {% if lang == 'es' %}
-                      Tu nombre
-                    {% elif lang == 'zh' %}
-                      您的姓名
-                    {% else %}
-                      Your name
-                    {% endif %}
-                  </label>
-                  <input
-                    id="name_{{ service.id }}"
-                    type="text"
-                    name="name"
-                    placeholder="{% if lang == 'es' %}Ej. Jane Doe{% elif lang == 'zh' %}例如：Jane Doe{% else %}e.g. Jane Doe{% endif %}"
-                    required
-                  >
-                </div>
-
-                <div class="service-field">
-                  <label for="email_{{ service.id }}">
-                    {% if lang == 'es' %}
-                      Tu correo
-                    {% elif lang == 'zh' %}
-                      您的邮箱
-                    {% else %}
-                      Your email
-                    {% endif %}
-                  </label>
-                  <input
-                    id="email_{{ service.id }}"
-                    type="email"
-                    name="email"
-                    placeholder="you@example.com"
-                    required
-                  >
-                </div>
-              </div>
-
-              <div class="service-field">
-                <label for="details_{{ service.id }}">
-                  {% if lang == 'es' %}
-                    Detalles rápidos
-                  {% elif lang == 'zh' %}
-                    简要说明
-                  {% else %}
-                    Quick details
-                  {% endif %}
-                </label>
-                <textarea
-                  id="details_{{ service.id }}"
-                  name="details"
-                  placeholder="{% if lang == 'es' %}Cuéntale al negocio lo que necesitas, tus tiempos o cualquier contexto útil.{% elif lang == 'zh' %}告诉商家您的需求、时间安排或任何有帮助的背景信息。{% else %}Tell the business what you need, your timing, or any helpful context.{% endif %}"
-                ></textarea>
-              </div>
-
-              <div class="service-form-actions">
-                <button type="submit" class="btn btn-brand">
-                  {% if lang == 'es' %}
-                    Solicitar servicio
-                  {% elif lang == 'zh' %}
-                    请求服务
-                  {% else %}
-                    Request Service
-                  {% endif %}
-                </button>
-              </div>
-            </form>
+            <div class="service-form">
+  <div class="service-form-actions">
+    <a
+      href="{{ url_for('public_service_request_page', user_id=business_user_id, service_id=service.id, lang=lang) }}"
+      class="btn btn-brand"
+    >
+      {% if lang == 'es' %}
+        Solicitar servicio
+      {% elif lang == 'zh' %}
+        请求服务
+      {% else %}
+        Request Service
+      {% endif %}
+    </a>
+  </div>
+</div>
           </article>
         {% endfor %}
       </div>
