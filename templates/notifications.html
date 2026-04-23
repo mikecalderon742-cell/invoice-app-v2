@@ -627,6 +627,100 @@
 </style>
 
 <div class="page-shell notifications-shell">
+{% if notification_preferences %}
+<div class="notifications-list-card" style="margin-bottom: 10px;">
+    <div class="notifications-list-header">
+        <div>
+            <h2 class="notifications-list-title">
+                {% if lang == 'es' %}
+                    Preferencias de notificaciones
+                {% elif lang == 'zh' %}
+                    通知偏好
+                {% else %}
+                    Notification Preferences
+                {% endif %}
+            </h2>
+            <p class="notifications-list-sub">
+                {% if lang == 'es' %}
+                    Controla qué tipo de actividad quieres recibir.
+                {% elif lang == 'zh' %}
+                    控制您希望接收的通知类型。
+                {% else %}
+                    Control what activity you want to be notified about.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="notifications-list-body">
+        <form method="POST" action="{{ url_for('update_notification_preferences_page', lang=lang) }}" data-loading-submit="true">
+            
+            <div class="notifications-group-list">
+
+                <label class="notification-item read" style="cursor:pointer;">
+                    <input type="checkbox" name="notifications_enabled"
+                           {% if notification_preferences.notifications_enabled %}checked{% endif %}>
+                    <div class="notification-main">
+                        <div class="notification-title">
+                            {% if lang == 'es' %}Notificaciones activas{% elif lang == 'zh' %}启用通知{% else %}Enable Notifications{% endif %}
+                        </div>
+                        <div class="notification-body">
+                            {% if lang == 'es' %}Activa o desactiva todas las notificaciones.{% elif lang == 'zh' %}开启或关闭所有通知。{% else %}Turn all notifications on or off.{% endif %}
+                        </div>
+                    </div>
+                </label>
+
+                <label class="notification-item read" style="cursor:pointer;">
+                    <input type="checkbox" name="business_request_alerts"
+                           {% if notification_preferences.business_request_alerts %}checked{% endif %}>
+                    <div class="notification-main">
+                        <div class="notification-title">
+                            {% if lang == 'es' %}Solicitudes de clientes{% elif lang == 'zh' %}客户请求{% else %}Client Requests{% endif %}
+                        </div>
+                        <div class="notification-body">
+                            {% if lang == 'es' %}Cuando alguien solicita un servicio.{% elif lang == 'zh' %}当有人请求服务时。{% else %}When someone requests a service.{% endif %}
+                        </div>
+                    </div>
+                </label>
+
+                <label class="notification-item read" style="cursor:pointer;">
+                    <input type="checkbox" name="invoice_alerts"
+                           {% if notification_preferences.invoice_alerts %}checked{% endif %}>
+                    <div class="notification-main">
+                        <div class="notification-title">
+                            {% if lang == 'es' %}Actividad de facturas{% elif lang == 'zh' %}发票活动{% else %}Invoice Activity{% endif %}
+                        </div>
+                        <div class="notification-body">
+                            {% if lang == 'es' %}Vistas y eventos de facturas.{% elif lang == 'zh' %}发票查看和状态更新。{% else %}Invoice views and updates.{% endif %}
+                        </div>
+                    </div>
+                </label>
+
+                <label class="notification-item read" style="cursor:pointer;">
+                    <input type="checkbox" name="payment_alerts"
+                           {% if notification_preferences.payment_alerts %}checked{% endif %}>
+                    <div class="notification-main">
+                        <div class="notification-title">
+                            {% if lang == 'es' %}Pagos recibidos{% elif lang == 'zh' %}收款通知{% else %}Payments Received{% endif %}
+                        </div>
+                        <div class="notification-body">
+                            {% if lang == 'es' %}Cuando recibes pagos.{% elif lang == 'zh' %}当收到付款时。{% else %}When you get paid.{% endif %}
+                        </div>
+                    </div>
+                </label>
+
+            </div>
+
+            <div style="margin-top: 16px;">
+                <button type="submit" class="btn btn-primary">
+                    {% if lang == 'es' %}Guardar preferencias{% elif lang == 'zh' %}保存设置{% else %}Save Preferences{% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endif %}
     <div class="notifications-hero">
         <div class="notifications-hero-inner">
             <div>
