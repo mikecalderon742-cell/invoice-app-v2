@@ -1896,14 +1896,10 @@ def request_service(service_id):
         )
         row = cur.fetchone()
 
-        if not row:
-            return redirect(request.referrer or url_for("client_dashboard", lang=lang))
+    if not row:
+        return redirect(request.referrer or url_for("client_dashboard", lang=lang))
 
-        business_user_id = row[0]
-
-    finally:
-        cur.close()
-        conn.close()
+    business_user_id = row[0]
 
     request_id = create_service_request(
         user_id=business_user_id,
@@ -1917,6 +1913,9 @@ def request_service(service_id):
         quantity=quantity,
     )
 
+finally:
+    cur.close()
+    conn.close()
     logger.info(
         "[ClientRequestCreated] request_id=%s service_id=%s request_details=%s",
         request_id,
