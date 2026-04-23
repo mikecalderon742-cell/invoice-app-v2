@@ -1495,14 +1495,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
-</script>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const loadingForms = document.querySelectorAll("form[data-loading-submit='true']");
 
     loadingForms.forEach((form) => {
-        form.addEventListener("submit", function () {
+        form.addEventListener("submit", function (e) {
+            if (!form.checkValidity()) {
+                return;
+            }
+
             const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
 
             submitButtons.forEach((btn) => {
@@ -1512,27 +1514,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 btn.dataset.loadingApplied = "true";
 
+                const loadingText =
+                    btn.dataset.loadingText ||
+                    form.dataset.loadingText ||
+                    "Saving...";
+
                 if (btn.tagName === "BUTTON") {
                     if (!btn.dataset.originalText) {
                         btn.dataset.originalText = btn.innerHTML;
                     }
-
-                    const loadingText =
-                        btn.dataset.loadingText ||
-                        form.dataset.loadingText ||
-                        "Saving...";
-
                     btn.innerHTML = loadingText;
                 } else if (btn.tagName === "INPUT") {
                     if (!btn.dataset.originalValue) {
                         btn.dataset.originalValue = btn.value;
                     }
-
-                    const loadingText =
-                        btn.dataset.loadingText ||
-                        form.dataset.loadingText ||
-                        "Saving...";
-
                     btn.value = loadingText;
                 }
 
