@@ -825,7 +825,7 @@
                     <td>
                       <div class="request-date-line">
                         {% if req.created_at %}
-                          {{ req.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                          {{ req.created_at.strftime("%Y-%m-%d %I:%M %p") if req.created_at else '—' }}
                         {% else %}
                           —
                         {% endif %}

@@ -3497,6 +3497,31 @@ def create_service_request(
         request_id = cur.fetchone()[0]
         conn.commit()
 
+        cur.execute(
+            """
+            SELECT
+                client_name,
+                client_email,
+                client_phone,
+                request_details,
+                preferred_date_text,
+                preferred_time_text,
+                quantity,
+                created_at
+            FROM service_requests
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (request_id,),
+        )
+        inserted_row = cur.fetchone()
+
+        logger.info(
+            "[ServiceRequestInserted] request_id=%s row=%s",
+            request_id,
+            inserted_row,
+        )
+
         log_service_request_event(
             request_id,
             user_id,
