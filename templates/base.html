@@ -1562,6 +1562,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             e.preventDefault();
+
+            // Force the browser to paint the loading text before the form moves forward.
+            form.offsetHeight;
+
             form.dataset.loadingSubmitted = "true";
 
             const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
@@ -1594,7 +1598,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             setTimeout(() => {
                 HTMLFormElement.prototype.submit.call(form);
-            }, 120);
+            }, 180);
         });
     });
 });
