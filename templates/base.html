@@ -1502,41 +1502,43 @@ document.addEventListener("DOMContentLoaded", function () {
     const loadingForms = document.querySelectorAll("form[data-loading-submit='true']");
 
     loadingForms.forEach((form) => {
-        form.addEventListener("submit", function (e) {
-            if (!form.checkValidity()) {
+        form.addEventListener("submit", function () {
+            if (typeof form.checkValidity === "function" && !form.checkValidity()) {
                 return;
             }
 
-            const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
-
-            submitButtons.forEach((btn) => {
-                if (btn.dataset.loadingApplied === "true") {
+            window.setTimeout(() => {
+                if (form.dataset.loadingApplied === "true") {
                     return;
                 }
 
-                btn.dataset.loadingApplied = "true";
+                form.dataset.loadingApplied = "true";
 
-                const loadingText =
-                    btn.dataset.loadingText ||
-                    form.dataset.loadingText ||
-                    "Saving...";
+                const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
 
-                if (btn.tagName === "BUTTON") {
-                    if (!btn.dataset.originalText) {
-                        btn.dataset.originalText = btn.innerHTML;
+                submitButtons.forEach((btn) => {
+                    const loadingText =
+                        btn.dataset.loadingText ||
+                        form.dataset.loadingText ||
+                        "Saving...";
+
+                    if (btn.tagName === "BUTTON") {
+                        if (!btn.dataset.originalText) {
+                            btn.dataset.originalText = btn.innerHTML;
+                        }
+                        btn.innerHTML = loadingText;
+                    } else if (btn.tagName === "INPUT") {
+                        if (!btn.dataset.originalValue) {
+                            btn.dataset.originalValue = btn.value;
+                        }
+                        btn.value = loadingText;
                     }
-                    btn.innerHTML = loadingText;
-                } else if (btn.tagName === "INPUT") {
-                    if (!btn.dataset.originalValue) {
-                        btn.dataset.originalValue = btn.value;
-                    }
-                    btn.value = loadingText;
-                }
 
-                btn.disabled = true;
-                btn.classList.add("is-loading");
-                btn.setAttribute("aria-busy", "true");
-            });
+                    btn.disabled = true;
+                    btn.classList.add("is-loading");
+                    btn.setAttribute("aria-busy", "true");
+                });
+            }, 0);
         });
     });
 });
