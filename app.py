@@ -1761,18 +1761,68 @@ def request_service(service_id):
     client_user = get_current_user()
     lang = get_request_lang()
 
-    client_name = (request.form.get("client_name") or request.form.get("name") or "").strip()
-    client_email = (request.form.get("client_email") or request.form.get("email") or client_user.get("email") or "").strip()
-    client_phone = (request.form.get("client_phone") or "").strip()
-    request_details = (request.form.get("request_details") or "").strip()
-    preferred_date_text = (request.form.get("preferred_date_text") or "").strip()
-    preferred_time_text = (request.form.get("preferred_time_text") or "").strip()
+    client_name = (
+        request.form.get("client_name")
+        or request.form.get("name")
+        or ""
+    ).strip()
 
-    quantity_raw = (request.form.get("quantity") or "1").strip()
+    client_email = (
+        request.form.get("client_email")
+        or request.form.get("email")
+        or client_user.get("email")
+        or ""
+    ).strip()
+
+    client_phone = (
+        request.form.get("client_phone")
+        or request.form.get("phone")
+        or ""
+    ).strip()
+
+    request_details = (
+        request.form.get("request_details")
+        or request.form.get("details")
+        or request.form.get("notes")
+        or request.form.get("message")
+        or request.form.get("description")
+        or ""
+    ).strip()
+
+    preferred_date_text = (
+        request.form.get("preferred_date_text")
+        or request.form.get("preferred_date")
+        or ""
+    ).strip()
+
+    preferred_time_text = (
+        request.form.get("preferred_time_text")
+        or request.form.get("preferred_time")
+        or ""
+    ).strip()
+
+    quantity_raw = (
+        request.form.get("quantity")
+        or "1"
+    ).strip()
+
     try:
         quantity = max(1, int(quantity_raw))
     except ValueError:
         quantity = 1
+
+    logger.info(
+        "[ClientRequestSubmit] service_id=%s client_name=%s client_email=%s client_phone=%s request_details=%s preferred_date=%s preferred_time=%s quantity=%s form_keys=%s",
+        service_id,
+        client_name,
+        client_email,
+        client_phone,
+        request_details,
+        preferred_date_text,
+        preferred_time_text,
+        quantity,
+        list(request.form.keys()),
+    )
 
     if not client_name or not client_email:
         return redirect(request.referrer or url_for("client_dashboard", lang=lang))
@@ -1810,6 +1860,13 @@ def request_service(service_id):
         preferred_date_text=preferred_date_text,
         preferred_time_text=preferred_time_text,
         quantity=quantity,
+    )
+
+    logger.info(
+        "[ClientRequestCreated] request_id=%s service_id=%s request_details=%s",
+        request_id,
+        service_id,
+        request_details,
     )
 
     if not request_id:
