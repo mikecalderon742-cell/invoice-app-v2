@@ -3833,6 +3833,8 @@ def create_notification_if_enabled(
     critical_types = {
         "service_request_created",
         "service_request_status_updated",
+        "service_request_updated_by_client",
+        "service_request_cancelled_by_client",
     }
 
     if notification_type not in critical_types:
