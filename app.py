@@ -4762,16 +4762,15 @@ def public_service_request_page(user_id, service_id):
             error = "Client email is required."
         else:
             request_id = create_service_request(
-                user_id=business_user_id,
+                user_id=user_id,
                 service_id=service_id,
-                client_name=client_name,
-                client_email=client_email,
-                client_phone=client_phone,
-                request_details=request_details,
-                preferred_date_text=preferred_date_text,
-                preferred_time_text=preferred_time_text,
-                quantity=quantity,
-                client_user_id=client_user["id"],
+                client_name=form_data["client_name"],
+                client_email=form_data["client_email"],
+                client_phone=form_data["client_phone"],
+                request_details=form_data["request_details"],
+                preferred_date_text=form_data["preferred_date_text"],
+                preferred_time_text=form_data["preferred_time_text"],
+                quantity=form_data["quantity"],
             )
 
             if request_id:
