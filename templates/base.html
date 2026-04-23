@@ -1502,43 +1502,47 @@ document.addEventListener("DOMContentLoaded", function () {
     const loadingForms = document.querySelectorAll("form[data-loading-submit='true']");
 
     loadingForms.forEach((form) => {
-        form.addEventListener("submit", function () {
+        form.addEventListener("submit", function (e) {
+            if (form.dataset.loadingSubmitted === "true") {
+                return;
+            }
+
             if (typeof form.checkValidity === "function" && !form.checkValidity()) {
                 return;
             }
 
-            window.setTimeout(() => {
-                if (form.dataset.loadingApplied === "true") {
-                    return;
+            e.preventDefault();
+
+            form.dataset.loadingSubmitted = "true";
+
+            const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
+
+            submitButtons.forEach((btn) => {
+                const loadingText =
+                    btn.dataset.loadingText ||
+                    form.dataset.loadingText ||
+                    "Saving...";
+
+                if (btn.tagName === "BUTTON") {
+                    if (!btn.dataset.originalText) {
+                        btn.dataset.originalText = btn.innerHTML;
+                    }
+                    btn.innerHTML = loadingText;
+                } else if (btn.tagName === "INPUT") {
+                    if (!btn.dataset.originalValue) {
+                        btn.dataset.originalValue = btn.value;
+                    }
+                    btn.value = loadingText;
                 }
 
-                form.dataset.loadingApplied = "true";
+                btn.disabled = true;
+                btn.classList.add("is-loading");
+                btn.setAttribute("aria-busy", "true");
+            });
 
-                const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
-
-                submitButtons.forEach((btn) => {
-                    const loadingText =
-                        btn.dataset.loadingText ||
-                        form.dataset.loadingText ||
-                        "Saving...";
-
-                    if (btn.tagName === "BUTTON") {
-                        if (!btn.dataset.originalText) {
-                            btn.dataset.originalText = btn.innerHTML;
-                        }
-                        btn.innerHTML = loadingText;
-                    } else if (btn.tagName === "INPUT") {
-                        if (!btn.dataset.originalValue) {
-                            btn.dataset.originalValue = btn.value;
-                        }
-                        btn.value = loadingText;
-                    }
-
-                    btn.disabled = true;
-                    btn.classList.add("is-loading");
-                    btn.setAttribute("aria-busy", "true");
-                });
-            }, 0);
+            setTimeout(() => {
+                HTMLFormElement.prototype.submit.call(form);
+            }, 120);
         });
     });
 });
