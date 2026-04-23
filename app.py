@@ -3392,7 +3392,37 @@ def get_service_request_by_id(request_id, user_id):
     try:
         cur.execute(
             """
-            SELECT *
+            SELECT
+                id,
+                user_id,
+                client_id,
+                service_id,
+                invoice_id,
+                status,
+                request_type,
+                source,
+                service_title_snapshot,
+                service_description_snapshot,
+                service_price_snapshot,
+                client_name,
+                client_email,
+                client_phone,
+                request_details,
+                preferred_date_text,
+                preferred_time_text,
+                quantity,
+                intake_answers_json,
+                owner_notes,
+                client_notes,
+                cancel_requested_by_client,
+                cancel_reason,
+                approved_at,
+                in_progress_at,
+                completed_at,
+                cancelled_at,
+                converted_to_invoice_at,
+                created_at,
+                updated_at
             FROM service_requests
             WHERE id = %s AND user_id = %s
             LIMIT 1
