@@ -238,7 +238,7 @@
                 </div>
             {% endif %}
 
-            <form method="POST" action="/login{% if lang %}?lang={{ lang }}{% endif %}" novalidate>
+            <form method="POST" action="/login{% if lang %}?lang={{ lang }}{% endif %}" novalidate data-loading-submit="true" data-loading-text="Signing in...">
                 <div class="auth-form-grid">
                     <div class="auth-field">
                         <label for="email">

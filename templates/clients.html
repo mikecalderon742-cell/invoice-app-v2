@@ -356,7 +356,7 @@
             </div>
         </div>
 
-        <form method="POST" action="/clients/add{% if lang %}?lang={{ lang }}{% endif %}">
+        <form method="POST" action="/clients/add{% if lang %}?lang={{ lang }}{% endif %}" data-loading-submit="true" data-loading-text="Saving...">
             <div class="clients-form-grid">
                 <div class="clients-row-2">
                     <div class="client-field">

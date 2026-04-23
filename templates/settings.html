@@ -1016,7 +1016,7 @@
     {% endif %}
 
     <div class="settings-form-shell fade-in-up">
-        <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}" enctype="multipart/form-data">
+        <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}" enctype="multipart/form-data" data-loading-submit="true" data-loading-text="Saving...">
             <input type="hidden" name="form_type" value="profile">
 
             <div class="settings-grid">
@@ -1717,7 +1717,7 @@
                 {% endif %}
             </div>
 
-            <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+            <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}" data-loading-submit="true" data-loading-text="Saving...">
                 <input type="hidden" name="form_type" value="notification_preferences">
 
                 {% set prefs = notification_preferences or {} %}
@@ -2025,7 +2025,7 @@
                 {% endif %}
             </div>
 
-            <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}">
+            <form method="POST" action="/settings{% if lang %}?lang={{ lang }}{% endif %}" data-loading-submit="true" data-loading-text="Updating...">
                 <input type="hidden" name="form_type" value="password">
 
                 <div class="security-grid">

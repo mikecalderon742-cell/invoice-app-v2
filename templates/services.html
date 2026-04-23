@@ -849,9 +849,9 @@
 
             <div class="services-form-wrap">
                 {% if edit_service %}
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('update_service_route', service_id=edit_service.id, lang=current_lang) }}">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('update_service_route', service_id=edit_service.id, lang=current_lang) }}" data-loading-submit="true" data-loading-text="Saving...">
 {% else %}
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_service_route', lang=current_lang) }}">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_service_route', lang=current_lang) }}" data-loading-submit="true" data-loading-text="Saving...">
 {% endif %}
                     <input type="hidden" name="lang" value="{{ current_lang }}">
 

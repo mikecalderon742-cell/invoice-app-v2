@@ -393,6 +393,14 @@
         margin-right: 4px;
     }
 
+    .btn.is-loading,
+    button.is-loading,
+    input[type="submit"].is-loading {
+        opacity: 0.78;
+        pointer-events: none;
+        cursor: wait;
+    }
+
     /* Safe layout / scroll / ribbon fixes */
     .container {
         max-width: min(1340px, calc(100vw - 40px));
@@ -1486,6 +1494,54 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const loadingForms = document.querySelectorAll("form[data-loading-submit='true']");
+
+    loadingForms.forEach((form) => {
+        form.addEventListener("submit", function () {
+            const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
+
+            submitButtons.forEach((btn) => {
+                if (btn.dataset.loadingApplied === "true") {
+                    return;
+                }
+
+                btn.dataset.loadingApplied = "true";
+
+                if (btn.tagName === "BUTTON") {
+                    if (!btn.dataset.originalText) {
+                        btn.dataset.originalText = btn.innerHTML;
+                    }
+
+                    const loadingText =
+                        btn.dataset.loadingText ||
+                        form.dataset.loadingText ||
+                        "Saving...";
+
+                    btn.innerHTML = loadingText;
+                } else if (btn.tagName === "INPUT") {
+                    if (!btn.dataset.originalValue) {
+                        btn.dataset.originalValue = btn.value;
+                    }
+
+                    const loadingText =
+                        btn.dataset.loadingText ||
+                        form.dataset.loadingText ||
+                        "Saving...";
+
+                    btn.value = loadingText;
+                }
+
+                btn.disabled = true;
+                btn.classList.add("is-loading");
+                btn.setAttribute("aria-busy", "true");
+            });
+        });
+    });
 });
 </script>
 

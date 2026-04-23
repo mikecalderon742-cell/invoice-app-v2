@@ -582,7 +582,7 @@
             {% endif %}
           </div>
 
-          <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}" class="public-request-form">
+          <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}" class="public-request-form" data-loading-submit="true" data-loading-text="Submitting..."> }}" class="public-request-form">
             <div class="public-request-form-grid">
               <div class="public-request-field">
                 <label for="client_name">

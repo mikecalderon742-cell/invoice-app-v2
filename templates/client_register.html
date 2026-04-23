@@ -474,7 +474,7 @@
       </div>
       {% endif %}
 
-      <form method="post" action="/client/register{% if lang %}?lang={{ lang }}{% endif %}" class="client-register-form">
+      <form method="post" action="/client/register{% if lang %}?lang={{ lang }}{% endif %}" class="client-register-form" data-loading-submit="true" data-loading-text="Creating account...">
         <div class="client-register-field">
           <label for="email">
             {% if lang == 'es' %}
