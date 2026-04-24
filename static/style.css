@@ -4264,3 +4264,18 @@ canvas.signature-canvas {
     content: " ✦";
     font-weight: 600;
 }
+
+.welcome-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.welcome-sparkle {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    fill: #facc15;
+    filter: drop-shadow(0 4px 10px rgba(250, 204, 21, 0.35));
+}

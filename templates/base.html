@@ -1112,7 +1112,12 @@ body.dark .autism-ribbon {
 <div id="welcomeModal" class="welcome-modal hidden">
     <div class="welcome-content">
         <h2 class="welcome-title">
-    {% if lang == 'es' %}Bienvenido a BillBeam{% else %}Welcome to BillBeam{% endif %}
+    <span>
+        {% if lang == 'es' %}Bienvenido a BillBeam{% else %}Welcome to BillBeam{% endif %}
+    </span>
+    <svg class="welcome-sparkle" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.5L14.7 9.3L21.5 12L14.7 14.7L12 21.5L9.3 14.7L2.5 12L9.3 9.3L12 2.5Z"></path>
+    </svg>
 </h2>
         <p>
             {% if lang == 'es' %}
