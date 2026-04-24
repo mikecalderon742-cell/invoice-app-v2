@@ -1050,6 +1050,16 @@
                     {% endif %}
                   </div>
 
+<div style="font-size:12px; color:#64748b; margin-bottom:12px;">
+  {% if lang == 'es' %}
+    Los mensajes se actualizan automáticamente cuando el negocio responde.
+  {% elif lang == 'zh' %}
+    当商家回复时，消息会自动更新。
+  {% else %}
+    Messages update automatically when the business replies.
+  {% endif %}
+</div>
+
                   {% if req.messages and req.messages|length > 0 %}
                     <div style="display:grid; gap:10px; margin-bottom:14px;">
                       {% for msg in req.messages %}
