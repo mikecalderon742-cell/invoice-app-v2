@@ -574,6 +574,22 @@
             line-height: 1.6;
         }
 
+        .services-trust-note {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(58,139,255,.07);
+            border: 1px solid rgba(58,139,255,.14);
+            color: #334155;
+            font-size: .9rem;
+            line-height: 1.62;
+        }
+
+        .services-trust-note strong {
+            color: #0f172a;
+            font-weight: 800;
+        }
+
         body.dark .services-panel {
             background:
                 radial-gradient(circle at top right, rgba(58,139,255,.18), transparent 40%),
@@ -596,6 +612,16 @@
         body.dark .service-card-meta,
         body.dark .services-stat-label {
             color: #cbd5e1;
+        }
+
+        body.dark .services-trust-note {
+            background: rgba(58,139,255,.12);
+            border-color: rgba(96,165,250,.22);
+            color: #dbe4f0;
+        }
+
+        body.dark .services-trust-note strong {
+            color: #f8fafc;
         }
 
         body.dark .services-input,
@@ -970,6 +996,16 @@
                         提示：使用清晰的服务名称和简洁但有价值的描述，这会让客户看到的公开页面更有高级感。
                     {% else %}
                         Tip: use clear service names and short but useful descriptions. It will make the public client experience feel much more premium.
+                    {% endif %}
+                </div>
+
+                <div class="services-trust-note">
+                    {% if current_lang == 'es' %}
+                        <strong>Nota de confianza:</strong> Tus servicios, precios, fotos, disponibilidad, cancelaciones, reembolsos y comunicación con clientes son administrados por tu negocio. BillBeam proporciona las herramientas para presentar servicios, recibir solicitudes, enviar mensajes, facturar y gestionar pagos.
+                    {% elif current_lang == 'zh' %}
+                        <strong>信任说明：</strong>您的服务、价格、照片、可用性、取消、退款以及客户沟通均由您的商家自行管理。BillBeam 提供用于展示服务、接收请求、发送消息、开具发票和管理付款的软件工具。
+                    {% else %}
+                        <strong>Trust note:</strong> Your services, pricing, photos, availability, cancellations, refunds, and client communication are managed by your business. BillBeam provides the tools to present services, receive requests, send messages, invoice, and manage payments.
                     {% endif %}
                 </div>
             </div>
