@@ -200,6 +200,27 @@
     color: #64748b;
   }
 
+  .public-request-photo-picker {
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px dashed rgba(58,139,255,0.34);
+    background: rgba(58,139,255,0.06);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .public-request-photo-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
   body.dark .public-request-help {
     color: #94a3b8;
   }
@@ -735,7 +756,16 @@
                 {% endif %}
               </label>
 
-              <label for="request_photos" style="display:grid; gap:8px; padding:16px; border-radius:18px; border:1px dashed rgba(58,139,255,0.34); background:rgba(58,139,255,0.06); cursor:pointer;">
+              <input
+                type="file"
+                id="request_photos"
+                name="request_photos"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                multiple
+                class="public-request-photo-input"
+              >
+
+              <label for="request_photos" class="public-request-photo-picker">
                 <strong>
                   {% if lang == 'es' %}
                     Toca para agregar fotos
@@ -755,15 +785,6 @@
                   {% endif %}
                 </span>
               </label>
-
-              <input
-                type="file"
-                id="request_photos"
-                name="request_photos"
-                accept="image/*"
-                multiple
-                style="display:none;"
-              >
 
               <div id="requestPhotoPreviewWrap" style="display:none; margin-top:10px;">
                 <div class="public-request-help" id="requestPhotoCount" style="margin-bottom:8px;"></div>
