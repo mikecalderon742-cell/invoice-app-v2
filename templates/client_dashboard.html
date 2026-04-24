@@ -961,6 +961,18 @@
                               {{ req.latest_message_body[:160] }}{% if req.latest_message_body|length > 160 %}…{% endif %}
                             </div>
                           {% endif %}
+
+                          <div style="margin-top:10px;">
+                            <button type="button" class="btn btn-secondary client-request-messages-toggle" data-request-id="{{ req.id }}">
+                              {% if lang == 'es' %}
+                                Abrir mensajes
+                              {% elif lang == 'zh' %}
+                                打开消息
+                              {% else %}
+                                Open Messages
+                              {% endif %}
+                            </button>
+                          </div>
                         </div>
                       {% endif %}
 
@@ -1021,6 +1033,101 @@
                       {% if lang == 'es' %}Cancelar solicitud{% elif lang == 'zh' %}取消请求{% else %}Cancel Request{% endif %}
                     </button>
                   {% endif %}
+                </div>
+
+                <div
+                  class="client-request-messages-panel"
+                  id="clientRequestMessagesPanel{{ req.id }}"
+                  style="display:none; margin-top:14px; padding:14px; border-radius:18px; background:rgba(15,23,42,0.03); border:1px solid rgba(148,163,184,0.14);"
+                >
+                  <div style="font-weight:800; margin-bottom:10px;">
+                    {% if lang == 'es' %}
+                      Mensajes
+                    {% elif lang == 'zh' %}
+                      消息
+                    {% else %}
+                      Messages
+                    {% endif %}
+                  </div>
+
+                  {% if req.messages and req.messages|length > 0 %}
+                    <div style="display:grid; gap:10px; margin-bottom:14px;">
+                      {% for msg in req.messages %}
+                        <div style="
+                          padding:12px 14px;
+                          border-radius:16px;
+                          background:{% if msg.sender_role == 'client' %}rgba(58,139,255,0.10){% else %}rgba(255,255,255,0.64){% endif %};
+                          border:1px solid rgba(148,163,184,0.14);
+                        ">
+                          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+                            <strong>
+                              {% if msg.sender_role == 'client' %}
+                                {% if lang == 'es' %}Tú{% elif lang == 'zh' %}您{% else %}You{% endif %}
+                              {% else %}
+                                {{ req.business_name }}
+                              {% endif %}
+                            </strong>
+
+                            <span class="request-meta" style="font-size:12px;">
+                              {% if msg.created_at %}
+                                {{ msg.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                              {% else %}
+                                —
+                              {% endif %}
+                            </span>
+                          </div>
+
+                          <div style="line-height:1.65; white-space:pre-line; word-break:break-word;">
+                            {{ msg.message_body }}
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="request-sub" style="margin-bottom:12px;">
+                      {% if lang == 'es' %}
+                        Todavía no hay mensajes en esta solicitud.
+                      {% elif lang == 'zh' %}
+                        此请求还没有消息。
+                      {% else %}
+                        No messages yet on this request.
+                      {% endif %}
+                    </div>
+                  {% endif %}
+
+                  <form method="POST" action="{{ url_for('client_send_request_message', request_id=req.id, lang=lang) }}">
+                    <div class="customize-row">
+                      <div class="customize-label">
+                        {% if lang == 'es' %}
+                          Responder
+                        {% elif lang == 'zh' %}
+                          回复
+                        {% else %}
+                          Reply
+                        {% endif %}
+                      </div>
+
+                      <textarea
+                        class="client-input"
+                        name="message_body"
+                        rows="3"
+                        placeholder="{% if lang == 'es' %}Escribe una respuesta...{% elif lang == 'zh' %}输入回复...{% else %}Write a reply...{% endif %}"
+                        required
+                      ></textarea>
+                    </div>
+
+                    <div class="request-actions" style="margin-top:10px;">
+                      <button type="submit" class="btn btn-brand">
+                        {% if lang == 'es' %}
+                          Enviar respuesta
+                        {% elif lang == 'zh' %}
+                          发送回复
+                        {% else %}
+                          Send Reply
+                        {% endif %}
+                      </button>
+                    </div>
+                  </form>
                 </div>
 
                 {% if req.status in ['requested', 'approved'] %}
@@ -1702,6 +1809,16 @@ document.addEventListener("DOMContentLoaded", function () {
       const form = document.getElementById("clientRequestCancelForm" + requestId);
       if (form) {
         form.style.display = form.style.display === "none" ? "block" : "none";
+      }
+    });
+  });
+
+  document.querySelectorAll(".client-request-messages-toggle").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const requestId = btn.dataset.requestId;
+      const panel = document.getElementById("clientRequestMessagesPanel" + requestId);
+      if (panel) {
+        panel.style.display = panel.style.display === "none" ? "block" : "none";
       }
     });
   });

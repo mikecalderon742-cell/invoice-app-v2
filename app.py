@@ -1714,6 +1714,9 @@ def client_dashboard():
             }
         )
 
+    for req in client_requests:
+        req["messages"] = get_service_request_messages(req["id"], req["business_user_id"])
+
     return render_template(
         "client_dashboard.html",
         user=user,
@@ -1820,6 +1823,100 @@ def client_update_request(request_id):
         business_user_id,
         "client_updated",
         note="Client updated request details.",
+    )
+
+    return redirect(url_for("client_dashboard", lang=lang))
+
+
+@app.route("/client/request/<int:request_id>/message", methods=["POST"])
+@login_required
+def client_send_request_message(request_id):
+    user = get_current_user()
+    client_user_id = user["id"]
+    client_email = (user.get("email") or "").strip().lower()
+    lang = get_request_lang()
+
+    message_body = (request.form.get("message_body") or "").strip()
+    if not message_body:
+        return redirect(url_for("client_dashboard", lang=lang))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT id, user_id, service_title_snapshot
+            FROM service_requests
+            WHERE id = %s
+              AND (
+                    client_user_id = %s
+                    OR LOWER(COALESCE(client_email, '')) = LOWER(%s)
+                  )
+            LIMIT 1
+            """,
+            (request_id, client_user_id, client_email),
+        )
+        row = cur.fetchone()
+
+        if not row:
+            return redirect(url_for("client_dashboard", lang=lang))
+
+        _, business_user_id, service_title = row
+
+        cur.execute(
+            """
+            INSERT INTO service_request_messages (
+                service_request_id,
+                sender_user_id,
+                sender_role,
+                message_body,
+                created_at
+            )
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (
+                request_id,
+                client_user_id,
+                "client",
+                message_body,
+                now_local(),
+            ),
+        )
+
+        cur.execute(
+            """
+            UPDATE service_requests
+            SET updated_at = %s
+            WHERE id = %s
+            """,
+            (now_local(), request_id),
+        )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Client message send failed for request_id=%s: %s", request_id, e)
+        return redirect(url_for("client_dashboard", lang=lang))
+    finally:
+        cur.close()
+        conn.close()
+
+    create_notification_if_enabled(
+        user_id=business_user_id,
+        category="business_request_alerts",
+        notification_type="request_message",
+        title="New client message",
+        body=message_body[:120],
+        link_url=f"/requests/{request_id}",
+    )
+
+    log_service_request_event(
+        request_id,
+        business_user_id,
+        "client_message",
+        note=message_body[:240],
     )
 
     return redirect(url_for("client_dashboard", lang=lang))
