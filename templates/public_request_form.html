@@ -735,21 +735,48 @@
                 {% endif %}
               </label>
 
+              <label for="request_photos" style="display:grid; gap:8px; padding:16px; border-radius:18px; border:1px dashed rgba(58,139,255,0.34); background:rgba(58,139,255,0.06); cursor:pointer;">
+                <strong>
+                  {% if lang == 'es' %}
+                    Toca para agregar fotos
+                  {% elif lang == 'zh' %}
+                    点击添加照片
+                  {% else %}
+                    Tap to add photos
+                  {% endif %}
+                </strong>
+                <span class="public-request-help">
+                  {% if lang == 'es' %}
+                    Ideal para mostrar condición, tamaño, tipo de trabajo o detalles que se entienden mejor con una imagen.
+                  {% elif lang == 'zh' %}
+                    适合展示现场情况、尺寸、工作类型或用图片更容易说明的细节。
+                  {% else %}
+                    Great for showing condition, size, job type, or details that are easier to explain with a photo.
+                  {% endif %}
+                </span>
+              </label>
+
               <input
                 type="file"
                 id="request_photos"
                 name="request_photos"
                 accept="image/*"
                 multiple
+                style="display:none;"
               >
+
+              <div id="requestPhotoPreviewWrap" style="display:none; margin-top:10px;">
+                <div class="public-request-help" id="requestPhotoCount" style="margin-bottom:8px;"></div>
+                <div id="requestPhotoPreviewGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(86px, 1fr)); gap:10px;"></div>
+              </div>
 
               <div class="public-request-help">
                 {% if lang == 'es' %}
-                  Agrega fotos si ayudan al negocio a entender mejor el trabajo.
+                  Puedes agregar varias fotos antes de enviar la solicitud.
                 {% elif lang == 'zh' %}
-                  如果照片有助于商家更好地了解工作内容，可以上传照片。
+                  您可以在提交请求前添加多张照片。
                 {% else %}
-                  Add photos if they help the business better understand the job.
+                  You can add multiple photos before submitting the request.
                 {% endif %}
               </div>
             </div>
@@ -926,4 +953,57 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.getElementById("request_photos");
+  const wrap = document.getElementById("requestPhotoPreviewWrap");
+  const grid = document.getElementById("requestPhotoPreviewGrid");
+  const count = document.getElementById("requestPhotoCount");
+
+  if (!input || !wrap || !grid || !count) {
+    return;
+  }
+
+  input.addEventListener("change", function () {
+    const files = Array.from(input.files || []);
+    grid.innerHTML = "";
+
+    if (!files.length) {
+      wrap.style.display = "none";
+      count.textContent = "";
+      return;
+    }
+
+    wrap.style.display = "block";
+
+    count.textContent =
+      files.length === 1
+        ? "{% if lang == 'es' %}1 foto seleccionada{% elif lang == 'zh' %}已选择 1 张照片{% else %}1 photo selected{% endif %}"
+        : files.length + " {% if lang == 'es' %}fotos seleccionadas{% elif lang == 'zh' %}张照片已选择{% else %}photos selected{% endif %}";
+
+    files.forEach((file) => {
+      if (!file.type || !file.type.startsWith("image/")) {
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        const img = document.createElement("img");
+        img.src = event.target.result;
+        img.alt = file.name || "Selected photo";
+        img.style.width = "100%";
+        img.style.height = "86px";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "14px";
+        img.style.border = "1px solid rgba(148,163,184,0.22)";
+        grid.appendChild(img);
+      };
+
+      reader.readAsDataURL(file);
+    });
+  });
+});
+</script>
 {% endblock %}
