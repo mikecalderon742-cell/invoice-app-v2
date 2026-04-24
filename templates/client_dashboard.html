@@ -1090,33 +1090,35 @@
 </div>
 
                   {% if req.messages and req.messages|length > 0 %}
-                    <div style="display:grid; gap:10px; margin-bottom:14px;">
+                    <div style="display:grid; gap:12px; margin-bottom:14px;">
                       {% for msg in req.messages %}
-                        <div style="
-                          padding:12px 14px;
-                          border-radius:16px;
-                          background:{% if msg.sender_role == 'client' %}rgba(58,139,255,0.10){% else %}rgba(255,255,255,0.64){% endif %};
-                          border:1px solid rgba(148,163,184,0.14);
-                        ">
-                          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
-                            <strong>
-                              {% if msg.sender_role == 'client' %}
-                                {% if lang == 'es' %}Tú{% elif lang == 'zh' %}您{% else %}You{% endif %}
-                              {% else %}
-                                {{ req.business_name }}
-                              {% endif %}
-                            </strong>
-
-                            <span class="request-meta" style="font-size:12px;">
-                              {% if msg.created_at %}
-                                {{ msg.created_at.strftime("%Y-%m-%d %I:%M %p") }}
-                              {% else %}
-                                —
-                              {% endif %}
-                            </span>
+                        <div style="display:flex; flex-direction:column; gap:6px; align-items:{% if msg.sender_role == 'client' %}flex-end{% else %}flex-start{% endif %};">
+                          <div style="font-size:12px; color:#64748b;">
+                            {% if msg.sender_role == 'client' %}
+                              {% if lang == 'es' %}Tú{% elif lang == 'zh' %}您{% else %}You{% endif %}
+                            {% else %}
+                              {{ req.business_name }}
+                            {% endif %}
+                            •
+                            {% if msg.created_at %}
+                              {{ msg.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                            {% else %}
+                              —
+                            {% endif %}
                           </div>
 
-                          <div style="line-height:1.65; white-space:pre-line; word-break:break-word;">
+                          <div style="
+                            max-width:78%;
+                            padding:14px 16px;
+                            border-radius:18px;
+                            background:{% if msg.sender_role == 'client' %}linear-gradient(135deg,#3A8BFF,#2563eb){% else %}rgba(15,23,42,0.06){% endif %};
+                            color:{% if msg.sender_role == 'client' %}#ffffff{% else %}#0f172a{% endif %};
+                            border:1px solid {% if msg.sender_role == 'client' %}rgba(37,99,235,0.3){% else %}rgba(148,163,184,0.18){% endif %};
+                            box-shadow:{% if msg.sender_role == 'client' %}0 10px 28px rgba(37,99,235,0.25){% else %}none{% endif %};
+                            line-height:1.7;
+                            white-space:pre-line;
+                            word-break:break-word;
+                          ">
                             {{ msg.message_body }}
                           </div>
                         </div>
