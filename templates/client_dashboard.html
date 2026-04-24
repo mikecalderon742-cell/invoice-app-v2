@@ -946,8 +946,9 @@
                       {% endif %}
 
                       {% if req.message_count and req.message_count > 0 %}
-                        <div class="request-sub" style="margin-top:8px; padding:12px 14px; border-radius:16px; background:rgba(58,139,255,0.08); border:1px solid rgba(58,139,255,0.14);">
-                          <strong>
+                      <div class="request-sub" style="margin-top:8px; padding:12px 14px; border-radius:16px; background:rgba(58,139,255,0.08); border:1px solid rgba(58,139,255,0.14);">
+                        <strong>
+                          {% if req.message_count and req.message_count > 0 %}
                             {% if lang == 'es' %}
                               Mensajes: {{ req.message_count }}
                             {% elif lang == 'zh' %}
@@ -955,15 +956,36 @@
                             {% else %}
                               Messages: {{ req.message_count }}
                             {% endif %}
-                          </strong>
-                          {% if req.latest_message_body %}
-                            <div style="margin-top:4px;">
-                              {{ req.latest_message_body[:160] }}{% if req.latest_message_body|length > 160 %}…{% endif %}
-                            </div>
+                          {% else %}
+                            {% if lang == 'es' %}
+                              Mensajes disponibles
+                            {% elif lang == 'zh' %}
+                              可发送消息
+                            {% else %}
+                              Messaging available
+                            {% endif %}
                           {% endif %}
+                        </strong>
 
-                          <div style="margin-top:10px;">
-                            <button type="button" class="btn btn-secondary client-request-messages-toggle" data-request-id="{{ req.id }}">
+                        {% if req.latest_message_body %}
+                          <div style="margin-top:4px;">
+                            {{ req.latest_message_body[:160] }}{% if req.latest_message_body|length > 160 %}…{% endif %}
+                          </div>
+                        {% else %}
+                          <div style="margin-top:4px;">
+                            {% if lang == 'es' %}
+                              Envía una pregunta o actualización directamente al negocio.
+                            {% elif lang == 'zh' %}
+                              直接向商家发送问题或更新。
+                            {% else %}
+                              Send a question or update directly to the business.
+                            {% endif %}
+                          </div>
+                        {% endif %}
+
+                        <div style="margin-top:10px;">
+                          <button type="button" class="btn btn-secondary client-request-messages-toggle" data-request-id="{{ req.id }}">
+                            {% if req.message_count and req.message_count > 0 %}
                               {% if lang == 'es' %}
                                 Abrir mensajes
                               {% elif lang == 'zh' %}
@@ -971,10 +993,18 @@
                               {% else %}
                                 Open Messages
                               {% endif %}
-                            </button>
-                          </div>
+                            {% else %}
+                              {% if lang == 'es' %}
+                                Enviar mensaje
+                              {% elif lang == 'zh' %}
+                                发送消息
+                              {% else %}
+                                Message Business
+                              {% endif %}
+                            {% endif %}
+                          </button>
                         </div>
-                      {% endif %}
+                      </div>
 
                       <div class="request-meta" style="margin-top:6px;">
                         {% if lang == 'es' %}
