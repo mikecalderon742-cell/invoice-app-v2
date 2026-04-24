@@ -1834,12 +1834,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadPrefs();
 
-  document.querySelectorAll(".client-request-edit-toggle").forEach((btn) => {
+  document.querySelectorAll(".client-request-messages-toggle").forEach((btn) => {
+    if (!btn.dataset.openText) {
+      btn.dataset.openText = btn.textContent.trim();
+    }
+
     btn.addEventListener("click", function () {
       const requestId = btn.dataset.requestId;
-      const form = document.getElementById("clientRequestEditForm" + requestId);
-      if (form) {
-        form.style.display = form.style.display === "none" ? "block" : "none";
+      const panel = document.getElementById("clientRequestMessagesPanel" + requestId);
+
+      if (!panel) {
+        return;
+      }
+
+      const isOpening = panel.style.display === "none" || panel.style.display === "";
+
+      panel.style.display = isOpening ? "block" : "none";
+
+      if (isOpening) {
+        btn.textContent = "{{ 'Cerrar mensajes' if lang == 'es' else ('关闭消息' if lang == 'zh' else 'Close Messages') }}";
+
+        panel.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest"
+        });
+
+        const textarea = panel.querySelector("textarea[name='message_body']");
+        if (textarea) {
+          setTimeout(() => textarea.focus(), 200);
+        }
+      } else {
+        btn.textContent = btn.dataset.openText;
       }
     });
   });
