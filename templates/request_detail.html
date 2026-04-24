@@ -876,6 +876,112 @@
           <div class="request-card-header">
             <h3 class="request-card-title">
               {% if lang == 'es' %}
+                Mensajes
+              {% elif lang == 'zh' %}
+                消息
+              {% else %}
+                Messages
+              {% endif %}
+            </h3>
+
+            <div class="request-card-sub">
+              {% if lang == 'es' %}
+                Envía actualizaciones o preguntas al cliente directamente desde esta solicitud.
+              {% elif lang == 'zh' %}
+                直接从此请求向客户发送更新或问题。
+              {% else %}
+                Send updates or questions to the client directly from this request.
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="request-card-body">
+            {% if request_messages and request_messages|length > 0 %}
+              <div style="display:grid; gap:12px; margin-bottom:16px;">
+                {% for msg in request_messages %}
+                  <div style="
+                    padding:14px 16px;
+                    border-radius:18px;
+                    background:{% if msg.sender_role == 'business' %}rgba(58,139,255,0.10){% else %}rgba(15,23,42,0.04){% endif %};
+                    border:1px solid rgba(148,163,184,0.16);
+                  ">
+                    <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                      <strong>
+                        {% if msg.sender_role == 'business' %}
+                          {% if lang == 'es' %}Negocio{% elif lang == 'zh' %}商家{% else %}Business{% endif %}
+                        {% else %}
+                          {% if lang == 'es' %}Cliente{% elif lang == 'zh' %}客户{% else %}Client{% endif %}
+                        {% endif %}
+                      </strong>
+
+                      <span class="request-muted" style="font-size:12px;">
+                        {% if msg.created_at %}
+                          {{ msg.created_at.strftime("%Y-%m-%d %I:%M %p") }}
+                        {% else %}
+                          —
+                        {% endif %}
+                      </span>
+                    </div>
+
+                    <div style="line-height:1.7; white-space:pre-line; word-break:break-word;">
+                      {{ msg.message_body }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="request-muted" style="margin-top:0;">
+                {% if lang == 'es' %}
+                  Todavía no hay mensajes en esta solicitud.
+                {% elif lang == 'zh' %}
+                  此请求还没有消息。
+                {% else %}
+                  No messages yet on this request.
+                {% endif %}
+              </p>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('send_request_message', request_id=service_request.id, lang=lang) }}" class="request-action-form">
+              <div>
+                <label for="message_body">
+                  {% if lang == 'es' %}
+                    Nuevo mensaje
+                  {% elif lang == 'zh' %}
+                    新消息
+                  {% else %}
+                    New Message
+                  {% endif %}
+                </label>
+
+                <textarea
+                  id="message_body"
+                  name="message_body"
+                  class="form-control"
+                  rows="4"
+                  placeholder="{% if lang == 'es' %}Escribe una actualización o pregunta para el cliente...{% elif lang == 'zh' %}给客户写一条更新或问题...{% else %}Write an update or question for the client...{% endif %}"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="request-action-buttons">
+                <button type="submit" class="btn btn-brand">
+                  {% if lang == 'es' %}
+                    Enviar mensaje
+                  {% elif lang == 'zh' %}
+                    发送消息
+                  {% else %}
+                    Send Message
+                  {% endif %}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="request-card">
+          <div class="request-card-header">
+            <h3 class="request-card-title">
+              {% if lang == 'es' %}
                 Historial de la solicitud
               {% elif lang == 'zh' %}
                 请求时间线

@@ -4201,6 +4201,38 @@ def get_service_request_by_id(request_id, user_id):
         conn.close()
 
 
+def get_service_request_messages(request_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT sender_role, message_body, created_at
+            FROM service_request_messages
+            WHERE service_request_id = %s
+            ORDER BY created_at ASC, id ASC
+            """,
+            (request_id,),
+        )
+        rows = cur.fetchall()
+
+        messages = []
+        for row in rows:
+            messages.append(
+                {
+                    "sender_role": row[0] or "client",
+                    "message_body": row[1] or "",
+                    "created_at": row[2],
+                }
+            )
+        return messages
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 def update_service_request_status(request_id, user_id, new_status):
     new_status = normalize_request_status(new_status)
 
@@ -4627,37 +4659,6 @@ def home():
     )
 
 
-@app.route("/__create_request_messages_table")
-def create_request_messages_table():
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS service_request_messages (
-                id SERIAL PRIMARY KEY,
-                service_request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
-                sender_user_id INTEGER,
-                sender_role TEXT NOT NULL DEFAULT 'client',
-                message_body TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE INDEX IF NOT EXISTS service_request_messages_request_idx
-            ON service_request_messages(service_request_id, created_at ASC, id ASC);
-        """)
-        conn.commit()
-        return "Request messages table created successfully"
-
-    except Exception as e:
-        conn.rollback()
-        return f"Error: {e}"
-
-    finally:
-        cur.close()
-        conn.close()
-
-
 # -------------------------
 # AUTH
 # -------------------------
@@ -4895,6 +4896,7 @@ def request_detail_page(request_id):
 
     request_events = get_service_request_events_for_user(request_id, user_id)
     request_photos = get_service_request_photos(request_id)
+    request_messages = get_service_request_messages(request_id, user_id)
     linked_invoice = None
     if service_request.get("invoice_id"):
         linked_invoice = get_invoice_summary_for_user(service_request["invoice_id"], user_id)
@@ -4911,6 +4913,7 @@ def request_detail_page(request_id):
         service_request=service_request,
         request_events=request_events,
         request_photos=request_photos,
+        request_messages=request_messages,
         linked_invoice=linked_invoice,
         public_booking_url=public_booking_url,
         lang=lang,
@@ -4958,6 +4961,83 @@ def create_invoice_from_request(request_id):
         params["prefill_client_id"] = service_request["client_id"]
 
     return redirect(url_for("home", **params))
+
+
+@app.route("/requests/<int:request_id>/message", methods=["POST"])
+@login_required
+def send_request_message(request_id):
+    user = get_current_user()
+    user_id = user["id"]
+
+    message_body = (request.form.get("message_body") or "").strip()
+    if not message_body:
+        return lang_redirect("request_detail_page", request_id=request_id)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # verify ownership
+        cur.execute(
+            """
+            SELECT client_email
+            FROM service_requests
+            WHERE id = %s AND user_id = %s
+            """,
+            (request_id, user_id),
+        )
+        row = cur.fetchone()
+        if not row:
+            return lang_redirect("requests_page")
+
+        client_email = row[0]
+
+        # insert message
+        cur.execute(
+            """
+            INSERT INTO service_request_messages
+            (service_request_id, sender_user_id, sender_role, message_body)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (request_id, user_id, "business", message_body),
+        )
+
+        conn.commit()
+
+        # notify client if exists
+        if client_email:
+            cur.execute(
+                """
+                SELECT id FROM users
+                WHERE LOWER(email) = LOWER(%s)
+                LIMIT 1
+                """,
+                (client_email,),
+            )
+            client_row = cur.fetchone()
+
+            if client_row:
+                client_user_id = client_row[0]
+
+                create_notification_if_enabled(
+                    user_id=client_user_id,
+                    category="client_request_updates",
+                    notification_type="request_message",
+                    title="New message on your request",
+                    body=message_body[:120],
+                    link_url="/client/dashboard",
+                )
+
+        return lang_redirect("request_detail_page", request_id=request_id)
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Message send failed: %s", e)
+        return lang_redirect("request_detail_page", request_id=request_id)
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route("/notifications")
