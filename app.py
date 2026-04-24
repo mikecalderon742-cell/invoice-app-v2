@@ -4554,6 +4554,32 @@ def home():
     )
 
 
+@app.route("/__create_request_photos_table")
+def create_request_photos_table():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS service_request_photos (
+                id SERIAL PRIMARY KEY,
+                request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+                image_url TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+        return "Table created successfully"
+
+    except Exception as e:
+        conn.rollback()
+        return f"Error: {e}"
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 # -------------------------
 # AUTH
 # -------------------------
