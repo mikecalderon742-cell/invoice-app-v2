@@ -1854,15 +1854,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  document.querySelectorAll(".client-request-messages-toggle").forEach((btn) => {
-    btn.addEventListener("click", function () {
-      const requestId = btn.dataset.requestId;
-      const panel = document.getElementById("clientRequestMessagesPanel" + requestId);
-      if (panel) {
-        panel.style.display = panel.style.display === "none" ? "block" : "none";
-      }
+document.querySelectorAll(".client-request-messages-toggle").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    const requestId = this.getAttribute("data-request-id");
+    const panel = document.getElementById("clientMessagesPanel-" + requestId);
+
+    if (!panel) return;
+
+    const isHidden = panel.style.display === "none" || !panel.style.display;
+
+    // Close all other panels (clean UX)
+    document.querySelectorAll("[id^='clientMessagesPanel-']").forEach((p) => {
+      p.style.display = "none";
     });
+
+    if (isHidden) {
+      panel.style.display = "block";
+
+      // 🔥 Smooth scroll into view
+      panel.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // 🔥 Auto-focus message input
+      const input = panel.querySelector("textarea");
+      if (input) {
+        setTimeout(() => {
+          input.focus();
+        }, 250);
+      }
+    } else {
+      panel.style.display = "none";
+    }
   });
+});
 });
 </script>
 {% endblock %}
