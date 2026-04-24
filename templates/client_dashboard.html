@@ -1882,7 +1882,12 @@ document.addEventListener("DOMContentLoaded", function () {
       setPanelOpen(isOpening, true);
     });
 
-    if (btn.dataset.hasMessages === "true") {
+    const urlParams = new URLSearchParams(window.location.search);
+    const openMessagesForRequest = urlParams.get("open_messages");
+
+    if (openMessagesForRequest && openMessagesForRequest === btn.dataset.requestId) {
+      setPanelOpen(true, true);
+    } else if (btn.dataset.hasMessages === "true") {
       setPanelOpen(true, false);
     }
   });
