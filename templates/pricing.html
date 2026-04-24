@@ -1205,22 +1205,24 @@
             </div>
 
           {% elif key == 'enterprise' and user_plan != 'enterprise' %}
-            <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="enterprise" id="upgradeEnterpriseBtn">
+            <a href="/contact{% if lang %}?lang={{ lang }}{% endif %}"
+               class="btn btn-brand btn-compact"
+               id="upgradeEnterpriseBtn">
               {% if lang == 'es' %}
-                Actualizar a Enterprise
+                Contactar para Enterprise
               {% elif lang == 'zh' %}
-                升级到 Enterprise
+                联系我们开通 Enterprise
               {% else %}
-                Upgrade to Enterprise
+                Contact us for Enterprise
               {% endif %}
-            </button>
+            </a>
             <span class="pricing-note" id="upgradeEnterpriseNote">
               {% if lang == 'es' %}
-                Sube al nivel más completo de BillBeam con Stripe.
+                Enterprise está pensado para negocios que quieren el BillBeam más completo.
               {% elif lang == 'zh' %}
-                通过 Stripe 升级到 BillBeam 最完整的方案。
+                Enterprise 适合希望获得最完整 BillBeam 体验的企业。
               {% else %}
-                Move up to BillBeam’s most complete tier with Stripe.
+                Enterprise is for businesses that want the most complete BillBeam experience.
               {% endif %}
             </span>
 
@@ -1359,9 +1361,9 @@
       <br>• En iPhone, el pago se cargará a tu cuenta de Apple ID al confirmar la compra cuando aplique
       <br>• Las suscripciones se renuevan automáticamente a menos que se cancelen al menos 24 horas antes del final del período actual
       <br>• Política de privacidad:
-      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver política de privacidad</a>
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">Ver política de privacidad</a>
       <br>• Términos de uso:
-      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">Ver términos de uso</a>
+      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">Ver términos de uso</a>
     {% elif lang == 'zh' %}
       订阅详情：
       <br>• BillBeam Simple、BillBeam Pro 和 BillBeam Enterprise 均为按月自动续订订阅
@@ -1372,9 +1374,9 @@
       <br>• 在 iPhone 上，适用时确认购买后将从您的 Apple ID 账户扣款
       <br>• 除非在当前周期结束前至少 24 小时取消，否则订阅将自动续订
       <br>• 隐私政策：
-      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">查看隐私政策</a>
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">查看隐私政策</a>
       <br>• 使用条款：
-      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">查看使用条款</a>
+      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">查看使用条款</a>
     {% else %}
       Subscription details:
       <br>• BillBeam Simple, BillBeam Pro, and BillBeam Enterprise are monthly auto-renewing subscriptions
@@ -1385,9 +1387,9 @@
       <br>• On iPhone, payment will be charged to your Apple ID account at confirmation of purchase when applicable
       <br>• Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period
       <br>• Privacy Policy:
-      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">View Privacy Policy</a>
+      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">View Privacy Policy</a>
       <br>• Terms of Use:
-      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}" target="_blank" rel="noopener">View Terms of Use</a>
+      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">View Terms of Use</a>
     {% endif %}
   </div>
 
