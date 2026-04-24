@@ -1813,8 +1813,8 @@ def client_update_request(request_id):
         user_id=business_user_id,
         category="business_request_alerts",
         notification_type="service_request_updated_by_client",
-        title="Client updated a request",
-        body=service_title or "A client updated their request details.",
+        title="Request updated",
+        body=f"{service_title or 'A request'} was updated by the client. Review the latest details.",
         link_url=f"/requests/{request_id}",
     )
 
@@ -1907,8 +1907,8 @@ def client_send_request_message(request_id):
         user_id=business_user_id,
         category="business_request_alerts",
         notification_type="request_message",
-        title="New client message",
-        body=message_body[:120],
+        title="New message on request",
+        body=f"{service_title or 'A request'}: {message_body[:90]}",
         link_url=f"/requests/{request_id}",
     )
 
