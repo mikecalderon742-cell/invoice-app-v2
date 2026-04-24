@@ -3391,6 +3391,28 @@ def serialize_service_request_rows(rows):
     return [serialize_service_request_row(row) for row in (rows or [])]
 
 
+def get_service_request_photos(request_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT image_url
+            FROM service_request_photos
+            WHERE request_id = %s
+            ORDER BY created_at ASC, id ASC
+            """,
+            (request_id,),
+        )
+        rows = cur.fetchall()
+        return [row[0] for row in rows if row and row[0]]
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 def get_service_request_events_for_user(request_id, user_id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -4841,6 +4863,7 @@ def request_detail_page(request_id):
         service_request["preferred_time_text"] = detail_row[2] or ""
 
     request_events = get_service_request_events_for_user(request_id, user_id)
+    request_photos = get_service_request_photos(request_id)
     linked_invoice = None
     if service_request.get("invoice_id"):
         linked_invoice = get_invoice_summary_for_user(service_request["invoice_id"], user_id)
@@ -4856,6 +4879,7 @@ def request_detail_page(request_id):
         "request_detail.html",
         service_request=service_request,
         request_events=request_events,
+        request_photos=request_photos,
         linked_invoice=linked_invoice,
         public_booking_url=public_booking_url,
         lang=lang,
@@ -6527,6 +6551,14 @@ def uploaded_service_image(filename):
     if not safe_filename:
         return "", 404
     return send_from_directory(SERVICE_IMAGE_UPLOAD_ROOT, safe_filename)
+
+
+@app.route("/uploads/service_request_photos/<path:filename>")
+def uploaded_service_request_photo(filename):
+    safe_filename = os.path.basename(filename or "")
+    if not safe_filename:
+        return "", 404
+    return send_from_directory(SERVICE_REQUEST_PHOTO_UPLOAD_ROOT, safe_filename)
 
 
 # -------------------------

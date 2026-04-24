@@ -741,6 +741,32 @@
 
             <div class="request-section-divider"></div>
 
+            {% if request_photos %}
+              <div class="request-rich-panel" style="margin-bottom:16px;">
+                <h4>
+                  {% if lang == 'es' %}
+                    Fotos del cliente
+                  {% elif lang == 'zh' %}
+                    客户照片
+                  {% else %}
+                    Client Photos
+                  {% endif %}
+                </h4>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; margin-top:12px;">
+                  {% for photo_url in request_photos %}
+                    <a href="{{ photo_url }}" target="_blank" rel="noopener">
+                      <img
+                        src="{{ photo_url }}"
+                        alt="{% if lang == 'es' %}Foto de la solicitud{% elif lang == 'zh' %}请求照片{% else %}Request photo{% endif %}"
+                        style="width:100%; height:140px; object-fit:cover; border-radius:16px; border:1px solid rgba(148,163,184,0.22);"
+                      >
+                    </a>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
             <div class="request-rich-panel" style="margin-bottom:16px;">
               <h4>
                 {% if lang == 'es' %}
