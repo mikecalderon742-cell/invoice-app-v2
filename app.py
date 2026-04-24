@@ -2042,6 +2042,44 @@ def business_profile(user_id):
     )
 
 
+@app.route("/__create_device_tokens_table")
+def create_device_tokens_table():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_device_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                platform TEXT NOT NULL,
+                device_token TEXT NOT NULL,
+                device_name TEXT,
+                app_version TEXT,
+                is_active BOOLEAN DEFAULT TRUE,
+                last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, platform, device_token)
+            );
+
+            CREATE INDEX IF NOT EXISTS user_device_tokens_user_idx
+            ON user_device_tokens(user_id, is_active);
+
+            CREATE INDEX IF NOT EXISTS user_device_tokens_platform_idx
+            ON user_device_tokens(platform, is_active);
+        """)
+        conn.commit()
+        return "Device tokens table created successfully"
+
+    except Exception as e:
+        conn.rollback()
+        return f"Error: {e}"
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 # =========================
 # FOLLOW SYSTEM
 # =========================
