@@ -425,11 +425,39 @@
     line-height: 1.7;
   }
 
+  .public-services-trust-note {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.86);
+    border: 1px solid rgba(148,163,184,0.22);
+    box-shadow: 0 14px 34px rgba(15,23,42,0.055);
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .public-services-trust-note strong {
+    color: #0f172a;
+    font-weight: 800;
+  }
+
   .public-services-powered {
     margin-top: 22px;
     text-align: center;
     font-size: 13px;
     color: #64748b;
+  }
+
+  body.dark .public-services-trust-note {
+    background: rgba(15,23,42,0.82);
+    border-color: rgba(148,163,184,0.18);
+    box-shadow: 0 18px 42px rgba(2,6,23,0.58);
+    color: #cbd5e1;
+  }
+
+  body.dark .public-services-trust-note strong {
+    color: #f8fafc;
   }
 
   body.dark .public-services-powered {
@@ -628,6 +656,16 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="public-services-trust-note">
+    {% if lang == 'es' %}
+      <strong>Nota importante:</strong> Los servicios son ofrecidos y realizados de forma independiente por este negocio. BillBeam ayuda a mostrar servicios, enviar solicitudes, compartir mensajes, administrar facturas y procesar pagos cuando estén disponibles.
+    {% elif lang == 'zh' %}
+      <strong>重要说明：</strong>服务由该商家独立提供和完成。BillBeam 帮助展示服务、提交请求、发送消息、管理发票，并在可用时处理付款体验。
+    {% else %}
+      <strong>Important note:</strong> Services are offered and performed independently by this business. BillBeam helps display services, submit requests, share messages, manage invoices, and support payment experiences when available.
+    {% endif %}
   </div>
 
   {% if public_services and public_services|length > 0 %}
