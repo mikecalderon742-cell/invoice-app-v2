@@ -4284,22 +4284,54 @@ def create_service_request(
             note="Service request submitted",
         )
 
+        photo_count = 0
+
         # SAVE PHOTOS (if any uploaded)
         try:
-            uploaded_files = request.files.getlist("request_photos")
+            uploaded_files = [
+                file_obj for file_obj in request.files.getlist("request_photos")
+                if file_obj and getattr(file_obj, "filename", "")
+            ]
+            photo_count = len(uploaded_files)
+
             if uploaded_files:
                 save_service_request_photos(request_id, uploaded_files)
         except Exception as e:
             logger.exception("Photo upload failed: %s", e)
 
+        notification_service_label = service_title or "Custom request"
+        notification_client_name = client_name or "A client"
+
+        notification_body_parts = []
+
+        if quantity and int(quantity or 1) > 1:
+            notification_body_parts.append(f"Quantity: {quantity}")
+
+        if preferred_date_text:
+            notification_body_parts.append(f"Preferred date: {preferred_date_text}")
+
+        if preferred_time_text:
+            notification_body_parts.append(f"Preferred time: {preferred_time_text}")
+
+        if photo_count > 0:
+            notification_body_parts.append(
+                f"{photo_count} photo{'s' if photo_count != 1 else ''} attached"
+            )
+
+        if request_details:
+            clean_details = " ".join(str(request_details).split())
+            notification_body_parts.append(clean_details[:120])
+
         create_notification_if_enabled(
             user_id=user_id,
             category="business_request_alerts",
             notification_type="service_request_created",
-            title=f"New service request from {client_name}",
-            body=(service_title or "Custom request"),
+            title=f"{notification_client_name} requested {notification_service_label}",
+            body=" • ".join(notification_body_parts) or "Open the request to review the details.",
             link_url=f"/requests/{request_id}",
         )
+
+        return request_id
 
         return request_id
 
