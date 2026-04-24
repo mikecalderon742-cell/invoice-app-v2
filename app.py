@@ -1909,7 +1909,7 @@ def client_send_request_message(request_id):
         notification_type="request_message",
         title="New message on request",
         body=f"{service_title or 'A request'}: {message_body[:90]}",
-        link_url=f"/requests/{request_id}",
+        link_url=f"/requests/{request_id}#messages",
     )
 
     log_service_request_event(
@@ -5297,7 +5297,7 @@ def send_request_message(request_id):
                     notification_type="request_message",
                     title="New message on your request",
                     body=message_body[:120],
-                    link_url="/client/dashboard",
+                    link_url=f"/client/dashboard?open_messages={request_id}",
                 )
 
         return lang_redirect("request_detail_page", request_id=request_id)

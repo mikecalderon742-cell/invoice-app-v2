@@ -910,7 +910,7 @@
                     {% for n in unread_notifications %}
                     {% set notification_type = n.notification_type or 'general' %}
 
-                    {% if notification_type in ['service_request_created', 'service_request_status_updated'] %}
+                    {% if notification_type in ['service_request_created', 'service_request_status_updated', 'service_request_updated_by_client', 'service_request_cancelled_by_client', 'request_message'] %}
                         {% set notification_icon = '🛠️' %}
                         {% set notification_group = 'request' %}
                         {% if lang == 'es' %}
@@ -1026,7 +1026,7 @@
                     {% for n in read_notifications %}
                     {% set notification_type = n.notification_type or 'general' %}
 
-                    {% if notification_type in ['service_request_created', 'service_request_status_updated'] %}
+                    {% if notification_type in ['service_request_created', 'service_request_status_updated', 'service_request_updated_by_client', 'service_request_cancelled_by_client', 'request_message'] %}
                         {% set notification_icon = '🛠️' %}
                         {% set notification_group = 'request' %}
                         {% if lang == 'es' %}
