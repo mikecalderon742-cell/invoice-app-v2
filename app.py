@@ -4600,9 +4600,9 @@ def update_service_request_status(request_id, user_id, new_status):
                 user_id=client_user_id,
                 category="client_request_updates",
                 notification_type="service_request_status_updated",
-                title=f"Request #{request_id} updated",
-                body=f"{service_label} is now {status_label}.",
-                link_url=f"/client/dashboard",
+                title=f"{service_label} is now {status_label}",
+                body=f"Your request status was updated to {status_label}.",
+                link_url=f"/client/dashboard?open_messages={request_id}",
             )
 
 
@@ -5335,9 +5335,11 @@ def notifications_page():
 def mark_notification_read_page(notification_id):
     user = get_current_user()
     user_id = user["id"]
+    lang = get_request_lang()
 
     notifications = get_notifications_for_user(user_id, unread_only=False, limit=100)
     target = None
+
     for item in notifications:
         if item["id"] == notification_id:
             target = item
@@ -5346,10 +5348,16 @@ def mark_notification_read_page(notification_id):
     mark_notification_read(notification_id, user_id)
 
     if target and target.get("link_url"):
-        link_url = target["link_url"]
-        if "?" in link_url:
-            return redirect(f"{link_url}&lang={get_request_lang()}")
-        return redirect(f"{link_url}?lang={get_request_lang()}")
+        link_url = (target.get("link_url") or "").strip()
+
+        if link_url:
+            fragment = ""
+            if "#" in link_url:
+                link_url, fragment_part = link_url.split("#", 1)
+                fragment = f"#{fragment_part}"
+
+            separator = "&" if "?" in link_url else "?"
+            return redirect(f"{link_url}{separator}lang={lang}{fragment}")
 
     return lang_redirect("notifications_page")
 

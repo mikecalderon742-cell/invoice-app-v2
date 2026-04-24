@@ -452,6 +452,53 @@
           <div>
             <h2>
               {% if lang == 'es' %}
+                v2.5 — Confianza, mensajes, notificaciones y experiencia cliente mejoradas
+              {% elif lang == 'zh' %}
+                v2.5 — 信任、消息、通知与客户体验改进
+              {% else %}
+                v2.5 — Trust, messaging, notifications, and client experience upgrades
+              {% endif %}
+            </h2>
+            <p class="changelog-date">
+              {% if lang == 'es' %}Lanzado recientemente{% elif lang == 'zh' %}最近发布{% else %}Recently shipped{% endif %}
+            </p>
+          </div>
+          <span class="changelog-pill current">
+            {% if lang == 'es' %}Actual{% elif lang == 'zh' %}当前{% else %}Current{% endif %}
+          </span>
+        </div>
+
+        <ul>
+          {% if lang == 'es' %}
+            <li>Se reforzó la capa legal y de confianza para aclarar mejor que BillBeam proporciona software y que cada negocio presta sus propios servicios de forma independiente.</li>
+            <li>Se mejoró la experiencia de mensajes entre clientes y negocios con conversaciones más claras, botones visibles en cada solicitud y acceso más directo al hilo correcto.</li>
+            <li>Se pulieron las notificaciones para que expliquen mejor qué ocurrió, quién actuó y cuál es el siguiente paso.</li>
+            <li>Se añadieron enlaces más inteligentes desde notificaciones hacia solicitudes, mensajes, facturas y actividad relevante.</li>
+            <li>Se mejoró el panel del cliente para que cada solicitud tenga acceso fácil a mensajes, edición y cancelación cuando corresponda.</li>
+            <li>Se confirmó y pulió el comportamiento de gestión de suscripción para mantener más clara la experiencia de facturación.</li>
+          {% elif lang == 'zh' %}
+            <li>加强了法律与信任说明，更清楚地说明 BillBeam 提供软件工具，而各商家独立提供自己的服务。</li>
+            <li>改进了客户与商家之间的消息体验，使对话更清晰，并让每个请求都能更容易进入对应消息线程。</li>
+            <li>优化了通知内容，让通知更清楚地说明发生了什么、谁进行了操作以及下一步是什么。</li>
+            <li>为通知加入更智能的跳转，能直接进入请求、消息、发票或相关活动。</li>
+            <li>改进了客户面板，让每个请求在适用时都能更容易发送消息、编辑或取消。</li>
+            <li>确认并优化了订阅管理体验，让账单相关流程更清晰。</li>
+          {% else %}
+            <li>Strengthened the legal and trust layer to better clarify that BillBeam provides software while each business independently provides its own services.</li>
+            <li>Improved client-to-business messaging with clearer conversation threads, visible message access on every request, and more direct access to the right conversation.</li>
+            <li>Polished notifications so they better explain what happened, who acted, and what the next step is.</li>
+            <li>Added smarter notification links into requests, messages, invoices, and relevant activity.</li>
+            <li>Improved the client dashboard so every request has easier access to messaging, editing, and cancellation when available.</li>
+            <li>Confirmed and polished subscription management behavior for a clearer billing experience.</li>
+          {% endif %}
+        </ul>
+      </article>
+
+      <article class="changelog-item">
+        <div class="changelog-item-header">
+          <div>
+            <h2>
+              {% if lang == 'es' %}
                 v2.4 — Nuevo plan Simple, mejoras de suscripción y pulido final
               {% elif lang == 'zh' %}
                 v2.4 — 新增 Simple 套餐、订阅优化与发布前最终打磨
@@ -469,15 +516,6 @@
               {% endif %}
             </p>
           </div>
-          <span class="changelog-pill current">
-            {% if lang == 'es' %}
-              Actual
-            {% elif lang == 'zh' %}
-              当前
-            {% else %}
-              Current
-            {% endif %}
-          </span>
         </div>
 
         <ul>

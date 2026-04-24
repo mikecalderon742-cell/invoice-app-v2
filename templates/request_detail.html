@@ -872,7 +872,7 @@
           </div>
         </div>
 
-        <div class="request-card">
+        <div class="request-card" id="messages">
           <div class="request-card-header">
             <h3 class="request-card-title">
               {% if lang == 'es' %}
@@ -974,7 +974,7 @@
                   {% elif lang == 'zh' %}
                     发送消息
                   {% else %}
-                    Send Message
+                    Send Message to Client
                   {% endif %}
                 </button>
               </div>
@@ -1116,9 +1116,9 @@
                     Guardar estado
                   {% elif lang == 'zh' %}
                     保存状态
-                  {% else %}
-                    Save Status
-                  {% endif %}
+                   {% else %}
+                     Update Request Status
+                   {% endif %}
                 </button>
 
                 {% if linked_invoice %}
@@ -1138,7 +1138,7 @@
                     {% elif lang == 'zh' %}
                       创建发票
                     {% else %}
-                      Create Invoice
+                      Turn Into Invoice
                     {% endif %}
                   </a>
                 {% endif %}
@@ -1407,6 +1407,14 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("requestPhotoModal");
+  if (window.location.hash === "#messages") {
+    const messageInput = document.getElementById("message_body");
+    if (messageInput) {
+      setTimeout(() => {
+        messageInput.focus();
+      }, 250);
+    }
+  }
   const modalImage = document.getElementById("requestPhotoModalImage");
   const closeBtn = document.getElementById("requestPhotoModalClose");
   const photoButtons = document.querySelectorAll(".request-photo-thumb");
