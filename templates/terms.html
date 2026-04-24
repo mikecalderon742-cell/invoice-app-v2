@@ -168,47 +168,56 @@ Terms governing the use of BillBeam across its website, mobile application, and 
         </h2>
         <p>
             {% if lang == 'es' %}
-                Eres responsable del contenido, datos y materiales que introduzcas en BillBeam, incluyendo información de clientes, conceptos de facturación, montos, mensajes y documentos.
+                Eres responsable de todo contenido, información, datos, mensajes, precios, descripciones, archivos, imágenes, facturas, solicitudes de servicio y demás materiales que ingreses, cargues, envíes, publiques o transmitas mediante BillBeam.
             {% elif lang == 'zh' %}
-                你需对你输入到 BillBeam 中的内容、数据和材料负责，包括客户信息、发票项目说明、金额、消息和文件。
+                你需对通过 BillBeam 输入、上传、发送、发布或传输的所有内容、信息、数据、消息、价格、说明、文件、图片、发票、服务请求及其他材料负责。
             {% else %}
-                You are responsible for the content, data, and materials you input into BillBeam, including client information, invoice descriptions, amounts, messages, and documents.
+                You are responsible for all content, information, data, messages, pricing, descriptions, files, images, invoices, service requests, and other materials that you enter, upload, send, publish, or transmit through BillBeam.
             {% endif %}
         </p>
         <ul>
-            <li>{% if lang == 'es' %}No usar el Servicio para fines ilegales, fraudulentos o engañosos{% elif lang == 'zh' %}不得将本服务用于非法、欺诈或误导性目的{% else %}Not use the Service for unlawful, fraudulent, or deceptive purposes{% endif %}</li>
-            <li>{% if lang == 'es' %}No interferir con la seguridad, estabilidad o funcionamiento del Servicio{% elif lang == 'zh' %}不得干扰本服务的安全性、稳定性或正常运行{% else %}Not interfere with the security, stability, or operation of the Service{% endif %}</li>
-            <li>{% if lang == 'es' %}No intentar acceder a datos, cuentas o sistemas sin autorización{% elif lang == 'zh' %}不得试图未经授权访问数据、账户或系统{% else %}Not attempt to access data, accounts, or systems without authorization{% endif %}</li>
-            <li>{% if lang == 'es' %}No utilizar el Servicio para enviar spam, abuso o contenido dañino{% elif lang == 'zh' %}不得利用本服务传播垃圾信息、滥用内容或有害内容{% else %}Not use the Service to distribute spam, abuse, or harmful content{% endif %}</li>
+            <li>{% if lang == 'es' %}No utilizar el Servicio para fines ilegales, fraudulentos, engañosos, abusivos o no autorizados{% elif lang == 'zh' %}不得将本服务用于非法、欺诈、误导、滥用或未经授权的目的{% else %}Do not use the Service for unlawful, fraudulent, deceptive, abusive, or unauthorized purposes{% endif %}</li>
+            <li>{% if lang == 'es' %}No interferir con la seguridad, estabilidad, disponibilidad o funcionamiento del Servicio{% elif lang == 'zh' %}不得干扰本服务的安全性、稳定性、可用性或正常运行{% else %}Do not interfere with the security, stability, availability, or operation of the Service{% endif %}</li>
+            <li>{% if lang == 'es' %}No intentar acceder a datos, cuentas, sistemas o áreas del Servicio sin autorización{% elif lang == 'zh' %}不得试图未经授权访问数据、账户、系统或服务区域{% else %}Do not attempt to access data, accounts, systems, or areas of the Service without authorization{% endif %}</li>
+            <li>{% if lang == 'es' %}No enviar spam, malware, contenido dañino, contenido engañoso o comunicaciones no solicitadas{% elif lang == 'zh' %}不得发送垃圾信息、恶意软件、有害内容、误导性内容或未经请求的通信{% else %}Do not send spam, malware, harmful content, misleading content, or unsolicited communications{% endif %}</li>
         </ul>
     </section>
 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                4. Planes, suscripciones y pagos
+                4. Negocios independientes y relaciones con clientes
             {% elif lang == 'zh' %}
-                4. 方案、订阅与付款
+                4. 独立商家与客户关系
             {% else %}
-                4. Plans, Subscriptions, and Payments
+                4. Independent Businesses and Client Relationships
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                BillBeam puede ofrecer planes gratuitos y planes de pago. Las funciones, límites y precios pueden variar según el plan seleccionado.
+                BillBeam proporciona software, herramientas administrativas y funciones de comunicación para ayudar a negocios independientes a gestionar facturas, solicitudes, mensajes, clientes, servicios y pagos. BillBeam no presta los servicios ofrecidos por los negocios que utilizan la plataforma.
             {% elif lang == 'zh' %}
-                BillBeam 可能提供免费方案和付费方案。功能、限制和价格可能因所选方案而异。
+                BillBeam 提供软件、管理工具和通信功能，帮助独立商家管理发票、请求、消息、客户、服务和付款。BillBeam 并不提供使用本平台的商家所销售或提供的服务。
             {% else %}
-                BillBeam may offer free plans and paid plans. Features, limits, and pricing may vary depending on the selected plan.
+                BillBeam provides software, administrative tools, and communication features to help independent businesses manage invoices, requests, messages, clients, services, and payments. BillBeam does not provide the services offered by businesses using the platform.
             {% endif %}
         </p>
         <p>
             {% if lang == 'es' %}
-                Los pagos pueden procesarse mediante proveedores externos como Stripe. Las suscripciones de pago pueden renovarse automáticamente hasta que se cancelen conforme a la política de facturación aplicable.
+                Cada negocio es independiente y es el único responsable de sus servicios, precios, descripciones, disponibilidad, calidad del trabajo, desempeño, programación, cancelaciones, reembolsos, comunicaciones, cumplimiento legal, impuestos, licencias, permisos, seguros y relación con sus clientes.
             {% elif lang == 'zh' %}
-                付款可能通过 Stripe 等第三方服务提供商处理。付费订阅可能会自动续订，直到根据适用的账单政策被取消。
+                每个商家均为独立经营者，并对其服务、价格、说明、可用性、工作质量、履约、安排、取消、退款、沟通、法律合规、税务、执照、许可、保险以及与客户的关系承担全部责任。
             {% else %}
-                Payments may be processed through third-party providers such as Stripe. Paid subscriptions may renew automatically until cancelled in accordance with the applicable billing policy.
+                Each business is independent and solely responsible for its services, pricing, descriptions, availability, work quality, performance, scheduling, cancellations, refunds, communications, legal compliance, taxes, licenses, permits, insurance, and relationship with its clients.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam does not supervise, control, endorse, guarantee, warrant, verify, or assume responsibility for any business, client, service, listing, request, transaction, message, invoice, payment, refund, cancellation, dispute, or outcome between users.
+            {% elif lang == 'zh' %}
+                BillBeam 不监督、控制、背书、保证、担保、核验或承担任何商家、客户、服务、列表、请求、交易、消息、发票、付款、退款、取消、争议或用户之间结果的责任。
+            {% else %}
+                BillBeam does not supervise, control, endorse, guarantee, warrant, verify, or assume responsibility for any business, client, service, listing, request, transaction, message, invoice, payment, refund, cancellation, dispute, or outcome between users.
             {% endif %}
         </p>
     </section>
@@ -216,50 +225,29 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                5. Funciones de IA
+                5. Servicios, solicitudes, mensajes y fotos
             {% elif lang == 'zh' %}
-                5. AI 功能
+                5. 服务、请求、消息与照片
             {% else %}
-                5. AI Features
+                5. Services, Requests, Messages, and Photos
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                BillBeam puede incluir funciones de asistencia basadas en inteligencia artificial para ayudar con redacción, sugerencias, resúmenes y orientación general dentro del Servicio.
+                Los negocios pueden utilizar BillBeam para mostrar servicios, recibir solicitudes, intercambiar mensajes, compartir fotos y administrar el estado de una solicitud. Estas funciones son herramientas de organización y comunicación; no convierten a BillBeam en parte de ningún contrato, acuerdo de servicio, relación laboral, agencia, sociedad, garantía o transacción entre un negocio y un cliente.
             {% elif lang == 'zh' %}
-                BillBeam 可能包含基于人工智能的辅助功能，用于帮助撰写内容、提供建议、生成摘要以及在服务中提供一般性指导。
+                商家可以使用 BillBeam 展示服务、接收请求、交换消息、分享照片并管理请求状态。这些功能仅为组织和通信工具；它们不会使 BillBeam 成为商家与客户之间任何合同、服务协议、雇佣关系、代理关系、合伙关系、担保或交易的一方。
             {% else %}
-                BillBeam may include AI-powered assistance features to help with drafting, suggestions, summaries, and general guidance within the Service.
+                Businesses may use BillBeam to display services, receive requests, exchange messages, share photos, and manage request status. These features are organizational and communication tools only; they do not make BillBeam a party to any contract, service agreement, employment relationship, agency relationship, partnership, warranty, or transaction between a business and a client.
             {% endif %}
         </p>
         <p>
             {% if lang == 'es' %}
-                Estas funciones se ofrecen únicamente con fines informativos y de productividad. No constituyen asesoramiento legal, financiero, fiscal o contable. Eres responsable de revisar cualquier contenido antes de utilizarlo, enviarlo o publicarlo.
+                Users are responsible for ensuring that photos, messages, service descriptions, and request details are accurate, lawful, appropriate, and authorized to be shared.
             {% elif lang == 'zh' %}
-                这些功能仅用于信息参考和提升效率。它们不构成法律、财务、税务或会计建议。你有责任在使用、发送或发布任何内容前进行审核。
+                用户有责任确保照片、消息、服务说明和请求详情准确、合法、适当，并且已获授权分享。
             {% else %}
-                These features are provided for informational and productivity purposes only. They do not constitute legal, financial, tax, or accounting advice. You are responsible for reviewing any content before using, sending, or publishing it.
-            {% endif %}
-        </p>
-    </section>
-
-    <section class="legal-card fade-in-up">
-        <h2>
-            {% if lang == 'es' %}
-                6. Propiedad intelectual
-            {% elif lang == 'zh' %}
-                6. 知识产权
-            {% else %}
-                6. Intellectual Property
-            {% endif %}
-        </h2>
-        <p>
-            {% if lang == 'es' %}
-                BillBeam y sus elementos asociados, incluyendo software, diseño, marca, interfaces, texto original y estructura del Servicio, son propiedad de sus titulares y están protegidos por leyes aplicables de propiedad intelectual.
-            {% elif lang == 'zh' %}
-                BillBeam 及其相关元素，包括软件、设计、品牌、界面、原创文本和服务结构，均归其相应权利人所有，并受适用知识产权法律保护。
-            {% else %}
-                BillBeam and its associated elements, including software, design, branding, interfaces, original text, and Service structure, are owned by their respective rights holders and protected by applicable intellectual property laws.
+                Users are responsible for ensuring that photos, messages, service descriptions, and request details are accurate, lawful, appropriate, and authorized to be shared.
             {% endif %}
         </p>
     </section>
@@ -267,20 +255,38 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                7. Disponibilidad del servicio
+                6. Planes, suscripciones y pagos
             {% elif lang == 'zh' %}
-                7. 服务可用性
+                6. 方案、订阅与付款
             {% else %}
-                7. Service Availability
+                6. Plans, Subscriptions, and Payments
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                BillBeam puede modificar, actualizar, suspender o discontinuar partes del Servicio en cualquier momento. No garantizamos que el Servicio esté disponible sin interrupciones o libre de errores.
+                BillBeam puede ofrecer planes gratuitos y planes de pago. Las funciones, límites, precios, disponibilidad y condiciones pueden variar según el plan seleccionado y pueden modificarse según lo permitido por la ley.
             {% elif lang == 'zh' %}
-                BillBeam 可随时修改、更新、暂停或停止服务的某些部分。我们不保证服务始终不中断或完全无错误。
+                BillBeam 可能提供免费方案和付费方案。功能、限制、价格、可用性和条件可能因所选方案而异，并可能在法律允许的范围内变更。
             {% else %}
-                BillBeam may modify, update, suspend, or discontinue parts of the Service at any time. We do not guarantee that the Service will be available without interruption or error-free.
+                BillBeam may offer free plans and paid plans. Features, limits, pricing, availability, and terms may vary depending on the selected plan and may be changed as permitted by law.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Los pagos por suscripciones, facturas u otras transacciones pueden procesarse mediante proveedores externos como Stripe, Apple, Google u otros procesadores de pago. El uso de dichos servicios puede estar sujeto a términos, políticas y requisitos adicionales del proveedor correspondiente.
+            {% elif lang == 'zh' %}
+                订阅、发票或其他交易的付款可能通过 Stripe、Apple、Google 或其他第三方支付处理商处理。使用这些服务可能受相应提供商的附加条款、政策和要求约束。
+            {% else %}
+                Payments for subscriptions, invoices, or other transactions may be processed by third-party providers such as Stripe, Apple, Google, or other payment processors. Use of those services may be subject to additional terms, policies, and requirements of the applicable provider.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                Unless expressly stated otherwise by BillBeam, disputes regarding a business’s services, pricing, cancellations, refunds, chargebacks, or client payments are between the applicable business and client.
+            {% elif lang == 'zh' %}
+                除非 BillBeam 明确另行说明，有关商家服务、价格、取消、退款、拒付或客户付款的争议均由相关商家与客户之间处理。
+            {% else %}
+                Unless expressly stated otherwise by BillBeam, disputes regarding a business’s services, pricing, cancellations, refunds, chargebacks, or client payments are between the applicable business and client.
             {% endif %}
         </p>
     </section>
@@ -288,20 +294,38 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                8. Terminación o suspensión
+                7. Funciones de IA
             {% elif lang == 'zh' %}
-                8. 终止或暂停
+                7. AI 功能
             {% else %}
-                8. Termination or Suspension
+                7. AI Features
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                Podemos suspender o terminar el acceso al Servicio si consideramos razonablemente que existe incumplimiento de estos términos, riesgo para la seguridad, fraude, abuso o uso no autorizado.
+                BillBeam puede incluir funciones de asistencia basadas en inteligencia artificial para ayudar con redacción, sugerencias, resúmenes, organización y orientación general dentro del Servicio.
             {% elif lang == 'zh' %}
-                如果我们有合理理由认为存在违反这些条款、安全风险、欺诈、滥用或未经授权的使用，我们可以暂停或终止你对本服务的访问。
+                BillBeam 可能包含基于人工智能的辅助功能，用于帮助撰写内容、提供建议、生成摘要、进行整理以及在服务中提供一般性指导。
             {% else %}
-                We may suspend or terminate access to the Service if we reasonably believe there is a violation of these terms, a security risk, fraud, abuse, or unauthorized use.
+                BillBeam may include AI-powered assistance features to help with drafting, suggestions, summaries, organization, and general guidance within the Service.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                AI-generated output may be inaccurate, incomplete, outdated, or unsuitable for a particular situation. You are responsible for reviewing, editing, and approving any AI-generated or AI-assisted content before relying on it, sending it, sharing it, publishing it, or using it in business decisions.
+            {% elif lang == 'zh' %}
+                AI 生成的输出可能不准确、不完整、过时或不适用于特定情况。在依赖、发送、分享、发布或将其用于商业决策之前，你有责任审查、编辑并批准任何 AI 生成或 AI 辅助内容。
+            {% else %}
+                AI-generated output may be inaccurate, incomplete, outdated, or unsuitable for a particular situation. You are responsible for reviewing, editing, and approving any AI-generated or AI-assisted content before relying on it, sending it, sharing it, publishing it, or using it in business decisions.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                AI features do not provide legal, financial, tax, accounting, insurance, licensing, professional, or compliance advice.
+            {% elif lang == 'zh' %}
+                AI 功能不提供法律、财务、税务、会计、保险、许可、专业或合规建议。
+            {% else %}
+                AI features do not provide legal, financial, tax, accounting, insurance, licensing, professional, or compliance advice.
             {% endif %}
         </p>
     </section>
@@ -309,20 +333,29 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                9. Exención de garantías
+                8. Propiedad intelectual
             {% elif lang == 'zh' %}
-                9. 免责声明
+                8. 知识产权
             {% else %}
-                9. Disclaimer of Warranties
+                8. Intellectual Property
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                El Servicio se proporciona “tal cual” y “según disponibilidad”, en la medida permitida por la ley. BillBeam no ofrece garantías expresas o implícitas respecto a disponibilidad, exactitud, adecuación para un propósito particular o ausencia de errores.
+                BillBeam y sus elementos asociados, incluyendo software, diseño, marca, interfaces, texto original, estructura del Servicio, gráficos y funciones, son propiedad de BillBeam o de sus respectivos titulares y están protegidos por leyes aplicables de propiedad intelectual.
             {% elif lang == 'zh' %}
-                在法律允许的最大范围内，本服务按“现状”和“可用性”提供。BillBeam 不对服务的可用性、准确性、特定用途适用性或无错误运行作出任何明示或暗示保证。
+                BillBeam 及其相关元素，包括软件、设计、品牌、界面、原创文本、服务结构、图形和功能，均归 BillBeam 或其相应权利人所有，并受适用知识产权法律保护。
             {% else %}
-                The Service is provided “as is” and “as available,” to the extent permitted by law. BillBeam makes no express or implied warranties regarding availability, accuracy, fitness for a particular purpose, or error-free operation.
+                BillBeam and its associated elements, including software, design, branding, interfaces, original text, Service structure, graphics, and features, are owned by BillBeam or their respective rights holders and are protected by applicable intellectual property laws.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                You retain ownership of content you submit to the Service, subject to the rights needed for BillBeam to host, process, transmit, display, and operate that content as necessary to provide the Service.
+            {% elif lang == 'zh' %}
+                你保留提交至本服务的内容所有权，但需授予 BillBeam 为提供服务而托管、处理、传输、显示和运行该内容所需的权利。
+            {% else %}
+                You retain ownership of content you submit to the Service, subject to the rights needed for BillBeam to host, process, transmit, display, and operate that content as necessary to provide the Service.
             {% endif %}
         </p>
     </section>
@@ -330,20 +363,20 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                10. Limitación de responsabilidad
+                9. Servicio beta, disponibilidad y cambios
             {% elif lang == 'zh' %}
-                10. 责任限制
+                9. 测试服务、可用性与变更
             {% else %}
-                10. Limitation of Liability
+                9. Beta Service, Availability, and Changes
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                En la máxima medida permitida por la ley, BillBeam no será responsable por daños indirectos, incidentales, especiales, consecuentes o punitivos, ni por pérdida de beneficios, ingresos, datos, reputación comercial u oportunidades derivadas del uso o imposibilidad de uso del Servicio.
+                BillBeam may modify, update, limit, suspend, replace, or discontinue any part of the Service at any time. We do not guarantee that the Service will be uninterrupted, secure, error-free, compatible with every device, or available at all times.
             {% elif lang == 'zh' %}
-                在法律允许的最大范围内，BillBeam 不对因使用或无法使用本服务而产生的任何间接、附带、特殊、后果性或惩罚性损害负责，也不对利润、收入、数据、商誉或商业机会的损失负责。
+                BillBeam 可随时修改、更新、限制、暂停、替换或停止本服务的任何部分。我们不保证服务始终不中断、安全、无错误、兼容所有设备或始终可用。
             {% else %}
-                To the maximum extent permitted by law, BillBeam will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for loss of profits, revenue, data, goodwill, or business opportunities arising from or relating to the use of, or inability to use, the Service.
+                BillBeam may modify, update, limit, suspend, replace, or discontinue any part of the Service at any time. We do not guarantee that the Service will be uninterrupted, secure, error-free, compatible with every device, or available at all times.
             {% endif %}
         </p>
     </section>
@@ -351,20 +384,20 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                11. Cambios a estos términos
+                10. Terminación o suspensión
             {% elif lang == 'zh' %}
-                11. 条款变更
+                10. 终止或暂停
             {% else %}
-                11. Changes to These Terms
+                10. Termination or Suspension
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                Podemos actualizar estos Términos de Servicio periódicamente. Las versiones actualizadas se publicarán en esta página y el uso continuado del Servicio después de la actualización constituirá aceptación de los términos revisados.
+                Podemos suspender, limitar o terminar el acceso al Servicio si consideramos razonablemente que existe incumplimiento de estos términos, riesgo para la seguridad, fraude, abuso, actividad ilegal, uso no autorizado, falta de pago o conducta que pueda causar daño a BillBeam, a otros usuarios o a terceros.
             {% elif lang == 'zh' %}
-                我们可能会不时更新这些服务条款。更新后的版本将发布在本页面上，在更新后继续使用本服务即表示你接受修订后的条款。
+                如果我们有合理理由认为存在违反这些条款、安全风险、欺诈、滥用、非法活动、未经授权使用、未付款，或可能损害 BillBeam、其他用户或第三方的行为，我们可以暂停、限制或终止你对本服务的访问。
             {% else %}
-                We may update these Terms of Service from time to time. Updated versions will be posted on this page, and continued use of the Service after an update constitutes acceptance of the revised terms.
+                We may suspend, limit, or terminate access to the Service if we reasonably believe there is a violation of these terms, a security risk, fraud, abuse, unlawful activity, unauthorized use, non-payment, or conduct that may harm BillBeam, other users, or third parties.
             {% endif %}
         </p>
     </section>
@@ -372,20 +405,113 @@ Terms governing the use of BillBeam across its website, mobile application, and 
     <section class="legal-card fade-in-up">
         <h2>
             {% if lang == 'es' %}
-                12. Contacto
+                11. Exención de garantías
             {% elif lang == 'zh' %}
-                12. 联系方式
+                11. 免责声明
             {% else %}
-                12. Contact
+                11. Disclaimer of Warranties
             {% endif %}
         </h2>
         <p>
             {% if lang == 'es' %}
-                Si tienes preguntas sobre estos términos, puedes contactarnos a través de la sección de ayuda o soporte dentro del Servicio.
+                En la máxima medida permitida por la ley, el Servicio se proporciona “tal cual” y “según disponibilidad”. BillBeam no ofrece garantías expresas, implícitas, legales o de otro tipo respecto a disponibilidad, exactitud, confiabilidad, comerciabilidad, idoneidad para un propósito particular, no infracción, seguridad, resultados comerciales, desempeño de terceros o ausencia de errores.
             {% elif lang == 'zh' %}
-                如果你对这些条款有任何疑问，可以通过服务中的帮助或支持页面联系我们。
+                在法律允许的最大范围内，本服务按“现状”和“可用性”提供。BillBeam 不就可用性、准确性、可靠性、适销性、特定用途适用性、不侵权、安全性、商业结果、第三方表现或无错误运行作出任何明示、暗示、法定或其他形式的保证。
             {% else %}
-                If you have questions about these terms, you may contact us through the help or support section within the Service.
+                To the maximum extent permitted by law, the Service is provided “as is” and “as available.” BillBeam makes no express, implied, statutory, or other warranties regarding availability, accuracy, reliability, merchantability, fitness for a particular purpose, non-infringement, security, business results, third-party performance, or error-free operation.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-card fade-in-up">
+        <h2>
+            {% if lang == 'es' %}
+                12. Limitación de responsabilidad
+            {% elif lang == 'zh' %}
+                12. 责任限制
+            {% else %}
+                12. Limitation of Liability
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                En la máxima medida permitida por la ley, BillBeam no será responsable por daños indirectos, incidentales, especiales, consecuentes, ejemplares o punitivos, ni por pérdida de beneficios, ingresos, datos, reputación comercial, clientes, oportunidades, uso, buena voluntad o interrupción comercial derivada de o relacionada con el uso o imposibilidad de uso del Servicio.
+            {% elif lang == 'zh' %}
+                在法律允许的最大范围内，BillBeam 不对因使用或无法使用本服务而产生或相关的任何间接、附带、特殊、后果性、惩戒性或惩罚性损害负责，也不对利润、收入、数据、商誉、客户、机会、使用、信誉或业务中断的损失负责。
+            {% else %}
+                To the maximum extent permitted by law, BillBeam will not be liable for any indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, revenue, data, goodwill, customers, opportunities, use, reputation, or business interruption arising from or relating to the use of, or inability to use, the Service.
+            {% endif %}
+        </p>
+        <p>
+            {% if lang == 'es' %}
+                BillBeam is not responsible for the acts, omissions, services, communications, pricing, refunds, cancellations, disputes, payments, representations, or performance of any independent business, client, payment processor, hosting provider, communications provider, app store, or other third party.
+            {% elif lang == 'zh' %}
+                BillBeam 不对任何独立商家、客户、支付处理商、托管服务提供商、通信服务提供商、应用商店或其他第三方的行为、疏忽、服务、通信、价格、退款、取消、争议、付款、陈述或履约承担责任。
+            {% else %}
+                BillBeam is not responsible for the acts, omissions, services, communications, pricing, refunds, cancellations, disputes, payments, representations, or performance of any independent business, client, payment processor, hosting provider, communications provider, app store, or other third party.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-card fade-in-up">
+        <h2>
+            {% if lang == 'es' %}
+                13. Indemnización
+            {% elif lang == 'zh' %}
+                13. 赔偿
+            {% else %}
+                13. Indemnification
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                To the extent permitted by law, you agree to defend, indemnify, and hold harmless BillBeam from and against claims, damages, liabilities, losses, costs, and expenses arising from or related to your use of the Service, your content, your business activities, your services, your clients, your violation of these terms, or your violation of any law or third-party right.
+            {% elif lang == 'zh' %}
+                在法律允许的范围内，你同意就因你使用本服务、你的内容、你的业务活动、你的服务、你的客户、你违反这些条款或你违反任何法律或第三方权利而产生或相关的索赔、损害、责任、损失、成本和费用，为 BillBeam 进行抗辩、赔偿并使其免受损害。
+            {% else %}
+                To the extent permitted by law, you agree to defend, indemnify, and hold harmless BillBeam from and against claims, damages, liabilities, losses, costs, and expenses arising from or related to your use of the Service, your content, your business activities, your services, your clients, your violation of these terms, or your violation of any law or third-party right.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-card fade-in-up">
+        <h2>
+            {% if lang == 'es' %}
+                14. Cambios a estos términos
+            {% elif lang == 'zh' %}
+                14. 条款变更
+            {% else %}
+                14. Changes to These Terms
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Podemos actualizar estos Términos de Servicio periódicamente. Las versiones actualizadas se publicarán en esta página. El uso continuado del Servicio después de la publicación de términos actualizados constituye aceptación de los términos revisados.
+            {% elif lang == 'zh' %}
+                我们可能会不时更新这些服务条款。更新后的版本将发布在本页面上。更新条款发布后继续使用本服务即表示你接受修订后的条款。
+            {% else %}
+                We may update these Terms of Service from time to time. Updated versions will be posted on this page. Continued use of the Service after updated terms are posted constitutes acceptance of the revised terms.
+            {% endif %}
+        </p>
+    </section>
+
+    <section class="legal-card fade-in-up">
+        <h2>
+            {% if lang == 'es' %}
+                15. Contacto
+            {% elif lang == 'zh' %}
+                15. 联系方式
+            {% else %}
+                15. Contact
+            {% endif %}
+        </h2>
+        <p>
+            {% if lang == 'es' %}
+                Si tienes preguntas sobre estos términos, puedes contactarnos a través de la sección de ayuda o soporte dentro del Servicio, o escribiendo a legal@billbeam.app.
+            {% elif lang == 'zh' %}
+                如果你对这些条款有任何疑问，可以通过服务中的帮助或支持页面联系我们，或发送邮件至 legal@billbeam.app。
+            {% else %}
+                If you have questions about these terms, you may contact us through the help or support section within the Service, or by emailing legal@billbeam.app.
             {% endif %}
         </p>
     </section>
