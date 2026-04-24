@@ -984,11 +984,11 @@
 
                         <div style="margin-top:10px;">
                           <button
-  type="button"
-  class="btn btn-secondary client-request-messages-toggle"
-  data-request-id="{{ req.id }}"
-  data-has-messages="{% if req.message_count and req.message_count > 0 %}true{% else %}false{% endif %}"
->
+                            type="button"
+                            class="btn btn-secondary client-request-messages-toggle"
+                            data-request-id="{{ req.id }}"
+                            data-has-messages="{% if req.message_count and req.message_count > 0 %}true{% else %}false{% endif %}"
+                          >
                             {% if req.message_count and req.message_count > 0 %}
                               {% if lang == 'es' %}
                                 Abrir mensajes
