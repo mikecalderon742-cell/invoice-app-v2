@@ -1892,48 +1892,51 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  document.querySelectorAll(".client-request-edit-toggle").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const requestId = btn.dataset.requestId;
+      const form = document.getElementById("clientRequestEditForm" + requestId);
+
+      if (form) {
+        const isOpening = form.style.display === "none" || form.style.display === "";
+        form.style.display = isOpening ? "block" : "none";
+
+        btn.textContent = isOpening
+          ? "{{ 'Cerrar edición' if lang == 'es' else ('关闭编辑' if lang == 'zh' else 'Close Edit') }}"
+          : "{{ 'Editar solicitud' if lang == 'es' else ('编辑请求' if lang == 'zh' else 'Edit Request') }}";
+
+        if (isOpening) {
+          form.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+          });
+        }
+      }
+    });
+  });
+
   document.querySelectorAll(".client-request-cancel-toggle").forEach((btn) => {
     btn.addEventListener("click", function () {
       const requestId = btn.dataset.requestId;
       const form = document.getElementById("clientRequestCancelForm" + requestId);
+
       if (form) {
-        form.style.display = form.style.display === "none" ? "block" : "none";
+        const isOpening = form.style.display === "none" || form.style.display === "";
+        form.style.display = isOpening ? "block" : "none";
+
+        btn.textContent = isOpening
+          ? "{{ 'Cerrar cancelación' if lang == 'es' else ('关闭取消' if lang == 'zh' else 'Close Cancel') }}"
+          : "{{ 'Cancelar solicitud' if lang == 'es' else ('取消请求' if lang == 'zh' else 'Cancel Request') }}";
+
+        if (isOpening) {
+          form.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+          });
+        }
       }
     });
   });
-
-document.querySelectorAll(".client-request-messages-toggle").forEach((btn) => {
-  btn.addEventListener("click", function () {
-    const requestId = this.getAttribute("data-request-id");
-    const panel = document.getElementById("clientMessagesPanel-" + requestId);
-
-    if (!panel) return;
-
-    const isHidden = panel.style.display === "none" || !panel.style.display;
-
-    // Close all other panels (clean UX)
-    document.querySelectorAll("[id^='clientMessagesPanel-']").forEach((p) => {
-      p.style.display = "none";
-    });
-
-    if (isHidden) {
-      panel.style.display = "block";
-
-      // 🔥 Smooth scroll into view
-      panel.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      // 🔥 Auto-focus message input
-      const input = panel.querySelector("textarea");
-      if (input) {
-        setTimeout(() => {
-          input.focus();
-        }, 250);
-      }
-    } else {
-      panel.style.display = "none";
-    }
-  });
-});
 });
 </script>
 {% endblock %}
