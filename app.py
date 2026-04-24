@@ -24,6 +24,7 @@ import os
 import requests
 import secrets
 import smtplib
+import uuid
 
 import psycopg2
 import stripe
@@ -151,6 +152,8 @@ ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 ALLOWED_IMAGE_MIMETYPES = {"image/png", "image/jpeg", "image/webp"}
 
 INVOICE_IMAGE_UPLOAD_ROOT = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads", "invoice_images")
+SERVICE_REQUEST_PHOTO_UPLOAD_ROOT = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads", "service_request_photos")
+os.makedirs(SERVICE_REQUEST_PHOTO_UPLOAD_ROOT, exist_ok=True)
 os.makedirs(INVOICE_IMAGE_UPLOAD_ROOT, exist_ok=True)
 
 app.config["MAX_INVOICE_IMAGE_UPLOAD_BYTES"] = int(
@@ -4025,6 +4028,14 @@ def create_service_request(
             note="Service request submitted",
         )
 
+        # SAVE PHOTOS (if any uploaded)
+        try:
+            uploaded_files = request.files.getlist("request_photos")
+            if uploaded_files:
+                save_service_request_photos(request_id, uploaded_files)
+        except Exception as e:
+            logger.exception("Photo upload failed: %s", e)
+
         create_notification_if_enabled(
             user_id=user_id,
             category="business_request_alerts",
@@ -4040,6 +4051,46 @@ def create_service_request(
         conn.rollback()
         logger.exception("Failed to create service request: %s", e)
         return None
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def save_service_request_photos(request_id, files):
+    if not files:
+        return
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        for file in files:
+            if not file or not file.filename:
+                continue
+
+            filename = secure_filename(file.filename)
+            unique_name = f"{uuid.uuid4().hex}_{filename}"
+
+            file_path = os.path.join(SERVICE_REQUEST_PHOTO_UPLOAD_ROOT, unique_name)
+            file.save(file_path)
+
+            # public path for browser
+            public_url = f"/uploads/service_request_photos/{unique_name}"
+
+            cur.execute(
+                """
+                INSERT INTO service_request_photos (request_id, image_url, created_at)
+                VALUES (%s, %s, %s)
+                """,
+                (request_id, public_url, now_local()),
+            )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed saving request photos: %s", e)
 
     finally:
         cur.close()
@@ -4552,32 +4603,6 @@ def home():
         services=services,
         lang=get_request_lang(),
     )
-
-
-@app.route("/__create_request_photos_table")
-def create_request_photos_table():
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS service_request_photos (
-                id SERIAL PRIMARY KEY,
-                request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
-                image_url TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        conn.commit()
-        return "Table created successfully"
-
-    except Exception as e:
-        conn.rollback()
-        return f"Error: {e}"
-
-    finally:
-        cur.close()
-        conn.close()
 
 
 # -------------------------

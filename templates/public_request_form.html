@@ -582,7 +582,7 @@
             {% endif %}
           </div>
 
-                    <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}" class="public-request-form">
+                              <form method="POST" action="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}" class="public-request-form" enctype="multipart/form-data">
             <div class="public-request-form-grid">
               <div class="public-request-field">
                 <label for="client_name">
@@ -720,6 +720,36 @@
                   可以补充您的需求、背景、地点或任何有助于商家更好回复您的信息。
                 {% else %}
                   Include what you need, the context, the location, or anything that helps them respond more accurately.
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="public-request-field">
+              <label for="request_photos">
+                {% if lang == 'es' %}
+                  Fotos opcionales
+                {% elif lang == 'zh' %}
+                  可选照片
+                {% else %}
+                  Optional Photos
+                {% endif %}
+              </label>
+
+              <input
+                type="file"
+                id="request_photos"
+                name="request_photos"
+                accept="image/*"
+                multiple
+              >
+
+              <div class="public-request-help">
+                {% if lang == 'es' %}
+                  Agrega fotos si ayudan al negocio a entender mejor el trabajo.
+                {% elif lang == 'zh' %}
+                  如果照片有助于商家更好地了解工作内容，可以上传照片。
+                {% else %}
+                  Add photos if they help the business better understand the job.
                 {% endif %}
               </div>
             </div>
