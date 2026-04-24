@@ -4259,3 +4259,8 @@ canvas.signature-canvas {
 .snapshot > * {
     min-width: 0;
 }
+
+.welcome-title::after {
+    content: " ✦";
+    font-weight: 600;
+}
