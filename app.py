@@ -2042,44 +2042,6 @@ def business_profile(user_id):
     )
 
 
-@app.route("/__create_device_tokens_table")
-def create_device_tokens_table():
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS user_device_tokens (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                platform TEXT NOT NULL,
-                device_token TEXT NOT NULL,
-                device_name TEXT,
-                app_version TEXT,
-                is_active BOOLEAN DEFAULT TRUE,
-                last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, platform, device_token)
-            );
-
-            CREATE INDEX IF NOT EXISTS user_device_tokens_user_idx
-            ON user_device_tokens(user_id, is_active);
-
-            CREATE INDEX IF NOT EXISTS user_device_tokens_platform_idx
-            ON user_device_tokens(platform, is_active);
-        """)
-        conn.commit()
-        return "Device tokens table created successfully"
-
-    except Exception as e:
-        conn.rollback()
-        return f"Error: {e}"
-
-    finally:
-        cur.close()
-        conn.close()
-
-
 # =========================
 # FOLLOW SYSTEM
 # =========================
@@ -3719,6 +3681,59 @@ def get_invoice_summary_for_user(invoice_id, user_id):
     }
 
 
+def get_active_device_tokens_for_user(user_id):
+    if not user_id:
+        return []
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT platform, device_token
+            FROM user_device_tokens
+            WHERE user_id = %s
+              AND is_active = TRUE
+            ORDER BY last_seen_at DESC, id DESC
+            """,
+            (user_id,),
+        )
+        rows = cur.fetchall()
+
+        return [
+            {
+                "platform": row[0],
+                "device_token": row[1],
+            }
+            for row in rows
+            if row and row[0] and row[1]
+        ]
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+def send_push_notification(user_id, title, body="", link_url="", notification_type=""):
+    tokens = get_active_device_tokens_for_user(user_id)
+
+    if not tokens:
+        return False
+
+    logger.info(
+        "[PushNotificationQueued] user_id=%s token_count=%s title=%s type=%s link_url=%s",
+        user_id,
+        len(tokens),
+        title,
+        notification_type,
+        link_url,
+    )
+
+    # APNs / FCM sending will be added after native iOS/Android token registration is confirmed.
+    return True
+
+
 def create_notification(user_id, notification_type, title, body="", link_url=""):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -3749,7 +3764,7 @@ def create_notification(user_id, notification_type, title, body="", link_url="")
         )
         notification_id = cur.fetchone()[0]
         conn.commit()
-        return notification_id
+
     except Exception as e:
         conn.rollback()
         logger.exception("Failed creating notification for user %s: %s", user_id, e)
@@ -3757,6 +3772,19 @@ def create_notification(user_id, notification_type, title, body="", link_url="")
     finally:
         cur.close()
         conn.close()
+
+    try:
+        send_push_notification(
+            user_id=user_id,
+            title=title,
+            body=body or "",
+            link_url=link_url or "",
+            notification_type=notification_type,
+        )
+    except Exception as e:
+        logger.exception("Push notification hook failed for user %s: %s", user_id, e)
+
+    return notification_id
 
 
 def get_notifications_for_user(user_id, unread_only=False, limit=25):
@@ -4023,6 +4051,62 @@ def create_notification_if_enabled(
         body=body,
         link_url=link_url,
     )
+
+
+def register_user_device_token(user_id, platform, device_token, device_name="", app_version=""):
+    if not user_id or not device_token:
+        return False
+
+    platform = (platform or "").strip().lower()
+    if platform not in ("ios", "android"):
+        return False
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            INSERT INTO user_device_tokens (
+                user_id,
+                platform,
+                device_token,
+                device_name,
+                app_version,
+                is_active,
+                last_seen_at,
+                created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, TRUE, %s, %s)
+            ON CONFLICT (user_id, platform, device_token)
+            DO UPDATE SET
+                device_name = EXCLUDED.device_name,
+                app_version = EXCLUDED.app_version,
+                is_active = TRUE,
+                last_seen_at = EXCLUDED.last_seen_at
+            """,
+            (
+                user_id,
+                platform,
+                device_token,
+                device_name or "",
+                app_version or "",
+                now_local(),
+                now_local(),
+            ),
+        )
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed registering device token for user_id=%s platform=%s: %s", user_id, platform, e)
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 def update_notification_preferences(user_id: int, updates: dict):
@@ -9062,6 +9146,30 @@ Never:
         return {"answer": answer}
     except Exception as e:
         return {"error": f"AI error: {e}"}, 500
+
+
+@app.route("/api/device-token", methods=["POST"])
+@login_required
+def api_register_device_token():
+    user = get_current_user()
+    user_id = user["id"]
+
+    data = request.get_json(silent=True) or request.form or {}
+
+    platform = (data.get("platform") or "").strip().lower()
+    device_token = (data.get("device_token") or "").strip()
+    device_name = (data.get("device_name") or "").strip()
+    app_version = (data.get("app_version") or "").strip()
+
+    ok = register_user_device_token(
+        user_id=user_id,
+        platform=platform,
+        device_token=device_token,
+        device_name=device_name,
+        app_version=app_version,
+    )
+
+    return jsonify({"ok": bool(ok)})
 
 
 @app.route("/api/ai-assistant", methods=["POST"])

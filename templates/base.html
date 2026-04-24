@@ -1178,9 +1178,28 @@ body.dark .autism-ribbon {
 {% endif %}
 
 <script>
+(function () {
+    function restorePageVisibility() {
+        if (!document.body) return;
+        document.body.classList.remove("fade-out", "fade-exit");
+    }
+
+    restorePageVisibility();
+
+    window.addEventListener("pageshow", function () {
+        restorePageVisibility();
+    });
+
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
+            restorePageVisibility();
+        }
+    });
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
 
-    document.body.classList.remove("fade-out");
+    document.body.classList.remove("fade-out", "fade-exit");
 
     const hero = document.querySelector(".hero");
     window.addEventListener("scroll", () => {
@@ -1299,14 +1318,28 @@ document.addEventListener("DOMContentLoaded", function () {
         if (link.hostname === window.location.hostname) {
             link.addEventListener("click", function (e) {
                 const href = this.getAttribute("href");
-                if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
+                const target = this.getAttribute("target");
+                const isModifiedClick = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0;
+
+                if (
+                    !href ||
+                    href.startsWith("#") ||
+                    href.startsWith("javascript:") ||
+                    href.startsWith("mailto:") ||
+                    href.startsWith("tel:") ||
+                    target === "_blank" ||
+                    isModifiedClick
+                ) {
                     return;
                 }
+
                 e.preventDefault();
+                document.body.classList.remove("fade-out");
                 document.body.classList.add("fade-exit");
+
                 setTimeout(() => {
-                    window.location = this.href;
-                }, 200);
+                    window.location.href = this.href;
+                }, 160);
             });
         }
     });
