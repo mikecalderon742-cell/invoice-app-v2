@@ -508,6 +508,21 @@ body.dark .autism-ribbon {
         opacity: 0.7;
     }
 }
+
+.welcome-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.welcome-sparkle {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    fill: #facc15;
+    filter: drop-shadow(0 4px 10px rgba(250, 204, 21, 0.35));
+}
     </style>
 </head>
 
@@ -1112,13 +1127,14 @@ body.dark .autism-ribbon {
 <div id="welcomeModal" class="welcome-modal hidden">
     <div class="welcome-content">
         <h2 class="welcome-title">
-    <span>
-        {% if lang == 'es' %}Bienvenido a BillBeam{% else %}Welcome to BillBeam{% endif %}
-    </span>
-    <svg class="welcome-sparkle" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 2.5L14.7 9.3L21.5 12L14.7 14.7L12 21.5L9.3 14.7L2.5 12L9.3 9.3L12 2.5Z"></path>
-    </svg>
-</h2>
+            <span>
+                {% if lang == 'es' %}Bienvenido a BillBeam{% else %}Welcome to BillBeam{% endif %}
+            </span>
+            <svg class="welcome-sparkle" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2.5L14.7 9.3L21.5 12L14.7 14.7L12 21.5L9.3 14.7L2.5 12L9.3 9.3L12 2.5Z"></path>
+            </svg>
+        </h2>
+
         <p>
             {% if lang == 'es' %}
                 Tu nuevo panel de control para facturas rápidas y claras.
@@ -1126,6 +1142,7 @@ body.dark .autism-ribbon {
                 Your new command center for clean, fast invoices.
             {% endif %}
         </p>
+
         <button id="closeWelcome" class="btn">
             {% if lang == 'es' %}Empezar{% else %}Let's Go{% endif %}
         </button>

@@ -4260,11 +4260,6 @@ canvas.signature-canvas {
     min-width: 0;
 }
 
-.welcome-title::after {
-    content: " ✦";
-    font-weight: 600;
-}
-
 .welcome-title {
     display: inline-flex;
     align-items: center;
