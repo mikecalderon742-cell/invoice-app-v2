@@ -1995,12 +1995,18 @@ def client_cancel_request(request_id):
         except Exception:
             pass
 
+    cancel_body_parts = [f"{service_title or 'A request'} was cancelled by the client."]
+
+    if cancel_reason:
+        clean_cancel_reason = " ".join(str(cancel_reason).split())
+        cancel_body_parts.append(f"Reason: {clean_cancel_reason[:120]}")
+
     create_notification_if_enabled(
         user_id=business_user_id,
         category="business_request_alerts",
         notification_type="service_request_cancelled_by_client",
-        title="Client cancelled a request",
-        body=service_title or "A client cancelled their request.",
+        title=f"Client cancelled {service_title or 'a request'}",
+        body=" ".join(cancel_body_parts),
         link_url=f"/requests/{request_id}",
     )
 
@@ -2082,8 +2088,8 @@ def follow_business(user_id):
             user_id=user_id,
             category="business_request_alerts",
             notification_type="business_followed",
-            title="New follower",
-            body=f"{follower_label} followed your business.",
+            title="New client follower",
+            body=f"{follower_label} followed your business and can now access your public profile.",
             link_url=f"/business/{user_id}",
         )
 
@@ -2502,7 +2508,7 @@ def record_public_invoice_view(invoice_id: int, token: str):
         category="invoice_alerts",
         notification_type="invoice_viewed",
         title=f"Invoice {invoice_number} was viewed",
-        body=f"Public invoice link opened. Total views: {view_summary['view_count']}.",
+        body=f"Your client opened the invoice link. Total views: {view_summary['view_count']}.",
         link_url=f"/invoices/{invoice_id}",
     )
 
@@ -7357,8 +7363,8 @@ def add_payment(invoice_id):
                     user_id=user_id,
                     category="payment_alerts",
                     notification_type="partial_payment_received",
-                    title=f"Partial payment received for {inv_label}",
-                    body=f"Total paid is now {format_currency(total_paid)}. Remaining balance: {format_currency(balance)}.",
+                    title=f"Payment recorded for {inv_label}",
+                    body=f"{format_currency(pay_amount)} was recorded. Remaining balance: {format_currency(balance)}.",
                     link_url=f"/invoices/{invoice_id_db}",
                 )
 
@@ -7374,8 +7380,8 @@ def add_payment(invoice_id):
                     user_id=user_id,
                     category="payment_alerts",
                     notification_type="final_payment_received",
-                    title=f"Invoice {inv_label} paid in full",
-                    body=f"A payment of {format_currency(pay_amount)} completed this invoice.",
+                    title=f"Invoice {inv_label} is paid in full",
+                    body=f"Final payment recorded: {format_currency(pay_amount)}.",
                     link_url=f"/invoices/{invoice_id_db}",
                 )
 
