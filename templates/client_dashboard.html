@@ -1165,12 +1165,16 @@
                       </div>
 
                       <textarea
-                        class="client-input"
-                        name="message_body"
-                        rows="3"
-                        placeholder="{% if lang == 'es' %}Escribe una respuesta...{% elif lang == 'zh' %}输入回复...{% else %}Write a reply...{% endif %}"
-                        required
-                      ></textarea>
+  class="client-input"
+  name="message_body"
+  rows="3"
+  placeholder="{% if lang == 'es' %}Escribe una pregunta, actualización o detalle para el negocio...{% elif lang == 'zh' %}输入问题、更新或给商家的补充说明...{% else %}Write a question, update, or detail for the business...{% endif %}"
+  {% if not req.messages or req.messages|length == 0 %}
+  >{% if lang == 'es' %}Hola, me gustaría confirmar algunos detalles sobre esta solicitud.{% elif lang == 'zh' %}您好，我想确认一下这个请求的一些细节。{% else %}Hi, I’d like to confirm a few details about this request.{% endif %}
+  {% else %}
+  >
+  {% endif %}
+</textarea>
                     </div>
 
                     <div class="request-actions" style="margin-top:10px;">
