@@ -1644,7 +1644,19 @@ def client_dashboard():
                 sr.preferred_time_text,
                 sr.quantity,
                 sr.created_at,
-                sr.updated_at
+                sr.updated_at,
+                (
+                    SELECT COUNT(*)
+                    FROM service_request_messages srm
+                    WHERE srm.service_request_id = sr.id
+                ) AS message_count,
+                (
+                    SELECT srm.message_body
+                    FROM service_request_messages srm
+                    WHERE srm.service_request_id = sr.id
+                    ORDER BY srm.created_at DESC, srm.id DESC
+                    LIMIT 1
+                ) AS latest_message_body
             FROM service_requests sr
             LEFT JOIN business_profile bp
                 ON bp.user_id = sr.user_id
@@ -1697,6 +1709,8 @@ def client_dashboard():
                 "quantity": int(row[10] or 1),
                 "created_at": row[11],
                 "updated_at": row[12],
+                "message_count": int(row[13] or 0),
+                "latest_message_body": row[14] or "",
             }
         )
 
@@ -3860,6 +3874,7 @@ def create_notification_if_enabled(
         "service_request_status_updated",
         "service_request_updated_by_client",
         "service_request_cancelled_by_client",
+        "request_message",
     }
 
     if notification_type not in critical_types:
