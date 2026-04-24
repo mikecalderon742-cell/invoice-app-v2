@@ -4291,7 +4291,7 @@ def update_service_request_status(request_id, user_id, new_status):
         status_label = status_label_map.get(new_status, new_status.replace("_", " ").title())
         service_label = (service_title_snapshot or "Your request").strip() if service_title_snapshot else "Your request"
 
-        if client_user_id:
+        if old_status != new_status and client_user_id:
             create_notification_if_enabled(
                 user_id=client_user_id,
                 category="client_request_updates",
