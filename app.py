@@ -4627,6 +4627,37 @@ def home():
     )
 
 
+@app.route("/__create_request_messages_table")
+def create_request_messages_table():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS service_request_messages (
+                id SERIAL PRIMARY KEY,
+                service_request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+                sender_user_id INTEGER,
+                sender_role TEXT NOT NULL DEFAULT 'client',
+                message_body TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS service_request_messages_request_idx
+            ON service_request_messages(service_request_id, created_at ASC, id ASC);
+        """)
+        conn.commit()
+        return "Request messages table created successfully"
+
+    except Exception as e:
+        conn.rollback()
+        return f"Error: {e}"
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 # -------------------------
 # AUTH
 # -------------------------
