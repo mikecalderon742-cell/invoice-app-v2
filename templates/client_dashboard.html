@@ -983,7 +983,12 @@
                         {% endif %}
 
                         <div style="margin-top:10px;">
-                          <button type="button" class="btn btn-secondary client-request-messages-toggle" data-request-id="{{ req.id }}">
+                          <button
+  type="button"
+  class="btn btn-secondary client-request-messages-toggle"
+  data-request-id="{{ req.id }}"
+  data-has-messages="{% if req.message_count and req.message_count > 0 %}true{% else %}false{% endif %}"
+>
                             {% if req.message_count and req.message_count > 0 %}
                               {% if lang == 'es' %}
                                 Abrir mensajes
@@ -1839,7 +1844,7 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.dataset.openText = btn.textContent.trim();
     }
 
-    btn.addEventListener("click", function () {
+    function setPanelOpen(isOpen, shouldFocus) {
       const requestId = btn.dataset.requestId;
       const panel = document.getElementById("clientRequestMessagesPanel" + requestId);
 
@@ -1847,13 +1852,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      const isOpening = panel.style.display === "none" || panel.style.display === "";
+      panel.style.display = isOpen ? "block" : "none";
+      btn.textContent = isOpen
+        ? "{{ 'Cerrar mensajes' if lang == 'es' else ('关闭消息' if lang == 'zh' else 'Close Messages') }}"
+        : btn.dataset.openText;
 
-      panel.style.display = isOpening ? "block" : "none";
-
-      if (isOpening) {
-        btn.textContent = "{{ 'Cerrar mensajes' if lang == 'es' else ('关闭消息' if lang == 'zh' else 'Close Messages') }}";
-
+      if (isOpen && shouldFocus) {
         panel.scrollIntoView({
           behavior: "smooth",
           block: "nearest"
@@ -1863,10 +1867,24 @@ document.addEventListener("DOMContentLoaded", function () {
         if (textarea) {
           setTimeout(() => textarea.focus(), 200);
         }
-      } else {
-        btn.textContent = btn.dataset.openText;
       }
+    }
+
+    btn.addEventListener("click", function () {
+      const requestId = btn.dataset.requestId;
+      const panel = document.getElementById("clientRequestMessagesPanel" + requestId);
+
+      if (!panel) {
+        return;
+      }
+
+      const isOpening = panel.style.display === "none" || panel.style.display === "";
+      setPanelOpen(isOpening, true);
     });
+
+    if (btn.dataset.hasMessages === "true") {
+      setPanelOpen(true, false);
+    }
   });
 
   document.querySelectorAll(".client-request-cancel-toggle").forEach((btn) => {
