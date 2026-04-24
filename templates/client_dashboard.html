@@ -918,7 +918,7 @@
         {% if client_requests %}
           <div class="request-list">
             {% for req in client_requests %}
-              <div class="request-card">
+              <div class="request-card" style="{% if req.message_count and req.message_count > 0 %}box-shadow:0 0 0 1px rgba(58,139,255,0.18), 0 18px 42px rgba(37,99,235,0.08);{% endif %}">
                 <div class="request-top">
                   <div class="request-left">
                     {% if req.business_logo_url %}
@@ -946,7 +946,18 @@
                       {% endif %}
 
                       <div class="request-sub" style="margin-top:8px; padding:12px 14px; border-radius:16px; background:rgba(58,139,255,0.08); border:1px solid rgba(58,139,255,0.14);">
-                        <strong>
+                        <strong style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                      {% if req.message_count and req.message_count > 0 %}
+  <span style="display:inline-flex; align-items:center; justify-content:center; padding:3px 8px; border-radius:999px; background:linear-gradient(135deg,#3A8BFF,#2563eb); color:#ffffff; font-size:11px; font-weight:800;">
+    {% if lang == 'es' %}
+      Nuevo
+    {% elif lang == 'zh' %}
+      新
+    {% else %}
+      New
+    {% endif %}
+  </span>
+{% endif %}
                           {% if req.message_count and req.message_count > 0 %}
                             {% if lang == 'es' %}
                               Mensajes: {{ req.message_count }}
