@@ -5,3 +5,7 @@ reportlab
 requests
 stripe>=10.0.0
 openai>=1.0.0
+PyJWT
+httpx
+cryptography
+h2

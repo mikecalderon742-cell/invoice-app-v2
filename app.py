@@ -24,7 +24,11 @@ import os
 import requests
 import secrets
 import smtplib
+import time
 import uuid
+
+import httpx
+import jwt
 
 import psycopg2
 import stripe
@@ -107,6 +111,16 @@ ai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 AI_MODEL_FREE = os.environ.get("AI_MODEL_FREE", "gpt-4o-mini")
 AI_MODEL_PRO = os.environ.get("AI_MODEL_PRO", "gpt-4.1-mini")
 AI_NOTICE_ENABLED = os.environ.get("AI_NOTICE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+APNS_KEY_ID = os.environ.get("APNS_KEY_ID")
+APNS_TEAM_ID = os.environ.get("APNS_TEAM_ID")
+APNS_BUNDLE_ID = os.environ.get("APNS_BUNDLE_ID", "com.billbeam.app")
+APNS_AUTH_KEY = os.environ.get("APNS_AUTH_KEY")
+APNS_USE_SANDBOX = os.environ.get("APNS_USE_SANDBOX", "false").lower() in ("1", "true", "yes", "on")
+
+_APNS_JWT_CACHE = {
+    "token": None,
+    "created_at": 0,
+}
 
 APP_TIMEZONE = ZoneInfo(os.environ.get("APP_TIMEZONE", "America/Los_Angeles"))
 IS_PRODUCTION = os.environ.get("FLASK_ENV", "").lower() == "production" or os.environ.get("APP_ENV", "").lower() == "production"
@@ -3721,23 +3735,132 @@ def get_active_device_tokens_for_user(user_id):
         conn.close()
 
 
+def get_apns_auth_token():
+    if not APNS_KEY_ID or not APNS_TEAM_ID or not APNS_AUTH_KEY:
+        logger.warning("APNs is not configured. Missing APNS_KEY_ID, APNS_TEAM_ID, or APNS_AUTH_KEY.")
+        return None
+
+    now_ts = int(time.time())
+
+    cached_token = _APNS_JWT_CACHE.get("token")
+    cached_created_at = int(_APNS_JWT_CACHE.get("created_at") or 0)
+
+    if cached_token and (now_ts - cached_created_at) < 45 * 60:
+        return cached_token
+
+    auth_key = APNS_AUTH_KEY.strip().replace("\\n", "\n")
+
+    try:
+        token = jwt.encode(
+            {
+                "iss": APNS_TEAM_ID,
+                "iat": now_ts,
+            },
+            auth_key,
+            algorithm="ES256",
+            headers={
+                "alg": "ES256",
+                "kid": APNS_KEY_ID,
+            },
+        )
+
+        _APNS_JWT_CACHE["token"] = token
+        _APNS_JWT_CACHE["created_at"] = now_ts
+
+        return token
+
+    except Exception as e:
+        logger.exception("Failed creating APNs auth token: %s", e)
+        return None
+
+
+def send_apns_push_to_token(device_token, title, body="", link_url="", notification_type=""):
+    token = get_apns_auth_token()
+    if not token:
+        return False
+
+    clean_device_token = (device_token or "").strip().replace(" ", "")
+    if not clean_device_token:
+        return False
+
+    apns_host = "api.sandbox.push.apple.com" if APNS_USE_SANDBOX else "api.push.apple.com"
+    apns_url = f"https://{apns_host}/3/device/{clean_device_token}"
+
+    payload = {
+        "aps": {
+            "alert": {
+                "title": title or APP_NAME,
+                "body": body or "",
+            },
+            "sound": "default",
+        },
+        "link_url": link_url or "/notifications",
+        "notification_type": notification_type or "",
+    }
+
+    headers = {
+        "authorization": f"bearer {token}",
+        "apns-topic": APNS_BUNDLE_ID,
+        "apns-push-type": "alert",
+        "apns-priority": "10",
+    }
+
+    try:
+        with httpx.Client(http2=True, timeout=10.0) as client:
+            response = client.post(apns_url, headers=headers, json=payload)
+
+        if 200 <= response.status_code < 300:
+            logger.info(
+                "[APNsPushSuccess] token_suffix=%s title=%s link_url=%s",
+                clean_device_token[-8:],
+                title,
+                link_url,
+            )
+            return True
+
+        logger.warning(
+            "[APNsPushFailed] status=%s response=%s token_suffix=%s",
+            response.status_code,
+            response.text,
+            clean_device_token[-8:],
+        )
+        return False
+
+    except Exception as e:
+        logger.exception("APNs push request failed: %s", e)
+        return False
+
+
 def send_push_notification(user_id, title, body="", link_url="", notification_type=""):
     tokens = get_active_device_tokens_for_user(user_id)
 
     if not tokens:
+        logger.info("[PushNotificationSkipped] user_id=%s no active device tokens", user_id)
         return False
 
-    logger.info(
-        "[PushNotificationQueued] user_id=%s token_count=%s title=%s type=%s link_url=%s",
-        user_id,
-        len(tokens),
-        title,
-        notification_type,
-        link_url,
-    )
+    sent_any = False
 
-    # APNs / FCM sending will be added after native iOS/Android token registration is confirmed.
-    return True
+    for token_row in tokens:
+        platform = (token_row.get("platform") or "").strip().lower()
+        device_token = token_row.get("device_token") or ""
+
+        if platform == "ios":
+            sent = send_apns_push_to_token(
+                device_token=device_token,
+                title=title,
+                body=body or "",
+                link_url=link_url or "/notifications",
+                notification_type=notification_type or "",
+            )
+            sent_any = sent_any or sent
+        else:
+            logger.info(
+                "[PushNotificationSkipped] unsupported platform=%s user_id=%s",
+                platform,
+                user_id,
+            )
+
+    return sent_any
 
 
 def create_notification(user_id, notification_type, title, body="", link_url=""):
