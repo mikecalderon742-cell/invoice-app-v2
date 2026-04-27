@@ -82,7 +82,7 @@ c = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
-APPLE_IAP_SIMPLE_PRODUCT_ID = os.environ.get("APPLE_IAP_SIMPLE_PRODUCT_ID", "app.billbeam.simple.monthly")
+APPLE_IAP_SIMPLE_PRODUCT_ID = os.environ.get("APPLE_IAP_SIMPLE_PRODUCT_ID", "app.billbeam.simple.v2.monthly")
 APPLE_IAP_PRO_PRODUCT_ID = os.environ.get("APPLE_IAP_PRO_PRODUCT_ID", "app.billbeam.pro.monthly")
 APPLE_IAP_ENTERPRISE_PRODUCT_ID = os.environ.get("APPLE_IAP_ENTERPRISE_PRODUCT_ID", "app.billbeam.business.monthly")
 
@@ -5767,6 +5767,87 @@ def dev_force_pro():
         return f"Error updating user plan: {e}", 500
 
     return f"User {user_id} is now Pro."
+
+
+# -------------------------
+# APPLE IAP ACTIVATION
+# -------------------------
+@app.route("/api/apple/activate-subscription", methods=["POST"])
+@login_required
+def api_apple_activate_subscription():
+    user = get_current_user()
+    user_id = user.get("id")
+
+    if not user_id:
+        return jsonify({"error": "No logged-in user found."}), 401
+
+    payload = request.get_json(silent=True) or {}
+
+    product_id = (payload.get("product_id") or payload.get("productId") or "").strip()
+    transaction_id = (payload.get("transaction_id") or payload.get("transactionId") or "").strip()
+    original_transaction_id = (
+        payload.get("original_transaction_id")
+        or payload.get("originalTransactionId")
+        or transaction_id
+        or ""
+    ).strip()
+
+    new_plan = get_plan_for_apple_product_id(product_id)
+
+    if new_plan not in ("simple", "pro", "enterprise"):
+        return jsonify({"error": "Unknown Apple product ID."}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET plan = %s,
+                apple_product_id = %s,
+                apple_transaction_id = %s,
+                apple_original_transaction_id = %s,
+                apple_last_purchase_at = %s
+            WHERE id = %s
+            """,
+            (
+                new_plan,
+                product_id,
+                transaction_id or None,
+                original_transaction_id or None,
+                now_local(),
+                user_id,
+            ),
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        logger.info(
+            "[Apple IAP Activate] user_id=%s upgraded to %s product_id=%s transaction_id=%s",
+            user_id,
+            new_plan,
+            product_id,
+            transaction_id,
+        )
+
+        session["user_id"] = user_id
+        session.permanent = True
+        session.modified = True
+
+        return jsonify(
+            {
+                "success": True,
+                "plan": new_plan,
+                "product_id": product_id,
+            }
+        ), 200
+
+    except Exception as e:
+        logger.exception("[Apple IAP Activate] failed for user_id=%s", user_id)
+        return jsonify({"error": f"Server error: {e}"}), 500
 
 
 # -------------------------

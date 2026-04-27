@@ -1773,17 +1773,55 @@ document.addEventListener("DOMContentLoaded", function () {
     showNativeAlert("warn", message);
   });
 
-  window.addEventListener("billbeam:purchase-success", function (event) {
-    resetUpgradeButtons();
+window.addEventListener("billbeam:purchase-success", async function (event) {
+  resetUpgradeButtons();
 
-    const productID = event.detail && event.detail.productID ? event.detail.productID : "";
-    const planLabel = productID.indexOf("simple") !== -1 ? "Simple" : "Pro";
+  const productID = event.detail && event.detail.productID ? event.detail.productID : "";
+  const planLabel = productID.indexOf("simple") !== -1 ? "Simple" : "Pro";
+
+  showNativeAlert(
+    "info",
+    planLabel + " purchase completed through Apple. Activating your BillBeam plan..."
+  );
+
+  try {
+    const resp = await fetch("/api/apple/activate-subscription", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        product_id: productID
+      })
+    });
+
+    const data = await resp.json();
+
+    if (resp.ok && data.success) {
+      showNativeAlert(
+        "success",
+        planLabel + " is now active on your BillBeam account."
+      );
+
+      window.setTimeout(function () {
+        window.location.href = "/pricing?upgraded=1";
+      }, 900);
+
+      return;
+    }
 
     showNativeAlert(
-      "success",
-      planLabel + " purchase completed through Apple. Server sync is the next step."
+      "warn",
+      data.error || "Apple purchase completed, but BillBeam could not activate your plan yet."
     );
-  });
+  } catch (e) {
+    showNativeAlert(
+      "warn",
+      "Apple purchase completed, but BillBeam could not reach the server to activate your plan."
+    );
+  }
+});
 
   window.addEventListener("billbeam:restore-finished", function () {
     resetUpgradeButtons();
