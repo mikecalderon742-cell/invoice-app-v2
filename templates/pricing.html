@@ -1697,15 +1697,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    if (plan === "simple" && window.BillBeamNative && typeof window.BillBeamNative.purchaseSimple === "function") {
-      window.BillBeamNative.purchaseSimple();
-      return;
-    }
+if (plan === "simple" && window.BillBeamNative && typeof window.BillBeamNative.purchaseSimple === "function") {
+  window.BillBeamNative.purchaseSimple();
+  return;
+}
 
-    if (window.BillBeamNative && typeof window.BillBeamNative.purchasePro === "function") {
-      window.BillBeamNative.purchasePro();
-      return;
-    }
+if (plan === "pro" && window.BillBeamNative && typeof window.BillBeamNative.purchasePro === "function") {
+  window.BillBeamNative.purchasePro();
+  return;
+}
 
     resetUpgradeButtons();
   }
