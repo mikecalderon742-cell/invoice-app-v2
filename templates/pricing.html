@@ -1506,11 +1506,18 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  function nativePurchaseAvailable() {
-    return !!(
-      window.BillBeamNative &&
-      typeof window.BillBeamNative.purchasePro === "function"
-    );
+  function nativePurchaseAvailable(plan) {
+    if (!window.BillBeamNative) return false;
+
+    if (plan === "simple") {
+      return typeof window.BillBeamNative.purchaseSimple === "function";
+    }
+
+    if (plan === "pro") {
+      return typeof window.BillBeamNative.purchasePro === "function";
+    }
+
+    return false;
   }
 
   function nativeRestoreAvailable() {
@@ -1521,7 +1528,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function isNativeIOSApp() {
-    return nativePurchaseAvailable() || nativeRestoreAvailable();
+    return nativePurchaseAvailable("simple") || nativePurchaseAvailable("pro") || nativeRestoreAvailable();
   }
 
   const upgradeButtons = document.querySelectorAll(".upgradePlanBtn");
@@ -1586,7 +1593,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (simpleUpgradeNote) {
-      simpleUpgradeNote.textContent = "{{ 'Simple se activa con Stripe en web. La compra integrada de Apple en iPhone está pensada para Pro.' if lang == 'es' else ('Simple 在网页端通过 Stripe 开通。iPhone 内购主要用于 Pro。' if lang == 'zh' else 'Simple activates with Stripe on web. Apple in-app purchase on iPhone is intended for Pro.') }}";
+      simpleUpgradeNote.textContent = "{{ 'Simple se activa con la compra integrada de Apple dentro de la app para iPhone.' if lang == 'es' else ('在 iPhone 应用内，Simple 通过 Apple 应用内购买开通。' if lang == 'zh' else 'Simple activates with Apple’s in-app purchase flow inside the iPhone app.') }}";
     }
 
     if (nativeHint) {
@@ -1644,10 +1651,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function startNativePurchase() {
-    if (!upgradeBtn) return;
+  function startNativePurchase(plan, clickedButton) {
+    if (!clickedButton) return;
 
-    if (!nativePurchaseAvailable()) {
+    if (!nativePurchaseAvailable(plan)) {
       showNativeAlert(
         "warn",
         "{{ 'La compra integrada de Apple aún no está disponible en esta pantalla. Cierra y vuelve a abrir la app e inténtalo de nuevo.' if lang == 'es' else ('此页面尚未准备好 Apple 应用内购买。请关闭并重新打开应用后再试。' if lang == 'zh' else 'Apple in-app purchase is not ready on this screen yet. Close and reopen the app, then try again.') }}"
@@ -1656,8 +1663,14 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    upgradeBtn.disabled = true;
-    upgradeBtn.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else ('正在打开 Apple 购买...' if lang == 'zh' else 'Opening Apple purchase...') }}";
+    clickedButton.disabled = true;
+    clickedButton.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else ('正在打开 Apple 购买...' if lang == 'zh' else 'Opening Apple purchase...') }}";
+
+    if (plan === "simple") {
+      window.BillBeamNative.purchaseSimple();
+      return;
+    }
+
     window.BillBeamNative.purchasePro();
   }
 
@@ -1667,8 +1680,8 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.addEventListener("click", async function () {
       const plan = btn.dataset.plan || "pro";
 
-      if (plan === "pro" && isNativeIOSApp()) {
-        startNativePurchase();
+      if ((plan === "simple" || plan === "pro") && isNativeIOSApp()) {
+        startNativePurchase(plan, btn);
       } else {
         await startStripeCheckout(plan, btn);
       }
