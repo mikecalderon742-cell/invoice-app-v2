@@ -1538,7 +1538,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function isNativeIOSApp() {
-    return nativePurchaseAvailable("simple") || nativePurchaseAvailable("pro") || nativeRestoreAvailable();
+    return (
+      navigator.userAgent.indexOf("BillBeamIOS") !== -1 ||
+      nativePurchaseAvailable("simple") ||
+      nativePurchaseAvailable("pro") ||
+      nativeRestoreAvailable()
+    );
   }
 
   const upgradeButtons = document.querySelectorAll(".upgradePlanBtn");
@@ -1675,6 +1680,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     clickedButton.disabled = true;
     clickedButton.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else ('正在打开 Apple 购买...' if lang == 'zh' else 'Opening Apple purchase...') }}";
+
+    if (navigator.userAgent.indexOf("BillBeamIOS") !== -1) {
+      window.location.href = "billbeam://purchase?plan=" + encodeURIComponent(plan);
+      return;
+    }
 
     if (
       window.webkit &&
