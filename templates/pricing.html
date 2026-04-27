@@ -1773,11 +1773,15 @@ document.addEventListener("DOMContentLoaded", function () {
     showNativeAlert("warn", message);
   });
 
-  window.addEventListener("billbeam:purchase-success", function () {
+  window.addEventListener("billbeam:purchase-success", function (event) {
     resetUpgradeButtons();
+
+    const productID = event.detail && event.detail.productID ? event.detail.productID : "";
+    const planLabel = productID.indexOf("simple") !== -1 ? "Simple" : "Pro";
+
     showNativeAlert(
       "success",
-      "{{ 'Compra completada. El siguiente paso es sincronizar el acceso Pro con tu cuenta BillBeam en el servidor.' if lang == 'es' else ('购买已完成。下一步是将 Pro 权限与您的 BillBeam 服务器账户同步。' if lang == 'zh' else 'Purchase completed. The next step is syncing Pro access with your BillBeam account on the server.') }}"
+      planLabel + " purchase completed through Apple. Server sync is the next step."
     );
   });
 
