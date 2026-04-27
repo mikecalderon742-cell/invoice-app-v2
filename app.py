@@ -5742,33 +5742,6 @@ def debug_plan():
     }
 
 
-@app.route("/dev/force-pro")
-@login_required
-def dev_force_pro():
-    if not IS_DEBUG_MODE:
-        return "Not available outside debug/development mode.", 404
-
-    user = get_current_user()
-    user_id = user.get("id")
-
-    if not user_id:
-        return "No current user found.", 400
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE users SET plan = %s WHERE id = %s", ("pro", user_id))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        logger.info("Force-upgraded user_id=%s to pro in debug mode", user_id)
-    except Exception as e:
-        logger.exception("Error updating user plan in dev_force_pro")
-        return f"Error updating user plan: {e}", 500
-
-    return f"User {user_id} is now Pro."
-
-
 # -------------------------
 # APPLE IAP ACTIVATION
 # -------------------------
