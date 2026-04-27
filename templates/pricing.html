@@ -1785,17 +1785,18 @@ window.addEventListener("billbeam:purchase-success", async function (event) {
   );
 
   try {
-    const resp = await fetch("/api/apple/activate-subscription", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "same-origin",
-      body: JSON.stringify({
-        product_id: productID,
-        transaction_id: event.detail && event.detail.transactionID ? event.detail.transactionID : "",
-        original_transaction_id: event.detail && event.detail.originalTransactionID ? event.detail.originalTransactionID : ""
-      })
+const resp = await fetch("/api/apple/activate-subscription", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  credentials: "same-origin",
+  body: JSON.stringify({
+    product_id: productID,
+    transaction_id: event.detail && event.detail.transactionID ? event.detail.transactionID : "",
+    original_transaction_id: event.detail && event.detail.originalTransactionID ? event.detail.originalTransactionID : ""
+  })
+});
 
     const data = await resp.json();
 
