@@ -1507,6 +1507,16 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   function nativePurchaseAvailable(plan) {
+    const hasDirectIOSBridge = !!(
+      window.webkit &&
+      window.webkit.messageHandlers &&
+      window.webkit.messageHandlers.billbeamNative
+    );
+
+    if (hasDirectIOSBridge && (plan === "simple" || plan === "pro")) {
+      return true;
+    }
+
     if (!window.BillBeamNative) return false;
 
     if (plan === "simple") {
@@ -1666,12 +1676,28 @@ document.addEventListener("DOMContentLoaded", function () {
     clickedButton.disabled = true;
     clickedButton.textContent = "{{ 'Abriendo compra de Apple...' if lang == 'es' else ('正在打开 Apple 购买...' if lang == 'zh' else 'Opening Apple purchase...') }}";
 
-    if (plan === "simple") {
+    if (
+      window.webkit &&
+      window.webkit.messageHandlers &&
+      window.webkit.messageHandlers.billbeamNative
+    ) {
+      window.webkit.messageHandlers.billbeamNative.postMessage({
+        action: plan === "simple" ? "purchaseSimple" : "purchasePro"
+      });
+      return;
+    }
+
+    if (plan === "simple" && window.BillBeamNative && typeof window.BillBeamNative.purchaseSimple === "function") {
       window.BillBeamNative.purchaseSimple();
       return;
     }
 
-    window.BillBeamNative.purchasePro();
+    if (window.BillBeamNative && typeof window.BillBeamNative.purchasePro === "function") {
+      window.BillBeamNative.purchasePro();
+      return;
+    }
+
+    resetUpgradeButtons();
   }
 
   applyNativeUIState();
