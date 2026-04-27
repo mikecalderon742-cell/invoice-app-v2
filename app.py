@@ -5797,6 +5797,9 @@ def api_apple_activate_subscription():
     if new_plan not in ("simple", "pro", "enterprise"):
         return jsonify({"error": "Unknown Apple product ID."}), 400
 
+    if not transaction_id:
+        return jsonify({"error": "Missing Apple transaction ID. Plan was not activated."}), 400
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()

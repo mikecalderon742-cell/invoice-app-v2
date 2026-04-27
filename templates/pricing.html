@@ -1792,9 +1792,10 @@ window.addEventListener("billbeam:purchase-success", async function (event) {
       },
       credentials: "same-origin",
       body: JSON.stringify({
-        product_id: productID
+        product_id: productID,
+        transaction_id: event.detail && event.detail.transactionID ? event.detail.transactionID : "",
+        original_transaction_id: event.detail && event.detail.originalTransactionID ? event.detail.originalTransactionID : ""
       })
-    });
 
     const data = await resp.json();
 
