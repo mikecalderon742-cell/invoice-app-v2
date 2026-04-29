@@ -888,6 +888,28 @@ def init_db():
     )
 
     cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS pricing_type TEXT DEFAULT 'fixed';"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS duration_minutes INTEGER;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS category TEXT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS location_required BOOLEAN DEFAULT FALSE;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS materials_included TEXT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS photo_required BOOLEAN DEFAULT FALSE;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS availability_notes TEXT;"
+    )
+
+    cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoice_events (
             id SERIAL PRIMARY KEY,
