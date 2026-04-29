@@ -1063,9 +1063,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="service-card-price">
-                                        ${{ '%.2f'|format(service.price or 0) }}
-                                    </div>
+<div class="service-card-price">
+    {% if service.pricing_type == "hourly" %}
+        ${{ '%.2f'|format(service.price or 0) }}/hr
+    {% elif service.pricing_type == "quote" %}
+        Request Quote
+    {% else %}
+        ${{ '%.2f'|format(service.price or 0) }}
+    {% endif %}
+</div>
                                 </div>
 
                                 <p class="service-card-description">
