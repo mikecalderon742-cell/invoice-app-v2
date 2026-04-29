@@ -1988,7 +1988,44 @@ def api_send_message():
 @app.route("/messages")
 @login_required
 def messages_page():
-    return render_template("messages.html")
+    user = get_current_user()
+    user_id = user["id"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            c.id,
+            c.business_user_id,
+            c.client_user_id,
+            c.created_at
+        FROM conversations c
+        WHERE c.business_user_id = %s
+           OR c.client_user_id = %s
+        ORDER BY c.created_at DESC
+        """,
+        (user_id, user_id),
+    )
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    conversations = []
+    for row in rows:
+        conversations.append({
+            "id": row[0],
+            "business_user_id": row[1],
+            "client_user_id": row[2],
+            "created_at": row[3],
+        })
+
+    return render_template(
+        "messages.html",
+        conversations=conversations
+    )
 
 
 @app.route("/api/conversation/messages/<int:conversation_id>", methods=["GET"])
