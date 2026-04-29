@@ -174,12 +174,6 @@ async function sendMessage(e) {
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ message: text })
         });
-
-        // ✅ reload messages properly
-        setTimeout(() => {
-            openConversation(currentConversationId);
-        }, 150);
-
     } catch (err) {
         console.error("Send failed", err);
     }
