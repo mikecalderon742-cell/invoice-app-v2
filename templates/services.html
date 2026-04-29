@@ -915,15 +915,21 @@
     <label class="services-label" for="pricing_type">
         Pricing Type
     </label>
-    <select
-        class="services-input"
-        id="pricing_type"
-        name="pricing_type"
-    >
-        <option value="fixed">Fixed Price</option>
-        <option value="hourly">Hourly</option>
-        <option value="quote">Custom Quote</option>
-    </select>
+<select
+    class="services-input"
+    id="pricing_type"
+    name="pricing_type"
+>
+    <option value="fixed" {% if edit_service and edit_service.pricing_type == "fixed" %}selected{% endif %}>
+        Fixed Price
+    </option>
+    <option value="hourly" {% if edit_service and edit_service.pricing_type == "hourly" %}selected{% endif %}>
+        Hourly
+    </option>
+    <option value="quote" {% if edit_service and edit_service.pricing_type == "quote" %}selected{% endif %}>
+        Custom Quote
+    </option>
+</select>
 </div>
 
                         <div class="services-field">
