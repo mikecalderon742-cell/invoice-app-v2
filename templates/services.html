@@ -917,17 +917,16 @@
                             </label>
                             <div class="services-price-wrap">
                                 <span class="services-currency">$</span>
-                                <input
-                                    class="services-input"
-                                    id="price"
-                                    name="price"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    required
-                                    value="{% if edit_service %}{{ '%.2f'|format(edit_service.price or 0) }}{% endif %}"
-                                    placeholder="0.00"
-                                >
+<input
+    class="services-input"
+    id="price"
+    name="price"
+    type="number"
+    step="0.01"
+    min="0"
+    value="{% if edit_service %}{{ '%.2f'|format(edit_service.price or 0) }}{% endif %}"
+    placeholder="0.00"
+>
                             </div>
                         </div>
                     </div>
