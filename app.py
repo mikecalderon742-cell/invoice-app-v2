@@ -1207,6 +1207,71 @@ def init_db():
         """
     )
 
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS conversations (
+            id SERIAL PRIMARY KEY,
+            business_user_id INTEGER NOT NULL,
+            client_user_id INTEGER NOT NULL,
+            service_request_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS conversation_participants (
+            id SERIAL PRIMARY KEY,
+            conversation_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            role TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            conversation_id INTEGER NOT NULL,
+            sender_user_id INTEGER NOT NULL,
+            message_text TEXT,
+            attachment_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS conversations_business_idx
+        ON conversations(business_user_id);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS conversations_client_idx
+        ON conversations(client_user_id);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS messages_conversation_idx
+        ON messages(conversation_id, created_at DESC);
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS conversation_participants_conv_idx
+        ON conversation_participants(conversation_id);
+        """
+    )
+
     cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1;")
     row = cursor.fetchone()
     if not row:
@@ -1538,6 +1603,132 @@ def login_required(view_func):
             return lang_redirect("login")
         return view_func(*args, **kwargs)
     return wrapped_view
+
+
+# -------------------------
+# MESSAGING HELPERS
+# -------------------------
+
+def get_or_create_conversation(business_user_id: int, client_user_id: int, service_request_id: int = None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT id
+            FROM conversations
+            WHERE business_user_id = %s
+              AND client_user_id = %s
+              AND (%s IS NULL OR service_request_id = %s)
+            LIMIT 1
+            """,
+            (business_user_id, client_user_id, service_request_id, service_request_id),
+        )
+        row = cur.fetchone()
+
+        if row:
+            return row[0]
+
+        cur.execute(
+            """
+            INSERT INTO conversations (
+                business_user_id,
+                client_user_id,
+                service_request_id
+            )
+            VALUES (%s, %s, %s)
+            RETURNING id
+            """,
+            (business_user_id, client_user_id, service_request_id),
+        )
+        conversation_id = cur.fetchone()[0]
+
+        # add participants
+        cur.execute(
+            """
+            INSERT INTO conversation_participants (conversation_id, user_id, role)
+            VALUES (%s, %s, %s)
+            """,
+            (conversation_id, business_user_id, "business"),
+        )
+
+        cur.execute(
+            """
+            INSERT INTO conversation_participants (conversation_id, user_id, role)
+            VALUES (%s, %s, %s)
+            """,
+            (conversation_id, client_user_id, "client"),
+        )
+
+        conn.commit()
+        return conversation_id
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Conversation create/get failed: %s", e)
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+
+def send_message(conversation_id: int, sender_user_id: int, message_text: str):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            INSERT INTO messages (
+                conversation_id,
+                sender_user_id,
+                message_text
+            )
+            VALUES (%s, %s, %s)
+            """,
+            (conversation_id, sender_user_id, message_text),
+        )
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Send message failed: %s", e)
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_conversation_messages(conversation_id: int):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT sender_user_id, message_text, created_at
+        FROM messages
+        WHERE conversation_id = %s
+        ORDER BY created_at ASC
+        """,
+        (conversation_id,),
+    )
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    messages = []
+    for sender_user_id, message_text, created_at in rows:
+        messages.append({
+            "sender_user_id": sender_user_id,
+            "message_text": message_text,
+            "created_at": created_at,
+        })
+
+    return messages
 
 
 # =========================
