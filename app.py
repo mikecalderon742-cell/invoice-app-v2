@@ -2035,6 +2035,37 @@ def api_get_messages(conversation_id):
     return jsonify({"messages": messages})
 
 
+@app.route("/api/messages/<int:conversation_id>")
+@login_required
+def get_messages(conversation_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT sender_user_id, message_text, created_at
+        FROM messages
+        WHERE conversation_id = %s
+        ORDER BY created_at ASC
+        """,
+        (conversation_id,)
+    )
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    messages = []
+    for row in rows:
+        messages.append({
+            "sender_user_id": row[0],
+            "message_text": row[1],
+            "created_at": str(row[2])
+        })
+
+    return {"messages": messages}
+
+
 @app.route("/client/request/<int:request_id>/update", methods=["POST"])
 @login_required
 def client_update_request(request_id):
