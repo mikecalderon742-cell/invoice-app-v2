@@ -911,6 +911,21 @@
                             >{{ (edit_service.description if edit_service else '')|default('', true) }}</textarea>
                         </div>
 
+<div class="services-field">
+    <label class="services-label" for="pricing_type">
+        Pricing Type
+    </label>
+    <select
+        class="services-input"
+        id="pricing_type"
+        name="pricing_type"
+    >
+        <option value="fixed">Fixed Price</option>
+        <option value="hourly">Hourly</option>
+        <option value="quote">Custom Quote</option>
+    </select>
+</div>
+
                         <div class="services-field">
                             <label class="services-label" for="price">
                                 {{ t('service_price', current_lang) }}
