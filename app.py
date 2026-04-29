@@ -3660,17 +3660,53 @@ def create_user_service(
     description: str = "",
     price: float = 0.0,
     image_url: str = "",
+    pricing_type: str = "fixed",
+    duration_minutes: int | None = None,
+    category: str = "",
+    location_required: bool = False,
+    materials_included: str = "",
+    photo_required: bool = False,
+    availability_notes: str = "",
 ):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute(
             """
-            INSERT INTO services (user_id, name, description, price, image_url, is_active, created_at)
-            VALUES (%s, %s, %s, %s, %s, TRUE, %s)
+            INSERT INTO services (
+                user_id,
+                name,
+                description,
+                price,
+                image_url,
+                pricing_type,
+                duration_minutes,
+                category,
+                location_required,
+                materials_included,
+                photo_required,
+                availability_notes,
+                is_active,
+                created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
             RETURNING id
             """,
-            (user_id, name.strip(), description.strip(), price, image_url.strip(), now_local()),
+            (
+                user_id,
+                name.strip(),
+                description.strip(),
+                price,
+                image_url.strip(),
+                pricing_type,
+                duration_minutes,
+                category.strip(),
+                location_required,
+                materials_included.strip(),
+                photo_required,
+                availability_notes.strip(),
+                now_local(),
+            ),
         )
         new_id = cur.fetchone()[0]
         conn.commit()
