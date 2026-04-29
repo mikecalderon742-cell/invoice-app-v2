@@ -7,23 +7,29 @@
 .messages-shell {
     display: flex;
     height: calc(100vh - 110px);
+    background: #f8fafc;
 }
 
 /* LEFT PANEL */
 .convo-list {
-    width: 280px;
+    width: 300px;
     border-right: 1px solid #e5e7eb;
+    background: #ffffff;
     overflow-y: auto;
 }
 
 .convo-item {
-    padding: 12px;
+    padding: 14px;
     cursor: pointer;
     border-bottom: 1px solid #f1f5f9;
 }
 
 .convo-item:hover {
-    background: #f8fafc;
+    background: #f1f5f9;
+}
+
+.convo-item.active {
+    background: #e0f2fe;
 }
 
 /* RIGHT PANEL */
@@ -31,44 +37,54 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    background: #ffffff;
 }
 
 .chat-messages {
     flex: 1;
-    padding: 15px;
+    padding: 20px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
+/* BUBBLES */
 .bubble {
     max-width: 70%;
     padding: 10px 14px;
-    border-radius: 14px;
+    border-radius: 18px;
     margin-bottom: 10px;
+    font-size: 14px;
 }
 
 .bubble.me {
     background: #0ea5e9;
     color: white;
-    margin-left: auto;
+    align-self: flex-end;
 }
 
 .bubble.them {
     background: #e5e7eb;
+    align-self: flex-start;
 }
 
 /* INPUT */
 .chat-input {
     display: flex;
     gap: 10px;
-    padding: 10px;
+    padding: 12px;
     border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+    position: relative;
+    z-index: 9999;
 }
 
 .chat-input input {
     flex: 1;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 12px;
+    border-radius: 20px;
     border: 1px solid #ccc;
+    outline: none;
 }
 
 /* MOBILE */
@@ -90,14 +106,10 @@
 
     <!-- LEFT -->
     <div class="convo-list">
-        <h3 style="padding:10px;">Conversations</h3>
-
-        <button onclick="createTestConversation()" style="margin:10px;">
-            Create Test Conversation
-        </button>
+        <h3 style="padding:12px;">Conversations</h3>
 
         {% for convo in conversations %}
-        <div class="convo-item" onclick="openConversation({{ convo.id }})">
+        <div class="convo-item" onclick="openConversation({{ convo.id }}, this)">
             Conversation {{ convo.id }}
         </div>
         {% endfor %}
@@ -111,8 +123,8 @@
         </div>
 
         <form class="chat-input" onsubmit="sendMessage(event)">
-            <input id="messageInput" placeholder="Type message..." />
-            <button class="btn">Send</button>
+            <input id="messageInput" placeholder="Type message..." autocomplete="off"/>
+            <button class="btn" type="submit">Send</button>
         </form>
 
     </div>
@@ -122,14 +134,29 @@
 <script>
 let currentConversationId = null;
 
-async function openConversation(id) {
+async function openConversation(id, el=null) {
     currentConversationId = id;
 
-    const res = await fetch(`/api/messages/${id}`);
+    // highlight active
+    document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
+    if (el) el.classList.add("active");
+
+    await loadMessages();
+}
+
+async function loadMessages() {
+    if (!currentConversationId) return;
+
+    const res = await fetch(`/api/messages/${currentConversationId}`);
     const data = await res.json();
 
     const box = document.getElementById("chatMessages");
     box.innerHTML = "";
+
+    if (!data.messages.length) {
+        box.innerHTML = '<p style="opacity:0.6;">No messages yet</p>';
+        return;
+    }
 
     data.messages.forEach(msg => {
         const div = document.createElement("div");
@@ -159,13 +186,13 @@ async function sendMessage(e) {
 
     const box = document.getElementById("chatMessages");
 
-    // ✅ optimistic message
+    // instant UI
     const temp = document.createElement("div");
     temp.classList.add("bubble", "me");
     temp.innerText = text;
     box.appendChild(temp);
-
     box.scrollTop = box.scrollHeight;
+
     input.value = "";
 
     try {
@@ -174,14 +201,13 @@ async function sendMessage(e) {
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ message: text })
         });
+
+        // 🔥 FORCE RELOAD OF SAME CONVERSATION (NO PAGE RELOAD)
+        await loadMessages();
+
     } catch (err) {
         console.error("Send failed", err);
     }
-}
-
-async function createTestConversation() {
-    await fetch("/api/create-test-convo");
-    location.reload();
 }
 </script>
 
