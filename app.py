@@ -3783,13 +3783,9 @@ def validate_service_form(name: str, description: str = "", price_raw=None):
         }
 
     if price is None:
-        return {
-            "ok": False,
-            "error": "Service price must be a valid number.",
-            "name": name,
-            "description": description,
-            "price": 0.0,
-        }
+        # Allow flexible pricing types later (hourly / custom quote)
+        # Default to 0.0 so existing flow does not break
+        price = 0.0
 
     if price < 0:
         return {
