@@ -2078,14 +2078,6 @@ def get_messages(conversation_id):
     return jsonify({"messages": messages})
 
 
-user = get_current_user()
-
-if not user:
-    return jsonify({"error": "Not authenticated"}), 401
-
-user_id = user["id"]
-
-
 @app.route("/api/create-test-convo")
 @login_required
 def create_test_convo():
