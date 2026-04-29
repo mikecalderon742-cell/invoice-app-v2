@@ -2066,6 +2066,30 @@ def get_messages(conversation_id):
     return {"messages": messages}
 
 
+@app.route("/api/messages/<int:conversation_id>", methods=["POST"])
+@login_required
+def send_message(conversation_id):
+    user = get_current_user()
+    data = request.get_json()
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO messages (conversation_id, sender_user_id, message_text)
+        VALUES (%s, %s, %s)
+        """,
+        (conversation_id, user["id"], data["message"])
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return {"status": "ok"}
+
+
 @app.route("/api/create-test-convo")
 @login_required
 def create_test_convo():
