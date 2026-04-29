@@ -3723,39 +3723,55 @@ def update_user_service(
     service_id: int,
     user_id: int,
     name: str,
-    description: str = "",
-    price: float = 0.0,
-    image_url: str | None = None,
+    description: str,
+    price: float,
+    image_url: str,
+    pricing_type: str = "fixed",
+    duration_minutes: int | None = None,
+    category: str = "",
+    location_required: bool = False,
+    materials_included: str = "",
+    photo_required: bool = False,
+    availability_notes: str = "",
 ):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        if image_url is None:
-            cur.execute(
-                """
-                UPDATE services
-                SET name = %s,
-                    description = %s,
-                    price = %s
-                WHERE id = %s AND user_id = %s
-                """,
-                (name.strip(), description.strip(), price, service_id, user_id),
-            )
-        else:
-            cur.execute(
-                """
-                UPDATE services
-                SET name = %s,
-                    description = %s,
-                    price = %s,
-                    image_url = %s
-                WHERE id = %s AND user_id = %s
-                """,
-                (name.strip(), description.strip(), price, image_url.strip(), service_id, user_id),
-            )
-
+        cur.execute(
+            """
+            UPDATE services
+            SET name=%s,
+                description=%s,
+                price=%s,
+                image_url=%s,
+                pricing_type=%s,
+                duration_minutes=%s,
+                category=%s,
+                location_required=%s,
+                materials_included=%s,
+                photo_required=%s,
+                availability_notes=%s
+            WHERE id=%s AND user_id=%s
+            """,
+            (
+                name.strip(),
+                description.strip(),
+                price,
+                image_url.strip(),
+                pricing_type,
+                duration_minutes,
+                category.strip(),
+                location_required,
+                materials_included.strip(),
+                photo_required,
+                availability_notes.strip(),
+                service_id,
+                user_id,
+            ),
+        )
+        updated = cur.rowcount > 0
         conn.commit()
-        return cur.rowcount > 0
+        return updated
     except Exception:
         conn.rollback()
         raise
@@ -6786,6 +6802,13 @@ def update_service_route(service_id):
             description=validation["description"],
             price=validation["price"],
             image_url=final_service_image_url,
+            pricing_type=request.form.get("pricing_type") or "fixed",
+            duration_minutes=int(request.form.get("duration_minutes") or 0) or None,
+            category=request.form.get("category") or "",
+            location_required=bool(request.form.get("location_required")),
+            materials_included=request.form.get("materials_included") or "",
+            photo_required=bool(request.form.get("photo_required")),
+            availability_notes=request.form.get("availability_notes") or "",
         )
         if not updated:
             return redirect(
