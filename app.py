@@ -1931,6 +1931,65 @@ def client_dashboard():
     )
 
 
+# -------------------------
+# MESSAGING ROUTES
+# -------------------------
+
+@app.route("/api/conversation/get-or-create", methods=["POST"])
+@login_required
+def api_get_or_create_conversation():
+    user = get_current_user()
+    client_user_id = user["id"]
+
+    business_user_id = request.json.get("business_user_id")
+    service_request_id = request.json.get("service_request_id")
+
+    if not business_user_id:
+        return jsonify({"error": "Missing business_user_id"}), 400
+
+    conversation_id = get_or_create_conversation(
+        business_user_id=business_user_id,
+        client_user_id=client_user_id,
+        service_request_id=service_request_id,
+    )
+
+    if not conversation_id:
+        return jsonify({"error": "Failed to create conversation"}), 500
+
+    return jsonify({"conversation_id": conversation_id})
+
+
+@app.route("/api/conversation/send-message", methods=["POST"])
+@login_required
+def api_send_message():
+    user = get_current_user()
+    sender_user_id = user["id"]
+
+    conversation_id = request.json.get("conversation_id")
+    message_text = (request.json.get("message_text") or "").strip()
+
+    if not conversation_id or not message_text:
+        return jsonify({"error": "Missing data"}), 400
+
+    success = send_message(
+        conversation_id=conversation_id,
+        sender_user_id=sender_user_id,
+        message_text=message_text,
+    )
+
+    if not success:
+        return jsonify({"error": "Message failed"}), 500
+
+    return jsonify({"success": True})
+
+
+@app.route("/api/conversation/messages/<int:conversation_id>", methods=["GET"])
+@login_required
+def api_get_messages(conversation_id):
+    messages = get_conversation_messages(conversation_id)
+    return jsonify({"messages": messages})
+
+
 @app.route("/client/request/<int:request_id>/update", methods=["POST"])
 @login_required
 def client_update_request(request_id):
