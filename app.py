@@ -6795,6 +6795,9 @@ def update_service_route(service_id):
             )
 
     try:
+        duration_raw = request.form.get("duration_minutes")
+        duration_value = int(duration_raw) if duration_raw and duration_raw.isdigit() else None
+
         updated = update_user_service(
             service_id=service_id,
             user_id=user_id,
@@ -6803,11 +6806,11 @@ def update_service_route(service_id):
             price=validation["price"],
             image_url=final_service_image_url,
             pricing_type=request.form.get("pricing_type") or "fixed",
-            duration_minutes=int(request.form.get("duration_minutes") or 0) or None,
+            duration_minutes=duration_value,
             category=request.form.get("category") or "",
-            location_required=bool(request.form.get("location_required")),
+            location_required=True if request.form.get("location_required") else False,
             materials_included=request.form.get("materials_included") or "",
-            photo_required=bool(request.form.get("photo_required")),
+            photo_required=True if request.form.get("photo_required") else False,
             availability_notes=request.form.get("availability_notes") or "",
         )
         if not updated:
