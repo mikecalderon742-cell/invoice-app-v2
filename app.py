@@ -2078,35 +2078,12 @@ def get_messages(conversation_id):
     return jsonify({"messages": messages})
 
 
-@app.route("/api/messages/<int:conversation_id>", methods=["POST"])
-def send_message(conversation_id):
-    data = request.get_json()
-    text = data.get("message")
+user = get_current_user()
 
-    if not text:
-        return jsonify({"error": "No message"}), 400
+if not user:
+    return jsonify({"error": "Not authenticated"}), 401
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        INSERT INTO messages (conversation_id, sender_user_id, message_text)
-        VALUES (%s, %s, %s)
-        RETURNING id
-        """,
-        (conversation_id, current_user.id, text)
-    )
-
-    new_id = cursor.fetchone()[0]
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    print("MESSAGE SAVED:", new_id)
-
-    return jsonify({"success": True})
+user_id = user["id"]
 
 
 @app.route("/api/create-test-convo")
