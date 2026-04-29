@@ -6786,13 +6786,6 @@ def update_service_route(service_id):
             description=validation["description"],
             price=validation["price"],
             image_url=final_service_image_url,
-            pricing_type=request.form.get("pricing_type") or "fixed",
-            duration_minutes=int(request.form.get("duration_minutes") or 0) or None,
-            category=request.form.get("category") or "",
-            location_required=bool(request.form.get("location_required")),
-            materials_included=request.form.get("materials_included") or "",
-            photo_required=bool(request.form.get("photo_required")),
-            availability_notes=request.form.get("availability_notes") or "",
         )
         if not updated:
             return redirect(
