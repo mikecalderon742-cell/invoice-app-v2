@@ -122,10 +122,10 @@
             <p style="opacity:0.6;">Select a conversation</p>
         </div>
 
-        <form class="chat-input" onsubmit="sendMessage(event)">
-            <input id="messageInput" placeholder="Type message..." autocomplete="off"/>
-            <button class="btn" type="submit">Send</button>
-        </form>
+<form class="chat-input" onsubmit="return false;">
+    <input id="messageInput" placeholder="Type message..." />
+    <button type="button" class="btn" onclick="sendMessage()">Send</button>
+</form>
 
     </div>
 
@@ -175,8 +175,7 @@ async function loadMessages() {
     box.scrollTop = box.scrollHeight;
 }
 
-async function sendMessage(e) {
-    e.preventDefault();
+async function sendMessage() {
 
     if (!currentConversationId) return;
 
