@@ -1229,8 +1229,6 @@ def init_db():
         """
     )
 
-    cursor.execute("DROP TABLE IF EXISTS messages CASCADE;")
-
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS messages (
@@ -7684,11 +7682,26 @@ def settings():
             desc = (request.form.get("service_description") or "").strip()
             price = parse_float(request.form.get("service_price"), default=0.0)
 
+            # NEW (safe additive fields)
+            pricing_type = (request.form.get("pricing_type") or "fixed").strip()
+            duration_minutes_raw = request.form.get("duration_minutes")
+            try:
+                duration_minutes = int(duration_minutes_raw) if duration_minutes_raw else None
+            except:
+                duration_minutes = None
+
             if not name:
                 feedback_message = "Service name is required."
                 feedback_type = "error"
             else:
-                create_user_service(user_id=user_id, name=name, description=desc, price=price)
+                create_user_service(
+                    user_id=user_id,
+                    name=name,
+                    description=desc,
+                    price=price,
+                    pricing_type=pricing_type,
+                    duration_minutes=duration_minutes,
+                )
                 feedback_message = "Service added successfully."
                 feedback_type = "success"
 
@@ -7702,6 +7715,14 @@ def settings():
             desc = (request.form.get("service_description") or "").strip()
             price = parse_float(request.form.get("service_price"), default=0.0)
 
+            # NEW (safe additive fields)
+            pricing_type = (request.form.get("pricing_type") or "fixed").strip()
+            duration_minutes_raw = request.form.get("duration_minutes")
+            try:
+                duration_minutes = int(duration_minutes_raw) if duration_minutes_raw else None
+            except:
+                duration_minutes = None
+
             if not service_id:
                 feedback_message = "Invalid service selected."
                 feedback_type = "error"
@@ -7709,31 +7730,23 @@ def settings():
                 feedback_message = "Service name is required."
                 feedback_type = "error"
             else:
-                if update_user_service(service_id, user_id, name, desc, price):
-                    feedback_message = "Service updated successfully."
-                    feedback_type = "success"
+                if update_user_service(
+                    service_id,
+                    user_id,
+                    name,
+                    desc,
+                    price,
+                    pricing_type=pricing_type,
+                    duration_minutes=duration_minutes,
+                ):
+                    return redirect(lang_url_for("settings"))
                 else:
                     feedback_message = "Service could not be updated."
                     feedback_type = "error"
 
         elif form_type == "service_toggle":
-            try:
-                service_id = int(request.form.get("service_id"))
-            except:
-                service_id = None
-
-            next_active = (request.form.get("next_active") or "").lower() in ("1", "true", "yes", "on")
-
-            if not service_id:
-                feedback_message = "Invalid service selected."
-                feedback_type = "error"
-            else:
-                if set_user_service_active(service_id, user_id, next_active):
-                    feedback_message = "Service status updated successfully."
-                    feedback_type = "success"
-                else:
-                    feedback_message = "Service status could not be updated."
-                    feedback_type = "error"
+            # Disabled to prevent conflicts with activate/deactivate routes
+            return redirect(lang_url_for("settings"))
 
         else:
             # PROFILE SAVE
