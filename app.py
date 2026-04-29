@@ -2043,7 +2043,7 @@ def get_messages(conversation_id):
 
     cur.execute(
         """
-        SELECT sender_user_id, message_text, created_at
+        SELECT id, sender_user_id, message_text, created_at
         FROM messages
         WHERE conversation_id = %s
         ORDER BY created_at ASC
@@ -2052,16 +2052,20 @@ def get_messages(conversation_id):
     )
 
     rows = cur.fetchall()
-    cur.close()
-    conn.close()
 
     messages = []
-    for row in rows:
+    for r in rows:
         messages.append({
-            "sender_user_id": row[0],
-            "message_text": row[1],
-            "created_at": str(row[2])
+            "id": r[0],
+            "sender_user_id": r[1],
+            "message_text": r[2],
+            "created_at": str(r[3])
         })
+
+    print("FETCHED MESSAGES:", messages)
+
+    cur.close()
+    conn.close()
 
     return {"messages": messages}
 
@@ -2072,6 +2076,8 @@ def send_message(conversation_id):
     user = get_current_user()
     data = request.get_json()
 
+    print("DEBUG SEND:", conversation_id, user["id"], data)
+
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -2079,13 +2085,18 @@ def send_message(conversation_id):
         """
         INSERT INTO messages (conversation_id, sender_user_id, message_text)
         VALUES (%s, %s, %s)
+        RETURNING id;
         """,
         (conversation_id, user["id"], data["message"])
     )
 
+    new_id = cur.fetchone()
+
     conn.commit()
     cur.close()
     conn.close()
+
+    print("MESSAGE SAVED:", new_id)
 
     return {"status": "ok"}
 
