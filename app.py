@@ -1211,6 +1211,26 @@ def init_db():
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            conversation_id INTEGER NOT NULL,
+            sender_user_id INTEGER NOT NULL,
+            message_text TEXT,
+            attachment_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS messages_conversation_idx
+        ON messages(conversation_id, created_at DESC);
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS conversations (
             id SERIAL PRIMARY KEY,
             business_user_id INTEGER NOT NULL,
@@ -1228,19 +1248,6 @@ def init_db():
             conversation_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
             role TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        """
-    )
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS messages (
-            id SERIAL PRIMARY KEY,
-            conversation_id INTEGER NOT NULL,
-            sender_user_id INTEGER NOT NULL,
-            message_text TEXT,
-            attachment_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
