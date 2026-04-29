@@ -159,26 +159,30 @@ async function sendMessage(e) {
 
     const box = document.getElementById("chatMessages");
 
-    // 👉 1. INSTANT UI MESSAGE (optimistic)
+    // ✅ optimistic message
     const temp = document.createElement("div");
     temp.classList.add("bubble", "me");
     temp.innerText = text;
     box.appendChild(temp);
 
     box.scrollTop = box.scrollHeight;
-
     input.value = "";
 
-    // 👉 2. SEND TO SERVER (no reload)
-    await fetch(`/api/messages/${currentConversationId}`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ message: text })
-    });
-}
+    try {
+        await fetch(`/api/messages/${currentConversationId}`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ message: text })
+        });
 
-    input.value = "";
-    openConversation(currentConversationId);
+        // ✅ reload messages properly
+        setTimeout(() => {
+            openConversation(currentConversationId);
+        }, 150);
+
+    } catch (err) {
+        console.error("Send failed", err);
+    }
 }
 
 async function createTestConversation() {
