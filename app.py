@@ -2066,6 +2066,43 @@ def get_messages(conversation_id):
     return {"messages": messages}
 
 
+@app.route("/api/create-test-convo")
+@login_required
+def create_test_convo():
+    user = get_current_user()
+    user_id = user["id"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # create conversation with self (for testing)
+    cur.execute(
+        """
+        INSERT INTO conversations (business_user_id, client_user_id)
+        VALUES (%s, %s)
+        RETURNING id
+        """,
+        (user_id, user_id)
+    )
+
+    convo_id = cur.fetchone()[0]
+
+    # add first message
+    cur.execute(
+        """
+        INSERT INTO messages (conversation_id, sender_user_id, message_text)
+        VALUES (%s, %s, %s)
+        """,
+        (convo_id, user_id, "Test message working 🚀")
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return {"status": "ok"}
+
+
 @app.route("/client/request/<int:request_id>/update", methods=["POST"])
 @login_required
 def client_update_request(request_id):

@@ -10,6 +10,10 @@
     <div style="width:280px; border-right:1px solid #e5e7eb; padding-right:10px; overflow-y:auto;">
         <h3 style="margin-bottom:10px;">Conversations</h3>
 
+<button onclick="createTestConversation()" style="margin-bottom:10px;">
+    Create Test Conversation
+</button>
+
         {% if conversations %}
             {% for convo in conversations %}
                 <div 
@@ -93,6 +97,13 @@ function sendMessage(e) {
     alert("Send function coming next step");
 
     input.value = "";
+}
+</script>
+
+<script>
+async function createTestConversation() {
+    await fetch("/api/create-test-convo");
+    location.reload();
 }
 </script>
 
