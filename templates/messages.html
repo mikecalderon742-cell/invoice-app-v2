@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Messages</title>
+</head>
+<body>
+
+<h2>Messages Test</h2>
+
+<button onclick="startConversation()">Start Conversation</button>
+
+<div id="chat" style="margin-top:20px;"></div>
+
+<input id="msg" placeholder="Type message..." />
+<button onclick="sendMessage()">Send</button>
+
+<script>
+let conversationId = null;
+
+function startConversation() {
+    fetch("/api/conversation/get-or-create", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ business_user_id: 1 })
+    })
+    .then(res => res.json())
+    .then(data => {
+        conversationId = data.conversation_id;
+        loadMessages();
+    });
+}
+
+function loadMessages() {
+    if (!conversationId) return;
+
+    fetch("/api/conversation/messages/" + conversationId)
+    .then(res => res.json())
+    .then(data => {
+        const chat = document.getElementById("chat");
+        chat.innerHTML = "";
+
+        data.messages.forEach(msg => {
+            const div = document.createElement("div");
+            div.textContent = msg.message_text;
+            chat.appendChild(div);
+        });
+    });
+}
+
+function sendMessage() {
+    const text = document.getElementById("msg").value;
+
+    fetch("/api/conversation/send-message", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            conversation_id: conversationId,
+            message_text: text
+        })
+    }).then(() => {
+        document.getElementById("msg").value = "";
+        loadMessages();
+    });
+}
+</script>
+
+</body>
+</html>

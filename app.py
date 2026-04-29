@@ -1983,6 +1983,12 @@ def api_send_message():
     return jsonify({"success": True})
 
 
+@app.route("/messages")
+@login_required
+def messages_page():
+    return render_template("messages.html")
+
+
 @app.route("/api/conversation/messages/<int:conversation_id>", methods=["GET"])
 @login_required
 def api_get_messages(conversation_id):
