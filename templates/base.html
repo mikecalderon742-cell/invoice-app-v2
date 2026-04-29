@@ -670,7 +670,15 @@ body.dark .autism-ribbon {
                 </span>
             {% endif %}
         </a>
-<a href="/notifications{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+<a href="/messages{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+    {% if lang == 'es' %}
+        Mensajes
+    {% elif lang == 'zh' %}
+        消息
+    {% else %}
+        Messages
+    {% endif %}
+</a>
         <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}
                 Precios
