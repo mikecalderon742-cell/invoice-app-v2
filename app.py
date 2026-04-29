@@ -798,41 +798,6 @@ def init_db():
 
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS messages (
-            id SERIAL PRIMARY KEY,
-            business_user_id INTEGER NOT NULL,
-            client_user_id INTEGER NOT NULL,
-            message_text TEXT NOT NULL,
-            sender_role TEXT NOT NULL,
-            is_read BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        """
-    )
-
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS messages_business_idx 
-        ON messages(business_user_id);
-        """
-    )
-
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS messages_client_idx 
-        ON messages(client_user_id);
-        """
-    )
-
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS messages_created_idx 
-        ON messages(created_at DESC);
-        """
-    )
-
-    cursor.execute(
-        """
         CREATE TABLE IF NOT EXISTS clients (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
@@ -1241,6 +1206,8 @@ def init_db():
         ON services(user_id, is_active);
         """
     )
+
+    cursor.execute("DROP TABLE IF EXISTS messages CASCADE;")
 
     cursor.execute(
         """
