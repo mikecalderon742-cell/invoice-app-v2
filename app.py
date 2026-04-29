@@ -2042,15 +2042,14 @@ def api_get_messages(conversation_id):
     return jsonify({"messages": messages})
 
 
-@app.route("/api/messages/<int:conversation_id>")
-@login_required
+@app.route("/api/messages/<int:conversation_id>", methods=["GET"])
 def get_messages(conversation_id):
     conn = get_db_connection()
-    cur = conn.cursor()
+    cursor = conn.cursor()
 
-    cur.execute(
+    cursor.execute(
         """
-        SELECT id, sender_user_id, message_text, created_at
+        SELECT id, conversation_id, sender_user_id, message_text, created_at
         FROM messages
         WHERE conversation_id = %s
         ORDER BY created_at ASC
@@ -2058,54 +2057,56 @@ def get_messages(conversation_id):
         (conversation_id,)
     )
 
-    rows = cur.fetchall()
+    rows = cursor.fetchall()
 
-    messages = []
-    for r in rows:
-        messages.append({
+    messages = [
+        {
             "id": r[0],
-            "sender_user_id": r[1],
-            "message_text": r[2],
-            "created_at": str(r[3])
-        })
+            "conversation_id": r[1],
+            "sender_user_id": r[2],
+            "message_text": r[3],
+            "created_at": r[4].isoformat() if r[4] else None,
+        }
+        for r in rows
+    ]
 
-    print("FETCHED MESSAGES:", messages)
+    print("FETCHED MESSAGES:", messages)  # keep this for debugging
 
-    cur.close()
+    cursor.close()
     conn.close()
 
-    return {"messages": messages}
+    return jsonify({"messages": messages})
 
 
 @app.route("/api/messages/<int:conversation_id>", methods=["POST"])
-@login_required
 def send_message(conversation_id):
-    user = get_current_user()
     data = request.get_json()
+    text = data.get("message")
 
-    print("DEBUG SEND:", conversation_id, user["id"], data)
+    if not text:
+        return jsonify({"error": "No message"}), 400
 
     conn = get_db_connection()
-    cur = conn.cursor()
+    cursor = conn.cursor()
 
-    cur.execute(
+    cursor.execute(
         """
         INSERT INTO messages (conversation_id, sender_user_id, message_text)
         VALUES (%s, %s, %s)
-        RETURNING id;
+        RETURNING id
         """,
-        (conversation_id, user["id"], data["message"])
+        (conversation_id, current_user.id, text)
     )
 
-    new_id = cur.fetchone()
+    new_id = cursor.fetchone()[0]
 
     conn.commit()
-    cur.close()
+    cursor.close()
     conn.close()
 
     print("MESSAGE SAVED:", new_id)
 
-    return {"status": "ok"}
+    return jsonify({"success": True})
 
 
 @app.route("/api/create-test-convo")
