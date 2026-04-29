@@ -1,68 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Messages</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-<h2>Messages Test</h2>
+{% block title %}Messages{% endblock %}
 
-<button onclick="startConversation()">Start Conversation</button>
+{% block content %}
 
-<div id="chat" style="margin-top:20px;"></div>
+<div style="display:flex; height: calc(100vh - 120px); gap:20px;">
 
-<input id="msg" placeholder="Type message..." />
-<button onclick="sendMessage()">Send</button>
+    <!-- LEFT: CONVERSATIONS -->
+    <div style="width:280px; border-right:1px solid #e5e7eb; padding-right:10px; overflow-y:auto;">
+        <h3 style="margin-bottom:10px;">Conversations</h3>
 
-<script>
-let conversationId = null;
+        {% if conversations %}
+            {% for convo in conversations %}
+                <div style="padding:10px; border-radius:10px; margin-bottom:8px; background:#f1f5f9;">
+                    Conversation #{{ convo.id }}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="opacity:0.6;">No conversations yet</p>
+        {% endif %}
+    </div>
 
-function startConversation() {
-    fetch("/api/conversation/get-or-create", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ business_user_id: 1 })
-    })
-    .then(res => res.json())
-    .then(data => {
-        conversationId = data.conversation_id;
-        loadMessages();
-    });
-}
+    <!-- RIGHT: MESSAGES -->
+    <div style="flex:1; display:flex; flex-direction:column;">
 
-function loadMessages() {
-    if (!conversationId) return;
+        <div style="flex:1; border:1px solid #e5e7eb; border-radius:10px; padding:15px; overflow-y:auto;">
+            <p style="opacity:0.6;">Select a conversation to view messages</p>
+        </div>
 
-    fetch("/api/conversation/messages/" + conversationId)
-    .then(res => res.json())
-    .then(data => {
-        const chat = document.getElementById("chat");
-        chat.innerHTML = "";
+        <form style="display:flex; gap:10px; margin-top:10px;">
+            <input type="text" placeholder="Type message..." style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+            <button type="submit" class="btn">Send</button>
+        </form>
 
-        data.messages.forEach(msg => {
-            const div = document.createElement("div");
-            div.textContent = msg.message_text;
-            chat.appendChild(div);
-        });
-    });
-}
+    </div>
 
-function sendMessage() {
-    const text = document.getElementById("msg").value;
+</div>
 
-    fetch("/api/conversation/send-message", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            conversation_id: conversationId,
-            message_text: text
-        })
-    }).then(() => {
-        document.getElementById("msg").value = "";
-        loadMessages();
-    });
-}
-</script>
-
-</body>
-</html>
+{% endblock %}
