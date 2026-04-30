@@ -2101,7 +2101,7 @@ def messages_page():
            OR c.client_user_id = %s
         ORDER BY COALESCE(m.created_at, c.created_at) DESC
         """,
-        (user_id, user_id),
+        (user_id, user_id, user_id),
     )
 
     rows = cur.fetchall()
@@ -2122,7 +2122,7 @@ def messages_page():
 
         # ✅ DEBUG INSIDE LOOP
         print("CONVO LIST ITEM:", convo_id)
-
+        m
         conversations.append({
             "id": convo_id,
             "display_name": display_name,
@@ -2131,9 +2131,9 @@ def messages_page():
             "created_at": row[3],
             "last_message": row[6] or "",
             "last_message_time": row[7],
-            "unread_count": row[8],
+            "unread_count": row[8],  # ✅ THIS IS THE NEW ONE
         })
-
+        m
     cur.close()
     conn.close()
 
