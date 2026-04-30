@@ -7,7 +7,7 @@
 .messages-shell {
     display: flex;
     height: calc(100vh - 100px);
-    background: #f8fafc;
+    background: #eef2f7;
 }
 
 /* LEFT PANEL */
@@ -73,35 +73,37 @@
 /* MESSAGES */
 .chat-messages {
     flex: 1;
-    padding: 20px 16px 100px 16px;
+    padding: 24px 16px 120px 16px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    background: linear-gradient(to bottom, #eef2f7, #e5eaf2);
 }
 
 /* BUBBLES */
 .bubble {
     max-width: 75%;
-    padding: 10px 14px;
-    border-radius: 18px;
+    padding: 12px 16px;
+    border-radius: 20px;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
     position: relative;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .bubble.me {
-    background: #0ea5e9;
+    background: linear-gradient(135deg, #0ea5e9, #3b82f6);
     color: white;
     align-self: flex-end;
     border-bottom-right-radius: 6px;
 }
 
 .bubble.them {
-    background: #e5e7eb;
+    background: #ffffff;
     color: #111827;
     align-self: flex-start;
     border-bottom-left-radius: 6px;
+    border: 1px solid #e5e7eb;
 }
 
 .timestamp {
@@ -121,7 +123,7 @@
     bottom: 0;
     z-index: 1000;
 
-    padding-right: 90px; /* avoids floating buttons */
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
 }
 
 .chat-input input {
