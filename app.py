@@ -64,6 +64,7 @@ PAYMENT_METHOD_LABELS = {
 }
 
 app = Flask(__name__)
+ensure_messages_is_read_column()
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 # -------------------------
@@ -10351,6 +10352,39 @@ def favicon():
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
+
+
+def ensure_messages_is_read_column():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='messages' AND column_name='is_read'
+            """
+        )
+        exists = cur.fetchone()
+
+        if not exists:
+            cur.execute(
+                """
+                ALTER TABLE messages
+                ADD COLUMN is_read BOOLEAN DEFAULT FALSE
+                """
+            )
+            conn.commit()
+            print("✅ Added is_read column to messages table")
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed to ensure is_read column: %s", e)
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route("/ios/activate-subscription", methods=["POST"])
