@@ -241,7 +241,11 @@ function appendMessage(msg) {
 
     const time = document.createElement("div");
     time.classList.add("timestamp");
-    time.innerText = msg.created_at ? new Date(msg.created_at + "Z").toLocaleTimeString() : "";
+    time.innerText = msg.created_at
+    ? new Date(
+        msg.created_at.endsWith("Z") ? msg.created_at : msg.created_at + "Z"
+      ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : "";
 
     wrap.appendChild(bubble);
     wrap.appendChild(time);
