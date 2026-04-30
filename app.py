@@ -2070,7 +2070,7 @@ def messages_page():
 
     cur.execute(
         """
-       SELECT
+        SELECT
             c.id,
             c.business_user_id,
             c.client_user_id,
@@ -2079,10 +2079,12 @@ def messages_page():
             cu.email,
             m.message_text,
             m.created_at,
-            COALESCE(um.unread_count, 0)
+            COALESCE(um.unread_count, 0) AS unread_count
         FROM conversations c
+
         LEFT JOIN users bu ON bu.id = c.business_user_id
         LEFT JOIN users cu ON cu.id = c.client_user_id
+
         LEFT JOIN LATERAL (
             SELECT message_text, created_at
             FROM messages
@@ -2090,15 +2092,18 @@ def messages_page():
             ORDER BY created_at DESC
             LIMIT 1
         ) m ON TRUE
+
         LEFT JOIN LATERAL (
             SELECT COUNT(*) AS unread_count
             FROM messages
             WHERE conversation_id = c.id
-            AND is_read = FALSE
-            AND sender_user_id != %s
+              AND COALESCE(is_read, FALSE) = FALSE
+              AND sender_user_id != %s
         ) um ON TRUE
+
         WHERE c.business_user_id = %s
            OR c.client_user_id = %s
+
         ORDER BY COALESCE(m.created_at, c.created_at) DESC
         """,
         (user_id, user_id, user_id),
@@ -2107,6 +2112,7 @@ def messages_page():
     rows = cur.fetchall()
 
     conversations = []
+
     for row in rows:
         convo_id = row[0]
         business_id = row[1]
@@ -2120,9 +2126,6 @@ def messages_page():
         else:
             display_name = business_email
 
-        # ✅ DEBUG INSIDE LOOP
-        print("CONVO LIST ITEM:", convo_id)
-        
         conversations.append({
             "id": convo_id,
             "display_name": display_name,
@@ -2131,9 +2134,9 @@ def messages_page():
             "created_at": row[3],
             "last_message": row[6] or "",
             "last_message_time": row[7],
-            "unread_count": row[8],  # ✅ THIS IS THE NEW ONE
+            "unread_count": row[8] or 0,
         })
-        
+
     cur.close()
     conn.close()
 

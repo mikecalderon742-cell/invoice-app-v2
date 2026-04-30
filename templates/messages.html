@@ -8,7 +8,7 @@
     display: flex;
     flex-direction: column;
 
-    height: 100vh;
+    min-height: calc(100vh - 80px);
     overflow: hidden;
 
     background: #f8fafc;
@@ -67,14 +67,11 @@
 
 /* RIGHT PANEL */
 .chat-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-
     display: none;
     flex-direction: column;
+
+    height: 100%;
+    overflow: hidden;
 
     background: #f8fafc;
 }
@@ -215,77 +212,78 @@
      onclick="openConversation({{ convo.id }}, this)"
      data-name="{{ convo.display_name }}">
 
-<div style="display:flex; align-items:center; gap:12px;">
+    <div style="display:flex; align-items:center; gap:12px; width:100%;">
 
-    <div style="
-        width:42px;
-        height:42px;
-        border-radius:50%;
-        background: linear-gradient(135deg,#0ea5e9,#2563eb);
-        color:white;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-weight:600;
-    ">
-        {{ convo.display_name[0]|upper }}
-    </div>
-
-<div style="flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center;">
-
-    <div style="min-width:0;">
-        <div style="font-weight:600;">
-            {{ convo.display_name }}
-        </div>
-
+        <!-- Avatar -->
         <div style="
-            font-size:13px;
-            color:#6b7280;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
+            width:42px;
+            height:42px;
+            border-radius:50%;
+            background: linear-gradient(135deg,#0ea5e9,#2563eb);
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:600;
+            flex-shrink:0;
         ">
-            {{ convo.last_message or "No messages yet" }}
+            {{ convo.display_name[0]|upper }}
         </div>
 
-        <div style="font-size:11px; color:#9ca3af;">
-            {% if convo.last_message_time %}
-                {{ convo.last_message_time }}
-            {% endif %}
+        <!-- Content -->
+        <div style="flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center;">
+
+            <!-- Left text -->
+            <div style="min-width:0;">
+                <div style="font-weight:600;">
+                    {{ convo.display_name }}
+                </div>
+
+                <div style="
+                    font-size:13px;
+                    color:#6b7280;
+                    white-space:nowrap;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                ">
+                    {{ convo.last_message or "No messages yet" }}
+                </div>
+            </div>
+
+            <!-- Right side (time + unread) -->
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-left:10px;">
+
+                {% if convo.last_message_time %}
+                <div style="font-size:11px; color:#9ca3af;">
+                    {{ convo.last_message_time }}
+                </div>
+                {% endif %}
+
+                {% if convo.unread_count > 0 %}
+                <div style="
+                    min-width:18px;
+                    height:18px;
+                    border-radius:999px;
+                    background:#0ea5e9;
+                    color:white;
+                    font-size:11px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-weight:600;
+                    padding:0 6px;
+                ">
+                    {{ convo.unread_count }}
+                </div>
+                {% endif %}
+
+            </div>
+
         </div>
-    </div>
 
-    {% if convo.unread_count > 0 %}
-    <div style="
-        min-width:18px;
-        height:18px;
-        border-radius:999px;
-        background:#0ea5e9;
-        color:white;
-        font-size:11px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-weight:600;
-    ">
-        {{ convo.unread_count }}
-    </div>
-    {% endif %}
-
-</div>
-
-        <div style="font-size:11px; color:#9ca3af;">
-            {% if convo.last_message_time %}
-                {{ convo.last_message_time }}
-            {% endif %}
-        </div>
     </div>
 
 </div>
-
-</div>
-        {% endfor %}
-    </div>
 
     <!-- RIGHT -->
     <div class="chat-panel">
@@ -357,6 +355,7 @@ async function openConversation(id, el = null) {
 }
 
 async function loadMessages() {
+    lastSenderId = null;
     if (!currentConversationId) return;
 
     const res = await fetch(`/api/messages/${currentConversationId}`);
