@@ -2307,31 +2307,8 @@ def client_send_request_message(request_id):
 
         _, business_user_id, service_title = row
 
-        # 🔥 Ensure conversation exists (NEW SYSTEM)
-        conversation_id = get_or_create_conversation(
-            business_user_id=business_user_id,
-            client_user_id=client_user_id,
-            service_request_id=request_id,
-        )
-
         # -------------------------
-        # SEND INTO MAIN MESSAGES SYSTEM ONLY
-        # -------------------------
-        conversation_id = get_or_create_conversation(
-            business_user_id=business_user_id,
-            client_user_id=client_user_id,
-            service_request_id=request_id,
-        )
-
-        if conversation_id:
-            send_message(
-                conversation_id=conversation_id,
-                sender_user_id=client_user_id,
-                message_text=message_body,
-            )
-
-        # -------------------------
-        # ALSO SEND TO MAIN CHAT SYSTEM
+        # CREATE CONVERSATION + SEND MESSAGE (ONLY ONCE)
         # -------------------------
         conversation_id = get_or_create_conversation(
             business_user_id=business_user_id,
@@ -2364,6 +2341,7 @@ def client_send_request_message(request_id):
         conn.rollback()
         logger.exception("Client message send failed for request_id=%s: %s", request_id, e)
         return redirect(url_for("client_dashboard", lang=lang))
+
     finally:
         cur.close()
         conn.close()
