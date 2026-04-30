@@ -1103,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     {% if service.pricing_type == "hourly" %}
         ${{ '%.2f'|format(service.price or 0) }}/hr
     {% elif service.pricing_type == "quote" %}
-        Request Quote
+        Quote
     {% else %}
         ${{ '%.2f'|format(service.price or 0) }}
     {% endif %}
@@ -1115,6 +1115,12 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 {% endif %}
                                 </div>
+
+{% if service.duration_minutes %}
+    <div style="font-size: .85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">
+        ⏱ {{ service.duration_minutes }} min service
+    </div>
+{% endif %}
 
                                 <p class="service-card-description">
                                     {% if service.description %}
@@ -1132,6 +1138,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                                 <div class="service-card-footer">
                                     <div class="service-card-meta">
+    {% if service.pricing_type == "hourly" %}
+        Billed hourly. Final total depends on time required.
+    {% elif service.pricing_type == "quote" %}
+        Pricing provided after reviewing request details.
+    {% else %}
+        Flat rate service with clear upfront pricing.
+    {% endif %}
+</div>
                                         {% if current_lang == 'es' %}
                                             Visible para tu negocio y listo para usarse en la experiencia del cliente.
                                         {% elif current_lang == 'zh' %}
