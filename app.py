@@ -64,7 +64,6 @@ PAYMENT_METHOD_LABELS = {
 }
 
 app = Flask(__name__)
-ensure_messages_is_read_column()
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 # -------------------------
@@ -10385,6 +10384,10 @@ def ensure_messages_is_read_column():
     finally:
         cur.close()
         conn.close()
+
+
+# Run once on startup
+ensure_messages_is_read_column()
 
 
 @app.route("/ios/activate-subscription", methods=["POST"])
