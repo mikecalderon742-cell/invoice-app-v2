@@ -2034,8 +2034,12 @@ def messages_page():
             c.id,
             c.business_user_id,
             c.client_user_id,
-            c.created_at
+            c.created_at,
+            bu.business_name,
+            cu.email
         FROM conversations c
+        LEFT JOIN users bu ON bu.id = c.business_user_id
+        LEFT JOIN users cu ON cu.id = c.client_user_id
         WHERE c.business_user_id = %s
            OR c.client_user_id = %s
         ORDER BY c.created_at DESC
@@ -2049,10 +2053,23 @@ def messages_page():
 
     conversations = []
     for row in rows:
+        convo_id = row[0]
+        business_id = row[1]
+        client_id = row[2]
+
+        business_name = row[4] or "Business"
+        client_email = row[5] or "Client"
+
+        if user_id == business_id:
+            display_name = client_email
+        else:
+            display_name = business_name
+
         conversations.append({
-            "id": row[0],
-            "business_user_id": row[1],
-            "client_user_id": row[2],
+            "id": convo_id,
+            "display_name": display_name,
+            "business_user_id": business_id,
+            "client_user_id": client_id,
             "created_at": row[3],
         })
 
