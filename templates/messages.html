@@ -210,6 +210,7 @@ let currentConversationId = null;
 
 async function openConversation(id, el = null) {
     currentConversationId = id;
+    lastSenderId = null;
 
     // highlight active
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
@@ -248,10 +249,16 @@ async function loadMessages() {
     box.scrollTop = box.scrollHeight;
 }
 
+let lastSenderId = null;
+
 function appendMessage(msg) {
     const box = document.getElementById("chatMessages");
 
+    const isSameSender = msg.sender_user_id === lastSenderId;
+
     const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
 
     const bubble = document.createElement("div");
     bubble.classList.add("bubble");
@@ -262,20 +269,32 @@ function appendMessage(msg) {
         bubble.classList.add("them");
     }
 
+    // spacing like iMessage
+    bubble.style.marginTop = isSameSender ? "2px" : "12px";
+
     bubble.innerText = msg.message_text;
 
-    const time = document.createElement("div");
-    time.classList.add("timestamp");
-    time.innerText = msg.created_at
-    ? new Date(
-        msg.created_at.endsWith("Z") ? msg.created_at : msg.created_at + "Z"
-      ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : "";
-
     wrap.appendChild(bubble);
-    wrap.appendChild(time);
+
+    // only show timestamp when sender changes
+    if (!isSameSender) {
+        const time = document.createElement("div");
+        time.classList.add("timestamp");
+
+        time.innerText = msg.created_at
+            ? new Date(
+                msg.created_at.endsWith("Z")
+                    ? msg.created_at
+                    : msg.created_at + "Z"
+              ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : "";
+
+        wrap.appendChild(time);
+    }
 
     box.appendChild(wrap);
+
+    lastSenderId = msg.sender_user_id;
 }
 
 async function sendMessage() {
