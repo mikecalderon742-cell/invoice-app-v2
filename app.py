@@ -2036,13 +2036,27 @@ def messages_page():
             c.client_user_id,
             c.created_at,
             bu.email,
-            cu.email
+            cu.email,
+            m.message_text,
+            m.created_at
+
         FROM conversations c
+
         LEFT JOIN users bu ON bu.id = c.business_user_id
         LEFT JOIN users cu ON cu.id = c.client_user_id
+
+        LEFT JOIN LATERAL (
+            SELECT message_text, created_at
+            FROM messages
+            WHERE conversation_id = c.id
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) m ON TRUE
+
         WHERE c.business_user_id = %s
            OR c.client_user_id = %s
-        ORDER BY c.created_at DESC
+
+        ORDER BY m.created_at DESC NULLS LAST
         """,
         (user_id, user_id),
     )
@@ -2065,13 +2079,15 @@ def messages_page():
         else:
             display_name = business_email
 
-        conversations.append({
-            "id": convo_id,
-            "display_name": display_name,
-            "business_user_id": business_id,
-            "client_user_id": client_id,
-            "created_at": row[3],
-        })
+    conversations.append({
+        "id": convo_id,
+        "display_name": display_name,
+        "business_user_id": business_id,
+        "client_user_id": client_id,
+        "created_at": row[3],
+        "last_message": row[6] or "",
+        "last_message_time": row[7],
+    })
 
     return render_template(
         "messages.html",

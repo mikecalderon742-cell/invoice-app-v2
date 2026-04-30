@@ -166,7 +166,21 @@
 <div class="convo-item"
      onclick="openConversation({{ convo.id }}, this)"
      data-name="{{ convo.display_name }}">
-    {{ convo.display_name }}
+
+    <div style="font-weight:600;">
+        {{ convo.display_name }}
+    </div>
+
+    <div style="font-size:13px; color:#6b7280; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        {{ convo.last_message or "No messages yet" }}
+    </div>
+
+    <div style="font-size:11px; color:#9ca3af; margin-top:2px;">
+        {% if convo.last_message_time %}
+            {{ convo.last_message_time }}
+        {% endif %}
+    </div>
+
 </div>
         {% endfor %}
     </div>
