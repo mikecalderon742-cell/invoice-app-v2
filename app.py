@@ -3717,7 +3717,15 @@ def create_user_service(
         conn.close()
 
 
-def update_user_service(service_id, user_id, name, description, price):
+def update_user_service(
+    service_id,
+    user_id,
+    name,
+    description,
+    price,
+    pricing_type=None,
+    duration_minutes=None
+):
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -3727,10 +3735,20 @@ def update_user_service(service_id, user_id, name, description, price):
             UPDATE services
             SET name = %s,
                 description = %s,
-                price = %s
+                price = %s,
+                pricing_type = COALESCE(%s, pricing_type),
+                duration_minutes = COALESCE(%s, duration_minutes)
             WHERE id = %s AND user_id = %s
             """,
-            (name, description, price, service_id, user_id),
+            (
+                name,
+                description,
+                price,
+                pricing_type,
+                duration_minutes,
+                service_id,
+                user_id,
+            ),
         )
 
         conn.commit()
@@ -3738,6 +3756,8 @@ def update_user_service(service_id, user_id, name, description, price):
         print("DEBUG UPDATE:", {
             "service_id": service_id,
             "user_id": user_id,
+            "pricing_type": pricing_type,
+            "duration_minutes": duration_minutes,
             "rowcount": cursor.rowcount
         })
 
@@ -4726,6 +4746,7 @@ def create_service_request(
     preferred_time_text=None,
     quantity=1,
     client_user_id=None,
+    uploaded_files=None,  # ✅ NEW (SAFE)
 ):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -4734,11 +4755,13 @@ def create_service_request(
         service_title = None
         service_description = None
         service_price = None
+        service_pricing_type = None
+        service_duration = None
 
         if service_id:
             cur.execute(
                 """
-                SELECT name, description, price
+                SELECT name, description, price, pricing_type, duration_minutes
                 FROM services
                 WHERE id = %s AND user_id = %s
                 """,
@@ -4746,7 +4769,13 @@ def create_service_request(
             )
             svc = cur.fetchone()
             if svc:
-                service_title, service_description, service_price = svc
+                (
+                    service_title,
+                    service_description,
+                    service_price,
+                    service_pricing_type,
+                    service_duration,
+                ) = svc
 
         client_id = find_matching_client(user_id, client_email)
 
@@ -4798,32 +4827,6 @@ def create_service_request(
         request_id = cur.fetchone()[0]
         conn.commit()
 
-        cur.execute(
-            """
-            SELECT
-                client_name,
-                client_email,
-                client_phone,
-                request_details,
-                preferred_date_text,
-                preferred_time_text,
-                quantity,
-                client_user_id,
-                created_at
-            FROM service_requests
-            WHERE id = %s
-            LIMIT 1
-            """,
-            (request_id,),
-        )
-        inserted_row = cur.fetchone()
-
-        logger.info(
-            "[ServiceRequestInserted] request_id=%s row=%s",
-            request_id,
-            inserted_row,
-        )
-
         log_service_request_event(
             request_id,
             user_id,
@@ -4831,20 +4834,14 @@ def create_service_request(
             note="Service request submitted",
         )
 
+        # ✅ SAFE PHOTO HANDLING
         photo_count = 0
-
-        # SAVE PHOTOS (if any uploaded)
-        try:
-            uploaded_files = [
-                file_obj for file_obj in request.files.getlist("request_photos")
-                if file_obj and getattr(file_obj, "filename", "")
-            ]
-            photo_count = len(uploaded_files)
-
-            if uploaded_files:
+        if uploaded_files:
+            try:
+                photo_count = len(uploaded_files)
                 save_service_request_photos(request_id, uploaded_files)
-        except Exception as e:
-            logger.exception("Photo upload failed: %s", e)
+            except Exception as e:
+                logger.exception("Photo upload failed: %s", e)
 
         notification_service_label = service_title or "Custom request"
         notification_client_name = client_name or "A client"
@@ -4877,8 +4874,6 @@ def create_service_request(
             body=" • ".join(notification_body_parts) or "Open the request to review the details.",
             link_url=f"/requests/{request_id}",
         )
-
-        return request_id
 
         return request_id
 
@@ -6016,7 +6011,7 @@ def public_service_request_page(user_id, service_id):
         elif not form_data["client_email"]:
             error = "Client email is required."
         else:
-            request_id = create_service_request(
+          request_id = create_service_request(
                 user_id=user_id,
                 service_id=service_id,
                 client_name=form_data["client_name"],
@@ -6027,7 +6022,8 @@ def public_service_request_page(user_id, service_id):
                 preferred_time_text=form_data["preferred_time_text"],
                 quantity=form_data["quantity"],
                 client_user_id=client_user_id,
-            )
+                uploaded_files=request.files.getlist("request_photos"),
+          )
 
             if request_id:
                 return redirect(
