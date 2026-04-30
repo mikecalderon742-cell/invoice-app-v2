@@ -6011,7 +6011,7 @@ def public_service_request_page(user_id, service_id):
         elif not form_data["client_email"]:
             error = "Client email is required."
         else:
-          request_id = create_service_request(
+            request_id = create_service_request(
                 user_id=user_id,
                 service_id=service_id,
                 client_name=form_data["client_name"],
@@ -6023,7 +6023,7 @@ def public_service_request_page(user_id, service_id):
                 quantity=form_data["quantity"],
                 client_user_id=client_user_id,
                 uploaded_files=request.files.getlist("request_photos"),
-          )
+            )
 
             if request_id:
                 return redirect(
