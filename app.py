@@ -3754,7 +3754,7 @@ def update_user_service(
             SET name = %s,
                 description = %s,
                 price = %s,
-                pricing_type = COALESCE(%s, pricing_type),
+                pricing_type = %s,
                 duration_minutes = COALESCE(%s, duration_minutes),
                 image_url = COALESCE(%s, image_url),
                 category = COALESCE(%s, category),
