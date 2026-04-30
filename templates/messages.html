@@ -254,7 +254,9 @@
         {{ convo.display_name[0]|upper }}
     </div>
 
-    <div style="flex:1; min-width:0;">
+<div style="flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center;">
+
+    <div style="min-width:0;">
         <div style="font-weight:600;">
             {{ convo.display_name }}
         </div>
@@ -268,6 +270,32 @@
         ">
             {{ convo.last_message or "No messages yet" }}
         </div>
+
+        <div style="font-size:11px; color:#9ca3af;">
+            {% if convo.last_message_time %}
+                {{ convo.last_message_time }}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if convo.unread_count > 0 %}
+    <div style="
+        min-width:18px;
+        height:18px;
+        border-radius:999px;
+        background:#0ea5e9;
+        color:white;
+        font-size:11px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:600;
+    ">
+        {{ convo.unread_count }}
+    </div>
+    {% endif %}
+
+</div>
 
         <div style="font-size:11px; color:#9ca3af;">
             {% if convo.last_message_time %}
@@ -473,6 +501,18 @@ function goBackToList() {
         i.classList.remove("active")
     );
 }
+
+// -------------------------
+// AUTO OPEN LATEST CONVERSATION
+// -------------------------
+window.addEventListener("load", () => {
+    const firstConvo = document.querySelector(".convo-item");
+
+    if (firstConvo) {
+        const convoId = firstConvo.getAttribute("onclick").match(/\d+/)[0];
+        openConversation(convoId, firstConvo);
+    }
+});
 </script>
 
 {% endblock %}
