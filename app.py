@@ -3727,6 +3727,7 @@ def update_user_service(
     duration_minutes=None,
     image_url=None,
     availability_notes=None
+    category=none
 ):
     conn = get_db_connection()
     cursor = conn.cursor()
