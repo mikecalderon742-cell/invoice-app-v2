@@ -723,9 +723,17 @@
             </div>
 
             <div class="public-service-meta-row">
+{% if service.pricing_type == "hourly" %}
+  <span class="public-service-chip">💲 / hr</span>
+{% elif service.pricing_type == "quote" %}
+  <span class="public-service-chip">📩 Quote</span>
+{% else %}
+  <span class="public-service-chip">💲 Fixed</span>
+{% endif %}
 {% if service.duration_minutes %}
   <span class="public-service-chip">
     ⏱ {{ service.duration_minutes }} min
+{% if lang == 'es' %}estimado{% elif lang == 'zh' %}预计{% else %}est.{% endif %}
   </span>
 {% endif %}
 
@@ -803,7 +811,7 @@
       {% if service.pricing_type == "hourly" %}
         ${{ '%.2f'|format(service.price or 0) }}/hr
       {% elif service.pricing_type == "quote" %}
-        {% if lang == 'es' %}Solicitar cotización{% elif lang == 'zh' %}请求报价{% else %}Request Quote{% endif %}
+  {% if lang == 'es' %}Presupuesto personalizado{% elif lang == 'zh' %}定制报价{% else %}Custom Quote{% endif %}
       {% else %}
         ${{ '%.2f'|format(service.price or 0) }}
       {% endif %}
