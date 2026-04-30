@@ -7583,22 +7583,6 @@ def settings():
     editing_service = None
     notification_preferences = get_notification_preferences(user_id)
 
-# -------------------------
-# SETTINGS
-# -------------------------
-@app.route("/settings", methods=["GET", "POST"])
-@login_required
-def settings():
-    user = get_current_user()
-    user_id = user["id"]
-    lang = normalize_lang(request.args.get("lang") or user.get("language") or "en")
-
-    profile = get_business_profile()
-    feedback_message = None
-    feedback_type = None
-    editing_service = None
-    notification_preferences = get_notification_preferences(user_id)
-
     if request.method == "POST":
         form_type = (request.form.get("form_type") or "profile").strip().lower()
 
