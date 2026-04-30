@@ -2122,7 +2122,7 @@ def messages_page():
 
         # ✅ DEBUG INSIDE LOOP
         print("CONVO LIST ITEM:", convo_id)
-        m
+        
         conversations.append({
             "id": convo_id,
             "display_name": display_name,
@@ -2133,7 +2133,7 @@ def messages_page():
             "last_message_time": row[7],
             "unread_count": row[8],  # ✅ THIS IS THE NEW ONE
         })
-        m
+        
     cur.close()
     conn.close()
 
