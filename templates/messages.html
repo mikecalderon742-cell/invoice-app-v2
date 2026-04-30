@@ -5,17 +5,17 @@
 
 <style>
 .messages-shell {
-    display: flex;
+    display: block;
     height: calc(100vh - 100px);
-    background: #eef2f7;
+    background: #f8fafc;
 }
 
 /* LEFT PANEL */
 .convo-list {
-    width: 320px;
-    border-right: 1px solid #e5e7eb;
-    background: #ffffff;
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
+    background: #ffffff;
 }
 
 .convo-header {
@@ -42,9 +42,9 @@
 
 /* RIGHT PANEL */
 .chat-panel {
-    flex: 1;
-    display: flex;
+    display: none; /* 🔥 hidden by default */
     flex-direction: column;
+    height: 100%;
     background: #ffffff;
 }
 
@@ -249,9 +249,22 @@
     <!-- RIGHT -->
     <div class="chat-panel">
 
-        <div class="chat-header">
-            <div class="chat-avatar" id="chatAvatar">?</div>            <div id="chatHeaderName">Select a conversation</div>
-        </div>
+<div class="chat-header">
+
+    <!-- BACK BUTTON -->
+    <button onclick="goBackToList()" style="
+        border:none;
+        background:none;
+        font-size:18px;
+        cursor:pointer;
+        margin-right:6px;
+    ">←</button>
+
+    <div class="chat-avatar" id="chatAvatar">?</div>
+
+    <div id="chatHeaderName">Select a conversation</div>
+
+</div>
 
         <div id="chatMessages" class="chat-messages">
             <p style="opacity:0.6;">Select a conversation</p>
@@ -271,18 +284,19 @@ let currentConversationId = null;
 
 async function openConversation(id, el = null) {
     currentConversationId = id;
-    lastSenderId = null;
 
-    // highlight active
+    // switch screens
+    document.querySelector(".convo-list").style.display = "none";
+    document.querySelector(".chat-panel").style.display = "flex";
+
+    // highlight
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
-    // ✅ get name safely
     const name = el?.dataset?.name || "Conversation";
 
     document.getElementById("chatHeaderName").innerText = name;
 
-    // ✅ avatar
     const avatar = document.getElementById("chatAvatar");
     if (avatar && name) {
         avatar.innerText = name.charAt(0).toUpperCase();
@@ -390,6 +404,28 @@ async function sendMessage() {
     } catch (err) {
         console.error("Send failed", err);
     }
+}
+
+function goBackToList() {
+    currentConversationId = null;
+
+    // hide chat
+    document.querySelector(".chat-panel").style.display = "none";
+
+    // show list
+    document.querySelector(".convo-list").style.display = "block";
+
+    // reset UI
+    document.getElementById("chatMessages").innerHTML =
+        '<p style="opacity:0.6;">Select a conversation</p>';
+
+    document.getElementById("chatHeaderName").innerText =
+        "Select a conversation";
+
+    // remove highlight
+    document.querySelectorAll(".convo-item").forEach(i =>
+        i.classList.remove("active")
+    );
 }
 </script>
 
