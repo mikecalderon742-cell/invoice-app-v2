@@ -1721,12 +1721,51 @@ def send_message(conversation_id: int, sender_user_id: int, message_text: str):
         )
 
         conn.commit()
+
+        # -------------------------
+        # TRIGGER PUSH NOTIFICATION
+        # -------------------------
+        try:
+            cur.execute(
+                """
+                SELECT business_user_id, client_user_id
+                FROM conversations
+                WHERE id = %s
+                """,
+                (conversation_id,),
+            )
+            convo = cur.fetchone()
+
+            if convo:
+                business_user_id, client_user_id = convo
+
+                recipient_id = (
+                    client_user_id
+                    if sender_user_id == business_user_id
+                    else business_user_id
+                )
+
+                # ✅ DO NOT NOTIFY YOURSELF
+                if recipient_id and recipient_id != sender_user_id:
+                    create_notification_if_enabled(
+                        user_id=recipient_id,
+                        category="messages",
+                        notification_type="new_message",
+                        title="New message",
+                        body=message_text[:100],
+                        link_url=f"/messages?open={conversation_id}",
+                    )
+
+        except Exception as e:
+            logger.exception("Notification failed: %s", e)
+
         return True
 
     except Exception as e:
         conn.rollback()
         logger.exception("Send message failed: %s", e)
         return False
+
     finally:
         cur.close()
         conn.close()
