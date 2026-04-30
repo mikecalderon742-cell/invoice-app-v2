@@ -3730,6 +3730,17 @@ def update_user_service(
     cursor = conn.cursor()
 
     try:
+        # 🔍 DEBUG BEFORE QUERY
+        print("DEBUG INPUT:", {
+            "service_id": service_id,
+            "user_id": user_id,
+            "name": name,
+            "description": description,
+            "price": price,
+            "pricing_type": pricing_type,
+            "duration_minutes": duration_minutes
+        })
+
         cursor.execute(
             """
             UPDATE services
@@ -3753,11 +3764,8 @@ def update_user_service(
 
         conn.commit()
 
-        print("DEBUG UPDATE:", {
-            "service_id": service_id,
-            "user_id": user_id,
-            "pricing_type": pricing_type,
-            "duration_minutes": duration_minutes,
+        # 🔍 DEBUG AFTER QUERY
+        print("DEBUG RESULT:", {
             "rowcount": cursor.rowcount
         })
 
