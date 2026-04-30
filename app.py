@@ -2056,7 +2056,7 @@ def messages_page():
         WHERE c.business_user_id = %s
            OR c.client_user_id = %s
 
-        ORDER BY m.created_at DESC NULLS LAST
+        ORDER BY COALESCE(m.created_at, c.created_at) DESC
         """,
         (user_id, user_id),
     )
