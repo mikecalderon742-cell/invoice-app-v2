@@ -755,40 +755,67 @@
               </span>
             </div>
 
-            <div class="public-service-price-row">
-              <div class="public-service-price-block">
-<div style="font-size:12px; color:#64748b; margin-top:6px;">
-  {% if service.pricing_type == "hourly" %}
-    Final price depends on time required
-  {% elif service.pricing_type == "quote" %}
-    Pricing provided after request review
-  {% else %}
-    Flat rate service
-  {% endif %}
-</div>
-                <div class="public-service-price-label">
-                  {% if lang == 'es' %}
-                    Precio
-                  {% elif lang == 'zh' %}
-                    价格
-                  {% else %}
-                    Price
-                  {% endif %}
-                </div>
-<div class="public-service-price">
-  {% if service.pricing_type == "hourly" %}
-    ${{ '%.2f'|format(service.price or 0) }}/hr
-  {% elif service.pricing_type == "quote" %}
-    Request Quote
-  {% else %}
-    ${{ '%.2f'|format(service.price or 0) }}
-  {% endif %}
-</div>
+<div class="public-service-price-row">
+  <div class="public-service-price-block">
 
-              <a
-                href="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}"
-                class="btn public-service-cta"
-              >
+    <!-- Context line -->
+    <div style="font-size:12px; color:#64748b; margin-top:6px;">
+      {% if service.pricing_type == "hourly" %}
+        {% if lang == 'es' %}
+          El precio final depende del tiempo requerido
+        {% elif lang == 'zh' %}
+          最终价格取决于所需时间
+        {% else %}
+          Final price depends on time required
+        {% endif %}
+      {% elif service.pricing_type == "quote" %}
+        {% if lang == 'es' %}
+          El precio se proporcionará después de revisar la solicitud
+        {% elif lang == 'zh' %}
+          价格将在审核请求后提供
+        {% else %}
+          Pricing provided after request review
+        {% endif %}
+      {% else %}
+        {% if lang == 'es' %}
+          Servicio de tarifa fija
+        {% elif lang == 'zh' %}
+          固定价格服务
+        {% else %}
+          Flat rate service
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Label -->
+    <div class="public-service-price-label">
+      {% if service.pricing_type == "hourly" %}
+        {% if lang == 'es' %}Tarifa por hora{% elif lang == 'zh' %}按小时收费{% else %}Hourly Rate{% endif %}
+      {% elif service.pricing_type == "quote" %}
+        {% if lang == 'es' %}Precio{% elif lang == 'zh' %}价格{% else %}Pricing{% endif %}
+      {% else %}
+        {% if lang == 'es' %}Precio fijo{% elif lang == 'zh' %}固定价格{% else %}Flat Price{% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Price -->
+    <div class="public-service-price">
+      {% if service.pricing_type == "hourly" %}
+        ${{ '%.2f'|format(service.price or 0) }}/hr
+      {% elif service.pricing_type == "quote" %}
+        {% if lang == 'es' %}Solicitar cotización{% elif lang == 'zh' %}请求报价{% else %}Request Quote{% endif %}
+      {% else %}
+        ${{ '%.2f'|format(service.price or 0) }}
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <a
+    href="{{ url_for('public_service_request_page', user_id=public_user_id, service_id=service.id, lang=lang) }}"
+    class="btn public-service-cta"
+  >
                 {% if lang == 'es' %}
                   Solicitar servicio
                 {% elif lang == 'zh' %}
