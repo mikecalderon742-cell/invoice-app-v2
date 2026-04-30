@@ -1638,65 +1638,66 @@ def login_required(view_func):
 # MESSAGING HELPERS
 # -------------------------
 
-def get_or_create_conversation(business_user_id: int, client_user_id: int, service_request_id: int = None):
+def get_or_create_conversation(business_user_id, client_user_id, service_request_id=None):
     conn = get_db_connection()
     cur = conn.cursor()
 
     try:
+        # -------------------------
+        # 1. TRY TO FIND EXISTING
+        # -------------------------
         cur.execute(
             """
             SELECT id
             FROM conversations
             WHERE business_user_id = %s
               AND client_user_id = %s
-              AND (%s IS NULL OR service_request_id = %s)
+              AND (
+                    service_request_id = %s
+                    OR (service_request_id IS NULL AND %s IS NULL)
+                  )
             LIMIT 1
             """,
             (business_user_id, client_user_id, service_request_id, service_request_id),
         )
+
         row = cur.fetchone()
 
         if row:
             return row[0]
 
+        # -------------------------
+        # 2. CREATE NEW IF NOT FOUND
+        # -------------------------
         cur.execute(
             """
             INSERT INTO conversations (
                 business_user_id,
                 client_user_id,
-                service_request_id
+                service_request_id,
+                created_at
             )
-            VALUES (%s, %s, %s)
+            VALUES (%s, %s, %s, %s)
             RETURNING id
             """,
-            (business_user_id, client_user_id, service_request_id),
-        )
-        conversation_id = cur.fetchone()[0]
-
-        # add participants
-        cur.execute(
-            """
-            INSERT INTO conversation_participants (conversation_id, user_id, role)
-            VALUES (%s, %s, %s)
-            """,
-            (conversation_id, business_user_id, "business"),
+            (
+                business_user_id,
+                client_user_id,
+                service_request_id,
+                now_local(),
+            ),
         )
 
-        cur.execute(
-            """
-            INSERT INTO conversation_participants (conversation_id, user_id, role)
-            VALUES (%s, %s, %s)
-            """,
-            (conversation_id, client_user_id, "client"),
-        )
-
+        new_id = cur.fetchone()[0]
         conn.commit()
-        return conversation_id
+
+        return new_id
 
     except Exception as e:
         conn.rollback()
-        logger.exception("Conversation create/get failed: %s", e)
+        logger.exception("get_or_create_conversation failed: %s", e)
         return None
+
     finally:
         cur.close()
         conn.close()
