@@ -3724,7 +3724,9 @@ def update_user_service(
     description,
     price,
     pricing_type=None,
-    duration_minutes=None
+    duration_minutes=None,
+    image_url=None,
+    availability_notes=None
 ):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -3748,7 +3750,9 @@ def update_user_service(
                 description = %s,
                 price = %s,
                 pricing_type = COALESCE(%s, pricing_type),
-                duration_minutes = COALESCE(%s, duration_minutes)
+                duration_minutes = COALESCE(%s, duration_minutes),
+                image_url = COALESCE(%s, image_url),
+                availability_notes = COALESCE(%s, availability_notes)
             WHERE id = %s AND user_id = %s
             """,
             (
@@ -3757,6 +3761,8 @@ def update_user_service(
                 price,
                 pricing_type,
                 duration_minutes,
+                image_url,
+                availability_notes,
                 service_id,
                 user_id,
             ),
