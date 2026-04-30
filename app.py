@@ -7593,42 +7593,28 @@ def settings():
             if not current_password or not new_password or not confirm_password:
                 feedback_message = "Please fill out all password fields."
                 feedback_type = "error"
-
             elif len(new_password) < 8:
                 feedback_message = "New password must be at least 8 characters long."
                 feedback_type = "error"
-
             elif new_password != confirm_password:
                 feedback_message = "New password and confirmation do not match."
                 feedback_type = "error"
-
             else:
                 conn = get_db_connection()
                 cursor = conn.cursor()
 
-                cursor.execute(
-                    "SELECT password_hash FROM users WHERE id = %s",
-                    (user_id,),
-                )
+                cursor.execute("SELECT password_hash FROM users WHERE id = %s", (user_id,))
                 row = cursor.fetchone()
 
-                if not row or not row[0]:
-                    feedback_message = "Unable to update password for this account."
-                    feedback_type = "error"
-
-                elif not check_password_hash(row[0], current_password):
+                if not row or not check_password_hash(row[0], current_password):
                     feedback_message = "Your current password is incorrect."
                     feedback_type = "error"
-
                 else:
-                    new_password_hash = generate_password_hash(new_password)
-
                     cursor.execute(
                         "UPDATE users SET password_hash = %s WHERE id = %s",
-                        (new_password_hash, user_id),
+                        (generate_password_hash(new_password), user_id),
                     )
                     conn.commit()
-
                     feedback_message = "Password updated successfully."
                     feedback_type = "success"
 
@@ -7636,35 +7622,7 @@ def settings():
                 conn.close()
 
         # -------------------------
-        # NOTIFICATIONS
-        # -------------------------
-        elif form_type == "notification_preferences":
-
-            def _checked(name: str) -> bool:
-                return (request.form.get(name) or "").strip().lower() in ("1", "true", "yes", "on")
-
-            updated_prefs = update_notification_preferences(
-                user_id,
-                {
-                    "notifications_enabled": _checked("notifications_enabled"),
-                    "in_app_enabled": _checked("in_app_enabled"),
-                    "business_request_alerts": _checked("business_request_alerts"),
-                    "client_request_updates": _checked("client_request_updates"),
-                    "invoice_alerts": _checked("invoice_alerts"),
-                    "payment_alerts": _checked("payment_alerts"),
-                },
-            )
-
-            if updated_prefs:
-                notification_preferences = updated_prefs
-                feedback_message = "Notification preferences updated successfully."
-                feedback_type = "success"
-            else:
-                feedback_message = "Notification preferences could not be updated."
-                feedback_type = "error"
-
-        # -------------------------
-        # ADD SERVICE
+        # SERVICE ADD
         # -------------------------
         elif form_type == "service_add":
             name = (request.form.get("service_name") or "").strip()
@@ -7695,7 +7653,7 @@ def settings():
                 feedback_type = "success"
 
         # -------------------------
-        # UPDATE SERVICE
+        # SERVICE UPDATE
         # -------------------------
         elif form_type == "service_update":
             try:
@@ -7718,11 +7676,9 @@ def settings():
             if not service_id:
                 feedback_message = "Invalid service selected."
                 feedback_type = "error"
-
             elif not name:
                 feedback_message = "Service name is required."
                 feedback_type = "error"
-
             else:
                 success = update_user_service(
                     service_id,
@@ -7744,65 +7700,18 @@ def settings():
         # PROFILE SAVE
         # -------------------------
         else:
-            uploaded_logo_file = request.files.get("logo_file")
-            uploaded_logo_url = None
-
-            if uploaded_logo_file and (uploaded_logo_file.filename or "").strip():
-                uploaded_logo_url, logo_error = save_uploaded_logo(uploaded_logo_file, user_id)
-
-                if logo_error:
-                    services = get_user_services(user_id, include_inactive=True)
-
-                    return render_template(
-                        "settings.html",
-                        profile=get_business_profile(),
-                        feedback_message=logo_error,
-                        feedback_type="error",
-                        notification_preferences=notification_preferences,
-                        payment_setup=sync_stripe_connect_status_for_user(user_id),
-                        current_plan=normalize_plan_key(user.get("plan") or "free"),
-                        lang=lang,
-                        services=services,
-                        editing_service=editing_service,
-                    )
-
-            final_logo = uploaded_logo_url or (request.form.get("logo_url") or "").strip()
-
             upsert_business_profile({
-                "business_name": request.form.get("business_name") or DEFAULT_BUSINESS_NAME,
+                "business_name": request.form.get("business_name"),
                 "email": request.form.get("email"),
                 "phone": request.form.get("phone"),
                 "website": request.form.get("website"),
                 "address": request.form.get("address"),
-                "logo_url": final_logo,
-                "brand_color": request.form.get("brand_color") or DEFAULT_BRAND_COLOR,
-                "accent_color": request.form.get("accent_color") or DEFAULT_ACCENT_COLOR,
-                "default_terms": request.form.get("default_terms"),
-                "default_notes": request.form.get("default_notes"),
+                "brand_color": request.form.get("brand_color"),
+                "accent_color": request.form.get("accent_color"),
             })
 
-            conn = get_db_connection()
-            cur = conn.cursor()
-
-            cur.execute(
-                "UPDATE users SET language = %s WHERE id = %s",
-                (normalize_lang(request.form.get("language") or lang), user_id),
-            )
-
-            conn.commit()
-            cur.close()
-            conn.close()
-
-            profile = get_business_profile()
             feedback_message = "Business profile updated successfully."
             feedback_type = "success"
-
-    edit_id = request.args.get("edit_service")
-    if edit_id:
-        try:
-            editing_service = get_service_by_id(int(edit_id), user_id)
-        except:
-            editing_service = None
 
     services = get_user_services(user_id, include_inactive=True)
 
@@ -7811,12 +7720,10 @@ def settings():
         profile=profile,
         feedback_message=feedback_message,
         feedback_type=feedback_type,
-        payment_setup=sync_stripe_connect_status_for_user(user_id),
-        current_plan=normalize_plan_key(user.get("plan") or "free"),
-        lang=lang,
         services=services,
         editing_service=editing_service,
         notification_preferences=notification_preferences,
+        lang=lang,
     )
     if edit_id:
         try:
