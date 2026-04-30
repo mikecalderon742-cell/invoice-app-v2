@@ -164,7 +164,7 @@
 
         {% for convo in conversations %}
         <div class="convo-item" onclick="openConversation({{ convo.id }}, this)">
-            Conversation {{ convo.id }}
+            {{ convo.display_name }}
         </div>
         {% endfor %}
     </div>
@@ -173,8 +173,7 @@
     <div class="chat-panel">
 
         <div class="chat-header">
-            <div class="chat-avatar">?</div>
-            <div id="chatHeaderName">Select a conversation</div>
+            <div class="chat-avatar" id="chatAvatar">?</div>            <div id="chatHeaderName">Select a conversation</div>
         </div>
 
         <div id="chatMessages" class="chat-messages">
@@ -199,7 +198,16 @@ async function openConversation(id, el=null) {
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
-    document.getElementById("chatHeaderName").innerText = "Conversation " + id;
+    const name = el ? el.innerText.trim() : "Conversation";
+const name = el ? el.innerText.trim() : "Conversation";
+
+document.getElementById("chatHeaderName").innerText = name;
+
+// 🔥 update avatar
+const avatar = document.getElementById("chatAvatar");
+if (avatar && name) {
+    avatar.innerText = name.charAt(0).toUpperCase();
+}
 
     await loadMessages();
 }
