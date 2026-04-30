@@ -6,22 +6,30 @@
 <style>
 .messages-shell {
     display: flex;
-    height: calc(100vh - 110px);
+    height: calc(100vh - 100px);
     background: #f8fafc;
 }
 
 /* LEFT PANEL */
 .convo-list {
-    width: 300px;
+    width: 320px;
     border-right: 1px solid #e5e7eb;
     background: #ffffff;
     overflow-y: auto;
 }
 
+.convo-header {
+    padding: 16px;
+    font-weight: 700;
+    font-size: 18px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
 .convo-item {
-    padding: 14px;
+    padding: 14px 16px;
     cursor: pointer;
     border-bottom: 1px solid #f1f5f9;
+    transition: 0.2s;
 }
 
 .convo-item:hover {
@@ -40,49 +48,97 @@
     background: #ffffff;
 }
 
+/* HEADER */
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #ffffff;
+    font-weight: 700;
+}
+
+.chat-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #0ea5e9;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* MESSAGES */
 .chat-messages {
     flex: 1;
-    padding: 20px;
+    padding: 20px 16px 100px 16px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    gap: 6px;
 }
 
 /* BUBBLES */
 .bubble {
-    max-width: 70%;
+    max-width: 75%;
     padding: 10px 14px;
     border-radius: 18px;
-    margin-bottom: 10px;
     font-size: 14px;
+    line-height: 1.4;
+    position: relative;
 }
 
 .bubble.me {
     background: #0ea5e9;
     color: white;
     align-self: flex-end;
+    border-bottom-right-radius: 6px;
 }
 
 .bubble.them {
     background: #e5e7eb;
+    color: #111827;
     align-self: flex-start;
+    border-bottom-left-radius: 6px;
+}
+
+.timestamp {
+    font-size: 11px;
+    opacity: 0.5;
+    margin-top: 2px;
 }
 
 /* INPUT */
 .chat-input {
     display: flex;
     gap: 10px;
-    padding: 12px;
+    padding: 12px 16px;
     border-top: 1px solid #e5e7eb;
     background: #ffffff;
+    position: sticky;
+    bottom: 0;
+    z-index: 1000;
+
+    padding-right: 90px; /* avoids floating buttons */
 }
 
 .chat-input input {
     flex: 1;
-    padding: 12px;
+    padding: 12px 14px;
     border-radius: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid #d1d5db;
     outline: none;
+}
+
+.chat-input button {
+    padding: 10px 16px;
+    border-radius: 20px;
+    border: none;
+    background: #0ea5e9;
+    color: white;
+    font-weight: 600;
 }
 
 /* MOBILE */
@@ -93,7 +149,7 @@
 
     .convo-list {
         width: 100%;
-        height: 40%;
+        height: 35%;
         border-right: none;
         border-bottom: 1px solid #e5e7eb;
     }
@@ -104,7 +160,7 @@
 
     <!-- LEFT -->
     <div class="convo-list">
-        <h3 style="padding:12px;">Conversations</h3>
+        <div class="convo-header">Conversations</div>
 
         {% for convo in conversations %}
         <div class="convo-item" onclick="openConversation({{ convo.id }}, this)">
@@ -115,14 +171,11 @@
 
     <!-- RIGHT -->
     <div class="chat-panel">
-<div id="chatHeader" style="
-    padding: 14px 18px;
-    border-bottom: 1px solid #e5e7eb;
-    font-weight: 700;
-    background: #ffffff;
-">
-    Select a conversation
-</div>
+
+        <div class="chat-header">
+            <div class="chat-avatar">?</div>
+            <div id="chatHeaderName">Select a conversation</div>
+        </div>
 
         <div id="chatMessages" class="chat-messages">
             <p style="opacity:0.6;">Select a conversation</p>
@@ -130,7 +183,7 @@
 
         <form class="chat-input" onsubmit="return false;">
             <input id="messageInput" placeholder="Type message..." />
-            <button type="button" class="btn" onclick="sendMessage()">Send</button>
+            <button type="button" onclick="sendMessage()">Send</button>
         </form>
 
     </div>
@@ -146,9 +199,7 @@ async function openConversation(id, el=null) {
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
-    // 🔥 Set header name (temporary for now)
-    const header = document.getElementById("chatHeader");
-    header.innerText = "Conversation " + id;
+    document.getElementById("chatHeaderName").innerText = "Conversation " + id;
 
     await loadMessages();
 }
@@ -167,9 +218,7 @@ async function loadMessages() {
         return;
     }
 
-    data.messages.forEach(msg => {
-        appendMessage(msg);
-    });
+    data.messages.forEach(msg => appendMessage(msg));
 
     box.scrollTop = box.scrollHeight;
 }
@@ -177,17 +226,27 @@ async function loadMessages() {
 function appendMessage(msg) {
     const box = document.getElementById("chatMessages");
 
-    const div = document.createElement("div");
-    div.classList.add("bubble");
+    const wrap = document.createElement("div");
+
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
 
     if (msg.sender_user_id == {{ current_user.id }}) {
-        div.classList.add("me");
+        bubble.classList.add("me");
     } else {
-        div.classList.add("them");
+        bubble.classList.add("them");
     }
 
-    div.innerText = msg.message_text;
-    box.appendChild(div);
+    bubble.innerText = msg.message_text;
+
+    const time = document.createElement("div");
+    time.classList.add("timestamp");
+    time.innerText = msg.created_at ? new Date(msg.created_at).toLocaleTimeString() : "";
+
+    wrap.appendChild(bubble);
+    wrap.appendChild(time);
+
+    box.appendChild(wrap);
 }
 
 async function sendMessage() {
@@ -198,10 +257,10 @@ async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
 
-    // instant UI (feels real-time)
     appendMessage({
         sender_user_id: {{ current_user.id }},
-        message_text: text
+        message_text: text,
+        created_at: new Date().toISOString()
     });
 
     const box = document.getElementById("chatMessages");
