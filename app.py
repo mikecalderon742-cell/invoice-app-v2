@@ -2291,6 +2291,13 @@ def client_send_request_message(request_id):
 
         _, business_user_id, service_title = row
 
+        # 🔥 Ensure conversation exists (NEW SYSTEM)
+        conversation_id = get_or_create_conversation(
+            business_user_id=business_user_id,
+            client_user_id=client_user_id,
+            service_request_id=request_id,
+        )
+
         cur.execute(
             """
             INSERT INTO service_request_messages (
@@ -2310,6 +2317,14 @@ def client_send_request_message(request_id):
                 now_local(),
             ),
         )
+
+        # 🔥 ALSO send into main conversations system
+        if conversation_id:
+            send_message(
+                conversation_id=conversation_id,
+                sender_user_id=client_user_id,
+                message_text=message_body,
+            )
 
         cur.execute(
             """
