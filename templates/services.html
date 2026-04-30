@@ -1088,6 +1088,11 @@ document.addEventListener("DOMContentLoaded", function () {
                             <div class="service-card-inner">
                                 <div class="service-card-top">
                                     <div class="service-card-title-wrap">
+{% if service.category %}
+    <div style="font-size:.75rem; font-weight:800; color:#3A8BFF; margin-bottom:6px; letter-spacing:.05em;">
+        {{ service.category|upper }}
+    </div>
+{% endif %}
                                         <h3 class="service-card-title">{{ service.name }}</h3>
 
                                         <div class="service-card-status {% if service.is_active %}active{% else %}inactive{% endif %}">
@@ -1122,17 +1127,23 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 {% endif %}
 
+{% if service.availability_notes %}
+    <div style="font-size:.85rem; color:#64748b; margin-bottom:8px;">
+        📅 {{ service.availability_notes }}
+    </div>
+{% endif %}
+
                                 <p class="service-card-description">
                                     {% if service.description %}
                                         {{ service.description }}
-                                    {% else %}
-                                        {% if current_lang == 'es' %}
-                                            Sin descripción todavía.
-                                        {% elif current_lang == 'zh' %}
-                                            暂无描述。
-                                        {% else %}
-                                            No description yet.
-                                        {% endif %}
+{% else %}
+    {% if service.pricing_type == "hourly" %}
+        Time-based service tailored to your needs.
+    {% elif service.pricing_type == "quote" %}
+        Custom service — details provided after request.
+    {% else %}
+        Professional fixed-price service ready to book.
+    {% endif %}
                                     {% endif %}
                                 </p>
 
