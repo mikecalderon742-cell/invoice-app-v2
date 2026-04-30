@@ -1007,9 +1007,39 @@
                             </button>
                         {% endif %}
                     </div>
-                </form>
+</form>
 
-                <div class="services-mini-note">
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const pricingSelect = document.getElementById("pricing_type");
+    const priceInput = document.getElementById("price");
+    const priceFieldWrap = priceInput.closest(".services-field");
+    const priceLabel = document.querySelector('label[for="price"]');
+
+    function updatePricingUI() {
+        const type = pricingSelect.value;
+
+        if (type === "quote") {
+            priceFieldWrap.style.opacity = "0.4";
+            priceFieldWrap.style.pointerEvents = "none";
+            priceLabel.innerText = "Price (Not required)";
+        } else if (type === "hourly") {
+            priceFieldWrap.style.opacity = "1";
+            priceFieldWrap.style.pointerEvents = "auto";
+            priceLabel.innerText = "Hourly Rate";
+        } else {
+            priceFieldWrap.style.opacity = "1";
+            priceFieldWrap.style.pointerEvents = "auto";
+            priceLabel.innerText = "Price";
+        }
+    }
+
+    pricingSelect.addEventListener("change", updatePricingUI);
+    updatePricingUI();
+});
+</script>
+
+<div class="services-mini-note">
                     {% if current_lang == 'es' %}
                         Consejo: usa nombres de servicio claros y descripciones breves pero útiles. Esto hará que la experiencia pública del cliente se vea mucho más premium.
                     {% elif current_lang == 'zh' %}
