@@ -2009,7 +2009,14 @@ def api_send_message():
     if not success:
         return jsonify({"error": "Message failed"}), 500
 
-    return jsonify({"success": True})
+    return jsonify({
+        "success": True,
+        "message": {
+            "conversation_id": conversation_id,
+            "sender_user_id": sender_user_id,
+            "message_text": message_text
+        }
+    })
 
 
 @app.route("/messages")
@@ -2055,14 +2062,8 @@ def messages_page():
     )
 
 
-@app.route("/api/conversation/messages/<int:conversation_id>", methods=["GET"])
-@login_required
-def api_get_messages(conversation_id):
-    messages = get_conversation_messages(conversation_id)
-    return jsonify({"messages": messages})
-
-
 @app.route("/api/messages/<int:conversation_id>", methods=["GET"])
+@login_required
 def get_messages(conversation_id):
     conn = get_db_connection()
     cursor = conn.cursor()

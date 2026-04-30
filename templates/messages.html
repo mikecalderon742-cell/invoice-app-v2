@@ -75,8 +75,6 @@
     padding: 12px;
     border-top: 1px solid #e5e7eb;
     background: #ffffff;
-    position: relative;
-    z-index: 9999;
 }
 
 .chat-input input {
@@ -122,10 +120,10 @@
             <p style="opacity:0.6;">Select a conversation</p>
         </div>
 
-<form class="chat-input" onsubmit="return false;">
-    <input id="messageInput" placeholder="Type message..." />
-    <button type="button" class="btn" onclick="sendMessage()">Send</button>
-</form>
+        <form class="chat-input" onsubmit="return false;">
+            <input id="messageInput" placeholder="Type message..." />
+            <button type="button" class="btn" onclick="sendMessage()">Send</button>
+        </form>
 
     </div>
 
@@ -137,7 +135,6 @@ let currentConversationId = null;
 async function openConversation(id, el=null) {
     currentConversationId = id;
 
-    // highlight active
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
@@ -159,20 +156,26 @@ async function loadMessages() {
     }
 
     data.messages.forEach(msg => {
-        const div = document.createElement("div");
-        div.classList.add("bubble");
-
-        if (msg.sender_user_id == {{ current_user.id }}) {
-            div.classList.add("me");
-        } else {
-            div.classList.add("them");
-        }
-
-        div.innerText = msg.message_text;
-        box.appendChild(div);
+        appendMessage(msg);
     });
 
     box.scrollTop = box.scrollHeight;
+}
+
+function appendMessage(msg) {
+    const box = document.getElementById("chatMessages");
+
+    const div = document.createElement("div");
+    div.classList.add("bubble");
+
+    if (msg.sender_user_id == {{ current_user.id }}) {
+        div.classList.add("me");
+    } else {
+        div.classList.add("them");
+    }
+
+    div.innerText = msg.message_text;
+    box.appendChild(div);
 }
 
 async function sendMessage() {
@@ -183,26 +186,26 @@ async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
 
-    const box = document.getElementById("chatMessages");
+    // instant UI (feels real-time)
+    appendMessage({
+        sender_user_id: {{ current_user.id }},
+        message_text: text
+    });
 
-    // instant UI
-    const temp = document.createElement("div");
-    temp.classList.add("bubble", "me");
-    temp.innerText = text;
-    box.appendChild(temp);
+    const box = document.getElementById("chatMessages");
     box.scrollTop = box.scrollHeight;
 
     input.value = "";
 
     try {
-        await fetch(`/api/messages/${currentConversationId}`, {
+        await fetch(`/api/conversation/send-message`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify({
+                conversation_id: currentConversationId,
+                message_text: text
+            })
         });
-
-        // 🔥 FORCE RELOAD OF SAME CONVERSATION (NO PAGE RELOAD)
-        await loadMessages();
 
     } catch (err) {
         console.error("Send failed", err);
