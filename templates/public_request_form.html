@@ -896,11 +896,64 @@
   {% if service.pricing_type == "hourly" %}
     ${{ '%.2f'|format(service.price or 0) }}/hr
   {% elif service.pricing_type == "quote" %}
-    {% if lang == 'es' %}Solicitar cotización{% elif lang == 'zh' %}请求报价{% else %}Request Quote{% endif %}
+    {% if lang == 'es' %}
+      Solicitar cotización
+    {% elif lang == 'zh' %}
+      请求报价
+    {% else %}
+      Request Quote
+    {% endif %}
   {% else %}
     ${{ '%.2f'|format(service.price or 0) }}
   {% endif %}
 </div>
+
+<div style="font-size:13px; color:#64748b; margin-top:6px;">
+  {% if service.pricing_type == "hourly" %}
+    {% if lang == 'es' %}
+      Precio final depende del tiempo requerido
+    {% elif lang == 'zh' %}
+      最终价格取决于所需时间
+    {% else %}
+      Final price depends on time required
+    {% endif %}
+  {% elif service.pricing_type == "quote" %}
+    {% if lang == 'es' %}
+      El precio se proporciona después de revisar la solicitud
+    {% elif lang == 'zh' %}
+      价格将在审核请求后提供
+    {% else %}
+      Pricing provided after request review
+    {% endif %}
+  {% else %}
+    {% if lang == 'es' %}
+      Precio fijo del servicio
+    {% elif lang == 'zh' %}
+      固定价格服务
+    {% else %}
+      Flat rate service
+    {% endif %}
+  {% endif %}
+</div>
+
+{% if service.duration_minutes %}
+  <div style="font-size:13px; color:#64748b;">
+    ⏱ {{ service.duration_minutes }} 
+    {% if lang == 'es' %}
+      minutos
+    {% elif lang == 'zh' %}
+      分钟
+    {% else %}
+      minutes
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if service.availability_notes %}
+  <div style="font-size:13px; color:#64748b;">
+    📅 {{ service.availability_notes }}
+  </div>
+{% endif %}
 
 <div style="font-size:12px; color:#64748b; margin-top:6px;">
   {% if service.pricing_type == "hourly" %}
