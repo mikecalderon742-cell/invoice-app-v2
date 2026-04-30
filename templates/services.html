@@ -1078,6 +1078,12 @@
         ${{ '%.2f'|format(service.price or 0) }}
     {% endif %}
 </div>
+
+{% if service.pricing_type == "hourly" and service.duration_minutes %}
+    <div style="margin-top: 6px; font-size: 0.82rem; color: #64748b; font-weight: 600;">
+        Approx. {{ service.duration_minutes }} min service
+    </div>
+{% endif %}
                                 </div>
 
                                 <p class="service-card-description">
