@@ -3579,7 +3579,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
         if include_inactive:
             cur.execute(
                 """
-                SELECT id, user_id, name, description, price, image_url, is_active, created_at
+                SELECT id, user_id, name, description, price, pricing_type, duration_minutes, image_url, is_active, created_at
                 FROM services
                 WHERE user_id = %s
                 ORDER BY created_at DESC, id DESC
@@ -3589,7 +3589,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
         else:
             cur.execute(
                 """
-                SELECT id, user_id, name, description, price, image_url, is_active, created_at
+                SELECT id, user_id, name, description, price, pricing_type, duration_minutes, image_url, is_active, created_at
                 FROM services
                 WHERE user_id = %s AND is_active = TRUE
                 ORDER BY created_at DESC, id DESC
@@ -3603,7 +3603,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
         conn.close()
 
     services = []
-    for service_id, service_user_id, name, description, price, image_url, is_active, created_at in rows:
+    for service_id, service_user_id, name, description, price, pricing_type, duration_minutes, image_url, is_active, created_at in rows:
         services.append(
             {
                 "id": service_id,
@@ -3611,6 +3611,8 @@ def get_user_services(user_id: int, include_inactive: bool = False):
                 "name": name or "",
                 "description": description or "",
                 "price": float(price or 0),
+                "pricing_type": pricing_type or "fixed",
+                "duration_minutes": duration_minutes,
                 "image_url": image_url or "",
                 "is_active": bool(is_active),
                 "created_at": created_at,
