@@ -2318,6 +2318,22 @@ def client_send_request_message(request_id):
             ),
         )
 
+# -------------------------
+# ALSO SEND TO MAIN CHAT SYSTEM
+# -------------------------
+conversation_id = get_or_create_conversation(
+    business_user_id=business_user_id,
+    client_user_id=client_user_id,
+    service_request_id=request_id,
+)
+
+if conversation_id:
+    send_message(
+        conversation_id=conversation_id,
+        sender_user_id=client_user_id,
+        message_text=message_body,
+    )
+
         # 🔥 ALSO send into main conversations system
         if conversation_id:
             send_message(
