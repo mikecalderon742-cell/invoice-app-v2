@@ -2040,12 +2040,9 @@ def messages_page():
             cu.email,
             m.message_text,
             m.created_at
-
         FROM conversations c
-
         LEFT JOIN users bu ON bu.id = c.business_user_id
         LEFT JOIN users cu ON cu.id = c.client_user_id
-
         LEFT JOIN LATERAL (
             SELECT message_text, created_at
             FROM messages
@@ -2053,18 +2050,14 @@ def messages_page():
             ORDER BY created_at DESC
             LIMIT 1
         ) m ON TRUE
-
         WHERE c.business_user_id = %s
            OR c.client_user_id = %s
-
         ORDER BY COALESCE(m.created_at, c.created_at) DESC
         """,
         (user_id, user_id),
     )
 
     rows = cur.fetchall()
-    cur.close()
-    conn.close()
 
     conversations = []
     for row in rows:
@@ -2080,15 +2073,21 @@ def messages_page():
         else:
             display_name = business_email
 
-    conversations.append({
-        "id": convo_id,
-        "display_name": display_name,
-        "business_user_id": business_id,
-        "client_user_id": client_id,
-        "created_at": row[3],
-        "last_message": row[6] or "",
-        "last_message_time": row[7],
-    })
+        # ✅ DEBUG INSIDE LOOP
+        print("CONVO LIST ITEM:", convo_id)
+
+        conversations.append({
+            "id": convo_id,
+            "display_name": display_name,
+            "business_user_id": business_id,
+            "client_user_id": client_id,
+            "created_at": row[3],
+            "last_message": row[6] or "",
+            "last_message_time": row[7],
+        })
+
+    cur.close()
+    conn.close()
 
     return render_template(
         "messages.html",
