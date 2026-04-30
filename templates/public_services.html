@@ -765,33 +765,6 @@
 
 <div class="public-service-price-row">
   <div class="public-service-price-block">
-<div style="font-size:13px; color:#64748b; margin-top:4px;">
-  {% if service.pricing_type == "hourly" %}
-    {% if lang == 'es' %}
-      Se cobrará según el tiempo necesario
-    {% elif lang == 'zh' %}
-      根据实际用时收费
-    {% else %}
-      Final price based on time required
-    {% endif %}
-  {% elif service.pricing_type == "quote" %}
-    {% if lang == 'es' %}
-      Recibirás un presupuesto antes de continuar
-    {% elif lang == 'zh' %}
-      提交后将提供报价
-    {% else %}
-      You'll receive a quote before any work begins
-    {% endif %}
-  {% else %}
-    {% if lang == 'es' %}
-      Precio fijo por este servicio
-    {% elif lang == 'zh' %}
-      此服务为固定价格
-    {% else %}
-      Flat rate service
-    {% endif %}
-  {% endif %}
-</div>
 
     <!-- Context line -->
     <div style="font-size:12px; color:#64748b; margin-top:6px;">
