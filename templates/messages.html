@@ -6,8 +6,9 @@
 <style>
 .messages-shell {
     display: block;
-    height: calc(100vh - 100px);
-    background: #f8fafc;
+
+    height: 100vh;
+    overflow: hidden; /* 🔥 stops full page scroll */
 }
 
 /* LEFT PANEL */
@@ -26,18 +27,32 @@
 }
 
 .convo-item {
-    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px 14px;
+
     cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
-    transition: 0.2s;
+
+    margin: 6px 10px;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    transition: all 0.2s ease;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
 .convo-item:hover {
-    background: #f1f5f9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
 }
 
 .convo-item.active {
-    background: #e0f2fe;
+    background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+    box-shadow: 0 6px 18px rgba(14,165,233,0.15);
 }
 
 /* RIGHT PANEL */
@@ -45,8 +60,8 @@
     display: none;
     flex-direction: column;
 
-    height: 100vh; /* 🔥 full screen */
-    overflow: hidden; /* 🔥 prevents whole page scroll */
+    height: 100%;
+    overflow: hidden; /* 🔥 locks layout */
 
     background: #ffffff;
 }
@@ -83,15 +98,14 @@
 /* MESSAGES */
 .chat-messages {
     flex: 1;
-    padding: 28px 18px 140px 18px;
-    overflow-y: auto;
+
+    overflow-y: auto; /* 🔥 ONLY THIS SCROLLS */
+
+    padding: 16px;
+
     display: flex;
     flex-direction: column;
-
-    /* 🔥 FLOATING CANVAS */
-    background: radial-gradient(circle at top, #f8fafc, #e9eef5);
-
-    position: relative;
+    gap: 6px;
 }
 
 /* BUBBLES */
@@ -142,16 +156,11 @@
 
     padding: 10px 12px;
 
-    position: sticky;
-    bottom: 0;
-
     background: #ffffff;
 
-    border-top: 1px solid #d1d5db;
+    border-top: 1px solid #e5e7eb;
 
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
-
-    z-index: 1000;
+    box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
 }
 
 .chat-input input {
@@ -194,6 +203,9 @@
         height: 35%;
         border-right: none;
         border-bottom: 1px solid #e5e7eb;
+        padding-top: 8px;
+        padding-bottom: 12px;
+        background: #f8fafc;
     }
 }
 </style>
@@ -261,10 +273,17 @@
     <!-- BACK BUTTON -->
 <button onclick="goBackToList()" style="
     border: none;
-    background: rgba(0,0,0,0.05);
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: white;
+
     padding: 6px 10px;
     border-radius: 8px;
-    font-size: 16px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    box-shadow: 0 4px 10px rgba(37,99,235,0.3);
+
     cursor: pointer;
 ">
     ←
