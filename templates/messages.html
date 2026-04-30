@@ -42,9 +42,12 @@
 
 /* RIGHT PANEL */
 .chat-panel {
-    display: none; /* 🔥 hidden by default */
+    display: none;
     flex-direction: column;
-    height: 100%;
+
+    height: 100vh; /* 🔥 full screen */
+    overflow: hidden; /* 🔥 prevents whole page scroll */
+
     background: #ffffff;
 }
 
@@ -53,9 +56,16 @@
     display: flex;
     align-items: center;
     gap: 10px;
+
     padding: 14px 16px;
-    border-bottom: 1px solid #e5e7eb;
+
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
     background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+
     font-weight: 700;
 }
 
@@ -130,21 +140,18 @@
     align-items: center;
     gap: 10px;
 
-    padding: 12px 14px;
+    padding: 10px 12px;
 
     position: sticky;
     bottom: 0;
-    z-index: 1000;
 
     background: #ffffff;
 
-    /* 🔥 THIS fixes the floating look */
-    border-top: 2px solid #e5e7eb;
+    border-top: 1px solid #d1d5db;
 
-    /* subtle depth */
-    box-shadow: 0 -6px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
 
-    padding-right: 110px;
+    z-index: 1000;
 }
 
 .chat-input input {
@@ -252,13 +259,16 @@
 <div class="chat-header">
 
     <!-- BACK BUTTON -->
-    <button onclick="goBackToList()" style="
-        border:none;
-        background:none;
-        font-size:18px;
-        cursor:pointer;
-        margin-right:6px;
-    ">←</button>
+<button onclick="goBackToList()" style="
+    border: none;
+    background: rgba(0,0,0,0.05);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+">
+    ←
+</button>
 
     <div class="chat-avatar" id="chatAvatar">?</div>
 
