@@ -2314,25 +2314,21 @@ def client_send_request_message(request_id):
             service_request_id=request_id,
         )
 
-        cur.execute(
-            """
-            INSERT INTO service_request_messages (
-                service_request_id,
-                sender_user_id,
-                sender_role,
-                message_body,
-                created_at
-            )
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (
-                request_id,
-                client_user_id,
-                "client",
-                message_body,
-                now_local(),
-            ),
+        # -------------------------
+        # SEND INTO MAIN MESSAGES SYSTEM ONLY
+        # -------------------------
+        conversation_id = get_or_create_conversation(
+            business_user_id=business_user_id,
+            client_user_id=client_user_id,
+            service_request_id=request_id,
         )
+
+        if conversation_id:
+            send_message(
+                conversation_id=conversation_id,
+                sender_user_id=client_user_id,
+                message_text=message_body,
+            )
 
         # -------------------------
         # ALSO SEND TO MAIN CHAT SYSTEM
@@ -5896,15 +5892,36 @@ def send_request_message(request_id):
 
         client_email = row[0]
 
-        # insert message
-        cur.execute(
-            """
-            INSERT INTO service_request_messages
-            (service_request_id, sender_user_id, sender_role, message_body)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (request_id, user_id, "business", message_body),
+        # -------------------------
+        # SEND INTO MAIN MESSAGING SYSTEM
+        # -------------------------
+        conversation_id = get_or_create_conversation(
+            business_user_id=user_id,
+            client_user_id=None,  # will resolve below
+            service_request_id=request_id,
         )
+
+        # resolve client_user_id from email
+        client_user_id = None
+        if client_email:
+            cur.execute(
+                """
+                SELECT id FROM users
+                WHERE LOWER(email) = LOWER(%s)
+                LIMIT 1
+                """,
+                (client_email,),
+            )
+            client_row = cur.fetchone()
+            if client_row:
+                client_user_id = client_row[0]
+
+        if conversation_id and client_user_id:
+            send_message(
+                conversation_id=conversation_id,
+                sender_user_id=user_id,
+                message_text=message_body,
+            )
 
         conn.commit()
 
