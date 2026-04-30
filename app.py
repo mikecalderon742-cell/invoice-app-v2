@@ -2035,7 +2035,7 @@ def messages_page():
             c.business_user_id,
             c.client_user_id,
             c.created_at,
-            bu.business_name,
+            bu.email,
             cu.email
         FROM conversations c
         LEFT JOIN users bu ON bu.id = c.business_user_id
@@ -2057,13 +2057,13 @@ def messages_page():
         business_id = row[1]
         client_id = row[2]
 
-        business_name = row[4] or "Business"
+        business_email = row[4] or "Business"
         client_email = row[5] or "Client"
 
         if user_id == business_id:
             display_name = client_email
         else:
-            display_name = business_name
+            display_name = business_email
 
         conversations.append({
             "id": convo_id,
