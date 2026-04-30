@@ -207,7 +207,8 @@
     <div class="convo-list">
         <div class="convo-header">Conversations</div>
 
-        {% for convo in conversations %}
+{% for convo in conversations %}
+
 <div class="convo-item"
      onclick="openConversation({{ convo.id }}, this)"
      data-name="{{ convo.display_name }}">
@@ -233,7 +234,6 @@
         <!-- Content -->
         <div style="flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center;">
 
-            <!-- Left text -->
             <div style="min-width:0;">
                 <div style="font-weight:600;">
                     {{ convo.display_name }}
@@ -250,7 +250,6 @@
                 </div>
             </div>
 
-            <!-- Right side (time + unread) -->
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-left:10px;">
 
                 {% if convo.last_message_time %}
@@ -285,6 +284,7 @@
 
 </div>
 
+{% endfor %}
     <!-- RIGHT -->
     <div class="chat-panel">
 
