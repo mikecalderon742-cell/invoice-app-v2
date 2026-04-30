@@ -2140,6 +2140,12 @@ def get_messages(conversation_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    user = get_current_user()
+    user_id = user["id"]
+
+    # -------------------------
+    # FETCH MESSAGES
+    # -------------------------
     cursor.execute(
         """
         SELECT id, conversation_id, sender_user_id, message_text, created_at
@@ -2152,6 +2158,21 @@ def get_messages(conversation_id):
 
     rows = cursor.fetchall()
 
+    # -------------------------
+    # MARK MESSAGES AS READ
+    # -------------------------
+    cursor.execute(
+        """
+        UPDATE messages
+        SET is_read = TRUE
+        WHERE conversation_id = %s
+          AND sender_user_id != %s
+        """,
+        (conversation_id, user_id),
+    )
+
+    conn.commit()
+
     messages = [
         {
             "id": r[0],
@@ -2163,7 +2184,7 @@ def get_messages(conversation_id):
         for r in rows
     ]
 
-    print("FETCHED MESSAGES:", messages)  # keep this for debugging
+    print("FETCHED MESSAGES:", messages)
 
     cursor.close()
     conn.close()
