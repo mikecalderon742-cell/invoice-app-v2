@@ -3717,64 +3717,39 @@ def create_user_service(
         conn.close()
 
 
-def update_user_service(
-    service_id: int,
-    user_id: int,
-    name: str,
-    description: str,
-    price: float,
-    image_url: str,
-    pricing_type: str = "fixed",
-    duration_minutes: int | None = None,
-    category: str = "",
-    location_required: bool = False,
-    materials_included: str = "",
-    photo_required: bool = False,
-    availability_notes: str = "",
-):
+def update_user_service(service_id, user_id, name, description, price):
     conn = get_db_connection()
-    cur = conn.cursor()
+    cursor = conn.cursor()
+
     try:
-        cur.execute(
+        cursor.execute(
             """
             UPDATE services
-            SET name=%s,
-                description=%s,
-                price=%s,
-                image_url=%s,
-                pricing_type=%s,
-                duration_minutes=%s,
-                category=%s,
-                location_required=%s,
-                materials_included=%s,
-                photo_required=%s,
-                availability_notes=%s
-            WHERE id=%s AND user_id=%s
+            SET name = %s,
+                description = %s,
+                price = %s
+            WHERE id = %s AND user_id = %s
             """,
-            (
-                name.strip(),
-                description.strip(),
-                price,
-                image_url.strip(),
-                pricing_type,
-                duration_minutes,
-                category.strip(),
-                location_required,
-                materials_included.strip(),
-                photo_required,
-                availability_notes.strip(),
-                service_id,
-                user_id,
-            ),
+            (name, description, price, service_id, user_id),
         )
-        updated = cur.rowcount > 0
+
         conn.commit()
-        return updated
-    except Exception:
+
+        print("DEBUG UPDATE:", {
+            "service_id": service_id,
+            "user_id": user_id,
+            "rowcount": cursor.rowcount
+        })
+
+        return cursor.rowcount > 0
+
+    except Exception as e:
+        print("UPDATE ERROR:", e)
         conn.rollback()
-        raise
+        return False
+
     finally:
-        cur.close()
+        cursor.close()
         conn.close()
 
 
@@ -7705,15 +7680,32 @@ def settings():
                 feedback_message = "Service added successfully."
                 feedback_type = "success"
 
-        elif form_type == "service_update":
-            try:
-                service_id = int(request.form.get("service_id"))
-            except:
-                service_id = None
+elif form_type == "service_update":
+    try:
+        service_id = int(request.form.get("service_id"))
+    except:
+        service_id = None
 
-            name = (request.form.get("service_name") or "").strip()
-            desc = (request.form.get("service_description") or "").strip()
-            price = parse_float(request.form.get("service_price"), default=0.0)
+    name = (request.form.get("service_name") or "").strip()
+    desc = (request.form.get("service_description") or "").strip()
+    price = parse_float(request.form.get("service_price"), default=0.0)
+
+    if not service_id:
+        feedback_message = "Invalid service selected."
+        feedback_type = "error"
+
+    elif not name:
+        feedback_message = "Service name is required."
+        feedback_type = "error"
+
+    else:
+        success = update_user_service(service_id, user_id, name, desc, price)
+
+        if success:
+            return redirect(lang_url_for("settings"))
+        else:
+            feedback_message = "Service could not be updated."
+            feedback_type = "error"
 
             # NEW (safe additive fields)
             pricing_type = (request.form.get("pricing_type") or "fixed").strip()
