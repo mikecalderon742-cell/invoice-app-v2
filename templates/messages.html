@@ -8,7 +8,14 @@
     display: block;
 
     height: 100vh;
-    overflow: hidden; /* 🔥 stops full page scroll */
+    overflow: hidden;
+
+    /* 🔥 THIS is what you were missing */
+    background: linear-gradient(
+        180deg,
+        #f8fafc 0%,
+        #eef2f7 100%
+    );
 }
 
 /* LEFT PANEL */
@@ -64,7 +71,7 @@
     height: 100%;
     overflow: hidden; /* 🔥 locks layout */
 
-    background: #ffffff;
+    background: transparent;
 }
 
 /* HEADER */
@@ -194,20 +201,17 @@
 }
 
 /* MOBILE */
-@media (max-width: 768px) {
-    .messages-shell {
-        flex-direction: column;
-    }
-
 .convo-list {
     width: 100%;
     height: 100%;
 
     overflow-y: auto;
 
-    background: #ffffff;
+    background: transparent;
 
     padding: 0; /* 🔥 important */
+
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03);
 }
 }
 </style>
