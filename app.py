@@ -3627,7 +3627,18 @@ def get_service_by_id(service_id: int, user_id: int):
     try:
         cur.execute(
             """
-            SELECT id, user_id, name, description, price, image_url, is_active, created_at
+            SELECT 
+                id,
+                user_id,
+                name,
+                description,
+                price,
+                image_url,
+                is_active,
+                created_at,
+                pricing_type,
+                duration_minutes,
+                availability_notes
             FROM services
             WHERE id = %s AND user_id = %s
             LIMIT 1
@@ -3651,6 +3662,9 @@ def get_service_by_id(service_id: int, user_id: int):
         "image_url": row[5] or "",
         "is_active": bool(row[6]),
         "created_at": row[7],
+        "pricing_type": row[8] or "fixed",
+        "duration_minutes": row[9],
+        "availability_notes": row[10] or "",
     }
 
 
