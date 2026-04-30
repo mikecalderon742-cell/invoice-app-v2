@@ -115,6 +115,14 @@
 
     <!-- RIGHT -->
     <div class="chat-panel">
+<div id="chatHeader" style="
+    padding: 14px 18px;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 700;
+    background: #ffffff;
+">
+    Select a conversation
+</div>
 
         <div id="chatMessages" class="chat-messages">
             <p style="opacity:0.6;">Select a conversation</p>
@@ -137,6 +145,10 @@ async function openConversation(id, el=null) {
 
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
+
+    // 🔥 Set header name (temporary for now)
+    const header = document.getElementById("chatHeader");
+    header.innerText = "Conversation " + id;
 
     await loadMessages();
 }
