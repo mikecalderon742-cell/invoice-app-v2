@@ -7583,9 +7583,28 @@ def settings():
     editing_service = None
     notification_preferences = get_notification_preferences(user_id)
 
+# -------------------------
+# SETTINGS
+# -------------------------
+@app.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    user = get_current_user()
+    user_id = user["id"]
+    lang = normalize_lang(request.args.get("lang") or user.get("language") or "en")
+
+    profile = get_business_profile()
+    feedback_message = None
+    feedback_type = None
+    editing_service = None
+    notification_preferences = get_notification_preferences(user_id)
+
     if request.method == "POST":
         form_type = (request.form.get("form_type") or "profile").strip().lower()
 
+        # -------------------------
+        # PASSWORD
+        # -------------------------
         if form_type == "password":
             current_password = request.form.get("current_password") or ""
             new_password = request.form.get("new_password") or ""
@@ -7594,15 +7613,19 @@ def settings():
             if not current_password or not new_password or not confirm_password:
                 feedback_message = "Please fill out all password fields."
                 feedback_type = "error"
+
             elif len(new_password) < 8:
                 feedback_message = "New password must be at least 8 characters long."
                 feedback_type = "error"
+
             elif new_password != confirm_password:
                 feedback_message = "New password and confirmation do not match."
                 feedback_type = "error"
+
             else:
                 conn = get_db_connection()
                 cursor = conn.cursor()
+
                 cursor.execute(
                     "SELECT password_hash FROM users WHERE id = %s",
                     (user_id,),
@@ -7612,23 +7635,31 @@ def settings():
                 if not row or not row[0]:
                     feedback_message = "Unable to update password for this account."
                     feedback_type = "error"
+
                 elif not check_password_hash(row[0], current_password):
                     feedback_message = "Your current password is incorrect."
                     feedback_type = "error"
+
                 else:
                     new_password_hash = generate_password_hash(new_password)
+
                     cursor.execute(
                         "UPDATE users SET password_hash = %s WHERE id = %s",
                         (new_password_hash, user_id),
                     )
                     conn.commit()
+
                     feedback_message = "Password updated successfully."
                     feedback_type = "success"
 
                 cursor.close()
                 conn.close()
 
+        # -------------------------
+        # NOTIFICATIONS
+        # -------------------------
         elif form_type == "notification_preferences":
+
             def _checked(name: str) -> bool:
                 return (request.form.get(name) or "").strip().lower() in ("1", "true", "yes", "on")
 
@@ -7652,13 +7683,16 @@ def settings():
                 feedback_message = "Notification preferences could not be updated."
                 feedback_type = "error"
 
+        # -------------------------
+        # ADD SERVICE
+        # -------------------------
         elif form_type == "service_add":
             name = (request.form.get("service_name") or "").strip()
             desc = (request.form.get("service_description") or "").strip()
             price = parse_float(request.form.get("service_price"), default=0.0)
 
-            # NEW (safe additive fields)
             pricing_type = (request.form.get("pricing_type") or "fixed").strip()
+
             duration_minutes_raw = request.form.get("duration_minutes")
             try:
                 duration_minutes = int(duration_minutes_raw) if duration_minutes_raw else None
@@ -7680,35 +7714,21 @@ def settings():
                 feedback_message = "Service added successfully."
                 feedback_type = "success"
 
-elif form_type == "service_update":
-    try:
-        service_id = int(request.form.get("service_id"))
-    except:
-        service_id = None
+        # -------------------------
+        # UPDATE SERVICE
+        # -------------------------
+        elif form_type == "service_update":
+            try:
+                service_id = int(request.form.get("service_id"))
+            except:
+                service_id = None
 
-    name = (request.form.get("service_name") or "").strip()
-    desc = (request.form.get("service_description") or "").strip()
-    price = parse_float(request.form.get("service_price"), default=0.0)
+            name = (request.form.get("service_name") or "").strip()
+            desc = (request.form.get("service_description") or "").strip()
+            price = parse_float(request.form.get("service_price"), default=0.0)
 
-    if not service_id:
-        feedback_message = "Invalid service selected."
-        feedback_type = "error"
-
-    elif not name:
-        feedback_message = "Service name is required."
-        feedback_type = "error"
-
-    else:
-        success = update_user_service(service_id, user_id, name, desc, price)
-
-        if success:
-            return redirect(lang_url_for("settings"))
-        else:
-            feedback_message = "Service could not be updated."
-            feedback_type = "error"
-
-            # NEW (safe additive fields)
             pricing_type = (request.form.get("pricing_type") or "fixed").strip()
+
             duration_minutes_raw = request.form.get("duration_minutes")
             try:
                 duration_minutes = int(duration_minutes_raw) if duration_minutes_raw else None
@@ -7718,11 +7738,13 @@ elif form_type == "service_update":
             if not service_id:
                 feedback_message = "Invalid service selected."
                 feedback_type = "error"
+
             elif not name:
                 feedback_message = "Service name is required."
                 feedback_type = "error"
+
             else:
-                if update_user_service(
+                success = update_user_service(
                     service_id,
                     user_id,
                     name,
@@ -7730,18 +7752,18 @@ elif form_type == "service_update":
                     price,
                     pricing_type=pricing_type,
                     duration_minutes=duration_minutes,
-                ):
+                )
+
+                if success:
                     return redirect(lang_url_for("settings"))
                 else:
                     feedback_message = "Service could not be updated."
                     feedback_type = "error"
 
-        elif form_type == "service_toggle":
-            # Disabled to prevent conflicts with activate/deactivate routes
-            return redirect(lang_url_for("settings"))
-
+        # -------------------------
+        # PROFILE SAVE
+        # -------------------------
         else:
-            # PROFILE SAVE
             uploaded_logo_file = request.files.get("logo_file")
             uploaded_logo_url = None
 
@@ -7781,10 +7803,12 @@ elif form_type == "service_update":
 
             conn = get_db_connection()
             cur = conn.cursor()
+
             cur.execute(
                 "UPDATE users SET language = %s WHERE id = %s",
                 (normalize_lang(request.form.get("language") or lang), user_id),
             )
+
             conn.commit()
             cur.close()
             conn.close()
@@ -7794,6 +7818,26 @@ elif form_type == "service_update":
             feedback_type = "success"
 
     edit_id = request.args.get("edit_service")
+    if edit_id:
+        try:
+            editing_service = get_service_by_id(int(edit_id), user_id)
+        except:
+            editing_service = None
+
+    services = get_user_services(user_id, include_inactive=True)
+
+    return render_template(
+        "settings.html",
+        profile=profile,
+        feedback_message=feedback_message,
+        feedback_type=feedback_type,
+        payment_setup=sync_stripe_connect_status_for_user(user_id),
+        current_plan=normalize_plan_key(user.get("plan") or "free"),
+        lang=lang,
+        services=services,
+        editing_service=editing_service,
+        notification_preferences=notification_preferences,
+    )
     if edit_id:
         try:
             editing_service = get_service_by_id(int(edit_id), user_id)
