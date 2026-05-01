@@ -457,6 +457,7 @@ async function sendMessage() {
 }
 
 function goBackToList() {
+    autoOpened = true;
     currentConversationId = null;
 
     // hide chat
@@ -481,11 +482,20 @@ function goBackToList() {
 // -------------------------
 // AUTO OPEN LATEST CONVERSATION
 // -------------------------
+let autoOpened = false;
+
 window.addEventListener("load", () => {
+    if (autoOpened) return;
+
     const firstConvo = document.querySelector(".convo-item");
 
     if (firstConvo) {
-        const convoId = firstConvo.getAttribute("onclick").match(/\d+/)[0];
+        autoOpened = true;
+
+        const convoId = firstConvo
+            .getAttribute("onclick")
+            .match(/\d+/)[0];
+
         openConversation(convoId, firstConvo);
     }
 });
