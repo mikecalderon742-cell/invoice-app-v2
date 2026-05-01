@@ -2007,27 +2007,42 @@ def client_dashboard():
             }
         )
 
-    client_requests = []
-    for row in request_rows:
-        client_requests.append(
-            {
-                "id": row[0],
-                "business_user_id": row[1],
-                "business_name": row[2] or "Business",
-                "business_logo_url": row[3] or "",
-                "service_title_snapshot": row[4] or "",
-                "service_price_snapshot": float(row[5] or 0),
-                "status": row[6] or "requested",
-                "request_details": row[7] or "",
-                "preferred_date_text": row[8] or "",
-                "preferred_time_text": row[9] or "",
-                "quantity": int(row[10] or 1),
-                "created_at": row[11],
-                "updated_at": row[12],
-                "message_count": int(row[13] or 0),
-                "latest_message_body": row[14] or "",
-            }
+client_requests = []
+for row in request_rows:
+    client_requests.append(
+        {
+            "id": row[0],
+            "business_user_id": row[1],
+            "business_name": row[2] or "Business",
+            "business_logo_url": row[3] or "",
+            "service_title_snapshot": row[4] or "",
+            "service_price_snapshot": float(row[5] or 0),
+            "status": row[6] or "requested",
+            "request_details": row[7] or "",
+            "preferred_date_text": row[8] or "",
+            "preferred_time_text": row[9] or "",
+            "quantity": int(row[10] or 1),
+            "created_at": row[11],
+            "updated_at": row[12],
+            "message_count": int(row[13] or 0),
+            "latest_message_body": row[14] or "",
+        }
+    )
+
+# -------------------------
+# ATTACH CONVERSATION IDS (SAFE)
+# -------------------------
+for req in client_requests:
+    try:
+        conversation_id = get_or_create_conversation(
+            business_user_id=req["business_user_id"],
+            client_user_id=client_user_id,
+            service_request_id=req["id"],
         )
+        req["conversation_id"] = conversation_id
+    except Exception as e:
+        logger.warning("Conversation attach failed: %s", e)
+        req["conversation_id"] = None
 
 for req in client_requests:
     conversation_id = get_or_create_conversation(
