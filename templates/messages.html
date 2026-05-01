@@ -424,9 +424,10 @@ let lastSenderId = null;
 
 async function openConversation(id, el = null) {
     currentConversationId = id;
+
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed"; /* ✅ HARD LOCK SCROLL */
+    document.body.style.position = "fixed";
 
     document.querySelector(".convo-list").style.display = "none";
     document.querySelector(".chat-panel").style.display = "flex";
@@ -497,24 +498,15 @@ async function sendMessage() {
         })
     });
 
-await loadMessages();
-
-// 🔥 mark as read immediately
-await fetch(`/api/conversation/mark-read/${id}`, {
-    method: "POST"
-});
-
-// 🔥 remove unread badge instantly (UI fix)
-if (el) {
-    const badge = el.querySelector("div[style*='border-radius:999px']");
-    if (badge) badge.remove();
+    await loadMessages();
 }
 
 function goBackToList() {
     currentConversationId = null;
+
     document.documentElement.style.overflow = "auto";
     document.body.style.overflow = "auto";
-    document.body.style.position = ""; /* ✅ UNLOCK */
+    document.body.style.position = "";
 
     document.querySelector(".chat-panel").style.display = "none";
     document.querySelector(".convo-list").style.display = "block";
@@ -528,6 +520,17 @@ function goBackToList() {
     document.querySelectorAll(".convo-item").forEach(i =>
         i.classList.remove("active")
     );
+}
+
+// 🔥 mark as read immediately
+await fetch(`/api/conversation/mark-read/${id}`, {
+    method: "POST"
+});
+
+// 🔥 remove unread badge instantly (UI fix)
+if (el) {
+    const badge = el.querySelector("div[style*='border-radius:999px']");
+    if (badge) badge.remove();
 }
 
 async function deleteConversation(convoId, el) {
