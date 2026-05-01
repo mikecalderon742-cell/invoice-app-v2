@@ -1921,6 +1921,9 @@ def client_dashboard():
     cur = conn.cursor()
 
     try:
+        # -------------------------
+        # FOLLOWED BUSINESSES
+        # -------------------------
         cur.execute(
             """
             SELECT
@@ -1944,6 +1947,9 @@ def client_dashboard():
         )
         followed_rows = cur.fetchall()
 
+        # -------------------------
+        # SERVICE REQUESTS
+        # -------------------------
         cur.execute(
             """
             SELECT
@@ -1990,6 +1996,9 @@ def client_dashboard():
         cur.close()
         conn.close()
 
+    # -------------------------
+    # FORMAT FOLLOWED BUSINESSES
+    # -------------------------
     followed_businesses = []
     for row in followed_rows:
         followed_businesses.append(
@@ -2007,10 +2016,12 @@ def client_dashboard():
             }
         )
 
-client_requests = []
-for row in request_rows:
-    client_requests.append(
-        {
+    # -------------------------
+    # FORMAT SERVICE REQUESTS
+    # -------------------------
+    client_requests = []
+    for row in request_rows:
+        req = {
             "id": row[0],
             "business_user_id": row[1],
             "business_name": row[2] or "Business",
@@ -2027,31 +2038,20 @@ for row in request_rows:
             "message_count": int(row[13] or 0),
             "latest_message_body": row[14] or "",
         }
-    )
 
-# -------------------------
-# ATTACH CONVERSATION IDS (SAFE)
-# -------------------------
-for req in client_requests:
-    try:
-        conversation_id = get_or_create_conversation(
-            business_user_id=req["business_user_id"],
-            client_user_id=client_user_id,
-            service_request_id=req["id"],
-        )
-        req["conversation_id"] = conversation_id
-    except Exception as e:
-        logger.warning("Conversation attach failed: %s", e)
-        req["conversation_id"] = None
+        # attach conversation id (SAFE)
+        try:
+            conversation_id = get_or_create_conversation(
+                business_user_id=req["business_user_id"],
+                client_user_id=client_user_id,
+                service_request_id=req["id"],
+            )
+            req["conversation_id"] = conversation_id
+        except Exception as e:
+            logger.warning("Conversation attach failed: %s", e)
+            req["conversation_id"] = None
 
-for req in client_requests:
-    conversation_id = get_or_create_conversation(
-        business_user_id=req["business_user_id"],
-        client_user_id=client_user_id,
-        service_request_id=req["id"],
-    )
-
-    req["conversation_id"] = conversation_id
+        client_requests.append(req)
 
     return render_template(
         "client_dashboard.html",
