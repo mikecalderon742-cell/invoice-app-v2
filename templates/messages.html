@@ -441,6 +441,10 @@ async function openConversation(id, el = null) {
     document.getElementById("chatAvatar").innerText = name.charAt(0).toUpperCase();
 
     await loadMessages();
+
+    await fetch(`/api/conversation/mark-read/${id}`, {
+        method: "POST"
+    });
 }
 
 async function loadMessages() {
