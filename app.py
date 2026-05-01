@@ -2156,6 +2156,25 @@ def get_messages(conversation_id):
     user_id = user["id"]
 
     # -------------------------
+    # VERIFY USER IS IN CONVERSATION
+    # -------------------------
+    cursor.execute(
+        """
+        SELECT id
+        FROM conversations
+        WHERE id = %s
+          AND (business_user_id = %s OR client_user_id = %s)
+        """,
+        (conversation_id, user_id, user_id),
+    )
+    convo = cursor.fetchone()
+
+    if not convo:
+        cursor.close()
+        conn.close()
+        return jsonify({"messages": []})
+
+    # -------------------------
     # FETCH MESSAGES
     # -------------------------
     cursor.execute(
