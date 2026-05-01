@@ -92,6 +92,7 @@
     right: 10px;
     bottom: 10px;
     min-height: 0; /* 🔥 prevents full page scroll bleed */
+    height: 100%;
 
     margin: 0; /* 👈 FIX */
 
@@ -189,8 +190,7 @@
 
 /* INPUT */
 .chat-input {
-    position: sticky;
-    bottom: 0;
+    flex-shrink: 0;
 
     display: flex;
     align-items: center;
@@ -237,7 +237,7 @@
 
 .delete-btn {
     position: absolute;
-    right: -80px; /* 👈 hide it off screen */
+    right: 0;
     top: 0;
     bottom: 0;
     opacity: 0;
@@ -522,8 +522,8 @@ item.addEventListener("touchmove", e => {
 
     const deleteBtn = item.parentElement.querySelector(".delete-btn");
 
-    if (diff > 50) {
-        item.style.transform = "translateX(-80px)";
+if (diff > 40) {
+    item.style.transform = "translateX(-70px)";
         deleteBtn.style.opacity = "1";
         deleteBtn.style.pointerEvents = "auto";
     }
@@ -538,7 +538,7 @@ item.addEventListener("touchmove", e => {
 item.addEventListener("touchend", () => {
     const deleteBtn = item.parentElement.querySelector(".delete-btn");
 
-    if (item.style.transform === "translateX(-80px)") {
+    if (item.style.transform === "translateX(-70px)") {
         deleteBtn.style.opacity = "1";
         deleteBtn.style.pointerEvents = "auto";
     } else {
