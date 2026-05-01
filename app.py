@@ -5871,6 +5871,18 @@ def request_detail_page(request_id):
     if not service_request:
         return lang_redirect("requests_page")
 
+# -------------------------
+# ENSURE THREAD EXISTS (SAFE FALLBACK)
+# -------------------------
+try:
+    get_or_create_conversation(
+        business_user_id=user_id,
+        client_user_id=service_request.get("client_id"),
+        service_request_id=request_id,
+    )
+except Exception as e:
+    logger.warning("Conversation auto-create failed: %s", e)
+
     # Force-load request details directly from the database so this page
     # still shows the client notes even if tuple column ordering drifted elsewhere.
     conn = get_db_connection()
