@@ -332,10 +332,11 @@
 
 <script>
 let currentConversationId = null;
+let hasLoadedMessages = false;
+let autoOpened = false;
 
 async function openConversation(id, el = null) {
     currentConversationId = id;
-    hasLoadedMessages = false;
 
 // switch screens (FIXED)
 document.querySelector(".convo-list").style.display = "none";
