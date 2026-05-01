@@ -5871,20 +5871,19 @@ def request_detail_page(request_id):
     if not service_request:
         return lang_redirect("requests_page")
 
-# -------------------------
-# ENSURE THREAD EXISTS (SAFE FALLBACK)
-# -------------------------
-try:
-    get_or_create_conversation(
-        business_user_id=user_id,
-        client_user_id=service_request.get("client_id"),
-        service_request_id=request_id,
-    )
-except Exception as e:
-    logger.warning("Conversation auto-create failed: %s", e)
+    # -------------------------
+    # ENSURE THREAD EXISTS (SAFE FALLBACK)
+    # -------------------------
+    try:
+        get_or_create_conversation(
+            business_user_id=user_id,
+            client_user_id=service_request.get("client_id"),
+            service_request_id=request_id,
+        )
+    except Exception as e:
+        logger.warning("Conversation auto-create failed: %s", e)
 
-    # Force-load request details directly from the database so this page
-    # still shows the client notes even if tuple column ordering drifted elsewhere.
+    # ✅ BACK TO NORMAL FLOW (THIS IS THE FIX)
     conn = get_db_connection()
     cur = conn.cursor()
     try:
@@ -5910,6 +5909,7 @@ except Exception as e:
     request_events = get_service_request_events_for_user(request_id, user_id)
     request_photos = get_service_request_photos(request_id)
     request_messages = get_service_request_messages(request_id, user_id)
+
     linked_invoice = None
     if service_request.get("invoice_id"):
         linked_invoice = get_invoice_summary_for_user(service_request["invoice_id"], user_id)
