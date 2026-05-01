@@ -2232,6 +2232,21 @@ def get_messages(conversation_id):
         return jsonify({"messages": []})
 
     # -------------------------
+    # MARK MESSAGES AS READ (DO THIS FIRST)
+    # -------------------------
+    cursor.execute(
+        """
+        UPDATE messages
+        SET is_read = TRUE
+        WHERE conversation_id = %s
+          AND sender_user_id != %s
+        """,
+        (conversation_id, user_id),
+    )
+
+    conn.commit()
+
+    # -------------------------
     # FETCH MESSAGES
     # -------------------------
     cursor.execute(
@@ -2246,17 +2261,21 @@ def get_messages(conversation_id):
 
     rows = cursor.fetchall()
 
-    cursor.execute(
-        """
-        UPDATE messages
-        SET is_read = TRUE
-        WHERE conversation_id = %s
-        AND sender_user_id != %s
-        """,
-        (conversation_id, user_id),
-     )
+    messages = [
+        {
+            "id": r[0],
+            "conversation_id": r[1],
+            "sender_user_id": r[2],
+            "message_text": r[3],
+            "created_at": r[4].isoformat() if r[4] else None,
+        }
+        for r in rows
+    ]
 
-     conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"messages": messages})
 
 
 @app.route("/api/create-test-convo")
