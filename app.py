@@ -1724,6 +1724,22 @@ def send_message(conversation_id: int, sender_user_id: int, message_text: str):
         conn.commit()
 
         # -------------------------
+        # KEEP CONVERSATION FRESH (ORDERING FIX)
+        # -------------------------
+        try:
+            cur.execute(
+                """
+                UPDATE conversations
+                SET created_at = %s
+                WHERE id = %s
+                """,
+                (now_local(), conversation_id),
+            )
+            conn.commit()
+        except Exception as e:
+            logger.warning("Conversation timestamp update failed: %s", e)
+
+        # -------------------------
         # TRIGGER PUSH NOTIFICATION
         # -------------------------
         try:
@@ -2013,8 +2029,14 @@ def client_dashboard():
             }
         )
 
-    for req in client_requests:
-        req["messages"] = get_service_request_messages(req["id"], req["business_user_id"])
+for req in client_requests:
+    conversation_id = get_or_create_conversation(
+        business_user_id=req["business_user_id"],
+        client_user_id=client_user_id,
+        service_request_id=req["id"],
+    )
+
+    req["conversation_id"] = conversation_id
 
     return render_template(
         "client_dashboard.html",
@@ -2263,7 +2285,7 @@ def get_messages(conversation_id):
     if not convo:
         cursor.close()
         conn.close()
-        return jsonify({"messages": []})
+        return jsonify({"error": "Unauthorized"}), 403
 
     # -------------------------
     # MARK MESSAGES AS READ (DO THIS FIRST)
