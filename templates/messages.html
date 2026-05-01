@@ -509,21 +509,6 @@ function goBackToList() {
 // -------------------------
 let autoOpened = false;
 
-window.addEventListener("load", () => {
-    if (autoOpened) return;
-
-    const firstConvo = document.querySelector(".convo-item");
-
-    if (firstConvo) {
-        autoOpened = true;
-
-        const convoId = firstConvo
-            .getAttribute("onclick")
-            .match(/\d+/)[0];
-
-        openConversation(convoId, firstConvo);
-    }
-});
 </script>
 
 {% endblock %}
