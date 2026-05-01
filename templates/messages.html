@@ -11,12 +11,10 @@
     min-height: calc(100vh - 80px);
     overflow: hidden;
 
-    background: linear-gradient(
-        180deg,
-        #eef2f7 0%,
-        #e6ecf5 40%,
-        #dde5f0 100%
-    );
+    background:
+        radial-gradient(circle at top left, #38bdf8 0%, transparent 40%),
+        radial-gradient(circle at bottom right, #6366f1 0%, transparent 40%),
+        linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
 }
 
 /* LEFT PANEL */
@@ -24,26 +22,28 @@
     flex: 1;
     overflow-y: auto;
 
-    margin: 12px;
+    margin: 14px;
     padding-bottom: 20px;
 
-    background: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.08);
 
-    backdrop-filter: blur(18px);
+    backdrop-filter: blur(20px);
 
-    border-radius: 24px;
+    border-radius: 26px;
 
     box-shadow:
-        0 10px 30px rgba(0,0,0,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.6);
+        0 20px 40px rgba(0,0,0,0.35);
 }
 
 .convo-header {
-    padding: 14px 16px;
+    padding: 16px;
+
     font-weight: 700;
-    font-size: 16px;
-    border-bottom: 1px solid #e5e7eb;
-    background: #ffffff;
+    font-size: 18px;
+
+    color: white;
+
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .convo-item {
@@ -68,7 +68,7 @@
 }
 
 .convo-item:hover {
-    background: #f8fafc;
+    background: rgba(255,255,255,0.08);
 }
 
 .convo-item-wrapper {
@@ -83,9 +83,11 @@
     height: 100%;
     width: 100%;
 
+    color: white;
+
     margin: 12px;
 
-    background: rgba(255,255,255,0.75);
+    background: rgba(15,23,42,0.85);
 
     backdrop-filter: blur(20px);
 
@@ -103,7 +105,7 @@
 
     padding: 16px;
 
-    background: transparent;
+    color: white;
 
     font-weight: 600;
     font-size: 15px;
@@ -144,21 +146,24 @@
 }
 
 .bubble.them {
-    background: rgba(255,255,255,0.85);
-    color: #111827;
+    background: rgba(255,255,255,0.08);
+    color: #e5e7eb;
 
-    border: 1px solid rgba(0,0,0,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
 
     align-self: flex-start;
+
+    backdrop-filter: blur(10px);
 }
 
-.bubble.them {
-    background: rgba(255,255,255,0.85);
-    color: #111827;
+.bubble.me {
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
 
-    border: 1px solid rgba(0,0,0,0.03);
+    color: white;
 
-    align-self: flex-start;
+    align-self: flex-end;
+
+    box-shadow: 0 6px 18px rgba(99,102,241,0.5);
 }
 
 .timestamp {
@@ -179,7 +184,7 @@
 
     border-radius: 999px;
 
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.08);
 
     backdrop-filter: blur(10px);
 
@@ -238,9 +243,12 @@
 .convo-item {
     position: relative;
     z-index: 2;
-    background: white;
 
-    transition: transform 0.2s ease;
+    background: rgba(255,255,255,0.04);
+
+    border-radius: 16px;
+
+    transition: all 0.2s ease;
 }
 </style>
 
@@ -288,7 +296,7 @@
 <div style="
     font-weight:600;
     font-size:15px;
-    color:#0f172a;
+    color:white;
 
     white-space:nowrap;
     overflow:hidden;
@@ -300,7 +308,7 @@
 
                     <div style="
                         font-size:13px;
-                        color:#6b7280;
+                        color:rgba(255,255,255,0.7);
                         white-space:nowrap;
                         overflow:hidden;
                         text-overflow:ellipsis;
@@ -312,7 +320,8 @@
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-left:10px;">
 
                     {% if convo.last_message_time %}
-                    <div style="font-size:11px; color:#9ca3af;">
+                    <div style="font-size:11px; color:rgba(255,255,255,0.5);
+font-size:10px;">
                         {{ convo.last_message_time }}
                     </div>
                     {% endif %}
@@ -418,11 +427,11 @@ function appendMessage(msg) {
     const bubble = document.createElement("div");
     bubble.classList.add("bubble");
 
-    if (msg.sender_user_id == {{ current_user.id }}) {
-        bubble.classList.add("me");
-    } else {
-        bubble.classList.add("them");
-    }
+if (msg.sender_user_id == {{ current_user.id }}) {
+    bubble.classList.add("me");
+} else {
+    bubble.classList.add("them");
+}
 
     bubble.innerText = msg.message_text;
     box.appendChild(bubble);
