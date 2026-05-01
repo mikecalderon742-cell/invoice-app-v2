@@ -86,25 +86,22 @@
     display: none;
     flex-direction: column;
 
-    position: absolute; /* 👈 FIX */
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    min-height: 0; /* 🔥 prevents full page scroll bleed */
-    height: 100%;
+    position: fixed; /* 🔥 KEY FIX */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
-    margin: 0; /* 👈 FIX */
+    margin: 0;
 
-    background: rgba(15,23,42,0.85);
+    background: rgba(15,23,42,0.95);
     backdrop-filter: blur(20px);
 
-    border-radius: 24px;
+    border-radius: 0; /* full screen = no cut edges */
 
-    overflow: hidden;
+    overflow: hidden; /* 🔥 prevents page scroll */
 
-    box-shadow:
-        0 20px 60px rgba(0,0,0,0.35);
+    z-index: 9999;
 }
 
 /* HEADER */
@@ -402,6 +399,7 @@ let lastSenderId = null;
 
 async function openConversation(id, el = null) {
     currentConversationId = id;
+    document.body.style.overflow = "hidden"; // 🔥 LOCK PAGE
 
     document.querySelector(".convo-list").style.display = "none";
     document.querySelector(".chat-panel").style.display = "flex";
@@ -477,6 +475,7 @@ async function sendMessage() {
 
 function goBackToList() {
     currentConversationId = null;
+    document.body.style.overflow = "auto"; // 🔥 UNLOCK PAGE
 
     document.querySelector(".chat-panel").style.display = "none";
     document.querySelector(".convo-list").style.display = "block";
