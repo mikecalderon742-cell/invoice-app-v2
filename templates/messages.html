@@ -20,6 +20,8 @@
 
     overflow-y: auto;
 
+    transition: opacity 0.15s ease;
+
     background: #ffffff;
 
     border-top-left-radius: 16px;
@@ -71,7 +73,7 @@
     flex-direction: column;
 
     height: 100%;
-    overflow: hidden;
+    width: 100%;
 
     background: #f8fafc;
 }
@@ -334,13 +336,16 @@ let currentConversationId = null;
 async function openConversation(id, el = null) {
     currentConversationId = id;
 
-    // switch screens
-    document.querySelector(".convo-list").style.display = "none";
-    document.querySelector(".chat-panel").style.display = "flex";
+// switch screens (FIXED)
+document.querySelector(".convo-list").style.display = "none";
 
-    // highlight
-    document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
-    if (el) el.classList.add("active");
+requestAnimationFrame(() => {
+    document.querySelector(".chat-panel").style.display = "flex";
+});
+
+// highlight
+document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
+if (el) el.classList.add("active");
 
     const name = el?.dataset?.name || "Conversation";
 
