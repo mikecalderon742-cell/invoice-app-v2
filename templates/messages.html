@@ -335,6 +335,7 @@ let currentConversationId = null;
 
 async function openConversation(id, el = null) {
     currentConversationId = id;
+    hasLoadedMessages = false;
 
 // switch screens (FIXED)
 document.querySelector(".convo-list").style.display = "none";
@@ -359,24 +360,43 @@ if (el) el.classList.add("active");
     await loadMessages();
 }
 
+let hasLoadedMessages = false;
+
 async function loadMessages() {
-    lastSenderId = null;
     if (!currentConversationId) return;
 
-    const res = await fetch(`/api/messages/${currentConversationId}`);
-    const data = await res.json();
+    try {
+        const res = await fetch(`/api/messages/${currentConversationId}`);
+        const data = await res.json();
 
-    const box = document.getElementById("chatMessages");
-    box.innerHTML = "";
+        const box = document.getElementById("chatMessages");
 
-    if (!data.messages.length) {
-        box.innerHTML = '<p style="opacity:0.6;">No messages yet</p>';
-        return;
+        // 🚫 prevent wipe from empty/duplicate calls
+        if (!data.messages || data.messages.length === 0) {
+            if (hasLoadedMessages) {
+                console.warn("Ignored empty message response");
+                return;
+            }
+
+            box.innerHTML = '<p style="opacity:0.6;">No messages yet</p>';
+            return;
+        }
+
+        // ✅ only clear when valid data
+        box.innerHTML = "";
+
+        // reset grouping
+        lastSenderId = null;
+
+        data.messages.forEach(msg => appendMessage(msg));
+
+        box.scrollTop = box.scrollHeight;
+
+        hasLoadedMessages = true;
+
+    } catch (err) {
+        console.error("Message load failed", err);
     }
-
-    data.messages.forEach(msg => appendMessage(msg));
-
-    box.scrollTop = box.scrollHeight;
 }
 
 let lastSenderId = null;
