@@ -60,9 +60,29 @@
 
     width: 100%;
 
-    background: transparent;
+    background: rgba(255,255,255,0.05);
 
-    transition: all 0.2s ease;
+    border-radius: 18px;
+
+    transition: all 0.25s ease;
+
+    backdrop-filter: blur(10px);
+}
+
+/* subtle glow on touch */
+.convo-item:active {
+    transform: scale(0.97);
+    background: rgba(255,255,255,0.12);
+}
+
+/* hover (desktop too) */
+.convo-item:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* spacing between cards */
+.convo-item-wrapper {
+    padding: 6px 10px;
 }
 
 .convo-item:active {
