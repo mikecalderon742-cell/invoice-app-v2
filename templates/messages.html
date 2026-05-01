@@ -159,7 +159,7 @@
 
 {% for convo in conversations %}
 <div class="convo-item"
-     onclick="openConversation({{ convo.id }}, this)"
+     onclick="handleClick(event, {{ convo.id }}, this)"
      onmousedown="startHold(event, {{ convo.id }}, this)"
      onmouseup="cancelHold()"
      onmouseleave="cancelHold()"
@@ -222,6 +222,8 @@
 </div>
 
 <script>
+let holdTimer = null;
+let isHolding = false;
 let currentConversationId = null;
 let lastSenderId = null;
 
@@ -321,20 +323,32 @@ function goBackToList() {
 // HOLD TO DELETE LOGIC
 // -------------------------
 let holdTimer = null;
+let isHolding = false;
 
 function startHold(e, convoId, el) {
+    isHolding = false;
+
     holdTimer = setTimeout(() => {
+        isHolding = true;
         showDeleteConfirm(convoId, el);
-    }, 600); // hold time (ms)
+    }, 600);
 }
 
 function cancelHold() {
     clearTimeout(holdTimer);
 }
 
+function handleClick(e, convoId, el) {
+    if (isHolding) {
+        isHolding = false;
+        return;
+    }
+
+    openConversation(convoId, el);
+}
+
 function showDeleteConfirm(convoId, el) {
     const confirmDelete = confirm("Delete this conversation?");
-
     if (!confirmDelete) return;
 
     deleteConversation(convoId, el);
@@ -346,10 +360,7 @@ async function deleteConversation(convoId, el) {
             method: "POST"
         });
 
-        // remove from UI
         el.remove();
-
-        // reset view
         goBackToList();
 
     } catch (err) {
