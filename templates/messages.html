@@ -201,7 +201,6 @@ bottom: 0;
     padding: 10px 14px;
 
     border-radius: 999px;
-
     border: none;
 
     background: transparent;
@@ -209,6 +208,13 @@ bottom: 0;
     outline: none;
 
     font-size: 16px;
+
+    color: white; /* ✅ FIX: text visible */
+    caret-color: #38bdf8; /* ✅ cursor visible */
+}
+
+.chat-input input::placeholder {
+    color: rgba(255,255,255,0.4); /* ✅ placeholder visible */
 }
 
 .chat-input button {
@@ -396,6 +402,7 @@ async function openConversation(id, el = null) {
     currentConversationId = id;
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed"; /* ✅ HARD LOCK SCROLL */
 
     document.querySelector(".convo-list").style.display = "none";
     document.querySelector(".chat-panel").style.display = "flex";
@@ -473,6 +480,7 @@ function goBackToList() {
     currentConversationId = null;
     document.documentElement.style.overflow = "auto";
     document.body.style.overflow = "auto";
+    document.body.style.position = ""; /* ✅ UNLOCK */
 
     document.querySelector(".chat-panel").style.display = "none";
     document.querySelector(".convo-list").style.display = "block";
