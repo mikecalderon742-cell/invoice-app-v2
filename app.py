@@ -2206,20 +2206,33 @@ def delete_conversation(conversation_id):
 @app.route("/api/conversation/mark-read/<int:conversation_id>", methods=["POST"])
 @login_required
 def mark_conversation_read(conversation_id):
+    user = get_current_user()
+    user_id = user["id"]
+
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        UPDATE messages
-        SET is_read = TRUE
-        WHERE conversation_id = %s
-        AND recipient_user_id = %s
-        AND is_read = FALSE
-    """, (conversation_id, current_user.id))
+    try:
+        cur.execute(
+            """
+            UPDATE messages
+            SET is_read = TRUE
+            WHERE conversation_id = %s
+              AND sender_user_id != %s
+              AND COALESCE(is_read, FALSE) = FALSE
+            """,
+            (conversation_id, user_id),
+        )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Mark read failed: %s", e)
+
+    finally:
+        cur.close()
+        conn.close()
 
     return jsonify({"success": True})
 
