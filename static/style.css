@@ -1625,7 +1625,7 @@ body.dark .chart-card {
     position: fixed;
     right: 24px;
     bottom: 24px;
-    z-index: 1500;
+    z-index: 900; /* lowered so it doesn’t block chat/send button */
     width: 54px;
     height: 54px;
     border-radius: 50%;
@@ -4273,4 +4273,11 @@ canvas.signature-canvas {
     flex: 0 0 auto;
     fill: #facc15;
     filter: drop-shadow(0 4px 10px rgba(250, 204, 21, 0.35));
+
+.chat-input-area,
+.message-input-container,
+.chat-footer {
+    position: relative;
+    z-index: 1200; /* ABOVE floating button */
+}
 }

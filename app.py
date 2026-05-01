@@ -2120,10 +2120,10 @@ def messages_page():
 
         LEFT JOIN LATERAL (
             SELECT COUNT(*) AS unread_count
-            FROM messages
-            WHERE conversation_id = c.id
-              AND COALESCE(is_read, FALSE) = FALSE
-              AND sender_user_id != %s
+            FROM messages m2
+            WHERE m2.conversation_id = c.id
+              AND m2.sender_user_id != %s
+              AND COALESCE(m2.is_read, FALSE) = FALSE
         ) um ON TRUE
 
         WHERE c.business_user_id = %s
