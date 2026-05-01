@@ -2203,6 +2203,27 @@ def delete_conversation(conversation_id):
     return jsonify({"success": True})
 
 
+@app.route("/api/conversation/mark-read/<int:conversation_id>", methods=["POST"])
+@login_required
+def mark_conversation_read(conversation_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE messages
+        SET is_read = TRUE
+        WHERE conversation_id = %s
+        AND recipient_user_id = %s
+        AND is_read = FALSE
+    """, (conversation_id, current_user.id))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"success": True})
+
+
 @app.route("/api/messages/<int:conversation_id>", methods=["GET"])
 @login_required
 def get_messages(conversation_id):

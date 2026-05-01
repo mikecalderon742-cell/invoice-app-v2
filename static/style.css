@@ -4280,4 +4280,22 @@ canvas.signature-canvas {
     position: relative;
     z-index: 1200; /* ABOVE floating button */
 }
+
+/* =========================
+   CHAT INPUT LAYER FIX (DESKTOP + MOBILE SAFE)
+   ========================= */
+
+.chat-panel,
+.chat-input-area,
+.message-input-container,
+.chat-footer {
+    position: relative;
+    z-index: 2000; /* force ABOVE floating button */
+}
+
+@media (min-width: 769px) {
+    .floating-btn {
+        z-index: 800; /* even lower on desktop */
+    }
+}
 }
