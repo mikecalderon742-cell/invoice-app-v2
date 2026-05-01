@@ -2146,6 +2146,38 @@ def messages_page():
     )
 
 
+@app.route("/api/conversation/delete/<int:conversation_id>", methods=["POST"])
+@login_required
+def delete_conversation(conversation_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # delete messages first
+        cur.execute(
+            "DELETE FROM messages WHERE conversation_id = %s",
+            (conversation_id,)
+        )
+
+        # delete conversation
+        cur.execute(
+            "DELETE FROM conversations WHERE id = %s",
+            (conversation_id,)
+        )
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Delete conversation failed: %s", e)
+
+    finally:
+        cur.close()
+        conn.close()
+
+    return jsonify({"success": True})
+
+
 @app.route("/api/messages/<int:conversation_id>", methods=["GET"])
 @login_required
 def get_messages(conversation_id):

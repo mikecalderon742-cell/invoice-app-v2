@@ -160,6 +160,11 @@
 {% for convo in conversations %}
 <div class="convo-item"
      onclick="openConversation({{ convo.id }}, this)"
+     onmousedown="startHold(event, {{ convo.id }}, this)"
+     onmouseup="cancelHold()"
+     onmouseleave="cancelHold()"
+     ontouchstart="startHold(event, {{ convo.id }}, this)"
+     ontouchend="cancelHold()"
      data-name="{{ convo.display_name }}">
 
     <div style="display:flex; align-items:center; gap:12px; width:100%;">
@@ -310,6 +315,46 @@ function goBackToList() {
     document.querySelectorAll(".convo-item").forEach(i =>
         i.classList.remove("active")
     );
+}
+
+// -------------------------
+// HOLD TO DELETE LOGIC
+// -------------------------
+let holdTimer = null;
+
+function startHold(e, convoId, el) {
+    holdTimer = setTimeout(() => {
+        showDeleteConfirm(convoId, el);
+    }, 600); // hold time (ms)
+}
+
+function cancelHold() {
+    clearTimeout(holdTimer);
+}
+
+function showDeleteConfirm(convoId, el) {
+    const confirmDelete = confirm("Delete this conversation?");
+
+    if (!confirmDelete) return;
+
+    deleteConversation(convoId, el);
+}
+
+async function deleteConversation(convoId, el) {
+    try {
+        await fetch(`/api/conversation/delete/${convoId}`, {
+            method: "POST"
+        });
+
+        // remove from UI
+        el.remove();
+
+        // reset view
+        goBackToList();
+
+    } catch (err) {
+        console.error("Delete failed", err);
+    }
 }
 </script>
 
