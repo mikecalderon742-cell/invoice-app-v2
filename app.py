@@ -1713,9 +1713,10 @@ def send_message(conversation_id: int, sender_user_id: int, message_text: str):
             INSERT INTO messages (
                 conversation_id,
                 sender_user_id,
-                message_text
+                message_text,
+                is_read
             )
-            VALUES (%s, %s, %s)
+            VALUES (%s, %s, %s, FALSE)
             """,
             (conversation_id, sender_user_id, message_text),
         )
@@ -10512,6 +10513,26 @@ def increment_unread_count(conversation_id, user_id):
     except Exception as e:
         conn.rollback()
         logger.warning("Unread increment failed: %s", e)
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_total_unread_messages(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(unread_count), 0)
+            FROM conversations
+            WHERE business_user_id = %s
+               OR client_user_id = %s
+            """,
+            (user_id, user_id),
+        )
+        result = cur.fetchone()
+        return result[0] if result else 0
     finally:
         cur.close()
         conn.close()
