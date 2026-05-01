@@ -6038,6 +6038,14 @@ def send_request_message(request_id):
                 message_text=message_body,
             )
 
+            # -------------------------
+            # MARK UNREAD FOR CLIENT
+            # -------------------------
+            increment_unread_count(
+                conversation_id,
+                client_user_id
+            )
+
         conn.commit()
 
         # notify client if exists
@@ -10486,6 +10494,27 @@ def ensure_messages_is_read_column():
 
 # Run once on startup
 ensure_messages_is_read_column()
+
+
+def increment_unread_count(conversation_id, user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE conversations
+            SET unread_count = COALESCE(unread_count, 0) + 1
+            WHERE id = %s
+            """,
+            (conversation_id,),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning("Unread increment failed: %s", e)
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route("/ios/activate-subscription", methods=["POST"])
