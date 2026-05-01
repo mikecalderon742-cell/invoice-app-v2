@@ -103,20 +103,22 @@
     display: none;
     flex-direction: column;
 
-position: fixed;
-top: 80px;
-left: 0;
-right: 0;
-bottom: 0;
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
     background: rgba(15,23,42,0.95);
     backdrop-filter: blur(20px);
 
-    border-radius: 0; /* full screen = no cut edges */
+    border-radius: 0;
 
-    overflow: hidden; /* 🔥 prevents page scroll */
+    overflow: hidden;
 
     z-index: 10000;
+
+    pointer-events: none; /* 🔥 FIX */
 }
 
 /* HEADER */
@@ -427,11 +429,11 @@ async function openConversation(id, el = null) {
 
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
 
     document.querySelector(".convo-list").style.display = "none";
-    document.querySelector(".chat-panel").style.display = "flex";
-
+    const panel = document.querySelector(".chat-panel");
+    panel.style.display = "flex";
+    panel.style.pointerEvents = "auto";
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
@@ -512,7 +514,9 @@ function goBackToList() {
     document.body.style.overflow = "auto";
     document.body.style.position = "";
 
-    document.querySelector(".chat-panel").style.display = "none";
+    const panel = document.querySelector(".chat-panel");
+    panel.style.display = "none";
+    panel.style.pointerEvents = "none";
     document.querySelector(".convo-list").style.display = "block";
 
     document.getElementById("chatMessages").innerHTML =
