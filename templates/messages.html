@@ -83,7 +83,7 @@
 
 /* RIGHT PANEL */
 .chat-panel {
-    display: flex;
+    display: none;
     flex-direction: column;
 
     position: absolute; /* 👈 FIX */
@@ -373,7 +373,7 @@ font-size:10px;">
 {% endfor %}
     </div>
 
-    <div class="chat-panel">
+    <div class="chat-panel" style="display:none;">
 
         <div class="chat-header">
             <button onclick="goBackToList()">←</button>
