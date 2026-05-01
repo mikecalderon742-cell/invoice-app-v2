@@ -10669,6 +10669,74 @@ def get_or_create_conversation(business_user_id: int, client_user_id: int):
         conn.close()
 
 
+def send_message_in_conversation(
+    business_user_id: int,
+    client_user_id: int,
+    sender_user_id: int,
+    message_text: str,
+):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # 1. Ensure conversation exists
+        conversation_id = get_or_create_conversation(
+            business_user_id,
+            client_user_id,
+        )
+
+        if not conversation_id:
+            logger.warning("No conversation could be created.")
+            return None
+
+        # 2. Insert message
+        cur.execute(
+            """
+            INSERT INTO messages (
+                conversation_id,
+                sender_user_id,
+                message_text,
+                created_at,
+                is_read
+            )
+            VALUES (%s, %s, %s, %s, FALSE)
+            RETURNING id
+            """,
+            (
+                conversation_id,
+                sender_user_id,
+                (message_text or "").strip(),
+                now_local(),
+            ),
+        )
+
+        message_id = cur.fetchone()[0]
+
+        # 3. Increment unread count for the OTHER user
+        recipient_user_id = (
+            client_user_id
+            if sender_user_id == business_user_id
+            else business_user_id
+        )
+
+        increment_unread_count(conversation_id, recipient_user_id)
+
+        conn.commit()
+        return {
+            "message_id": message_id,
+            "conversation_id": conversation_id,
+        }
+
+    except Exception as e:
+        conn.rollback()
+        logger.exception("Failed to send message: %s", e)
+        return None
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 def get_total_unread_messages(user_id):
     conn = get_db_connection()
     cur = conn.cursor()
