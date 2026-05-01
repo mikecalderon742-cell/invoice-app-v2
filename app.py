@@ -2053,9 +2053,14 @@ def client_dashboard():
 
         client_requests.append(req)
 
+    # -------------------------
+    # REFRESH USER FROM DB (FIX STALE PROFILE DATA)
+    # -------------------------
+    fresh_user = get_current_user()
+
     return render_template(
         "client_dashboard.html",
-        user=user,
+        user=fresh_user,
         lang=lang,
         followed_businesses=followed_businesses,
         client_requests=client_requests,
