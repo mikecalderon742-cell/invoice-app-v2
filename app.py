@@ -1801,6 +1801,30 @@ def get_conversation_messages(conversation_id: int):
     return messages
 
 
+def get_unread_message_count(user_id: int) -> int:
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM messages m
+        JOIN conversations c ON c.id = m.conversation_id
+        WHERE (c.business_user_id = %s OR c.client_user_id = %s)
+          AND m.sender_user_id != %s
+          AND COALESCE(m.is_read, FALSE) = FALSE
+        """,
+        (user_id, user_id, user_id),
+    )
+
+    count = cur.fetchone()[0] or 0
+
+    cur.close()
+    conn.close()
+
+    return int(count)
+
+
 # =========================
 # CLIENT ACCOUNT SYSTEM
 # =========================
@@ -2222,38 +2246,17 @@ def get_messages(conversation_id):
 
     rows = cursor.fetchall()
 
-    # -------------------------
-    # MARK MESSAGES AS READ
-    # -------------------------
     cursor.execute(
         """
         UPDATE messages
         SET is_read = TRUE
         WHERE conversation_id = %s
-          AND sender_user_id != %s
+        AND sender_user_id != %s
         """,
         (conversation_id, user_id),
-    )
+     )
 
-    conn.commit()
-
-    messages = [
-        {
-            "id": r[0],
-            "conversation_id": r[1],
-            "sender_user_id": r[2],
-            "message_text": r[3],
-            "created_at": r[4].isoformat() if r[4] else None,
-        }
-        for r in rows
-    ]
-
-    print("FETCHED MESSAGES:", messages)
-
-    cursor.close()
-    conn.close()
-
-    return jsonify({"messages": messages})
+     conn.commit()
 
 
 @app.route("/api/create-test-convo")
