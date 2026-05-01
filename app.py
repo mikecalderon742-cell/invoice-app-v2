@@ -6006,15 +6006,8 @@ def send_request_message(request_id):
         client_email = row[0]
 
         # -------------------------
-        # SEND INTO MAIN MESSAGING SYSTEM
+        # RESOLVE CLIENT USER FIRST (FIX)
         # -------------------------
-        conversation_id = get_or_create_conversation(
-            business_user_id=user_id,
-            client_user_id=None,  # will resolve below
-            service_request_id=request_id,
-        )
-
-        # resolve client_user_id from email
         client_user_id = None
         if client_email:
             cur.execute(
@@ -6028,6 +6021,15 @@ def send_request_message(request_id):
             client_row = cur.fetchone()
             if client_row:
                 client_user_id = client_row[0]
+
+        # -------------------------
+        # SEND INTO MAIN MESSAGING SYSTEM (FIXED)
+        # -------------------------
+        conversation_id = get_or_create_conversation(
+            business_user_id=user_id,
+            client_user_id=client_user_id,
+            service_request_id=request_id,
+        )
 
         if conversation_id and client_user_id:
             send_message(
