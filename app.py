@@ -3813,6 +3813,7 @@ def get_business_profile_by_user_id(user_id: int):
 
     conn = get_db_connection()
     cursor = conn.cursor()
+
     cursor.execute(
         """
         SELECT id, business_name, email, phone, website, address,
@@ -3824,7 +3825,9 @@ def get_business_profile_by_user_id(user_id: int):
         """,
         (user_id,),
     )
+
     row = cursor.fetchone()
+
     cursor.close()
     conn.close()
 
@@ -3836,7 +3839,7 @@ def get_business_profile_by_user_id(user_id: int):
             "phone": "",
             "website": "",
             "address": "",
-            "logo_url": "",
+            "logo_url": None,
             "brand_color": DEFAULT_BRAND_COLOR,
             "accent_color": DEFAULT_ACCENT_COLOR,
             "default_terms": "",
@@ -3865,69 +3868,7 @@ def get_business_profile_by_user_id(user_id: int):
         "phone": phone or "",
         "website": website or "",
         "address": address or "",
-        "logo_url": logo_url or "",
-        "brand_color": brand_color or DEFAULT_BRAND_COLOR,
-        "accent_color": accent_color or DEFAULT_ACCENT_COLOR,
-        "default_terms": default_terms or "",
-        "default_notes": default_notes or "",
-        "user_id": user_id,
-    }
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT id, business_name, email, phone, website, address,
-               logo_url, brand_color, accent_color, default_terms, default_notes
-        FROM business_profile
-        WHERE user_id = %s
-        ORDER BY id ASC
-        LIMIT 1
-        """,
-        (user_id,),
-    )
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if not row:
-        return {
-            "id": None,
-            "business_name": DEFAULT_BUSINESS_NAME,
-            "email": "",
-            "phone": "",
-            "website": "",
-            "address": "",
-            "logo_url": "",
-            "brand_color": DEFAULT_BRAND_COLOR,
-            "accent_color": DEFAULT_ACCENT_COLOR,
-            "default_terms": "",
-            "default_notes": "",
-            "user_id": user_id,
-        }
-
-    (
-        bp_id,
-        business_name,
-        email,
-        phone,
-        website,
-        address,
-        logo_url,
-        brand_color,
-        accent_color,
-        default_terms,
-        default_notes,
-    ) = row
-
-    return {
-        "id": bp_id,
-        "business_name": business_name or DEFAULT_BUSINESS_NAME,
-        "email": email or "",
-        "phone": phone or "",
-        "website": website or "",
-        "address": address or "",
-        "logo_url": logo_url or "",
+        "logo_url": logo_url if logo_url else None,
         "brand_color": brand_color or DEFAULT_BRAND_COLOR,
         "accent_color": accent_color or DEFAULT_ACCENT_COLOR,
         "default_terms": default_terms or "",
