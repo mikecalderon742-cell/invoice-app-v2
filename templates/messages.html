@@ -457,21 +457,15 @@ async function openConversation(id, el = null) {
     });
 
 // ✅ FORCE REFRESH OF GLOBAL BADGES
-await fetch("/api/notifications/summary")
-    .then(res => res.json())
-    .then(data => {
-        const count = Number(data.unread_count || 0);
+// ✅ CLEAR MESSAGE BADGES IMMEDIATELY
 
-        document.querySelectorAll(".notification-badge, .sidebar-notification-badge").forEach(badge => {
-            if (count > 0) {
-                badge.textContent = count < 100 ? String(count) : "99+";
-                badge.style.display = "inline-flex";
-            } else {
-                badge.textContent = "";
-                badge.style.display = "none";
-            }
-        });
-    });
+// remove sidebar + navbar message badges
+document.querySelectorAll(".notification-badge, .sidebar-notification-badge").forEach(badge => {
+    if (badge.closest("a")?.href?.includes("/messages")) {
+        badge.textContent = "";
+        badge.style.display = "none";
+    }
+});
 
     // 🔥 REMOVE BADGE FROM UI IMMEDIATELY
     if (el) {
@@ -537,10 +531,17 @@ async function sendMessage() {
 
     await loadMessages();
 
-    // 🔥 FORCE REFRESH LIST (safe for now)
-    location.reload();
-}
+// 🔥 INSTANT UI UPDATE (NO RELOAD)
 
+// reload messages
+await loadMessages();
+
+// remove unread badge from active convo
+const activeItem = document.querySelector(".convo-item.active");
+if (activeItem) {
+    const badge = activeItem.querySelector("div[style*='border-radius:999px']");
+    if (badge) badge.remove();
+}
 function goBackToList() {
     currentConversationId = null;
 
