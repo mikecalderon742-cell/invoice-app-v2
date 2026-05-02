@@ -1225,11 +1225,15 @@
                                 <div class="brand-preview-top">
                                     <div class="brand-preview-top-inner">
                                         <div class="brand-logo-box">
-                                            {% if profile.logo_url %}
-                                                <img src="{{ profile.logo_url }}" alt="Logo preview">
-                                            {% else %}
-                                                <div class="brand-logo-fallback">B</div>
-                                            {% endif %}
+<div style="color:red; font-size:12px;">
+    DEBUG LOGO URL: {{ profile.logo_url }}
+</div>
+
+{% if profile.logo_url %}
+    <img src="{{ profile.logo_url }}" alt="Logo preview">
+{% else %}
+    <div class="brand-logo-fallback">B</div>
+{% endif %}
                                         </div>
                                         <div>
                                             <div class="brand-preview-name">{{ profile.business_name or "BillBeam" }}</div>
