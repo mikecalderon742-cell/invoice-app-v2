@@ -1236,11 +1236,11 @@
   business_profile.logo_url = "{{ business_profile.logo_url }}"
 </div>
 
-{% if profile.logo_url %}
-    <img src="{{ profile.logo_url }}" alt="Logo preview">
-{% else %}
-    <div class="brand-logo-fallback">B</div>
-{% endif %}
+<img src="{{ profile.logo_url }}" alt="Logo preview">
+
+<div style="color:lime; font-size:12px;">
+    RAW VALUE → "{{ profile.logo_url }}"
+</div>
                                         </div>
                                         <div>
                                             <div class="brand-preview-name">{{ profile.business_name or "BillBeam" }}</div>
