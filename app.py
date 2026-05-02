@@ -8145,8 +8145,9 @@ def settings():
 
             new_logo = (request.form.get("logo_url") or "").strip()
 
-            if not new_logo:
-                new_logo = current_logo
+            # 🔥 FIX: prevent "None" from being saved
+            if not new_logo or new_logo.lower() == "none":
+                new_logo = current_logo or ""
 
             upsert_business_profile({
                 "user_id": user_id,  # 🔥 CRITICAL FIX
