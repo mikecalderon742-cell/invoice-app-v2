@@ -1233,7 +1233,7 @@
   profile.logo_url = "{{ profile.logo_url }}"
 </div>
 
-{% if profile.logo_url and profile.logo_url not in ["None", ""] %}
+{% if profile.logo_url and profile.logo_url not in ["None", "", None] %}
     <img src="{{ profile.logo_url }}" alt="Logo preview">
 {% else %}
     <div class="brand-logo-fallback">

@@ -8143,11 +8143,30 @@ def settings():
         else:
             current_logo = profile.get("logo_url")
 
-            new_logo = (request.form.get("logo_url") or "").strip()
+            logo_file = request.files.get("logo_file")
 
-            # prevent "None" from being saved
-            if not new_logo or new_logo.lower() == "none":
-                new_logo = current_logo or ""
+            # ✅ HANDLE FILE UPLOAD FIRST
+            if logo_file and logo_file.filename:
+                import os
+                from werkzeug.utils import secure_filename
+
+                filename = secure_filename(logo_file.filename)
+
+                upload_folder = os.path.join("static", "uploads")
+                os.makedirs(upload_folder, exist_ok=True)
+
+                file_path = os.path.join(upload_folder, filename)
+                logo_file.save(file_path)
+
+                new_logo = f"/static/uploads/{filename}"
+
+            else:
+                # fallback to URL input
+                new_logo = (request.form.get("logo_url") or "").strip()
+
+                # prevent "None" from being saved
+                if not new_logo or new_logo.lower() == "none":
+                    new_logo = current_logo or ""
 
             upsert_business_profile({
                 "user_id": user_id,
@@ -8161,14 +8180,15 @@ def settings():
                 "accent_color": request.form.get("accent_color"),
             })
 
-            # ✅ THIS MUST BE HERE (inside same indent)
+            # reload fresh profile after save
             profile = get_business_profile()
 
             feedback_message = "Business profile updated successfully."
             feedback_type = "success"
 
-    services = get_user_services(user_id, include_inactive=True)
-   
+    # -------------------------
+    # AFTER POST HANDLING
+    # -------------------------
     edit_id = request.args.get("edit_id")
 
     if edit_id:
