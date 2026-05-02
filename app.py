@@ -8161,6 +8161,8 @@ def settings():
                 "accent_color": request.form.get("accent_color"),
             })
 
+    profile = get_business_profile()
+
             # 🔥 reload fresh profile after save (fixes logo disappearing)
             profile = get_business_profile()
 
@@ -8169,16 +8171,6 @@ def settings():
 
     services = get_user_services(user_id, include_inactive=True)
 
-    return render_template(
-        "settings.html",
-        profile=profile,
-        feedback_message=feedback_message,
-        feedback_type=feedback_type,
-        services=services,
-        editing_service=editing_service,
-        notification_preferences=notification_preferences,
-        lang=lang,
-    )
     if edit_id:
         try:
             editing_service = get_service_by_id(int(edit_id), user_id)

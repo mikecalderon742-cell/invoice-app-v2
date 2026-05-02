@@ -1232,11 +1232,8 @@
 <div style="color:#ef4444; font-size:12px; margin-bottom:6px;">
   profile.logo_url = "{{ profile.logo_url }}"
 </div>
-<div style="color:#22c55e; font-size:12px; margin-bottom:6px;">
-  business_profile.logo_url = "{{ business_profile.logo_url }}"
-</div>
 
-{% if profile.logo_url and profile.logo_url != "None" %}
+{% if profile.logo_url and profile.logo_url not in ["None", ""] %}
     <img src="{{ profile.logo_url }}" alt="Logo preview">
 {% else %}
     <div class="brand-logo-fallback">
