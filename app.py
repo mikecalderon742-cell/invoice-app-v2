@@ -2220,6 +2220,22 @@ def messages_page():
 
     rows = cur.fetchall()
 
+# --- MARK CURRENT CONVERSATION AS READ (SAFE) ---
+conversation_id = request.args.get("conversation_id")
+
+if conversation_id:
+    cur.execute(
+        """
+        UPDATE messages
+        SET is_read = TRUE
+        WHERE conversation_id = %s
+          AND sender_user_id != %s
+          AND COALESCE(is_read, FALSE) = FALSE
+        """,
+        (conversation_id, user_id),
+    )
+    conn.commit()
+
     conversations = []
 
     for row in rows:
