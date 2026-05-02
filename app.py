@@ -8147,6 +8147,7 @@ def settings():
                 "phone": request.form.get("phone"),
                 "website": request.form.get("website"),
                 "address": request.form.get("address"),
+                "logo_url": request.form.get("logo_url"),
                 "brand_color": request.form.get("brand_color"),
                 "accent_color": request.form.get("accent_color"),
             })
