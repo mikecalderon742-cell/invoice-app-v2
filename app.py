@@ -8150,15 +8150,18 @@ def settings():
                 import os
                 from werkzeug.utils import secure_filename
 
-                filename = secure_filename(logo_file.filename)
+                import uuid
 
-                upload_folder = os.path.join("static", "uploads")
+                filename = secure_filename(logo_file.filename)
+                unique_name = f"{uuid.uuid4()}_{filename}"
+
+                upload_folder = os.path.join("/mnt/data", "uploads")
                 os.makedirs(upload_folder, exist_ok=True)
 
-                file_path = os.path.join(upload_folder, filename)
+                file_path = os.path.join(upload_folder, unique_name)
                 logo_file.save(file_path)
 
-                new_logo = f"/static/uploads/{filename}"
+                new_logo = f"/uploads/{unique_name}"
 
             else:
                 # fallback to URL input
@@ -8166,7 +8169,7 @@ def settings():
 
                 # prevent "None" from being saved
                 if not new_logo or new_logo.lower() == "none":
-                    new_logo = current_logo or ""
+                    new_logo = current_logo if current_logo not in [None, "None"] else ""
 
             upsert_business_profile({
                 "user_id": user_id,
@@ -8211,6 +8214,15 @@ def settings():
         editing_service=editing_service,
         notification_preferences=notification_preferences,
     )
+
+
+# -------------------------
+# UPLOADED FILES (LOGO STORAGE)
+# -------------------------
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    from flask import send_from_directory
+    return send_from_directory('/mnt/data/uploads', filename)
 
 
 # -------------------------

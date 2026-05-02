@@ -1226,10 +1226,6 @@
                                     <div class="brand-preview-top-inner">
                                         <div class="brand-logo-box">
 
-<div style="color:#ef4444; font-size:12px; margin-bottom:6px;">
-  profile.logo_url = "{{ profile.logo_url }}"
-</div>
-
 {% if profile.logo_url and profile.logo_url not in ["None", "", None] %}
     <img src="{{ profile.logo_url }}" alt="Logo preview">
 {% else %}
