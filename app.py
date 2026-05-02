@@ -2211,9 +2211,67 @@ def messages_page():
     conn.close()
 
     return render_template(
-        "messages.html",
-        conversations=conversations
+         "messages.html",
+         conversations=conversations,
+         active_messages=active_messages,
+         open_conversation_id=open_conversation_id
     )
+
+
+# -------------------------
+# ACTIVE CONVERSATION (FIX CLICK ISSUE)
+# -------------------------
+open_conversation_id = request.args.get("open")
+
+active_messages = []
+
+if open_conversation_id:
+    try:
+        open_conversation_id = int(open_conversation_id)
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # verify access
+        cur.execute(
+            """
+            SELECT id
+            FROM conversations
+            WHERE id = %s
+              AND (business_user_id = %s OR client_user_id = %s)
+            """,
+            (open_conversation_id, user_id, user_id),
+        )
+        valid = cur.fetchone()
+
+        if valid:
+            cur.execute(
+                """
+                SELECT id, sender_user_id, message_text, created_at
+                FROM messages
+                WHERE conversation_id = %s
+                ORDER BY created_at ASC
+                """,
+                (open_conversation_id,),
+            )
+
+            rows = cur.fetchall()
+
+            active_messages = [
+                {
+                    "id": r[0],
+                    "sender_user_id": r[1],
+                    "message_text": r[2],
+                    "created_at": r[3],
+                }
+                for r in rows
+            ]
+
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        logger.warning("Active conversation load failed: %s", e)
 
 
 @app.route("/api/conversation/delete/<int:conversation_id>", methods=["POST"])
