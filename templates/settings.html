@@ -1225,9 +1225,6 @@
                                 <div class="brand-preview-top">
                                     <div class="brand-preview-top-inner">
                                         <div class="brand-logo-box">
-<div style="color:red; font-size:12px;">
-    DEBUG LOGO URL: {{ profile.logo_url }}
-</div>
 
 <div style="color:#ef4444; font-size:12px; margin-bottom:6px;">
   profile.logo_url = "{{ profile.logo_url }}"
@@ -1240,10 +1237,6 @@
         {{ (profile.business_name or "B")[0] }}
     </div>
 {% endif %}
-
-<div style="color:lime; font-size:12px;">
-    RAW VALUE → "{{ profile.logo_url }}"
-</div>
                                         </div>
                                         <div>
                                             <div class="brand-preview-name">{{ profile.business_name or "BillBeam" }}</div>
