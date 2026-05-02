@@ -665,7 +665,7 @@ body.dark .autism-ribbon {
                 Notifications
             {% endif %}
             {% if unread_notification_count and unread_notification_count > 0 %}
-                <span class="sidebar-notification-badge">
+                <span class="sidebar-message-badge sidebar-notification-badge">
                     {{ unread_notification_count if unread_notification_count < 100 else '99+' }}
                 </span>
             {% endif %}
@@ -915,7 +915,7 @@ body.dark .autism-ribbon {
                         {% endif %}
                     </span>
                     {% if unread_notification_count and unread_notification_count > 0 %}
-                        <span class="notification-badge">
+                        <span class="message-badge notification-badge">
                             {{ unread_notification_count if unread_notification_count < 100 else '99+' }}
                         </span>
                     {% endif %}
@@ -1695,6 +1695,36 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const notificationBadges = document.querySelectorAll(".notification-badge, .sidebar-notification-badge");
+
+const messageBadges = document.querySelectorAll(
+    ".message-badge, .sidebar-message-badge"
+);
+
+async function refreshMessageBadges() {
+    try {
+        const response = await fetch("/api/messages/unread-count");
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const count = Number(data.unread_count || 0);
+
+        messageBadges.forEach((badge) => {
+            if (count > 0) {
+                badge.textContent = count < 100 ? String(count) : "99+";
+                badge.style.display = "inline-flex";
+            } else {
+                badge.textContent = "";
+                badge.style.display = "none";
+            }
+        });
+    } catch (e) {
+        console.warn("Message badge refresh failed:", e);
+    }
+}
+
+refreshMessageBadges();
+setInterval(refreshMessageBadges, 30000);
 
     if (!notificationBadges.length) {
         return;

@@ -6378,6 +6378,42 @@ def api_notifications_summary():
     )
 
 
+@app.route("/api/messages/unread-count", methods=["GET"])
+@login_required
+def get_unread_message_count():
+    user = get_current_user()
+    user_id = user["id"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT COUNT(*)
+            FROM messages m
+            JOIN conversations c ON m.conversation_id = c.id
+            WHERE
+                (c.business_user_id = %s OR c.client_user_id = %s)
+                AND m.sender_user_id != %s
+                AND COALESCE(m.is_read, FALSE) = FALSE
+            """,
+            (user_id, user_id, user_id),
+        )
+
+        count = cur.fetchone()[0] or 0
+
+        return jsonify({"unread_count": count})
+
+    except Exception as e:
+        logger.exception("Unread message count API failed: %s", e)
+        return jsonify({"unread_count": 0})
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 # -------------------------
 # PUBLIC SERVICE REQUEST FLOW
 # -------------------------
