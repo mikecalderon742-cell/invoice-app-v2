@@ -433,9 +433,11 @@ async function openConversation(id, el = null) {
     document.body.style.overflow = "hidden";
 
     document.querySelector(".convo-list").style.display = "none";
+
     const panel = document.querySelector(".chat-panel");
     panel.style.display = "flex";
     panel.style.pointerEvents = "auto";
+
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
@@ -444,11 +446,19 @@ async function openConversation(id, el = null) {
     document.getElementById("chatHeaderName").innerText = name;
     document.getElementById("chatAvatar").innerText = name.charAt(0).toUpperCase();
 
+    // 🔥 LOAD MESSAGES FIRST
     await loadMessages();
 
+    // 🔥 MARK AS READ (BACKEND)
     await fetch(`/api/conversation/mark-read/${id}`, {
         method: "POST"
     });
+
+    // 🔥 REMOVE BADGE FROM UI IMMEDIATELY
+    if (el) {
+        const badge = el.querySelector("div[style*='border-radius:999px']");
+        if (badge) badge.remove();
+    }
 }
 
 async function loadMessages() {
