@@ -8145,12 +8145,12 @@ def settings():
 
             new_logo = (request.form.get("logo_url") or "").strip()
 
-            # 🔥 FIX: prevent "None" from being saved
+            # prevent "None" from being saved
             if not new_logo or new_logo.lower() == "none":
                 new_logo = current_logo or ""
 
             upsert_business_profile({
-                "user_id": user_id,  # 🔥 CRITICAL FIX
+                "user_id": user_id,
                 "business_name": request.form.get("business_name"),
                 "email": request.form.get("email"),
                 "phone": request.form.get("phone"),
@@ -8161,9 +8161,7 @@ def settings():
                 "accent_color": request.form.get("accent_color"),
             })
 
-    profile = get_business_profile()
-
-            # 🔥 reload fresh profile after save (fixes logo disappearing)
+            # ✅ THIS MUST BE HERE (inside same indent)
             profile = get_business_profile()
 
             feedback_message = "Business profile updated successfully."
