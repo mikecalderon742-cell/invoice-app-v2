@@ -35,6 +35,7 @@
     border-radius: 0px;
     background: transparent;
     touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
 
 .convo-header {
@@ -626,12 +627,14 @@ async function deleteConversation(convoId, el) {
 document.querySelectorAll(".convo-item").forEach(item => {
     let startX = 0;
 
-    item.addEventListener("touchstart", e => {
-        startX = e.touches[0].clientX;
-    });
+item.addEventListener("touchstart", e => {
+    e.stopPropagation(); // 🔥 stops nav from being affected
+    startX = e.touches[0].clientX;
+});
 
 item.addEventListener("touchmove", e => {
     e.stopPropagation(); // 🔥 CRITICAL FIX
+    e.preventDefault();   //
 
     let moveX = e.touches[0].clientX;
     let diff = startX - moveX;
