@@ -456,6 +456,23 @@ async function openConversation(id, el = null) {
         method: "POST"
     });
 
+// ✅ FORCE REFRESH OF GLOBAL BADGES
+await fetch("/api/notifications/summary")
+    .then(res => res.json())
+    .then(data => {
+        const count = Number(data.unread_count || 0);
+
+        document.querySelectorAll(".notification-badge, .sidebar-notification-badge").forEach(badge => {
+            if (count > 0) {
+                badge.textContent = count < 100 ? String(count) : "99+";
+                badge.style.display = "inline-flex";
+            } else {
+                badge.textContent = "";
+                badge.style.display = "none";
+            }
+        });
+    });
+
     // 🔥 REMOVE BADGE FROM UI IMMEDIATELY
     if (el) {
         const badge = el.querySelector("div[style*='border-radius:999px']");
