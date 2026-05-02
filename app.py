@@ -8159,6 +8159,9 @@ def settings():
                 "accent_color": request.form.get("accent_color"),
             })
 
+            # 🔥 reload fresh profile after save (fixes logo disappearing)
+            profile = get_business_profile()
+
             feedback_message = "Business profile updated successfully."
             feedback_type = "success"
 
