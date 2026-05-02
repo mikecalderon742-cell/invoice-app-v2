@@ -8149,6 +8149,7 @@ def settings():
                 new_logo = current_logo
 
             upsert_business_profile({
+                "user_id": user_id,  # 🔥 CRITICAL FIX
                 "business_name": request.form.get("business_name"),
                 "email": request.form.get("email"),
                 "phone": request.form.get("phone"),
