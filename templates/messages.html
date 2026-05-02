@@ -141,6 +141,7 @@ box-shadow:
 
     font-weight: 600;
     font-size: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .chat-avatar {
@@ -174,6 +175,7 @@ box-shadow:
 .bubble {
     max-width: 75%;
     padding: 12px 16px;
+    animation: fadeIn 0.2s ease;
 
     border-radius: 20px;
 
@@ -291,6 +293,17 @@ box-shadow:
     font-weight: 600;
 
     border-radius: 0 16px 16px 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>
 
@@ -415,7 +428,10 @@ font-size:10px;">
         <div class="chat-header">
             <button onclick="goBackToList()">←</button>
             <div class="chat-avatar" id="chatAvatar"></div>
-            <div id="chatHeaderName">Select a conversation</div>
+            <div style="display:flex; flex-direction:column;">
+    <div id="chatHeaderName" style="font-weight:600;"></div>
+    <div style="font-size:11px; opacity:0.6;">Tap to view details</div>
+</div>
         </div>
 
         <div id="chatMessages" class="chat-messages">
@@ -505,8 +521,10 @@ async function loadMessages() {
 
     data.messages.forEach(msg => appendMessage(msg));
 
-    box.scrollTop = box.scrollHeight;
-}
+box.scrollTo({
+    top: box.scrollHeight,
+    behavior: "smooth"
+});
 
 // ==========================
 // APPEND MESSAGE
