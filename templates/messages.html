@@ -419,6 +419,8 @@ font-size:10px;">
 </div>
 
 <script>
+const CURRENT_USER_ID = {{ current_user.id }};
+
 let holdTimer = null;
 let isHolding = false;
 let currentConversationId = null;
@@ -476,11 +478,11 @@ function appendMessage(msg) {
     const bubble = document.createElement("div");
     bubble.classList.add("bubble");
 
-if (msg.sender_user_id == {{ current_user.id }}) {
-    bubble.classList.add("me");
-} else {
-    bubble.classList.add("them");
-}
+    if (msg.sender_user_id == CURRENT_USER_ID) {
+        bubble.classList.add("me");
+    } else {
+        bubble.classList.add("them");
+    }
 
     bubble.innerText = msg.message_text;
     box.appendChild(bubble);
@@ -505,6 +507,9 @@ async function sendMessage() {
     });
 
     await loadMessages();
+
+    // 🔥 FORCE REFRESH LIST (safe for now)
+    location.reload();
 }
 
 function goBackToList() {
