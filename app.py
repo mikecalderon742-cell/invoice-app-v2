@@ -1863,10 +1863,14 @@ def get_unread_message_count(user_id: int) -> int:
         """
         SELECT COUNT(*)
         FROM messages m
-        JOIN conversations c ON c.id = m.conversation_id
-        WHERE (c.business_user_id = %s OR c.client_user_id = %s)
-          AND m.sender_user_id != %s
-          AND COALESCE(m.is_read, FALSE) = FALSE
+        JOIN conversations c ON m.conversation_id = c.id
+        WHERE
+            (
+                (c.business_user_id = %s AND m.sender_user_id = c.client_user_id)
+                OR
+                (c.client_user_id = %s AND m.sender_user_id = c.business_user_id)
+            )
+            AND COALESCE(m.is_read, FALSE) = FALSE
         """,
         (user_id, user_id, user_id),
     )
