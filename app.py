@@ -66,6 +66,41 @@ PAYMENT_METHOD_LABELS = {
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
+@app.context_processor
+def inject_unread_message_count():
+    try:
+        user = get_current_user()
+        if not user:
+            return {"unread_message_count": 0}
+
+        user_id = user["id"]
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT COUNT(*)
+            FROM messages m
+            JOIN conversations c ON m.conversation_id = c.id
+            WHERE (c.business_user_id = %s OR c.client_user_id = %s)
+              AND m.sender_user_id != %s
+              AND COALESCE(m.is_read, FALSE) = FALSE
+            """,
+            (user_id, user_id, user_id),
+        )
+
+        count = cur.fetchone()[0] or 0
+
+        cur.close()
+        conn.close()
+
+        return {"unread_message_count": count}
+
+    except Exception as e:
+        logger.warning("Unread message count failed: %s", e)
+        return {"unread_message_count": 0}
+
 # -------------------------
 # LOGGING
 # -------------------------
