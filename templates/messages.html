@@ -368,7 +368,7 @@ font-size:10px;">
                     {% endif %}
 
                     {% if convo.unread_count > 0 %}
-                    <div style="
+                    <div data-badge style="
                         min-width:18px;
                         height:18px;
                         border-radius:999px;
@@ -421,59 +421,55 @@ font-size:10px;">
 <script>
 const CURRENT_USER_ID = {{ current_user.id }};
 
-let holdTimer = null;
-let isHolding = false;
 let currentConversationId = null;
-let lastSenderId = null;
 
+// ==========================
+// OPEN CONVERSATION
+// ==========================
 async function openConversation(id, el = null) {
     currentConversationId = id;
 
-    window.history.replaceState(null, "", `/messages?conversation_id=${id}`);
-
+    // lock scroll
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
+    // switch UI
     document.querySelector(".convo-list").style.display = "none";
-
     const panel = document.querySelector(".chat-panel");
     panel.style.display = "flex";
-    panel.style.pointerEvents = "auto";
 
+    // highlight active
     document.querySelectorAll(".convo-item").forEach(i => i.classList.remove("active"));
     if (el) el.classList.add("active");
 
+    // header
     const name = el?.dataset?.name || "Conversation";
-
     document.getElementById("chatHeaderName").innerText = name;
     document.getElementById("chatAvatar").innerText = name.charAt(0).toUpperCase();
 
-    // 🔥 LOAD MESSAGES FIRST
+    // load messages
     await loadMessages();
 
-    // 🔥 MARK AS READ (BACKEND)
-    await fetch(`/api/conversation/mark-read/${id}`, {
-        method: "POST"
-    });
+    // mark as read (backend)
+    await fetch(`/api/conversation/mark-read/${id}`, { method: "POST" });
 
-// ✅ FORCE REFRESH OF GLOBAL BADGES
-// ✅ CLEAR MESSAGE BADGES IMMEDIATELY
-
-// remove sidebar + navbar message badges
-document.querySelectorAll(".notification-badge, .sidebar-notification-badge").forEach(badge => {
-    if (badge.closest("a")?.href?.includes("/messages")) {
-        badge.textContent = "";
-        badge.style.display = "none";
-    }
-});
-
-    // 🔥 REMOVE BADGE FROM UI IMMEDIATELY
+    // remove badge from this item
     if (el) {
-        const badge = el.querySelector("div[style*='border-radius:999px']");
+        const badge = el.querySelector("[data-badge]");
         if (badge) badge.remove();
     }
+
+    // clear nav + sidebar message badges
+    document.querySelectorAll(".notification-badge, .sidebar-notification-badge").forEach(badge => {
+        if (badge.closest("a")?.href?.includes("/messages")) {
+            badge.remove();
+        }
+    });
 }
 
+// ==========================
+// LOAD MESSAGES
+// ==========================
 async function loadMessages() {
     if (!currentConversationId) return;
 
@@ -482,8 +478,6 @@ async function loadMessages() {
 
     const box = document.getElementById("chatMessages");
     box.innerHTML = "";
-
-    lastSenderId = null;
 
     if (!data.messages || data.messages.length === 0) {
         box.innerHTML = '<p style="opacity:0.6;">No messages yet</p>';
@@ -495,6 +489,9 @@ async function loadMessages() {
     box.scrollTop = box.scrollHeight;
 }
 
+// ==========================
+// APPEND MESSAGE
+// ==========================
 function appendMessage(msg) {
     const box = document.getElementById("chatMessages");
 
@@ -511,6 +508,9 @@ function appendMessage(msg) {
     box.appendChild(bubble);
 }
 
+// ==========================
+// SEND MESSAGE
+// ==========================
 async function sendMessage() {
     if (!currentConversationId) return;
 
@@ -529,28 +529,20 @@ async function sendMessage() {
         })
     });
 
+    // reload messages ONLY (no page reload)
     await loadMessages();
-
-// 🔥 INSTANT UI UPDATE (NO RELOAD)
-
-// reload messages
-await loadMessages();
-
-// remove unread badge from active convo
-const activeItem = document.querySelector(".convo-item.active");
-if (activeItem) {
-    const badge = activeItem.querySelector("div[style*='border-radius:999px']");
-    if (badge) badge.remove();
 }
+
+// ==========================
+// BACK TO LIST
+// ==========================
 function goBackToList() {
     currentConversationId = null;
 
     document.documentElement.style.overflow = "auto";
     document.body.style.overflow = "auto";
 
-    const panel = document.querySelector(".chat-panel");
-    panel.style.display = "none";
-    panel.style.pointerEvents = "none";
+    document.querySelector(".chat-panel").style.display = "none";
     document.querySelector(".convo-list").style.display = "block";
 
     document.getElementById("chatMessages").innerHTML =
@@ -564,13 +556,15 @@ function goBackToList() {
     );
 }
 
+// ==========================
+// DELETE
+// ==========================
 async function deleteConversation(convoId, el) {
     try {
         await fetch(`/api/conversation/delete/${convoId}`, {
             method: "POST"
         });
 
-        // remove ENTIRE row (not just button)
         const wrapper = el.closest(".convo-item-wrapper");
         if (wrapper) wrapper.remove();
 
@@ -580,46 +574,6 @@ async function deleteConversation(convoId, el) {
         console.error("Delete failed", err);
     }
 }
-
-document.querySelectorAll(".convo-item").forEach(item => {
-    let startX = 0;
-
-    item.addEventListener("touchstart", e => {
-        startX = e.touches[0].clientX;
-    });
-
-item.addEventListener("touchmove", e => {
-    let moveX = e.touches[0].clientX;
-    let diff = startX - moveX;
-
-    const deleteBtn = item.parentElement.querySelector(".delete-btn");
-
-if (diff > 40) {
-    item.style.transform = "translateX(-70px)";
-        deleteBtn.style.opacity = "1";
-        deleteBtn.style.pointerEvents = "auto";
-    }
-
-    if (diff < 0) {
-        item.style.transform = "translateX(0)";
-        deleteBtn.style.opacity = "0";
-        deleteBtn.style.pointerEvents = "none";
-    }
-});
-
-item.addEventListener("touchend", () => {
-    const deleteBtn = item.parentElement.querySelector(".delete-btn");
-
-    if (item.style.transform === "translateX(-70px)") {
-        deleteBtn.style.opacity = "1";
-        deleteBtn.style.pointerEvents = "auto";
-    } else {
-        item.style.transform = "translateX(0)";
-        deleteBtn.style.opacity = "0";
-        deleteBtn.style.pointerEvents = "none";
-    }
-});
-});
 </script>
 
 {% endblock %}
