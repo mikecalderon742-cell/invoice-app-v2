@@ -12,6 +12,9 @@
     height: calc(100vh - 80px);
     overflow: hidden;
 
+    overscroll-behavior: none;
+    height: 100dvh;
+
     background:
         radial-gradient(circle at top left, #38bdf8 0%, transparent 40%),
         radial-gradient(circle at bottom right, #6366f1 0%, transparent 40%),
@@ -23,10 +26,12 @@
     flex: 1;
     overflow-y: auto;
 
+    overscroll-behavior: contain;
+
     margin: 14px;
     padding-bottom: 20px;
 
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05);
 
     backdrop-filter: blur(20px);
 
@@ -60,7 +65,7 @@
 
     width: 100%;
 
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.035);
 
     border-radius: 18px;
 
@@ -111,6 +116,8 @@
 
     background: rgba(15,23,42,0.95);
     backdrop-filter: blur(20px);
+
+    padding-bottom: env(safe-area-inset-bottom);
 
     border-radius: 0;
 
@@ -176,7 +183,7 @@
 }
 
 .bubble.them {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05);
     color: #e5e7eb;
 
     border: 1px solid rgba(255,255,255,0.1);
@@ -212,14 +219,15 @@
 
     padding: 12px 16px;
 
-    background: rgba(15,23,42,0.9);
-    backdrop-filter: blur(10px);
+    background: rgba(15,23,42,0.95);
+    backdrop-filter: blur(12px);
 
     border-top: 1px solid rgba(255,255,255,0.08);
 
-    position: relative;
-    z-index: 20000; /* 🔥 ABOVE EVERYTHING */
-    pointer-events: auto;
+    position: sticky;
+    bottom: 0;
+
+    z-index: 9999;
 }
 
 .chat-input input {
@@ -574,6 +582,43 @@ async function deleteConversation(convoId, el) {
         console.error("Delete failed", err);
     }
 }
+
+document.querySelectorAll(".convo-item").forEach(item => {
+    let startX = 0;
+
+    item.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
+    });
+
+    item.addEventListener("touchmove", e => {
+        let moveX = e.touches[0].clientX;
+        let diff = startX - moveX;
+
+        const deleteBtn = item.parentElement.querySelector(".delete-btn");
+
+        if (diff > 50) {
+            item.style.transform = "translateX(-80px)";
+            deleteBtn.style.opacity = "1";
+            deleteBtn.style.pointerEvents = "auto";
+        }
+
+        if (diff < 0) {
+            item.style.transform = "translateX(0)";
+            deleteBtn.style.opacity = "0";
+            deleteBtn.style.pointerEvents = "none";
+        }
+    });
+
+    item.addEventListener("touchend", () => {
+        const deleteBtn = item.parentElement.querySelector(".delete-btn");
+
+        if (item.style.transform !== "translateX(-80px)") {
+            item.style.transform = "translateX(0)";
+            deleteBtn.style.opacity = "0";
+            deleteBtn.style.pointerEvents = "none";
+        }
+    });
+});
 </script>
 
 {% endblock %}
