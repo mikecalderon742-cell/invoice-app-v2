@@ -5719,7 +5719,25 @@ def inject_now():
 
 @app.context_processor
 def inject_business_profile_ctx():
-    return {"business_profile": get_business_profile()}
+    try:
+        profile = get_business_profile()
+
+        if not profile:
+            return {"business_profile": {}}
+
+        # Ensure all keys exist (prevents template crashes / missing logo)
+        safe_profile = {
+            "business_name": profile.get("business_name"),
+            "logo_url": profile.get("logo_url"),
+            "brand_color": profile.get("brand_color"),
+            "accent_color": profile.get("accent_color"),
+        }
+
+        return {"business_profile": safe_profile}
+
+    except Exception as e:
+        logger.warning("Business profile context failed: %s", e)
+        return {"business_profile": {}}
 
 
 def get_business_profile_safe():

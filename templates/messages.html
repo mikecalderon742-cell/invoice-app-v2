@@ -184,14 +184,15 @@ box-shadow:
 }
 
 .bubble.them {
-    background: rgba(255,255,255,0.05);
-    color: #e5e7eb;
+    background: linear-gradient(135deg, #10b981, #059669);
 
-    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+
+    border: none;
 
     align-self: flex-start;
 
-    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 18px rgba(5,150,105,0.35);
 }
 
 .bubble.me {
@@ -205,9 +206,11 @@ box-shadow:
 }
 
 .timestamp {
-    font-size: 11px;
+    font-size: 10px;
     opacity: 0.5;
-    margin-top: 2px;
+    margin-top: 4px;
+
+    text-align: right;
 }
 
 /* INPUT */
@@ -505,7 +508,12 @@ function appendMessage(msg) {
         bubble.classList.add("them");
     }
 
-    bubble.innerText = msg.message_text;
+    bubble.innerHTML = `
+    ${msg.message_text}
+    <div class="timestamp">
+        ${msg.created_at || ""}
+    </div>
+`;
     box.appendChild(bubble);
 }
 
