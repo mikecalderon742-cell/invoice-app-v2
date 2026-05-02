@@ -8141,13 +8141,15 @@ def settings():
         # PROFILE SAVE
         # -------------------------
         else:
+            logo_url = (request.form.get("logo_url") or "").strip()
+
             upsert_business_profile({
                 "business_name": request.form.get("business_name"),
                 "email": request.form.get("email"),
                 "phone": request.form.get("phone"),
                 "website": request.form.get("website"),
                 "address": request.form.get("address"),
-                "logo_url": request.form.get("logo_url"),
+                "logo_url": logo_url,
                 "brand_color": request.form.get("brand_color"),
                 "accent_color": request.form.get("accent_color"),
             })
