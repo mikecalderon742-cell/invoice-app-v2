@@ -118,7 +118,7 @@
 
     z-index: 10000;
 
-    pointer-events: none; /* 🔥 FIX */
+    pointer-events: auto;
 }
 
 /* HEADER */
@@ -527,17 +527,6 @@ function goBackToList() {
     document.querySelectorAll(".convo-item").forEach(i =>
         i.classList.remove("active")
     );
-}
-
-// 🔥 mark as read immediately
-await fetch(`/api/conversation/mark-read/${id}`, {
-    method: "POST"
-});
-
-// 🔥 remove unread badge instantly (UI fix)
-if (el) {
-    const badge = el.querySelector("div[style*='border-radius:999px']");
-    if (badge) badge.remove();
 }
 
 async function deleteConversation(convoId, el) {
