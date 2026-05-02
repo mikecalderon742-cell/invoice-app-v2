@@ -8217,15 +8217,6 @@ def settings():
 
 
 # -------------------------
-# UPLOADED FILES (LOGO STORAGE)
-# -------------------------
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    from flask import send_from_directory
-    return send_from_directory('/mnt/data/uploads', filename)
-
-
-# -------------------------
 # CLIENTS
 # -------------------------
 @app.route("/clients")
