@@ -8145,11 +8145,10 @@ def settings():
 
             logo_file = request.files.get("logo_file")
 
-            # ✅ HANDLE FILE UPLOAD FIRST
+            # ✅ SIMPLE + WORKING (same structure you had before)
             if logo_file and logo_file.filename:
                 import os
                 from werkzeug.utils import secure_filename
-
                 import uuid
 
                 filename = secure_filename(logo_file.filename)
@@ -8161,13 +8160,11 @@ def settings():
                 file_path = os.path.join(upload_folder, unique_name)
                 logo_file.save(file_path)
 
-                new_logo = f"/uploads/{unique_name}"
+                new_logo = f"/static/uploads/{unique_name}"
 
             else:
-                # fallback to URL input
                 new_logo = (request.form.get("logo_url") or "").strip()
 
-                # prevent "None" from being saved
                 if not new_logo or new_logo.lower() == "none":
                     new_logo = current_logo if current_logo not in [None, "None"] else ""
 
@@ -8183,7 +8180,6 @@ def settings():
                 "accent_color": request.form.get("accent_color"),
             })
 
-            # reload fresh profile after save
             profile = get_business_profile()
 
             feedback_message = "Business profile updated successfully."
