@@ -5,16 +5,16 @@
 
 <style>
 .messages-shell {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
     display: flex;
     flex-direction: column;
-    padding: 0;
-    min-height: 100vh;
 
-    height: calc(100vh - 80px);
     overflow: hidden;
-
-    overscroll-behavior: none;
-    height: 100dvh;
 
     background:
         radial-gradient(circle at top left, #38bdf8 0%, transparent 40%),
@@ -34,6 +34,7 @@
 
     border-radius: 0px;
     background: transparent;
+    touch-action: pan-y;
 }
 
 .convo-header {
@@ -629,24 +630,26 @@ document.querySelectorAll(".convo-item").forEach(item => {
         startX = e.touches[0].clientX;
     });
 
-    item.addEventListener("touchmove", e => {
-        let moveX = e.touches[0].clientX;
-        let diff = startX - moveX;
+item.addEventListener("touchmove", e => {
+    e.stopPropagation(); // 🔥 CRITICAL FIX
 
-        const deleteBtn = item.parentElement.querySelector(".delete-btn");
+    let moveX = e.touches[0].clientX;
+    let diff = startX - moveX;
 
-        if (diff > 50) {
-            item.style.transform = "translateX(-80px)";
-            deleteBtn.style.opacity = "1";
-            deleteBtn.style.pointerEvents = "auto";
-        }
+    const deleteBtn = item.parentElement.querySelector(".delete-btn");
 
-        if (diff < 0) {
-            item.style.transform = "translateX(0)";
-            deleteBtn.style.opacity = "0";
-            deleteBtn.style.pointerEvents = "none";
-        }
-    });
+    if (diff > 50) {
+        item.style.transform = "translateX(-80px)";
+        deleteBtn.style.opacity = "1";
+        deleteBtn.style.pointerEvents = "auto";
+    }
+
+    if (diff < 0) {
+        item.style.transform = "translateX(0)";
+        deleteBtn.style.opacity = "0";
+        deleteBtn.style.pointerEvents = "none";
+    }
+});
 
     item.addEventListener("touchend", () => {
         const deleteBtn = item.parentElement.querySelector(".delete-btn");
