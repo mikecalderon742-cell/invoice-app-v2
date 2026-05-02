@@ -429,6 +429,8 @@ let lastSenderId = null;
 async function openConversation(id, el = null) {
     currentConversationId = id;
 
+    window.history.replaceState(null, "", `/messages?conversation_id=${id}`);
+
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
