@@ -678,6 +678,12 @@ body.dark .autism-ribbon {
     {% else %}
         Messages
     {% endif %}
+
+    {% if unread_message_count and unread_message_count > 0 %}
+        <span class="sidebar-notification-badge">
+            {{ unread_message_count if unread_message_count < 100 else '99+' }}
+        </span>
+    {% endif %}
 </a>
         <a href="/pricing{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}
@@ -915,13 +921,21 @@ body.dark .autism-ribbon {
                     {% endif %}
                 </a>
 
-<a href="/messages{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
-    {% if lang == 'es' %}
-        Mensajes
-    {% elif lang == 'zh' %}
-        消息
-    {% else %}
-        Messages
+<a href="/messages{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link nav-notification-link">
+    <span>
+        {% if lang == 'es' %}
+            Mensajes
+        {% elif lang == 'zh' %}
+            消息
+        {% else %}
+            Messages
+        {% endif %}
+    </span>
+
+    {% if unread_message_count and unread_message_count > 0 %}
+        <span class="notification-badge">
+            {{ unread_message_count if unread_message_count < 100 else '99+' }}
+        </span>
     {% endif %}
 </a>
 

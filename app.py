@@ -10814,6 +10814,23 @@ def get_total_unread_messages(user_id):
         conn.close()
 
 
+@app.context_processor
+def inject_unread_message_count():
+    try:
+        user = get_current_user()
+        user_id = user.get("id") if user else None
+
+        if not user_id:
+            return dict(unread_message_count=0)
+
+        count = get_total_unread_messages(user_id)
+        return dict(unread_message_count=count)
+
+    except Exception as e:
+        logger.warning("Unread count inject failed: %s", e)
+        return dict(unread_message_count=0)
+
+
 @app.route("/ios/activate-subscription", methods=["POST"])
 @login_required
 def ios_activate_subscription():
