@@ -1708,20 +1708,37 @@ def send_message(conversation_id: int, sender_user_id: int, message_text: str):
     cur = conn.cursor()
 
     try:
+        # -------------------------
+        # GET CONVERSATION PARTICIPANTS
+        # -------------------------
         cur.execute(
             """
-            INSERT INTO messages (
-                conversation_id,
-                sender_user_id,
-                message_text,
-                is_read
-            )
-            VALUES (%s, %s, %s, FALSE)
+            SELECT business_user_id, client_user_id
+            FROM conversations
+            WHERE id = %s
             """,
-            (conversation_id, sender_user_id, message_text),
+            (conversation_id,),
+        )
+        convo = cur.fetchone()
+
+        if not convo:
+            logger.warning("send_message: conversation not found")
+            return False
+
+        business_user_id, client_user_id = convo
+
+        # -------------------------
+        # USE NEW PIPELINE
+        # -------------------------
+        result = send_message_in_conversation(
+            business_user_id=business_user_id,
+            client_user_id=client_user_id,
+            sender_user_id=sender_user_id,
+            message_text=message_text,
         )
 
-        conn.commit()
+        if not result:
+            return False
 
         # -------------------------
         # KEEP CONVERSATION FRESH (ORDERING FIX)
@@ -1743,35 +1760,21 @@ def send_message(conversation_id: int, sender_user_id: int, message_text: str):
         # TRIGGER PUSH NOTIFICATION
         # -------------------------
         try:
-            cur.execute(
-                """
-                SELECT business_user_id, client_user_id
-                FROM conversations
-                WHERE id = %s
-                """,
-                (conversation_id,),
+            recipient_id = (
+                client_user_id
+                if sender_user_id == business_user_id
+                else business_user_id
             )
-            convo = cur.fetchone()
 
-            if convo:
-                business_user_id, client_user_id = convo
-
-                recipient_id = (
-                    client_user_id
-                    if sender_user_id == business_user_id
-                    else business_user_id
+            if recipient_id and recipient_id != sender_user_id:
+                create_notification_if_enabled(
+                    user_id=recipient_id,
+                    category="messages",
+                    notification_type="new_message",
+                    title="New message",
+                    body=(message_text or "")[:100],
+                    link_url=f"/messages?open={conversation_id}",
                 )
-
-                # ✅ DO NOT NOTIFY YOURSELF
-                if recipient_id and recipient_id != sender_user_id:
-                    create_notification_if_enabled(
-                        user_id=recipient_id,
-                        category="messages",
-                        notification_type="new_message",
-                        title="New message",
-                        body=message_text[:100],
-                        link_url=f"/messages?open={conversation_id}",
-                    )
 
         except Exception as e:
             logger.exception("Notification failed: %s", e)
