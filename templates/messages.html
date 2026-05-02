@@ -4,6 +4,12 @@
 {% block content %}
 
 <style>
+html, body {
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+}
+
 .messages-shell {
     position: fixed;
     top: 80px;
@@ -15,6 +21,8 @@
     flex-direction: column;
 
     overflow: hidden;
+
+    touch-action: none; /* 🔥 stops parent scrolling */
 
     background:
         radial-gradient(circle at top left, #38bdf8 0%, transparent 40%),
@@ -28,14 +36,15 @@
     overflow-y: auto;
 
     overscroll-behavior: contain;
+    touch-action: pan-y;
 
-    margin: 0px;
+    -webkit-overflow-scrolling: touch;
+
+    margin: 0;
     padding-bottom: 20px;
 
-    border-radius: 0px;
+    border-radius: 0;
     background: transparent;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
 }
 
 .convo-header {
