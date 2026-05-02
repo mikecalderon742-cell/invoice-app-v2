@@ -8155,7 +8155,7 @@ def settings():
                 filename = secure_filename(logo_file.filename)
                 unique_name = f"{uuid.uuid4()}_{filename}"
 
-                upload_folder = os.path.join("/mnt/data", "uploads")
+                upload_folder = os.path.join("static", "uploads")
                 os.makedirs(upload_folder, exist_ok=True)
 
                 file_path = os.path.join(upload_folder, unique_name)
