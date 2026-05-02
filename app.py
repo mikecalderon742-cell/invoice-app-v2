@@ -8168,6 +8168,8 @@ def settings():
             feedback_type = "success"
 
     services = get_user_services(user_id, include_inactive=True)
+   
+    edit_id = request.args.get("edit_id")
 
     if edit_id:
         try:
