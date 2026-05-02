@@ -2218,53 +2218,52 @@ def messages_page():
         (user_id, user_id, user_id),
     )
 
-rows = cur.fetchall()
+    rows = cur.fetchall()
 
-# --- MARK CURRENT CONVERSATION AS READ (SAFE) ---
-conversation_id = request.args.get("conversation_id")
+    # --- MARK CURRENT CONVERSATION AS READ (SAFE) ---
+    conversation_id = request.args.get("conversation_id")
 
-if conversation_id:
-    cur.execute(
-        """
-        UPDATE messages
-        SET is_read = TRUE
-        WHERE conversation_id = %s
-          AND sender_user_id != %s
-          AND COALESCE(is_read, FALSE) = FALSE
-        """,
-        (conversation_id, user_id),
-    )
-    conn.commit()
+    if conversation_id:
+        cur.execute(
+            """
+            UPDATE messages
+            SET is_read = TRUE
+            WHERE conversation_id = %s
+              AND sender_user_id != %s
+              AND COALESCE(is_read, FALSE) = FALSE
+            """,
+            (conversation_id, user_id),
+        )
+        conn.commit()
 
-# ✅ OUTSIDE THE IF BLOCK (THIS WAS YOUR BUG)
-conversations = []
+    conversations = []
 
-for row in rows:
-    convo_id = row[0]
-    business_id = row[1]
-    client_id = row[2]
+    for row in rows:
+        convo_id = row[0]
+        business_id = row[1]
+        client_id = row[2]
 
-    business_email = row[4] or "Business"
-    client_email = row[5] or "Client"
+        business_email = row[4] or "Business"
+        client_email = row[5] or "Client"
 
-    if user_id == business_id:
-        display_name = client_email
-    else:
-        display_name = business_email
+        if user_id == business_id:
+            display_name = client_email
+        else:
+            display_name = business_email
 
-    conversations.append({
-        "id": convo_id,
-        "display_name": display_name,
-        "business_user_id": business_id,
-        "client_user_id": client_id,
-        "created_at": row[3],
-        "last_message": row[6] or "",
-        "last_message_time": row[7],
-        "unread_count": row[8] or 0,
-    })
+        conversations.append({
+            "id": convo_id,
+            "display_name": display_name,
+            "business_user_id": business_id,
+            "client_user_id": client_id,
+            "created_at": row[3],
+            "last_message": row[6] or "",
+            "last_message_time": row[7],
+            "unread_count": row[8] or 0,
+        })
 
-cur.close()
-conn.close()
+    cur.close()
+    conn.close()
 
     # -------------------------
     # ACTIVE CONVERSATION FIX (CLICK ISSUE)
