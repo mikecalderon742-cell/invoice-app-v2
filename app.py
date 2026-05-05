@@ -1004,6 +1004,16 @@ def init_db():
         """
     )
 
+    # -------------------------
+    # SAFE COLUMN ADD (CLIENT ADDRESS)
+    # -------------------------
+    cursor.execute(
+        """
+        ALTER TABLE service_requests
+        ADD COLUMN IF NOT EXISTS client_address TEXT;
+        """
+    )
+
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS service_request_events (
