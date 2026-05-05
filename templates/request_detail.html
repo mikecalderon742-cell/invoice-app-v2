@@ -692,20 +692,20 @@
 
   <div style="margin-top:10px;">
 <a 
-  href="#"
-  onclick="openMaps('{{ service_request.client_address | urlencode }}')"
+  href="https://www.google.com/maps/search/?api=1&query={{ service_request.client_address | urlencode }}"
+  target="_blank"
   class="btn btn-brand"
   style="width:100%; text-align:center;"
 >
-      📍 
-      {% if lang == 'es' %}
-        Obtener direcciones
-      {% elif lang == 'zh' %}
-        获取路线
-      {% else %}
-        Get Directions
-      {% endif %}
-    </a>
+  📍 
+  {% if lang == 'es' %}
+    Obtener direcciones
+  {% elif lang == 'zh' %}
+    获取路线
+  {% else %}
+    Get Directions
+  {% endif %}
+</a>
   </div>
 {% endif %}
               </div>
@@ -1429,25 +1429,6 @@
     >
   </div>
 </div>
-
-<script>
-function openMaps(encodedAddress) {
-  const address = decodeURIComponent(encodedAddress);
-
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-  const appleUrl = `https://maps.apple.com/?q=${encodeURIComponent(address)}`;
-  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-
-  if (isIOS) {
-    // 🔥 THIS is the fix — DO NOT use window.open
-    window.location.href = appleUrl;
-  } else {
-    window.open(googleUrl, "_blank");
-  }
-}
-</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
