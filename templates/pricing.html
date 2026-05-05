@@ -727,6 +727,27 @@
     border-color: rgba(125,211,252,0.22);
   }
 
+.pro-highlight {
+  background: linear-gradient(
+    135deg,
+    #facc15 0%,
+    #fde68a 25%,
+    #f59e0b 50%,
+    #fde68a 75%,
+    #facc15 100%
+  );
+  -webkit-background-clip: text;
+  color: transparent;
+
+  letter-spacing: -0.04em;
+
+  text-shadow:
+    0 2px 8px rgba(245,158,11,0.35),
+    0 0 1px rgba(255,255,255,0.4);
+
+  position: relative;
+}
+
   .pricing-note {
     font-size: 12px;
     line-height: 1.7;
@@ -1015,7 +1036,7 @@ Start free, then upgrade to Pro when you're ready to get paid online, automate y
         <div class="pricing-card-header">
           <div class="pricing-title-row">
             <div>
-              <div class="pricing-name">
+<div class="pricing-name {% if key == 'simple' %}pro-highlight{% endif %}">
   {% if key == 'simple' %}
     Pro
   {% else %}
