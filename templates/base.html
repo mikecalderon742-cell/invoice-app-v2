@@ -856,19 +856,15 @@ body.dark .autism-ribbon {
             {% if is_authenticated %}
                 <span class="nav-user-pill">
                     <span class="nav-user-pill-text">{{ current_user.email }}</span>
-                    <span class="plan-badge">
-                        {% if current_plan_key == 'free' %}
-                            Free
-                        {% elif current_plan_key == 'simple' %}
-                            Simple
-                        {% elif current_plan_key == 'pro' %}
-                            Pro
-                        {% elif current_plan_key == 'enterprise' %}
-                            {% if lang == 'es' %}Business{% else %}Business{% endif %}
-                        {% else %}
-                            {{ current_plan_key|capitalize }}
-                        {% endif %}
-                    </span>
+<span class="plan-badge">
+    {% if current_plan_key == 'free' %}
+        Free
+    {% elif current_plan_key == 'simple' %}
+        Pro
+    {% else %}
+        Pro
+    {% endif %}
+</span>
                 </span>
 
                 {% if is_client_area %}
