@@ -851,13 +851,13 @@
         {% endif %}
       </h1>
       <div class="pricing-subcopy">
-        {% if lang == 'es' %}
-          Empieza gratis, sube a Simple si solo necesitas crear facturas y recibos, elige Pro cuando quieras pagos con Stripe y más automatización, o usa Enterprise cuando quieras una experiencia más seria y más completa.
-        {% elif lang == 'zh' %}
-          免费开始；如果您只需要创建发票和收据，可升级到 Simple；当您需要 Stripe 付款和更多自动化时，可选择 Pro；当您想要更完整、更专业的体验时，可使用 Enterprise。
-        {% else %}
-          Start free, move up to Simple if you only need invoices and receipts, choose Pro when you want Stripe payments and more automation, or use Enterprise when you want a more serious and complete experience.
-        {% endif %}
+{% if lang == 'es' %}
+Empieza gratis y sube a Pro cuando estés listo para cobrar en línea, automatizar tu flujo y ofrecer una experiencia más profesional a tus clientes.
+{% elif lang == 'zh' %}
+免费开始，当您准备好在线收款、自动化流程并为客户提供更专业体验时升级到 Pro。
+{% else %}
+Start free, then upgrade to Pro when you're ready to get paid online, automate your workflow, and give your clients a more professional experience.
+{% endif %}
       </div>
     </div>
 
@@ -950,26 +950,26 @@
       </div>
     </div>
 
-    <div class="pricing-hero-card">
-      <div class="pricing-hero-label">
-        {% if lang == 'es' %}
-          Plan Simple
-        {% elif lang == 'zh' %}
-          Simple 方案
-        {% else %}
-          Simple plan
-        {% endif %}
-      </div>
-      <div class="pricing-hero-value" id="billingMethodHeroValue">
-        {% if lang == 'es' %}
-          Facturas y recibos
-        {% elif lang == 'zh' %}
-          发票与收据
-        {% else %}
-          Invoices and receipts
-        {% endif %}
-      </div>
-    </div>
+<div class="pricing-hero-card">
+  <div class="pricing-hero-label">
+    {% if lang == 'es' %}
+      Plan Pro
+    {% elif lang == 'zh' %}
+      Pro 方案
+    {% else %}
+      Pro plan
+    {% endif %}
+  </div>
+  <div class="pricing-hero-value" id="billingMethodHeroValue">
+    {% if lang == 'es' %}
+      Facturación completa
+    {% elif lang == 'zh' %}
+      完整功能
+    {% else %}
+      Full access
+    {% endif %}
+  </div>
+</div>
 
     <div class="pricing-hero-card">
       <div class="pricing-hero-label">
@@ -995,6 +995,9 @@
 
   <div class="pricing-grid">
     {% for key, plan in plans.items() %}
+  {% if key in ['pro', 'studio'] %}
+    {% continue %}
+  {% endif %}
       <div class="pricing-card
         {% if key == 'free' %}pricing-free{% elif key == 'simple' %}pricing-simple{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
         {% if key == user_plan %} pricing-current{% endif %}
@@ -1002,13 +1005,24 @@
         <div class="pricing-card-header">
           <div class="pricing-title-row">
             <div>
-              <div class="pricing-name">{{ plan.name }}</div>
+              <div class="pricing-name">
+  {% if key == 'simple' %}
+    Pro
+  {% else %}
+    {{ plan.name }}
+  {% endif %}
+</div>
               <p class="pricing-tagline">{{ plan.tagline }}</p>
             </div>
 
             <div class="pricing-price" style="text-align:right;">
-              <span class="amount">{{ plan.price_label }}</span><br>
-
+              <span class="amount">
+  {% if key == 'simple' %}
+    $9.99/mo
+  {% else %}
+    {{ plan.price_label }}
+  {% endif %}
+</span><br>
               {% if key == user_plan %}
                 <span class="pricing-pill current">
                   {% if lang == 'es' %}
@@ -1060,6 +1074,7 @@
               <span class="feature-bullet">•</span>
               <span>{{ f }}</span>
             </li>
+            {% endif %}
           {% endfor %}
         </ul>
 
@@ -1252,11 +1267,11 @@
           {% elif key == 'simple' and user_plan == 'free' %}
             <button type="button" class="btn btn-brand btn-compact upgradePlanBtn" data-plan="simple" id="upgradeSimpleBtn">
               {% if lang == 'es' %}
-                Actualizar a Simple
+                Actualizar a Pro
               {% elif lang == 'zh' %}
-                升级到 Simple
+                升级到 Pro
               {% else %}
-                Upgrade to Simple
+                Upgrade to Pro
               {% endif %}
             </button>
 
@@ -1420,7 +1435,7 @@
         {% elif lang == 'zh' %}
           如果您只需要发票和收据，可使用 Simple；如果您希望在线收款，可选择 Pro；如果您希望获得最完整的 BillBeam，可选择 Enterprise。
         {% else %}
-          Use Simple if you only need invoices and receipts, Pro if you want online payments, or Enterprise if you want the most complete BillBeam.
+          Upgrade to Pro when you're ready to unlock the full BillBeam experience, including payments, automation, and advanced tools. BillBeam.
         {% endif %}
       </div>
     </div>
@@ -1459,48 +1474,44 @@
     </div>
   {% endif %}
 
-  <div class="pricing-subscription-disclosure">
-    {% if lang == 'es' %}
-      Detalles de suscripción:
-      <br>• BillBeam Simple, BillBeam Pro y BillBeam Enterprise son suscripciones mensuales auto-renovables
-      <br>• Duración: 1 mes
-      <br>• Precio de Simple: $9.99 al mes
-      <br>• Precio de Pro: $19.99 al mes
-      <br>• Precio de Enterprise: según el precio configurado en BillBeam
-      <br>• En iPhone, el pago se cargará a tu cuenta de Apple ID al confirmar la compra cuando aplique
-      <br>• Las suscripciones se renuevan automáticamente a menos que se cancelen al menos 24 horas antes del final del período actual
-      <br>• Política de privacidad:
-      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">Ver política de privacidad</a>
-      <br>• Términos de uso:
-      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">Ver términos de uso</a>
-    {% elif lang == 'zh' %}
-      订阅详情：
-      <br>• BillBeam Simple、BillBeam Pro 和 BillBeam Enterprise 均为按月自动续订订阅
-      <br>• 时长：1 个月
-      <br>• Simple 价格：每月 $9.99
-      <br>• Pro 价格：每月 $19.99
-      <br>• Enterprise 价格：以 BillBeam 中配置的价格为准
-      <br>• 在 iPhone 上，适用时确认购买后将从您的 Apple ID 账户扣款
-      <br>• 除非在当前周期结束前至少 24 小时取消，否则订阅将自动续订
-      <br>• 隐私政策：
-      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">查看隐私政策</a>
-      <br>• 使用条款：
-      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">查看使用条款</a>
-    {% else %}
-      Subscription details:
-      <br>• BillBeam Simple, BillBeam Pro, and BillBeam Enterprise are monthly auto-renewing subscriptions
-      <br>• Length: 1 month
-      <br>• Simple price: $9.99 per month
-      <br>• Pro price: $19.99 per month
-      <br>• Enterprise price: based on the price configured in BillBeam
-      <br>• On iPhone, payment will be charged to your Apple ID account at confirmation of purchase when applicable
-      <br>• Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period
-      <br>• Privacy Policy:
-      <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">View Privacy Policy</a>
-      <br>• Terms of Use:
-      <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">View Terms of Use</a>
-    {% endif %}
-  </div>
+<div class="pricing-subscription-disclosure">
+  {% if lang == 'es' %}
+    Detalles de suscripción:
+    <br>• BillBeam Pro es una suscripción mensual auto-renovable
+    <br>• Duración: 1 mes
+    <br>• Precio: $9.99 al mes
+    <br>• El pago se cargará a tu Apple ID al confirmar la compra cuando aplique
+    <br>• La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes
+    <br>• Política de privacidad:
+    <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">Ver política de privacidad</a>
+    <br>• Términos de uso:
+    <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">Ver términos de uso</a>
+
+  {% elif lang == 'zh' %}
+    订阅详情：
+    <br>• BillBeam Pro 为按月自动续订订阅
+    <br>• 时长：1 个月
+    <br>• 价格：每月 $9.99
+    <br>• 确认购买后将从您的 Apple ID 账户扣款（如适用）
+    <br>• 除非在周期结束前至少 24 小时取消，否则将自动续订
+    <br>• 隐私政策：
+    <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">查看隐私政策</a>
+    <br>• 使用条款：
+    <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">查看使用条款</a>
+
+  {% else %}
+    Subscription details:
+    <br>• BillBeam Pro is a monthly auto-renewing subscription
+    <br>• Length: 1 month
+    <br>• Price: $9.99 per month
+    <br>• Payment will be charged to your Apple ID at confirmation when applicable
+    <br>• Subscription renews automatically unless canceled at least 24 hours before renewal
+    <br>• Privacy Policy:
+    <a href="/privacy{% if lang %}?lang={{ lang }}{% endif %}">View Privacy Policy</a>
+    <br>• Terms of Use:
+    <a href="/terms{% if lang %}?lang={{ lang }}{% endif %}">View Terms of Use</a>
+  {% endif %}
+</div>
 
 </div>
 
