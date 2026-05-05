@@ -994,10 +994,8 @@ Start free, then upgrade to Pro when you're ready to get paid online, automate y
   </div>
 
   <div class="pricing-grid">
-    {% for key, plan in plans.items() %}
-  {% if key in ['pro', 'studio'] %}
-    {% continue %}
-  {% endif %}
+{% for key, plan in plans.items() %}
+  {% if key not in ['pro', 'studio'] %}
       <div class="pricing-card
         {% if key == 'free' %}pricing-free{% elif key == 'simple' %}pricing-simple{% elif key == 'pro' %}pricing-pro{% else %}pricing-enterprise{% endif %}
         {% if key == user_plan %} pricing-current{% endif %}
