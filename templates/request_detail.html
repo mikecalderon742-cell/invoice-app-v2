@@ -1437,12 +1437,14 @@ function openMaps(encodedAddress) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+  const appleUrl = `https://maps.apple.com/?q=${encodeURIComponent(address)}`;
+  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
   if (isIOS) {
-    // Apple Maps
-    window.open(`https://maps.apple.com/?q=${encodeURIComponent(address)}`, "_blank");
+    // 🔥 THIS is the fix — DO NOT use window.open
+    window.location.href = appleUrl;
   } else {
-    // Google Maps fallback
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, "_blank");
+    window.open(googleUrl, "_blank");
   }
 }
 </script>

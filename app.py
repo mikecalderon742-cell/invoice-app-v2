@@ -10763,59 +10763,6 @@ def increment_unread_count(conversation_id, user_id):
         conn.close()
 
 
-# -------------------------
-# MESSAGING CORE (STEP 1 FIX)
-# -------------------------
-def get_or_create_conversation(business_user_id: int, client_user_id: int):
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        # Try existing conversation
-        cur.execute(
-            """
-            SELECT id
-            FROM conversations
-            WHERE business_user_id = %s
-              AND client_user_id = %s
-            LIMIT 1
-            """,
-            (business_user_id, client_user_id),
-        )
-        row = cur.fetchone()
-
-        if row:
-            return row[0]
-
-        # Create new conversation
-        cur.execute(
-            """
-            INSERT INTO conversations (
-                business_user_id,
-                client_user_id,
-                created_at,
-                unread_count
-            )
-            VALUES (%s, %s, %s, 0)
-            RETURNING id
-            """,
-            (business_user_id, client_user_id, now_local()),
-        )
-
-        conversation_id = cur.fetchone()[0]
-        conn.commit()
-        return conversation_id
-
-    except Exception as e:
-        conn.rollback()
-        logger.exception("Failed to get/create conversation: %s", e)
-        return None
-
-    finally:
-        cur.close()
-        conn.close()
-
-
 def send_message_in_conversation(
     business_user_id: int,
     client_user_id: int,
