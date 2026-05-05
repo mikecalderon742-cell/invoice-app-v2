@@ -667,21 +667,47 @@
 
                 <p><strong>{{ service_request.client_name }}</strong></p>
                 <p>{{ service_request.client_email }}</p>
-                <p>
-                  {% if service_request.client_phone %}
-                    {{ service_request.client_phone }}
-                  {% else %}
-                    <span class="request-muted">
-                      {% if lang == 'es' %}
-                        Sin teléfono
-                      {% elif lang == 'zh' %}
-                        未提供电话
-                      {% else %}
-                        No phone provided
-                      {% endif %}
-                    </span>
-                  {% endif %}
-                </p>
+<!-- PHONE -->
+<p>
+  {% if service_request.client_phone %}
+    {{ service_request.client_phone }}
+  {% else %}
+    <span class="request-muted">
+      {% if lang == 'es' %}
+        Sin teléfono
+      {% elif lang == 'zh' %}
+        未提供电话
+      {% else %}
+        No phone provided
+      {% endif %}
+    </span>
+  {% endif %}
+</p>
+
+<!-- ADDRESS -->
+{% if service_request.client_address %}
+  <p>
+    {{ service_request.client_address }}
+  </p>
+
+  <div style="margin-top:10px;">
+<a 
+  href="#"
+  onclick="openMaps('{{ service_request.client_address | urlencode }}')"
+  class="btn btn-brand"
+  style="width:100%; text-align:center;"
+>
+      📍 
+      {% if lang == 'es' %}
+        Obtener direcciones
+      {% elif lang == 'zh' %}
+        获取路线
+      {% else %}
+        Get Directions
+      {% endif %}
+    </a>
+  </div>
+{% endif %}
               </div>
 
               <div class="request-info-block">
@@ -1403,6 +1429,23 @@
     >
   </div>
 </div>
+
+<script>
+function openMaps(encodedAddress) {
+  const address = decodeURIComponent(encodedAddress);
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if (isIOS) {
+    // Apple Maps
+    window.open(`https://maps.apple.com/?q=${encodeURIComponent(address)}`, "_blank");
+  } else {
+    // Google Maps fallback
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, "_blank");
+  }
+}
+</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

@@ -5096,6 +5096,7 @@ def create_service_request(
     client_name,
     client_email,
     client_phone=None,
+    client_address=None,
     request_details=None,
     preferred_date_text=None,
     preferred_time_text=None,
@@ -5148,6 +5149,7 @@ def create_service_request(
                 client_name,
                 client_email,
                 client_phone,
+                client_address,
                 request_details,
                 preferred_date_text,
                 preferred_time_text,
@@ -5170,6 +5172,7 @@ def create_service_request(
                 client_name,
                 client_email,
                 client_phone,
+                client_address,
                 request_details,
                 preferred_date_text,
                 preferred_time_text,
@@ -6069,7 +6072,7 @@ def request_detail_page(request_id):
     try:
         cur.execute(
             """
-            SELECT request_details, preferred_date_text, preferred_time_text
+            SELECT request_details, preferred_date_text, preferred_time_text, client_address
             FROM service_requests
             WHERE id = %s AND user_id = %s
             LIMIT 1
@@ -6085,6 +6088,7 @@ def request_detail_page(request_id):
         service_request["request_details"] = detail_row[0] or ""
         service_request["preferred_date_text"] = detail_row[1] or ""
         service_request["preferred_time_text"] = detail_row[2] or ""
+        service_request["client_address"] = detail_row[3] or ""
 
     request_events = get_service_request_events_for_user(request_id, user_id)
     request_photos = get_service_request_photos(request_id)
@@ -6437,6 +6441,7 @@ def public_service_request_page(user_id, service_id):
         "client_name": "",
         "client_email": client_email_fallback,
         "client_phone": "",
+        "client_address": "",
         "request_details": "",
         "preferred_date_text": "",
         "preferred_time_text": "",
@@ -6447,6 +6452,7 @@ def public_service_request_page(user_id, service_id):
         form_data["client_name"] = (request.form.get("client_name") or "").strip()
         form_data["client_email"] = (request.form.get("client_email") or client_email_fallback or "").strip()
         form_data["client_phone"] = (request.form.get("client_phone") or "").strip()
+        form_data["client_address"] = (request.form.get("client_address") or "").strip()
         form_data["request_details"] = (request.form.get("request_details") or "").strip()
         form_data["preferred_date_text"] = (request.form.get("preferred_date_text") or "").strip()
         form_data["preferred_time_text"] = (request.form.get("preferred_time_text") or "").strip()
@@ -6468,6 +6474,7 @@ def public_service_request_page(user_id, service_id):
                 client_name=form_data["client_name"],
                 client_email=form_data["client_email"],
                 client_phone=form_data["client_phone"],
+                client_address=form_data["client_address"],
                 request_details=form_data["request_details"],
                 preferred_date_text=form_data["preferred_date_text"],
                 preferred_time_text=form_data["preferred_time_text"],

@@ -636,6 +636,36 @@
                 </div>
               </div>
 
+<div class="public-request-field">
+  <label for="client_address">
+    {% if lang == 'es' %}
+      Dirección del servicio
+    {% elif lang == 'zh' %}
+      服务地址
+    {% else %}
+      Service Address
+    {% endif %}
+  </label>
+
+  <input
+    type="text"
+    id="client_address"
+    name="client_address"
+    value="{{ form_data.client_address }}"
+    placeholder="{% if lang == 'es' %}Ej. 123 Main St, Los Angeles{% elif lang == 'zh' %}例如：123 Main St, Los Angeles{% else %}Example: 123 Main St, Los Angeles{% endif %}"
+  >
+
+  <div class="public-request-help">
+    {% if lang == 'es' %}
+      Esto permite al negocio saber exactamente dónde realizar el trabajo.
+    {% elif lang == 'zh' %}
+      这可以帮助商家知道工作地点。
+    {% else %}
+      This helps the business know exactly where the job is located.
+    {% endif %}
+  </div>
+</div>
+
               <div class="public-request-field">
                 <label for="client_email">
                   {% if lang == 'es' %}
