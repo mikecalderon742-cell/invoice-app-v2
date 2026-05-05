@@ -227,14 +227,14 @@
     background: radial-gradient(circle, rgba(59,130,246,0.18), transparent 68%);
   }
 
-  .pricing-simple {
-    transform: translateY(-6px);
-    background: linear-gradient(180deg, rgba(240,253,250,0.98), rgba(204,251,241,0.94));
-    border-color: rgba(13,148,136,0.22);
-    box-shadow:
-      0 30px 72px rgba(13,148,136,0.14),
-      0 0 0 1px rgba(13,148,136,0.08);
-  }
+.pricing-simple {
+  transform: translateY(-6px);
+  background: linear-gradient(180deg, rgba(239,246,255,0.98), rgba(219,234,254,0.94));
+  border-color: rgba(59,130,246,0.22);
+  box-shadow:
+    0 30px 72px rgba(37,99,235,0.16),
+    0 0 0 1px rgba(59,130,246,0.08);
+}
 
   .pricing-simple::after {
     background: radial-gradient(circle, rgba(20,184,166,0.26), transparent 68%);
@@ -548,9 +548,10 @@
       0 0 0 1px rgba(255,255,255,0.18) inset;
   }
 
-  .pricing-simple .btn-brand {
-    background: linear-gradient(135deg, #0f766e, #14b8a6) !important;
-  }
+.pricing-simple .btn-brand {
+  background: linear-gradient(135deg, #facc15, #f59e0b) !important;
+  color: #0f172a !important;
+}
 
   .pricing-pro .btn-brand {
     background: linear-gradient(135deg, #facc15, #f59e0b) !important;
@@ -1076,12 +1077,12 @@ Start free, then upgrade to Pro when you're ready to get paid online, automate y
 
         {% if key == 'simple' %}
           <div class="pricing-ai-callout">
-            <strong>
-              {% if lang == 'es' %}
-                Ideal para facturación simple:
-              {% elif lang == 'zh' %}
-                适合简单开票：
-              {% else %}
+<strong>
+  {% if lang == 'es' %}
+    Todo lo que necesitas para manejar tu negocio:
+  {% elif lang == 'zh' %}
+    经营业务所需的一切：
+  {% else %}
                 Everything you need to run your business:
               {% endif %}
             </strong>
