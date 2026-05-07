@@ -8171,13 +8171,13 @@ def settings():
                 filename = secure_filename(logo_file.filename)
                 unique_name = f"{uuid.uuid4()}_{filename}"
 
-                upload_folder = os.path.join(PERSISTENT_STORAGE_ROOT, "uploads")
+                upload_folder = os.path.join("static", "uploads")
                 os.makedirs(upload_folder, exist_ok=True)
 
                 file_path = os.path.join(upload_folder, unique_name)
                 logo_file.save(file_path)
 
-                new_logo = f"/uploads/{unique_name}"
+                new_logo = f"/static/uploads/{unique_name}"
 
             else:
                 new_logo = (request.form.get("logo_url") or "").strip()
