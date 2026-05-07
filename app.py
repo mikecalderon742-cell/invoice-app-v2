@@ -10618,7 +10618,7 @@ def stripe_webhook():
         logger.warning("[Stripe] Invalid signature")
         return "Invalid signature", 400
 
-    event_type = event.get("type")
+    event_type = event["type"]
     logger.info("[Stripe] Received event: %s", event_type)
 
     if event_type == "checkout.session.completed":
