@@ -9026,9 +9026,9 @@ def public_invoice(token):
         try:
             session_obj = stripe.checkout.Session.retrieve(session_id)
 
-            session_mode = (session_obj.get("mode") or "").lower()
-            payment_status = (session_obj.get("payment_status") or "").lower()
-            metadata = session_obj.get("metadata") or {}
+            session_mode = (session_obj["mode"] or "").lower()
+            payment_status = (session_obj["payment_status"] or "").lower()
+            metadata = session_obj["metadata"] or {}
 
             metadata_token = metadata.get("token") or metadata.get("public_token")
             invoice_id_str = metadata.get("invoice_id")
@@ -10623,7 +10623,7 @@ def stripe_webhook():
 
     if event_type == "checkout.session.completed":
         session_obj = event["data"]["object"]
-        mode = (session_obj.get("mode") or "").lower()
+        mode = (session_obj["mode"] or "").lower()
 
         if mode == "payment":
             _record_invoice_payment_from_checkout_session(session_obj)
@@ -10638,7 +10638,7 @@ def stripe_webhook():
 
     if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         sub = event["data"]["object"]
-        customer_id = sub.get("customer")
+        customer_id = sub["customer"]
         status = (sub.get("status") or "").lower()
         sub_metadata = sub.get("metadata") or {}
         paid_plan = normalize_plan_key(sub_metadata.get("plan_key") or "pro")
@@ -10647,7 +10647,7 @@ def stripe_webhook():
         logger.info(
             "[Stripe] Subscription sync customer=%s sub=%s status=%s => plan=%s",
             customer_id,
-            sub.get("id"),
+            sub["id"],
             status,
             new_plan,
         )
@@ -10666,7 +10666,7 @@ def stripe_webhook():
                     stripe_subscription_id = %s
                 WHERE stripe_customer_id = %s
                 """,
-                (new_plan, sub.get("id"), customer_id),
+                (new_plan, sub["id"], customer_id),
             )
             conn.commit()
             updated = cursor.rowcount
