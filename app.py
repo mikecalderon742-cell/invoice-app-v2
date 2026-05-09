@@ -944,6 +944,28 @@ def init_db():
         "ALTER TABLE services ADD COLUMN IF NOT EXISTS availability_notes TEXT;"
     )
 
+    # -------------------------
+    # SAFE COLUMN ADDS (LISTINGS ENGINE)
+    # -------------------------
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS image_urls TEXT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS location_address TEXT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS location_lat FLOAT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS location_lng FLOAT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS details_json TEXT;"
+    )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS category_tag TEXT;"
+    )
+
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS invoice_events (
