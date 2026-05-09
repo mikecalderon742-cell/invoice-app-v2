@@ -10603,7 +10603,7 @@ def stripe_webhook():
 
     if not STRIPE_WEBHOOK_SECRET:
         logger.warning("[Stripe] Webhook called but STRIPE_WEBHOOK_SECRET is not set")
-        return "Webhook secret not configured", 500
+        return "", 200  # ⚠️ DO NOT RETURN 500
 
     try:
         event = stripe.Webhook.construct_event(
@@ -10613,71 +10613,83 @@ def stripe_webhook():
         )
     except ValueError:
         logger.warning("[Stripe] Invalid payload")
-        return "Invalid payload", 400
+        return "", 400
     except stripe.error.SignatureVerificationError:
         logger.warning("[Stripe] Invalid signature")
-        return "Invalid signature", 400
+        return "", 400
 
-    event_type = event.get("type")
-    logger.info("[Stripe] Received event: %s", event_type)
+    try:
+        event_type = event["type"]
+        logger.info("[Stripe] Received event: %s", event_type)
 
-    if event_type == "checkout.session.completed":
-        session_obj = event["data"]["object"]
-        mode = (session_obj.get("mode") or "").lower()
+        # =========================
+        # CHECKOUT COMPLETED
+        # =========================
+        if event_type == "checkout.session.completed":
+            session_obj = event["data"]["object"]
+            mode = (session_obj["mode"] if "mode" in session_obj else "").lower()
 
-        if mode == "payment":
-            _record_invoice_payment_from_checkout_session(session_obj)
-            return "OK", 200
+            if mode == "payment":
+                _record_invoice_payment_from_checkout_session(session_obj)
+                return "", 200
 
-        if mode == "subscription":
-            _handle_subscription_checkout_completed(session_obj)
-            return "OK", 200
+            if mode == "subscription":
+                _handle_subscription_checkout_completed(session_obj)
+                return "", 200
 
-        logger.info("[Stripe] checkout.session.completed with unsupported mode=%s", mode)
-        return "OK", 200
+            logger.info("[Stripe] Unsupported checkout mode=%s", mode)
+            return "", 200
 
-    if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
-        sub = event["data"]["object"]
-        customer_id = sub.get("customer")
-        status = (sub.get("status") or "").lower()
-        sub_metadata = sub.get("metadata") or {}
-        paid_plan = normalize_plan_key(sub_metadata.get("plan_key") or "pro")
-        new_plan = paid_plan if status in ("active", "trialing") else "free"
+        # =========================
+        # SUBSCRIPTION EVENTS
+        # =========================
+        if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
+            sub = event["data"]["object"]
 
-        logger.info(
-            "[Stripe] Subscription sync customer=%s sub=%s status=%s => plan=%s",
-            customer_id,
-            sub.get("id"),
-            status,
-            new_plan,
-        )
+            customer_id = sub["customer"] if "customer" in sub else None
+            status = (sub["status"] if "status" in sub else "").lower()
+            sub_metadata = sub["metadata"] if "metadata" in sub else {}
 
-        if not customer_id:
-            logger.warning("[Stripe] Missing customer_id on subscription event")
-            return "OK", 200
+            paid_plan = normalize_plan_key(sub_metadata.get("plan_key") or "pro")
+            new_plan = paid_plan if status in ("active", "trialing") else "free"
 
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                UPDATE users
-                SET plan = %s,
-                    stripe_subscription_id = %s
-                WHERE stripe_customer_id = %s
-                """,
-                (new_plan, sub.get("id"), customer_id),
+            logger.info(
+                "[Stripe] Subscription sync customer=%s sub=%s status=%s => plan=%s",
+                customer_id,
+                sub["id"],
+                status,
+                new_plan,
             )
-            conn.commit()
-            updated = cursor.rowcount
-            cursor.close()
-            conn.close()
 
-            logger.info("[Stripe] Subscription sync rows_updated=%s for customer_id=%s", updated, customer_id)
-        except Exception:
-            logger.exception("[Stripe] subscription sync error")
+            if customer_id:
+                try:
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
 
-    return "OK", 200
+                    cursor.execute(
+                        """
+                        UPDATE users
+                        SET plan = %s,
+                            stripe_subscription_id = %s
+                        WHERE stripe_customer_id = %s
+                        """,
+                        (new_plan, sub["id"], customer_id),
+                    )
+
+                    conn.commit()
+                    logger.info("[Stripe] Subscription sync rows_updated=%s", cursor.rowcount)
+
+                    cursor.close()
+                    conn.close()
+                except Exception:
+                    logger.exception("[Stripe] subscription sync error")
+
+        return "", 200
+
+    except Exception as e:
+        # 🚨 THIS IS WHAT STOPS STRIPE RETRIES
+        logger.exception("[Stripe] CRITICAL WEBHOOK ERROR: %s", str(e))
+        return "", 200
 
 
 # -------------------------
