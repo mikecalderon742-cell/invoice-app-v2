@@ -131,6 +131,34 @@
             grid-column: 1 / -1;
         }
 
+.listing-form-section {
+    grid-column: 1 / -1;
+    margin: 8px 0 2px;
+    padding: 13px 14px;
+    border-radius: 18px;
+    background:
+        linear-gradient(135deg, rgba(58,139,255,.08), rgba(16,185,129,.05)),
+        rgba(248,250,252,.86);
+    border: 1px solid rgba(148,163,184,.16);
+}
+
+.listing-form-section span {
+    display: block;
+    color: #0f172a;
+    font-size: .86rem;
+    font-weight: 950;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.listing-form-section small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: .84rem;
+    line-height: 1.45;
+}
+
         .services-label {
             font-size: .92rem;
             font-weight: 700;
@@ -1039,6 +1067,21 @@
             color: #94a3b8;
         }
 
+body.dark .listing-form-section {
+    background:
+        linear-gradient(135deg, rgba(58,139,255,.14), rgba(16,185,129,.08)),
+        rgba(15,23,42,.72);
+    border-color: rgba(148,163,184,.16);
+}
+
+body.dark .listing-form-section span {
+    color: #f8fafc;
+}
+
+body.dark .listing-form-section small {
+    color: #cbd5e1;
+}
+
 body.dark #listing_type {
     background:
         linear-gradient(135deg, rgba(58,139,255,.16), rgba(16,185,129,.10)),
@@ -1291,7 +1334,7 @@ body.dark .listing-details-empty {
         </div>
 
         <h1>
-            {{ t('manage_services', current_lang) }}
+            Listings Studio
         </h1>
 
         <p>
@@ -1336,9 +1379,9 @@ body.dark .listing-details-empty {
             <div class="services-panel-header">
                 <h2 class="services-panel-title">
                     {% if edit_service %}
-                        {{ t('edit', current_lang) }} {{ t('service_name', current_lang) }}
+                        Edit Listing
                     {% else %}
-                        {{ t('add_service', current_lang) }}
+                        Create Listing
                     {% endif %}
                 </h2>
 
@@ -1370,6 +1413,10 @@ body.dark .listing-details-empty {
                     <input type="hidden" name="lang" value="{{ current_lang }}">
 
                     <div class="services-form-grid">
+                        <div class="listing-form-section full">
+                            <span>Listing Identity</span>
+                            <small>Name, description, type, pricing, and category.</small>
+                        </div>
                         <div class="services-field full">
                             <label class="services-label" for="name">
                                 {{ t('service_name', current_lang) }}
@@ -1487,6 +1534,11 @@ body.dark .listing-details-empty {
                         </div>
                     </div>
 
+<div class="listing-form-section full">
+    <span>Media & Location</span>
+    <small>Photos, address, and public-facing listing context.</small>
+</div>
+
                    <div class="services-field">
     <label class="services-label" for="service_image">
         {% if current_lang == 'es' %}
@@ -1494,7 +1546,7 @@ body.dark .listing-details-empty {
         {% elif current_lang == 'zh' %}
             服务图片
         {% else %}
-            Service Photo
+            Cover Photo
         {% endif %}
     </label>
 
@@ -1525,6 +1577,11 @@ body.dark .listing-details-empty {
             >
         </div>
     {% endif %}
+</div>
+
+<div class="listing-form-section full">
+    <span>Smart Specs</span>
+    <small>Use templates or custom details to make the listing feel complete.</small>
 </div>
 
 <div class="services-field full">
@@ -1631,7 +1688,7 @@ body.dark .listing-details-empty {
                     <div class="services-form-actions">
                         {% if edit_service %}
                             <button type="submit" class="services-btn services-btn-primary">
-                                {{ t('update', current_lang) }}
+                                Update Listing
                             </button>
 
                             <a href="{{ url_for('services_page', lang=current_lang) }}" class="services-btn services-btn-neutral">
@@ -1639,7 +1696,7 @@ body.dark .listing-details-empty {
                             </a>
                         {% else %}
                             <button type="submit" class="services-btn services-btn-primary">
-                                {{ t('add_service', current_lang) }}
+                                Publish Listing
                             </button>
                         {% endif %}
                     </div>
