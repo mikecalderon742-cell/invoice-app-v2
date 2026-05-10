@@ -12,6 +12,46 @@
             margin: 0 auto;
         }
 
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.services-page-shell {
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+    body {
+        background-color: #f8fafc;
+    }
+
+    body.dark {
+        background-color: #020617;
+    }
+
+    .services-page-shell {
+        min-height: 100vh;
+        overscroll-behavior-y: contain;
+    }
+}
+
+.services-top-grid,
+.services-panel,
+.services-list-wrap,
+.services-card-grid,
+.service-card {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.services-panel,
+.service-card {
+    overscroll-behavior: contain;
+}
+
         .services-hero {
             position: relative;
             overflow: hidden;
