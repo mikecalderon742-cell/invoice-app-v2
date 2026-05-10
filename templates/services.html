@@ -435,6 +435,75 @@
     box-shadow: 0 10px 24px rgba(2,6,23,.22);
 }
 
+.listing-image-strip::after {
+    content: "Swipe";
+    position: sticky;
+    right: 12px;
+    align-self: flex-end;
+    margin: 0 12px 12px -70px;
+    z-index: 4;
+    width: fit-content;
+    height: fit-content;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.18);
+    color: #ffffff;
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 24px rgba(2,6,23,.22);
+    pointer-events: none;
+}
+
+.listing-image-strip:has(.listing-image:only-child)::after {
+    display: none;
+}
+
+.service-card-media {
+    isolation: isolate;
+}
+
+.service-card-media::before {
+    background:
+        linear-gradient(180deg, rgba(2,6,23,.16), transparent 34%, rgba(2,6,23,.32)),
+        linear-gradient(135deg, rgba(255,255,255,.16), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 44%);
+}
+
+.listing-image {
+    transition: transform .28s ease, filter .28s ease;
+}
+
+.service-card:hover .listing-image {
+    transform: scale(1.025);
+    filter: saturate(1.06) contrast(1.02);
+}
+
+.listing-carousel-dots {
+    position: absolute;
+    left: 12px;
+    bottom: 14px;
+    z-index: 4;
+    display: flex;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.listing-carousel-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.48);
+    box-shadow: 0 4px 12px rgba(2,6,23,.24);
+}
+
+.listing-carousel-dots span:first-child {
+    width: 18px;
+    background: rgba(255,255,255,.92);
+}
+
 .listing-category-pill {
     display: inline-flex;
     width: fit-content;
@@ -1599,6 +1668,14 @@ document.addEventListener("DOMContentLoaded", function () {
             {% if listing_images|length > 1 %}
                 <div class="listing-photo-count">
                     {{ listing_images|length }} photos
+                </div>
+            {% endif %}
+
+            {% if listing_images|length > 1 %}
+                <div class="listing-carousel-dots" aria-hidden="true">
+                    {% for image_url in listing_images[:5] %}
+                        <span></span>
+                    {% endfor %}
                 </div>
             {% endif %}
         {% elif service.image_url %}
