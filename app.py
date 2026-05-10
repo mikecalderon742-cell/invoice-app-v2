@@ -7261,15 +7261,25 @@ def create_service_route():
             )
         )
 
+    uploaded_service_images = request.files.getlist("service_images")
     uploaded_service_image = request.files.get("service_image")
+
+    uploaded_image_urls = []
     uploaded_service_image_url = ""
 
-    if uploaded_service_image and (uploaded_service_image.filename or "").strip():
-        uploaded_service_image_url, image_error = save_uploaded_service_image(
-            uploaded_service_image,
+    # -------------------------
+    # MULTI IMAGE SUPPORT
+    # -------------------------
+    for image_file in uploaded_service_images:
+        if not image_file or not (image_file.filename or "").strip():
+            continue
+
+        image_url, image_error = save_uploaded_service_image(
+            image_file,
             user_id,
             None,
         )
+
         if image_error:
             return redirect(
                 lang_url_for(
@@ -7278,20 +7288,60 @@ def create_service_route():
                 )
             )
 
+        if image_url:
+            uploaded_image_urls.append(image_url)
+
+    # -------------------------
+    # BACKWARD COMPATIBILITY
+    # -------------------------
+    if not uploaded_image_urls and uploaded_service_image:
+        if (uploaded_service_image.filename or "").strip():
+            uploaded_service_image_url, image_error = save_uploaded_service_image(
+                uploaded_service_image,
+                user_id,
+                None,
+            )
+
+            if image_error:
+                return redirect(
+                    lang_url_for(
+                        "services_page",
+                        service_error=image_error,
+                    )
+                )
+
+            if uploaded_service_image_url:
+                uploaded_image_urls.append(uploaded_service_image_url)
+
+    if uploaded_image_urls:
+        uploaded_service_image_url = uploaded_image_urls[0]
+
     try:
+        duration_value = (
+            int(request.form.get("duration_minutes") or 0) or None
+        )
+
+        details_json_value = (
+            request.form.get("details_json") or ""
+        ).strip()
+
         create_user_service(
             user_id=user_id,
             name=validation["name"],
             description=validation["description"],
             price=validation["price"],
             image_url=uploaded_service_image_url,
+            image_urls=serialize_image_urls(uploaded_image_urls),
             pricing_type=request.form.get("pricing_type") or "fixed",
-            duration_minutes=int(request.form.get("duration_minutes") or 0) or None,
+            duration_minutes=duration_value,
             category=request.form.get("category") or "",
             location_required=bool(request.form.get("location_required")),
             materials_included=request.form.get("materials_included") or "",
             photo_required=bool(request.form.get("photo_required")),
             availability_notes=request.form.get("availability_notes") or "",
+            location_address=request.form.get("location_address") or "",
+            details_json=details_json_value or "{}",
+            category_tag=request.form.get("category_tag") or "",
         )
     except Exception:
         logger.exception("Failed creating service for user_id=%s", user_id)
@@ -7341,15 +7391,25 @@ def update_service_route(service_id):
             )
         )
 
+    uploaded_service_images = request.files.getlist("service_images")
     uploaded_service_image = request.files.get("service_image")
-    final_service_image_url = None
 
-    if uploaded_service_image and (uploaded_service_image.filename or "").strip():
-        final_service_image_url, image_error = save_uploaded_service_image(
-            uploaded_service_image,
+    final_service_image_url = None
+    updated_image_urls = list(existing.get("images") or [])
+
+    # -------------------------
+    # MULTI IMAGE SUPPORT
+    # -------------------------
+    for image_file in uploaded_service_images:
+        if not image_file or not (image_file.filename or "").strip():
+            continue
+
+        image_url, image_error = save_uploaded_service_image(
+            image_file,
             user_id,
             service_id,
         )
+
         if image_error:
             return redirect(
                 lang_url_for(
@@ -7359,9 +7419,41 @@ def update_service_route(service_id):
                 )
             )
 
+        if image_url and image_url not in updated_image_urls:
+            updated_image_urls.append(image_url)
+
+    # -------------------------
+    # BACKWARD COMPATIBILITY
+    # -------------------------
+    if uploaded_service_image and (uploaded_service_image.filename or "").strip():
+        image_url, image_error = save_uploaded_service_image(
+            uploaded_service_image,
+            user_id,
+            service_id,
+        )
+
+        if image_error:
+            return redirect(
+                lang_url_for(
+                    "services_page",
+                    edit=service_id,
+                    service_error=image_error,
+                )
+            )
+
+        if image_url and image_url not in updated_image_urls:
+            updated_image_urls.append(image_url)
+
+    if updated_image_urls:
+        final_service_image_url = updated_image_urls[0]
+
     try:
         duration_raw = request.form.get("duration_minutes")
         duration_value = int(duration_raw) if duration_raw and duration_raw.isdigit() else None
+
+        details_json_value = (
+            request.form.get("details_json") or existing.get("details_json") or "{}"
+        ).strip() or "{}"
 
         updated = update_user_service(
             service_id=service_id,
@@ -7370,6 +7462,7 @@ def update_service_route(service_id):
             description=validation["description"],
             price=validation["price"],
             image_url=final_service_image_url,
+            image_urls=serialize_image_urls(updated_image_urls),
             pricing_type=request.form.get("pricing_type") or "fixed",
             duration_minutes=duration_value,
             category=request.form.get("category") or "",
@@ -7377,6 +7470,9 @@ def update_service_route(service_id):
             materials_included=request.form.get("materials_included") or "",
             photo_required=True if request.form.get("photo_required") else False,
             availability_notes=request.form.get("availability_notes") or "",
+            location_address=request.form.get("location_address") or "",
+            details_json=details_json_value,
+            category_tag=request.form.get("category_tag") or "",
         )
         if not updated:
             return redirect(
