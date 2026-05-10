@@ -997,6 +997,9 @@ def init_db():
     cursor.execute(
         "ALTER TABLE services ADD COLUMN IF NOT EXISTS category_tag TEXT;"
     )
+    cursor.execute(
+        "ALTER TABLE services ADD COLUMN IF NOT EXISTS listing_type TEXT DEFAULT 'service';"
+    )
 
     cursor.execute(
         """
@@ -3980,7 +3983,8 @@ def get_user_services(user_id: int, include_inactive: bool = False):
                 location_lat,
                 location_lng,
                 details_json,
-                category_tag
+                category_tag,
+                listing_type
             FROM services
             WHERE user_id = %s
         """
@@ -4029,6 +4033,7 @@ def get_user_services(user_id: int, include_inactive: bool = False):
                 "details_json": row[19] or "",
                 "details": parse_details(row[19]),
                 "category_tag": row[20] or "",
+                "listing_type": row[21] or "service",
             }
         )
     return services
@@ -4061,7 +4066,8 @@ def get_service_by_id(service_id: int, user_id: int):
                 location_lat,
                 location_lng,
                 details_json,
-                category_tag
+                category_tag,
+                listing_type
             FROM services
             WHERE id = %s AND user_id = %s
             LIMIT 1
@@ -4103,6 +4109,7 @@ def get_service_by_id(service_id: int, user_id: int):
         "details_json": row[19] or "",
         "details": parse_details(row[19]),
         "category_tag": row[20] or "",
+        "listing_type": row[21] or "service",
     }
 
 
@@ -4125,6 +4132,7 @@ def create_user_service(
     location_lng=None,
     details_json: str = "",
     category_tag: str = "",
+    listing_type: str = "service",
 ):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -4150,10 +4158,11 @@ def create_user_service(
                 location_lng,
                 details_json,
                 category_tag,
+                listing_type,
                 is_active,
                 created_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
             RETURNING id
             """,
             (
@@ -4175,6 +4184,7 @@ def create_user_service(
                 location_lng,
                 details_json or "{}",
                 category_tag.strip(),
+                listing_type.strip() or "service",
                 now_local(),
             ),
         )
@@ -4207,6 +4217,7 @@ def update_user_service(
     location_lng=None,
     details_json=None,
     category_tag=None,
+    listing_type=None,
     **kwargs
 ):
     conn = get_db_connection()
@@ -4223,6 +4234,7 @@ def update_user_service(
                 duration_minutes = %s,
                 image_url = COALESCE(%s, image_url),
                 category = COALESCE(%s, category),
+                listing_type = COALESCE(%s, listing_type)
                 availability_notes = COALESCE(%s, availability_notes),
                 location_required = COALESCE(%s, location_required),
                 image_urls = COALESCE(%s, image_urls),
@@ -4249,6 +4261,7 @@ def update_user_service(
                 location_lng,
                 details_json,
                 category_tag,
+                listing_type,
                 service_id,
                 user_id,
             ),
@@ -7342,6 +7355,7 @@ def create_service_route():
             location_address=request.form.get("location_address") or "",
             details_json=details_json_value or "{}",
             category_tag=request.form.get("category_tag") or "",
+            listing_type=request.form.get("listing_type") or "service",
         )
     except Exception:
         logger.exception("Failed creating service for user_id=%s", user_id)
@@ -7473,6 +7487,7 @@ def update_service_route(service_id):
             location_address=request.form.get("location_address") or "",
             details_json=details_json_value,
             category_tag=request.form.get("category_tag") or "",
+            listing_type=request.form.get("listing_type") or "service",
         )
         if not updated:
             return redirect(

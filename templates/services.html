@@ -157,6 +157,24 @@
             box-shadow: 0 0 0 4px rgba(58,139,255,.12);
         }
 
+#listing_type,
+#pricing_type {
+    font-weight: 800;
+    cursor: pointer;
+}
+
+#listing_type {
+    background:
+        linear-gradient(135deg, rgba(58,139,255,.08), rgba(16,185,129,.06)),
+        #ffffff;
+}
+
+#pricing_type {
+    background:
+        linear-gradient(135deg, rgba(139,92,246,.08), rgba(58,139,255,.06)),
+        #ffffff;
+}
+
         .services-textarea {
             min-height: 130px;
             resize: vertical;
@@ -504,6 +522,14 @@
     background: rgba(255,255,255,.92);
 }
 
+.listing-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.listing-type-pill,
 .listing-category-pill {
     display: inline-flex;
     width: fit-content;
@@ -518,6 +544,48 @@
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: .06em;
+}
+
+.listing-type-pill {
+    background: rgba(15,23,42,.08);
+    border: 1px solid rgba(15,23,42,.12);
+    color: #0f172a;
+}
+
+.listing-type-pill.type-service {
+    background: rgba(58,139,255,.11);
+    border-color: rgba(58,139,255,.20);
+    color: #1d4ed8;
+}
+
+.listing-type-pill.type-rental {
+    background: rgba(16,185,129,.12);
+    border-color: rgba(16,185,129,.22);
+    color: #047857;
+}
+
+.listing-type-pill.type-product {
+    background: rgba(139,92,246,.12);
+    border-color: rgba(139,92,246,.22);
+    color: #6d28d9;
+}
+
+.listing-type-pill.type-property {
+    background: rgba(245,158,11,.14);
+    border-color: rgba(245,158,11,.24);
+    color: #b45309;
+}
+
+.listing-type-pill.type-event {
+    background: rgba(236,72,153,.12);
+    border-color: rgba(236,72,153,.22);
+    color: #be185d;
+}
+
+.listing-type-pill.type-consultation {
+    background: rgba(20,184,166,.12);
+    border-color: rgba(20,184,166,.22);
+    color: #0f766e;
 }
 
 .listing-quick-meta {
@@ -964,6 +1032,18 @@
             color: #94a3b8;
         }
 
+body.dark #listing_type {
+    background:
+        linear-gradient(135deg, rgba(58,139,255,.16), rgba(16,185,129,.10)),
+        rgba(2,6,23,.72);
+}
+
+body.dark #pricing_type {
+    background:
+        linear-gradient(135deg, rgba(139,92,246,.16), rgba(58,139,255,.10)),
+        rgba(2,6,23,.72);
+}
+
         body.dark .services-price-wrap .services-currency {
             color: #cbd5e1;
         }
@@ -1313,22 +1393,69 @@ body.dark .listing-details-empty {
                         </div>
 
 <div class="services-field">
+    <label class="services-label" for="listing_type">
+        Listing Type
+    </label>
+
+    {% set selected_listing_type = (edit_service.listing_type if edit_service else 'service')|default('service', true) %}
+
+    <select
+        class="services-input"
+        id="listing_type"
+        name="listing_type"
+    >
+        <option value="service" {% if selected_listing_type == "service" %}selected{% endif %}>Service</option>
+        <option value="rental" {% if selected_listing_type == "rental" %}selected{% endif %}>Rental</option>
+        <option value="product" {% if selected_listing_type == "product" %}selected{% endif %}>Product</option>
+        <option value="property" {% if selected_listing_type == "property" %}selected{% endif %}>Property</option>
+        <option value="event" {% if selected_listing_type == "event" %}selected{% endif %}>Event</option>
+        <option value="consultation" {% if selected_listing_type == "consultation" %}selected{% endif %}>Consultation</option>
+    </select>
+</div>
+
+<div class="services-field">
     <label class="services-label" for="pricing_type">
         Pricing Type
     </label>
+{% set selected_pricing_type = (edit_service.pricing_type if edit_service else 'fixed')|default('fixed', true) %}
+
 <select
     class="services-input"
     id="pricing_type"
     name="pricing_type"
 >
-    <option value="fixed" {% if edit_service and edit_service.pricing_type == "fixed" %}selected{% endif %}>
+    <option value="fixed" data-listing-types="service product event consultation" {% if selected_pricing_type == "fixed" %}selected{% endif %}>
         Fixed Price
     </option>
-    <option value="hourly" {% if edit_service and edit_service.pricing_type == "hourly" %}selected{% endif %}>
+    <option value="hourly" data-listing-types="service consultation" {% if selected_pricing_type == "hourly" %}selected{% endif %}>
         Hourly
     </option>
-    <option value="quote" {% if edit_service and edit_service.pricing_type == "quote" %}selected{% endif %}>
+    <option value="quote" data-listing-types="service product property rental event consultation" {% if selected_pricing_type == "quote" %}selected{% endif %}>
         Custom Quote
+    </option>
+    <option value="daily" data-listing-types="rental" {% if selected_pricing_type == "daily" %}selected{% endif %}>
+        Daily Rental
+    </option>
+    <option value="weekly" data-listing-types="rental" {% if selected_pricing_type == "weekly" %}selected{% endif %}>
+        Weekly Rental
+    </option>
+    <option value="monthly" data-listing-types="rental property" {% if selected_pricing_type == "monthly" %}selected{% endif %}>
+        Monthly
+    </option>
+    <option value="sale" data-listing-types="property product" {% if selected_pricing_type == "sale" %}selected{% endif %}>
+        For Sale
+    </option>
+    <option value="rent" data-listing-types="property" {% if selected_pricing_type == "rent" %}selected{% endif %}>
+        For Rent
+    </option>
+    <option value="financing" data-listing-types="product property auto" {% if selected_pricing_type == "financing" %}selected{% endif %}>
+        Financing Available
+    </option>
+    <option value="ticketed" data-listing-types="event" {% if selected_pricing_type == "ticketed" %}selected{% endif %}>
+        Ticketed
+    </option>
+    <option value="free" data-listing-types="event consultation" {% if selected_pricing_type == "free" %}selected{% endif %}>
+        Free
     </option>
 </select>
 </div>
@@ -1507,31 +1634,101 @@ body.dark .listing-details-empty {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const listingSelect = document.getElementById("listing_type");
     const pricingSelect = document.getElementById("pricing_type");
     const priceInput = document.getElementById("price");
-    const priceFieldWrap = priceInput.closest(".services-field");
+    const priceFieldWrap = priceInput ? priceInput.closest(".services-field") : null;
     const priceLabel = document.querySelector('label[for="price"]');
+
+    if (!listingSelect || !pricingSelect || !priceInput || !priceFieldWrap || !priceLabel) return;
+
+    function optionSupportsListing(option, listingType) {
+        const supported = (option.dataset.listingTypes || "").split(" ");
+        return supported.includes(listingType);
+    }
+
+    function ensureVisibleSelectedOption(listingType) {
+        const selectedOption = pricingSelect.options[pricingSelect.selectedIndex];
+
+        if (selectedOption && optionSupportsListing(selectedOption, listingType)) {
+            return;
+        }
+
+        for (const option of pricingSelect.options) {
+            if (optionSupportsListing(option, listingType)) {
+                pricingSelect.value = option.value;
+                return;
+            }
+        }
+    }
+
+    function updatePricingOptions() {
+        const listingType = listingSelect.value || "service";
+
+        Array.from(pricingSelect.options).forEach((option) => {
+            const supported = optionSupportsListing(option, listingType);
+            option.hidden = !supported;
+            option.disabled = !supported;
+        });
+
+        ensureVisibleSelectedOption(listingType);
+        updatePricingUI();
+    }
 
     function updatePricingUI() {
         const type = pricingSelect.value;
 
+        priceFieldWrap.style.opacity = "1";
+        priceFieldWrap.style.pointerEvents = "auto";
+
         if (type === "quote") {
-            priceFieldWrap.style.opacity = "0.4";
-            priceFieldWrap.style.pointerEvents = "none";
-            priceLabel.innerText = "Price (Not required)";
+            priceInput.required = false;
+            priceLabel.innerText = "Estimated Price";
+            priceInput.placeholder = "Optional";
         } else if (type === "hourly") {
-            priceFieldWrap.style.opacity = "1";
-            priceFieldWrap.style.pointerEvents = "auto";
+            priceInput.required = false;
             priceLabel.innerText = "Hourly Rate";
-        } else {
-            priceFieldWrap.style.opacity = "1";
-            priceFieldWrap.style.pointerEvents = "auto";
+            priceInput.placeholder = "0.00";
+        } else if (type === "daily") {
+            priceInput.required = false;
+            priceLabel.innerText = "Daily Rate";
+            priceInput.placeholder = "0.00";
+        } else if (type === "weekly") {
+            priceInput.required = false;
+            priceLabel.innerText = "Weekly Rate";
+            priceInput.placeholder = "0.00";
+        } else if (type === "monthly" || type === "rent") {
+            priceInput.required = false;
+            priceLabel.innerText = "Monthly Price";
+            priceInput.placeholder = "0.00";
+        } else if (type === "sale") {
+            priceInput.required = false;
+            priceLabel.innerText = "Sale Price";
+            priceInput.placeholder = "0.00";
+        } else if (type === "financing") {
+            priceInput.required = false;
+            priceLabel.innerText = "Starting Price";
+            priceInput.placeholder = "Optional";
+        } else if (type === "ticketed") {
+            priceInput.required = false;
+            priceLabel.innerText = "Ticket Price";
+            priceInput.placeholder = "0.00";
+        } else if (type === "free") {
+            priceInput.required = false;
             priceLabel.innerText = "Price";
+            priceInput.value = "0.00";
+            priceInput.placeholder = "Free";
+        } else {
+            priceInput.required = false;
+            priceLabel.innerText = "Price";
+            priceInput.placeholder = "0.00";
         }
     }
 
+    listingSelect.addEventListener("change", updatePricingOptions);
     pricingSelect.addEventListener("change", updatePricingUI);
-    updatePricingUI();
+
+    updatePricingOptions();
 });
 </script>
 
@@ -1698,15 +1895,33 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="service-card-inner">
         <div class="service-card-top">
             <div class="service-card-title-wrap">
-                {% if service.category_tag %}
-                    <div class="listing-category-pill">
-                        {{ service.category_tag }}
-                    </div>
-                {% elif service.category %}
-                    <div class="listing-category-pill">
-                        {{ service.category }}
-                    </div>
-                {% endif %}
+                <div class="listing-pill-row">
+                    <span class="listing-type-pill type-{{ service.listing_type or 'service' }}">
+                        {% if service.listing_type == "rental" %}
+                            Rental
+                        {% elif service.listing_type == "product" %}
+                            Product
+                        {% elif service.listing_type == "property" %}
+                            Property
+                        {% elif service.listing_type == "event" %}
+                            Event
+                        {% elif service.listing_type == "consultation" %}
+                            Consultation
+                        {% else %}
+                            Service
+                        {% endif %}
+                    </span>
+
+                    {% if service.category_tag %}
+                        <span class="listing-category-pill">
+                            {{ service.category_tag }}
+                        </span>
+                    {% elif service.category %}
+                        <span class="listing-category-pill">
+                            {{ service.category }}
+                        </span>
+                    {% endif %}
+                </div>
 
                 <h3 class="service-card-title">{{ service.name }}</h3>
 
@@ -1722,6 +1937,20 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="service-card-price">
                 {% if service.pricing_type == "hourly" %}
                     ${{ '%.2f'|format(service.price or 0) }}/hr
+                {% elif service.pricing_type == "daily" %}
+                    ${{ '%.2f'|format(service.price or 0) }}/day
+                {% elif service.pricing_type == "weekly" %}
+                    ${{ '%.2f'|format(service.price or 0) }}/week
+                {% elif service.pricing_type == "monthly" or service.pricing_type == "rent" %}
+                    ${{ '%.2f'|format(service.price or 0) }}/mo
+                {% elif service.pricing_type == "sale" %}
+                    For Sale · ${{ '%.2f'|format(service.price or 0) }}
+                {% elif service.pricing_type == "financing" %}
+                    Financing
+                {% elif service.pricing_type == "ticketed" %}
+                    Tickets · ${{ '%.2f'|format(service.price or 0) }}
+                {% elif service.pricing_type == "free" %}
+                    Free
                 {% elif service.pricing_type == "quote" %}
                     Quote
                 {% else %}
@@ -1796,10 +2025,26 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="service-card-meta">
                 {% if service.pricing_type == "hourly" %}
                     Billed hourly. Final total depends on time required.
+                {% elif service.pricing_type == "daily" %}
+                    Daily rental pricing. Final total may depend on dates, quantity, or availability.
+                {% elif service.pricing_type == "weekly" %}
+                    Weekly rental pricing for longer bookings or extended use.
+                {% elif service.pricing_type == "monthly" %}
+                    Monthly pricing for ongoing rentals, services, or recurring access.
+                {% elif service.pricing_type == "rent" %}
+                    Rental listing with monthly pricing.
+                {% elif service.pricing_type == "sale" %}
+                    Sale listing with upfront purchase pricing.
+                {% elif service.pricing_type == "financing" %}
+                    Financing may be available. Final terms are managed by the business.
+                {% elif service.pricing_type == "ticketed" %}
+                    Ticketed listing. Price may apply per attendee or per entry.
+                {% elif service.pricing_type == "free" %}
+                    Free listing. No upfront price required.
                 {% elif service.pricing_type == "quote" %}
                     Pricing provided after reviewing request details.
                 {% else %}
-                    Flat rate service with clear upfront pricing.
+                    Flat rate listing with clear upfront pricing.
                 {% endif %}
 
                 <br>
