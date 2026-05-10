@@ -560,6 +560,92 @@
     font-size: .84rem;
 }
 
+.listing-details-builder {
+    border-radius: 22px;
+    padding: 16px;
+    background:
+        radial-gradient(circle at top right, rgba(58,139,255,.14), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,.94), rgba(248,250,252,.94));
+    border: 1px solid rgba(148,163,184,.20);
+    box-shadow: 0 14px 34px rgba(15,23,42,.06);
+}
+
+.listing-details-builder-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.listing-details-builder-head div {
+    display: grid;
+    gap: 4px;
+}
+
+.listing-details-builder-head strong {
+    color: #0f172a;
+    font-size: .98rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+}
+
+.listing-details-builder-head span,
+.listing-details-empty {
+    color: #64748b;
+    font-size: .88rem;
+    line-height: 1.5;
+}
+
+.listing-details-rows {
+    display: grid;
+    gap: 10px;
+}
+
+.listing-detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(148,163,184,.16);
+}
+
+.listing-detail-row input {
+    border: 1px solid rgba(148,163,184,.24);
+    border-radius: 14px;
+    padding: 12px 13px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: .92rem;
+    outline: none;
+}
+
+.listing-detail-row input:focus {
+    border-color: rgba(58,139,255,.62);
+    box-shadow: 0 0 0 4px rgba(58,139,255,.10);
+}
+
+.listing-detail-remove {
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+    cursor: pointer;
+    background: #fff1f2;
+    color: #be123c;
+    font-weight: 900;
+}
+
+.listing-details-empty {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15,23,42,.035);
+    border: 1px dashed rgba(148,163,184,.28);
+}
+
 .service-card-media::before {
     content: "";
     position: absolute;
@@ -931,6 +1017,42 @@ body.dark .listing-location-box span {
     color: #cbd5e1;
 }
 
+body.dark .listing-details-builder {
+    background:
+        radial-gradient(circle at top right, rgba(58,139,255,.18), transparent 36%),
+        linear-gradient(180deg, rgba(15,23,42,.90), rgba(2,6,23,.90));
+    border-color: rgba(148,163,184,.16);
+}
+
+body.dark .listing-details-builder-head strong {
+    color: #f8fafc;
+}
+
+body.dark .listing-details-builder-head span,
+body.dark .listing-details-empty {
+    color: #cbd5e1;
+}
+
+body.dark .listing-detail-row {
+    background: rgba(2,6,23,.62);
+    border-color: rgba(148,163,184,.14);
+}
+
+body.dark .listing-detail-row input {
+    background: rgba(15,23,42,.82);
+    border-color: rgba(148,163,184,.18);
+    color: #f8fafc;
+}
+
+body.dark .listing-detail-row input::placeholder {
+    color: #94a3b8;
+}
+
+body.dark .listing-details-empty {
+    background: rgba(15,23,42,.50);
+    border-color: rgba(148,163,184,.20);
+}
+
         @media (max-width: 980px) {
             .services-top-grid {
                 grid-template-columns: 1fr;
@@ -1266,20 +1388,34 @@ body.dark .listing-location-box span {
 </div>
 
 <div class="services-field full">
-    <label class="services-label" for="details_json">
+    <label class="services-label">
         Listing Details
     </label>
 
-    <textarea
-        class="services-textarea"
+    <input
+        type="hidden"
         id="details_json"
         name="details_json"
-        maxlength="2000"
-        placeholder='Example: {"beds":"3","baths":"2","sqft":"1800"}'
-    >{{ (edit_service.details_json if edit_service else '')|default('', true) }}</textarea>
+        value="{{ (edit_service.details_json if edit_service else '')|default('{}', true) }}"
+    >
 
-    <div class="services-mini-note" style="margin-top: 2px;">
-        Optional. Add simple JSON details for listings that need specs, like rooms, size, color, package details, vehicle year, or included features.
+    <div class="listing-details-builder" id="listingDetailsBuilder">
+        <div class="listing-details-builder-head">
+            <div>
+                <strong>Smart Details</strong>
+                <span>Add clean specs like size, rooms, year, color, package details, or included features.</span>
+            </div>
+
+            <button type="button" class="services-btn services-btn-secondary" id="addDetailRow">
+                + Add Detail
+            </button>
+        </div>
+
+        <div class="listing-details-rows" id="listingDetailsRows"></div>
+
+        <div class="listing-details-empty" id="listingDetailsEmpty">
+            No details yet. Add your first detail to make this listing feel more complete.
+        </div>
     </div>
 </div>
 
@@ -1327,6 +1463,93 @@ document.addEventListener("DOMContentLoaded", function () {
 
     pricingSelect.addEventListener("change", updatePricingUI);
     updatePricingUI();
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const hiddenInput = document.getElementById("details_json");
+    const rowsWrap = document.getElementById("listingDetailsRows");
+    const addBtn = document.getElementById("addDetailRow");
+    const emptyState = document.getElementById("listingDetailsEmpty");
+
+    if (!hiddenInput || !rowsWrap || !addBtn || !emptyState) return;
+
+    function normalizeKey(label) {
+        return String(label || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/^_+|_+$/g, "");
+    }
+
+    function updateHiddenJson() {
+        const rows = rowsWrap.querySelectorAll(".listing-detail-row");
+        const data = {};
+
+        rows.forEach((row) => {
+            const labelInput = row.querySelector("[data-detail-label]");
+            const valueInput = row.querySelector("[data-detail-value]");
+
+            const label = labelInput ? labelInput.value.trim() : "";
+            const value = valueInput ? valueInput.value.trim() : "";
+            const key = normalizeKey(label);
+
+            if (key && value) {
+                data[key] = value;
+            }
+        });
+
+        hiddenInput.value = JSON.stringify(data);
+        emptyState.style.display = rows.length ? "none" : "block";
+    }
+
+    function addDetailRow(label = "", value = "") {
+        const row = document.createElement("div");
+        row.className = "listing-detail-row";
+
+        row.innerHTML = `
+            <input type="text" data-detail-label placeholder="Detail name" value="${String(label).replace(/"/g, "&quot;")}">
+            <input type="text" data-detail-value placeholder="Value" value="${String(value).replace(/"/g, "&quot;")}">
+            <button type="button" class="listing-detail-remove" aria-label="Remove detail">×</button>
+        `;
+
+        rowsWrap.appendChild(row);
+
+        row.querySelectorAll("input").forEach((input) => {
+            input.addEventListener("input", updateHiddenJson);
+        });
+
+        row.querySelector(".listing-detail-remove").addEventListener("click", function () {
+            row.remove();
+            updateHiddenJson();
+        });
+
+        updateHiddenJson();
+    }
+
+    function loadExistingDetails() {
+        let existing = {};
+
+        try {
+            existing = JSON.parse(hiddenInput.value || "{}");
+        } catch (e) {
+            existing = {};
+        }
+
+        Object.keys(existing || {}).forEach((key) => {
+            const prettyLabel = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+            addDetailRow(prettyLabel, existing[key]);
+        });
+
+        updateHiddenJson();
+    }
+
+    addBtn.addEventListener("click", function () {
+        addDetailRow();
+    });
+
+    loadExistingDetails();
 });
 </script>
 
