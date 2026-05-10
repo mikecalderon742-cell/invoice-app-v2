@@ -715,6 +715,13 @@
     margin-bottom: 14px;
 }
 
+.listing-details-builder-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
 .listing-details-builder-head div {
     display: grid;
     gap: 4px;
@@ -1602,9 +1609,15 @@ body.dark .listing-details-empty {
                 <span>Add clean specs like size, rooms, year, color, package details, or included features.</span>
             </div>
 
-            <button type="button" class="services-btn services-btn-secondary" id="addDetailRow">
-                + Add Detail
-            </button>
+            <div class="listing-details-builder-actions">
+                <button type="button" class="services-btn services-btn-secondary" id="applyCategoryTemplate">
+                    Apply Category Template
+                </button>
+
+                <button type="button" class="services-btn services-btn-secondary" id="addDetailRow">
+                    + Add Detail
+                </button>
+            </div>
         </div>
 
         <div class="listing-details-rows" id="listingDetailsRows"></div>
@@ -1737,6 +1750,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const hiddenInput = document.getElementById("details_json");
     const rowsWrap = document.getElementById("listingDetailsRows");
     const addBtn = document.getElementById("addDetailRow");
+    const templateBtn = document.getElementById("applyCategoryTemplate");
+    const categorySelect = document.getElementById("category_tag");
     const emptyState = document.getElementById("listingDetailsEmpty");
 
     if (!hiddenInput || !rowsWrap || !addBtn || !emptyState) return;
@@ -1811,9 +1826,114 @@ document.addEventListener("DOMContentLoaded", function () {
         updateHiddenJson();
     }
 
+    const categoryTemplates = {
+        "Real Estate": [
+            ["Beds", ""],
+            ["Baths", ""],
+            ["Sq Ft", ""],
+            ["Lot Size", ""],
+            ["Year Built", ""],
+            ["Parking", ""],
+            ["Property Type", ""]
+        ],
+        "Auto": [
+            ["Year", ""],
+            ["Make", ""],
+            ["Model", ""],
+            ["Mileage", ""],
+            ["Transmission", ""],
+            ["Fuel Type", ""],
+            ["VIN", ""]
+        ],
+        "Cleaning": [
+            ["Property Size", ""],
+            ["Rooms", ""],
+            ["Frequency", ""],
+            ["Supplies Included", ""],
+            ["Estimated Time", ""]
+        ],
+        "Home Services": [
+            ["Service Area", ""],
+            ["Estimated Time", ""],
+            ["Materials Included", ""],
+            ["Warranty", ""],
+            ["Emergency Available", ""]
+        ],
+        "Beauty": [
+            ["Session Length", ""],
+            ["Style", ""],
+            ["Products Included", ""],
+            ["Deposit Required", ""],
+            ["Travel Available", ""]
+        ],
+        "Fitness": [
+            ["Session Length", ""],
+            ["Skill Level", ""],
+            ["Location", ""],
+            ["Equipment Needed", ""],
+            ["Package Options", ""]
+        ],
+        "Consulting": [
+            ["Session Length", ""],
+            ["Delivery Method", ""],
+            ["Industry", ""],
+            ["Includes Follow Up", ""],
+            ["Best For", ""]
+        ],
+        "Events": [
+            ["Event Type", ""],
+            ["Guest Count", ""],
+            ["Duration", ""],
+            ["Setup Included", ""],
+            ["Travel Fee", ""]
+        ]
+    };
+
+    function getExistingDetailLabels() {
+        const labels = new Set();
+
+        rowsWrap.querySelectorAll("[data-detail-label]").forEach((input) => {
+            const key = normalizeKey(input.value);
+            if (key) {
+                labels.add(key);
+            }
+        });
+
+        return labels;
+    }
+
+    function applyCategoryTemplate() {
+        if (!categorySelect) return;
+
+        const category = categorySelect.value || "";
+        const template = categoryTemplates[category];
+
+        if (!template || !template.length) {
+            addDetailRow();
+            return;
+        }
+
+        const existingLabels = getExistingDetailLabels();
+
+        template.forEach(([label, value]) => {
+            const key = normalizeKey(label);
+
+            if (!existingLabels.has(key)) {
+                addDetailRow(label, value);
+                existingLabels.add(key);
+            }
+        });
+
+        updateHiddenJson();
+    }
+
     addBtn.addEventListener("click", function () {
         addDetailRow();
     });
+
+    if (templateBtn) {
+        templateBtn.addEventListener("click", applyCategoryTemplate);
+    }
 
     loadExistingDetails();
 });
