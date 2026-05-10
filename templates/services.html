@@ -998,6 +998,50 @@
             line-height: 1.7;
         }
 
+.services-empty-premium {
+    position: relative;
+    overflow: hidden;
+    padding: 34px 24px;
+    background:
+        radial-gradient(circle at top right, rgba(58,139,255,.16), transparent 36%),
+        radial-gradient(circle at bottom left, rgba(16,185,129,.14), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,.97), rgba(248,250,252,.95));
+}
+
+.services-empty-premium::after {
+    content: "";
+    position: absolute;
+    right: -34px;
+    bottom: -42px;
+    width: 140px;
+    height: 140px;
+    border-radius: 999px;
+    background: rgba(58,139,255,.08);
+    pointer-events: none;
+}
+
+.services-empty-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at top right, rgba(255,255,255,.46), transparent 42%),
+        linear-gradient(135deg, #3A8BFF, #2563eb);
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 900;
+    box-shadow: 0 18px 36px rgba(37,99,235,.26);
+}
+
+.services-empty-cta {
+    margin-top: 18px;
+    position: relative;
+    z-index: 1;
+}
+
         .services-mini-note {
             margin-top: 14px;
             font-size: .9rem;
@@ -1173,6 +1217,13 @@ body.dark #pricing_type {
         body.dark .services-empty {
             background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.88));
             border-color: rgba(148,163,184,.24);
+        }
+
+       body.dark .services-empty-premium {
+    background:
+        radial-gradient(circle at top right, rgba(58,139,255,.18), transparent 36%),
+        radial-gradient(circle at bottom left, rgba(16,185,129,.12), transparent 34%),
+        linear-gradient(180deg, rgba(15,23,42,.94), rgba(2,6,23,.90));
         }
 
         body.dark .service-card-footer {
@@ -2277,25 +2328,38 @@ document.addEventListener("DOMContentLoaded", function () {
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="services-empty">
+                <div class="services-empty services-empty-premium">
+                    <div class="services-empty-icon">✦</div>
+
                     <h3>
                         {% if current_lang == 'es' %}
-                            Todavía no has creado servicios
+                            Tu estudio de anuncios está listo
                         {% elif current_lang == 'zh' %}
-                            您还没有创建任何服务
+                            您的 Listings Studio 已准备就绪
                         {% else %}
-                            You have not created any services yet
+                            Your Listings Studio is ready
                         {% endif %}
                     </h3>
+
                     <p>
                         {% if current_lang == 'es' %}
-                            Empieza agregando tu primer servicio para que tu negocio tenga una experiencia más organizada, más útil y más valiosa.
+                            Crea tu primer anuncio profesional con fotos, detalles inteligentes, precios, ubicación y una experiencia moderna para clientes.
                         {% elif current_lang == 'zh' %}
-                            从添加您的第一个服务开始，让您的业务体验更有条理、更实用，也更有价值。
+                            创建您的第一个专业列表，包括照片、智能详情、价格、位置以及现代化客户展示体验。
                         {% else %}
-                            Start by adding your first service so your business feels more organized, more useful, and more valuable right away.
+                            Build your first polished listing with photos, smart details, pricing, location, and a clean client-facing presentation.
                         {% endif %}
                     </p>
+
+                    <a href="#name" class="services-btn services-btn-primary services-empty-cta">
+                        {% if current_lang == 'es' %}
+                            Crear mi primer anuncio
+                        {% elif current_lang == 'zh' %}
+                            创建我的第一个列表
+                        {% else %}
+                            Create Your First Listing
+                        {% endif %}
+                    </a>
                 </div>
             {% endif %}
         </section>
