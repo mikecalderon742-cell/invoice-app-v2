@@ -19,6 +19,7 @@ from functools import wraps
 import base64
 import hashlib
 import io
+import json
 import logging
 import os
 import requests
@@ -373,6 +374,37 @@ def parse_float(value, default=0.0):
         return float(str(value).strip())
     except (TypeError, ValueError):
         return default
+
+
+def parse_image_urls(value):
+    try:
+        parsed = json.loads(value) if value else []
+        return parsed if isinstance(parsed, list) else []
+    except Exception:
+        return []
+
+
+def serialize_image_urls(images):
+    try:
+        cleaned = [str(img).strip() for img in (images or []) if str(img).strip()]
+        return json.dumps(cleaned)
+    except Exception:
+        return "[]"
+
+
+def parse_details(value):
+    try:
+        parsed = json.loads(value) if value else {}
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
+
+
+def serialize_details(details):
+    try:
+        return json.dumps(details or {})
+    except Exception:
+        return "{}"
 
 
 def clean_percent(value, default=25.0):
@@ -3909,6 +3941,16 @@ def get_business_profile_by_user_id(user_id: int):
     }
 
 
+def build_service_image_list(image_url: str = "", image_urls: str = ""):
+    images = parse_image_urls(image_urls)
+    fallback_image = (image_url or "").strip()
+
+    if fallback_image and fallback_image not in images:
+        images.insert(0, fallback_image)
+
+    return images
+
+
 def get_user_services(user_id: int, include_inactive: bool = False):
     if not user_id:
         return []
@@ -3916,46 +3958,77 @@ def get_user_services(user_id: int, include_inactive: bool = False):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        if include_inactive:
-            cur.execute(
-                """
-                SELECT id, user_id, name, description, price, pricing_type, duration_minutes, image_url, is_active, created_at
-                FROM services
-                WHERE user_id = %s
-                ORDER BY created_at DESC, id DESC
-                """,
-                (user_id,),
-            )
-        else:
-            cur.execute(
-                """
-                SELECT id, user_id, name, description, price, pricing_type, duration_minutes, image_url, is_active, created_at
-                FROM services
-                WHERE user_id = %s AND is_active = TRUE
-                ORDER BY created_at DESC, id DESC
-                """,
-                (user_id,),
-            )
+        base_query = """
+            SELECT
+                id,
+                user_id,
+                name,
+                description,
+                price,
+                pricing_type,
+                duration_minutes,
+                image_url,
+                is_active,
+                created_at,
+                category,
+                location_required,
+                materials_included,
+                photo_required,
+                availability_notes,
+                image_urls,
+                location_address,
+                location_lat,
+                location_lng,
+                details_json,
+                category_tag
+            FROM services
+            WHERE user_id = %s
+        """
 
+        params = [user_id]
+
+        if not include_inactive:
+            base_query += " AND is_active = TRUE"
+
+        base_query += " ORDER BY created_at DESC, id DESC"
+
+        cur.execute(base_query, tuple(params))
         rows = cur.fetchall()
     finally:
         cur.close()
         conn.close()
 
     services = []
-    for service_id, service_user_id, name, description, price, pricing_type, duration_minutes, image_url, is_active, created_at in rows:
+    for row in rows:
+        image_url = row[7] or ""
+        raw_image_urls = row[15] or ""
+        image_list = build_service_image_list(image_url, raw_image_urls)
+
         services.append(
             {
-                "id": service_id,
-                "user_id": service_user_id,
-                "name": name or "",
-                "description": description or "",
-                "price": float(price or 0),
-                "pricing_type": pricing_type or "fixed",
-                "duration_minutes": duration_minutes,
-                "image_url": image_url or "",
-                "is_active": bool(is_active),
-                "created_at": created_at,
+                "id": row[0],
+                "user_id": row[1],
+                "name": row[2] or "",
+                "description": row[3] or "",
+                "price": float(row[4] or 0),
+                "pricing_type": row[5] or "fixed",
+                "duration_minutes": row[6],
+                "image_url": image_url,
+                "is_active": bool(row[8]),
+                "created_at": row[9],
+                "category": row[10] or "",
+                "location_required": bool(row[11]),
+                "materials_included": row[12] or "",
+                "photo_required": bool(row[13]),
+                "availability_notes": row[14] or "",
+                "image_urls": raw_image_urls,
+                "images": image_list,
+                "location_address": row[16] or "",
+                "location_lat": row[17],
+                "location_lng": row[18],
+                "details_json": row[19] or "",
+                "details": parse_details(row[19]),
+                "category_tag": row[20] or "",
             }
         )
     return services
@@ -3967,7 +4040,7 @@ def get_service_by_id(service_id: int, user_id: int):
     try:
         cur.execute(
             """
-            SELECT 
+            SELECT
                 id,
                 user_id,
                 name,
@@ -3978,7 +4051,17 @@ def get_service_by_id(service_id: int, user_id: int):
                 created_at,
                 pricing_type,
                 duration_minutes,
-                availability_notes
+                availability_notes,
+                category,
+                location_required,
+                materials_included,
+                photo_required,
+                image_urls,
+                location_address,
+                location_lat,
+                location_lng,
+                details_json,
+                category_tag
             FROM services
             WHERE id = %s AND user_id = %s
             LIMIT 1
@@ -3993,18 +4076,33 @@ def get_service_by_id(service_id: int, user_id: int):
     if not row:
         return None
 
+    image_url = row[5] or ""
+    raw_image_urls = row[15] or ""
+
     return {
         "id": row[0],
         "user_id": row[1],
         "name": row[2] or "",
         "description": row[3] or "",
         "price": float(row[4] or 0),
-        "image_url": row[5] or "",
+        "image_url": image_url,
         "is_active": bool(row[6]),
         "created_at": row[7],
         "pricing_type": row[8] or "fixed",
         "duration_minutes": row[9],
         "availability_notes": row[10] or "",
+        "category": row[11] or "",
+        "location_required": bool(row[12]),
+        "materials_included": row[13] or "",
+        "photo_required": bool(row[14]),
+        "image_urls": raw_image_urls,
+        "images": build_service_image_list(image_url, raw_image_urls),
+        "location_address": row[16] or "",
+        "location_lat": row[17],
+        "location_lng": row[18],
+        "details_json": row[19] or "",
+        "details": parse_details(row[19]),
+        "category_tag": row[20] or "",
     }
 
 
@@ -4021,6 +4119,12 @@ def create_user_service(
     materials_included: str = "",
     photo_required: bool = False,
     availability_notes: str = "",
+    image_urls: str = "",
+    location_address: str = "",
+    location_lat=None,
+    location_lng=None,
+    details_json: str = "",
+    category_tag: str = "",
 ):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -4040,10 +4144,16 @@ def create_user_service(
                 materials_included,
                 photo_required,
                 availability_notes,
+                image_urls,
+                location_address,
+                location_lat,
+                location_lng,
+                details_json,
+                category_tag,
                 is_active,
                 created_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
             RETURNING id
             """,
             (
@@ -4059,6 +4169,12 @@ def create_user_service(
                 materials_included.strip(),
                 photo_required,
                 availability_notes.strip(),
+                image_urls or "[]",
+                location_address.strip(),
+                location_lat,
+                location_lng,
+                details_json or "{}",
+                category_tag.strip(),
                 now_local(),
             ),
         )
@@ -4085,23 +4201,18 @@ def update_user_service(
     category=None,
     availability_notes=None,
     location_required=None,
+    image_urls=None,
+    location_address=None,
+    location_lat=None,
+    location_lng=None,
+    details_json=None,
+    category_tag=None,
     **kwargs
 ):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # 🔍 DEBUG BEFORE QUERY
-        print("DEBUG INPUT:", {
-            "service_id": service_id,
-            "user_id": user_id,
-            "name": name,
-            "description": description,
-            "price": price,
-            "pricing_type": pricing_type,
-            "duration_minutes": duration_minutes
-        })
-
         cursor.execute(
             """
             UPDATE services
@@ -4109,11 +4220,17 @@ def update_user_service(
                 description = %s,
                 price = %s,
                 pricing_type = %s,
-                duration_minutes = COALESCE(%s, duration_minutes),
+                duration_minutes = %s,
                 image_url = COALESCE(%s, image_url),
                 category = COALESCE(%s, category),
                 availability_notes = COALESCE(%s, availability_notes),
-                location_required = COALESCE(%s, location_required)
+                location_required = COALESCE(%s, location_required),
+                image_urls = COALESCE(%s, image_urls),
+                location_address = COALESCE(%s, location_address),
+                location_lat = COALESCE(%s, location_lat),
+                location_lng = COALESCE(%s, location_lng),
+                details_json = COALESCE(%s, details_json),
+                category_tag = COALESCE(%s, category_tag)
             WHERE id = %s AND user_id = %s
             """,
             (
@@ -4126,24 +4243,23 @@ def update_user_service(
                 category,
                 availability_notes,
                 location_required,
+                image_urls,
+                location_address,
+                location_lat,
+                location_lng,
+                details_json,
+                category_tag,
                 service_id,
                 user_id,
             ),
         )
 
         conn.commit()
-
-        # 🔍 DEBUG AFTER QUERY
-        print("DEBUG RESULT:", {
-            "rowcount": cursor.rowcount
-        })
-
         return cursor.rowcount > 0
 
-    except Exception as e:
-        print("UPDATE ERROR:", e)
+    except Exception:
         conn.rollback()
-        return False
+        raise
 
     finally:
         cursor.close()
