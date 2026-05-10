@@ -387,6 +387,179 @@
     z-index: 1;
 }
 
+.listing-image-strip {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    z-index: 1;
+}
+
+.listing-image-strip::-webkit-scrollbar {
+    height: 6px;
+}
+
+.listing-image-strip::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.42);
+    border-radius: 999px;
+}
+
+.listing-image {
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    scroll-snap-align: start;
+    position: relative;
+    z-index: 1;
+}
+
+.listing-photo-count {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 3;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(15,23,42,.72);
+    color: #ffffff;
+    font-size: .76rem;
+    font-weight: 900;
+    letter-spacing: .02em;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 24px rgba(2,6,23,.22);
+}
+
+.listing-category-pill {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(58,139,255,.10);
+    border: 1px solid rgba(58,139,255,.18);
+    color: #1d4ed8;
+    font-size: .72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+.listing-quick-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -4px 0 14px;
+}
+
+.listing-quick-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(15,23,42,.04);
+    border: 1px solid rgba(148,163,184,.18);
+    color: #475569;
+    font-size: .82rem;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.listing-details-box {
+    margin: 14px 0 16px;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(248,250,252,.88);
+    border: 1px solid rgba(148,163,184,.18);
+}
+
+.listing-details-title {
+    font-size: .78rem;
+    font-weight: 900;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 10px;
+}
+
+.listing-details-list {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.listing-details-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(226,232,240,.82);
+    color: #475569;
+    font-size: .9rem;
+    line-height: 1.35;
+}
+
+.listing-details-list li:last-child {
+    border-bottom: none;
+}
+
+.listing-details-list strong {
+    color: #0f172a;
+    font-weight: 850;
+}
+
+.listing-details-list span {
+    text-align: right;
+    word-break: break-word;
+}
+
+.listing-location-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 14px 0 16px;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(239,246,255,.82);
+    border: 1px solid rgba(96,165,250,.20);
+}
+
+.listing-location-box div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.listing-location-box strong {
+    color: #0f172a;
+    font-size: .84rem;
+    font-weight: 900;
+}
+
+.listing-location-box span {
+    color: #475569;
+    font-size: .9rem;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.listing-map-btn {
+    flex: 0 0 auto;
+    padding: 10px 13px;
+    border-radius: 14px;
+    font-size: .84rem;
+}
+
 .service-card-media::before {
     content: "";
     position: absolute;
@@ -721,6 +894,43 @@
             border-top-color: rgba(51,65,85,.9);
         }
 
+body.dark .listing-category-pill {
+    background: rgba(96,165,250,.14);
+    border-color: rgba(96,165,250,.24);
+    color: #bfdbfe;
+}
+
+body.dark .listing-quick-meta span {
+    background: rgba(15,23,42,.82);
+    border-color: rgba(148,163,184,.18);
+    color: #cbd5e1;
+}
+
+body.dark .listing-details-box {
+    background: rgba(15,23,42,.72);
+    border-color: rgba(148,163,184,.16);
+}
+
+body.dark .listing-details-title,
+body.dark .listing-details-list strong,
+body.dark .listing-location-box strong {
+    color: #f8fafc;
+}
+
+body.dark .listing-details-list li {
+    color: #cbd5e1;
+    border-bottom-color: rgba(51,65,85,.92);
+}
+
+body.dark .listing-location-box {
+    background: rgba(30,41,59,.72);
+    border-color: rgba(96,165,250,.18);
+}
+
+body.dark .listing-location-box span {
+    color: #cbd5e1;
+}
+
         @media (max-width: 980px) {
             .services-top-grid {
                 grid-template-columns: 1fr;
@@ -992,6 +1202,87 @@
     {% endif %}
 </div>
 
+<div class="services-field full">
+    <label class="services-label" for="service_images">
+        Listing Photos
+    </label>
+
+    <input
+        class="services-input"
+        id="service_images"
+        name="service_images"
+        type="file"
+        multiple
+        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+    >
+
+    <div class="services-mini-note" style="margin-top: 2px;">
+        Upload multiple photos for this listing. The first photo will be used as the main cover image.
+    </div>
+</div>
+
+<div class="services-field full">
+    <label class="services-label" for="location_address">
+        Location / Address
+    </label>
+
+    <input
+        class="services-input"
+        id="location_address"
+        name="location_address"
+        type="text"
+        maxlength="300"
+        value="{{ (edit_service.location_address if edit_service else '')|default('', true) }}"
+        placeholder="Ex. Riverside, CA or full service address"
+    >
+
+    <div class="services-mini-note" style="margin-top: 2px;">
+        Optional. Add a city, service area, or full address when the listing needs a location.
+    </div>
+</div>
+
+<div class="services-field">
+    <label class="services-label" for="category_tag">
+        Listing Category
+    </label>
+
+    <select
+        class="services-input"
+        id="category_tag"
+        name="category_tag"
+    >
+        {% set selected_category_tag = (edit_service.category_tag if edit_service else '')|default('', true) %}
+        <option value="" {% if not selected_category_tag %}selected{% endif %}>General</option>
+        <option value="Real Estate" {% if selected_category_tag == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+        <option value="Auto" {% if selected_category_tag == 'Auto' %}selected{% endif %}>Auto</option>
+        <option value="Cleaning" {% if selected_category_tag == 'Cleaning' %}selected{% endif %}>Cleaning</option>
+        <option value="Home Services" {% if selected_category_tag == 'Home Services' %}selected{% endif %}>Home Services</option>
+        <option value="Beauty" {% if selected_category_tag == 'Beauty' %}selected{% endif %}>Beauty</option>
+        <option value="Fitness" {% if selected_category_tag == 'Fitness' %}selected{% endif %}>Fitness</option>
+        <option value="Consulting" {% if selected_category_tag == 'Consulting' %}selected{% endif %}>Consulting</option>
+        <option value="Events" {% if selected_category_tag == 'Events' %}selected{% endif %}>Events</option>
+        <option value="Other" {% if selected_category_tag == 'Other' %}selected{% endif %}>Other</option>
+    </select>
+</div>
+
+<div class="services-field full">
+    <label class="services-label" for="details_json">
+        Listing Details
+    </label>
+
+    <textarea
+        class="services-textarea"
+        id="details_json"
+        name="details_json"
+        maxlength="2000"
+        placeholder='Example: {"beds":"3","baths":"2","sqft":"1800"}'
+    >{{ (edit_service.details_json if edit_service else '')|default('', true) }}</textarea>
+
+    <div class="services-mini-note" style="margin-top: 2px;">
+        Optional. Add simple JSON details for listings that need specs, like rooms, size, color, package details, vehicle year, or included features.
+    </div>
+</div>
+
                     <div class="services-form-actions">
                         {% if edit_service %}
                             <button type="submit" class="services-btn services-btn-primary">
@@ -1066,145 +1357,201 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="services-card-grid">
                     {% for service in services %}
                         {% set service_theme = loop.cycle('theme-ocean', 'theme-emerald', 'theme-violet') %}
-                        <article class="service-card {{ service_theme }}">
-                            <div class="service-card-media">
-    {% if service.image_url %}
-        <img
-            src="{{ service.image_url }}"
-            alt="{{ service.name }}"
-            style="width: 100%; height: 100%; object-fit: cover; display: block;"
-        >
-    {% else %}
-        {% if current_lang == 'es' %}
-            Sin foto
-        {% elif current_lang == 'zh' %}
-            暂无图片
+<article class="service-card {{ service_theme }}">
+    {% set listing_images = service.images if service.images is defined and service.images else [] %}
+    {% set listing_details = service.details if service.details is defined and service.details else {} %}
+
+    <div class="service-card-media">
+        {% if listing_images and listing_images|length > 0 %}
+            <div class="listing-image-strip">
+                {% for image_url in listing_images %}
+                    <img
+                        src="{{ image_url }}"
+                        alt="{{ service.name }}"
+                        class="listing-image"
+                    >
+                {% endfor %}
+            </div>
+
+            {% if listing_images|length > 1 %}
+                <div class="listing-photo-count">
+                    {{ listing_images|length }} photos
+                </div>
+            {% endif %}
+        {% elif service.image_url %}
+            <img
+                src="{{ service.image_url }}"
+                alt="{{ service.name }}"
+                class="listing-image"
+            >
         {% else %}
-            No photo yet
+            {% if current_lang == 'es' %}
+                Sin foto
+            {% elif current_lang == 'zh' %}
+                暂无图片
+            {% else %}
+                No photo yet
+            {% endif %}
         {% endif %}
-    {% endif %}
-</div>
-
-                            <div class="service-card-inner">
-                                <div class="service-card-top">
-                                    <div class="service-card-title-wrap">
-{% if service.category %}
-    <div style="font-size:.75rem; font-weight:800; color:#3A8BFF; margin-bottom:6px; letter-spacing:.05em;">
-        {{ service.category|upper }}
     </div>
-{% endif %}
-                                        <h3 class="service-card-title">{{ service.name }}</h3>
 
-                                        <div class="service-card-status {% if service.is_active %}active{% else %}inactive{% endif %}">
-                                            {% if service.is_active %}
-                                                {{ t('active', current_lang) }}
-                                            {% else %}
-                                                {{ t('inactive', current_lang) }}
-                                            {% endif %}
-                                        </div>
-                                    </div>
+    <div class="service-card-inner">
+        <div class="service-card-top">
+            <div class="service-card-title-wrap">
+                {% if service.category_tag %}
+                    <div class="listing-category-pill">
+                        {{ service.category_tag }}
+                    </div>
+                {% elif service.category %}
+                    <div class="listing-category-pill">
+                        {{ service.category }}
+                    </div>
+                {% endif %}
 
-<div class="service-card-price">
-    {% if service.pricing_type == "hourly" %}
-        ${{ '%.2f'|format(service.price or 0) }}/hr
-    {% elif service.pricing_type == "quote" %}
-        Quote
-    {% else %}
-        ${{ '%.2f'|format(service.price or 0) }}
-    {% endif %}
-</div>
+                <h3 class="service-card-title">{{ service.name }}</h3>
 
-{% if service.pricing_type == "hourly" and service.duration_minutes %}
-    <div style="margin-top: 6px; font-size: 0.82rem; color: #64748b; font-weight: 600;">
-        Approx. {{ service.duration_minutes }} min service
+                <div class="service-card-status {% if service.is_active %}active{% else %}inactive{% endif %}">
+                    {% if service.is_active %}
+                        {{ t('active', current_lang) }}
+                    {% else %}
+                        {{ t('inactive', current_lang) }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="service-card-price">
+                {% if service.pricing_type == "hourly" %}
+                    ${{ '%.2f'|format(service.price or 0) }}/hr
+                {% elif service.pricing_type == "quote" %}
+                    Quote
+                {% else %}
+                    ${{ '%.2f'|format(service.price or 0) }}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="listing-quick-meta">
+            {% if service.duration_minutes %}
+                <span>⏱ {{ service.duration_minutes }} min</span>
+            {% endif %}
+
+            {% if service.availability_notes %}
+                <span>📅 {{ service.availability_notes }}</span>
+            {% endif %}
+
+            {% if service.location_address %}
+                <span>📍 {{ service.location_address }}</span>
+            {% endif %}
+        </div>
+
+        <p class="service-card-description">
+            {% if service.description %}
+                {{ service.description }}
+            {% else %}
+                {% if service.pricing_type == "hourly" %}
+                    Time-based service tailored to your needs.
+                {% elif service.pricing_type == "quote" %}
+                    Custom service — details provided after request.
+                {% else %}
+                    Professional fixed-price service ready to book.
+                {% endif %}
+            {% endif %}
+        </p>
+
+        {% if listing_details %}
+            <div class="listing-details-box">
+                <div class="listing-details-title">Details</div>
+                <ul class="listing-details-list">
+                    {% for key, value in listing_details.items() %}
+                        {% if value %}
+                            <li>
+                                <strong>{{ key|replace('_', ' ')|title }}:</strong>
+                                <span>{{ value }}</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if service.location_address %}
+            <div class="listing-location-box">
+                <div>
+                    <strong>Location</strong>
+                    <span>{{ service.location_address }}</span>
+                </div>
+
+                <a
+                    href="https://www.google.com/maps/search/?api=1&query={{ service.location_address|urlencode }}"
+                    target="_blank"
+                    rel="noopener"
+                    class="services-btn services-btn-neutral listing-map-btn"
+                >
+                    Open in Maps
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="service-card-footer">
+            <div class="service-card-meta">
+                {% if service.pricing_type == "hourly" %}
+                    Billed hourly. Final total depends on time required.
+                {% elif service.pricing_type == "quote" %}
+                    Pricing provided after reviewing request details.
+                {% else %}
+                    Flat rate service with clear upfront pricing.
+                {% endif %}
+
+                <br>
+
+                {% if current_lang == 'es' %}
+                    Visible para tu negocio y listo para usarse en la experiencia del cliente.
+                {% elif current_lang == 'zh' %}
+                    可在您的业务中使用，并可用于客户体验展示。
+                {% else %}
+                    Ready for your business and available for client-facing presentation.
+                {% endif %}
+            </div>
+
+            <div class="service-card-actions">
+                <a
+                    href="{{ url_for('services_page', lang=current_lang, edit=service.id) }}"
+                    class="services-btn services-btn-secondary"
+                >
+                    {{ t('edit', current_lang) }}
+                </a>
+
+                {% if service.is_active %}
+                    <form class="service-inline-form" method="POST" action="{{ url_for('deactivate_service_route', service_id=service.id, lang=current_lang) }}">
+                        <input type="hidden" name="lang" value="{{ current_lang }}">
+                        <button type="submit" class="services-btn services-btn-danger">
+                            {% if current_lang == 'es' %}
+                                Desactivar
+                            {% elif current_lang == 'zh' %}
+                                停用
+                            {% else %}
+                                Deactivate
+                            {% endif %}
+                        </button>
+                    </form>
+                {% else %}
+                    <form class="service-inline-form" method="POST" action="{{ url_for('activate_service_route', service_id=service.id, lang=current_lang) }}">
+                        <input type="hidden" name="lang" value="{{ current_lang }}">
+                        <button type="submit" class="services-btn services-btn-neutral">
+                            {% if current_lang == 'es' %}
+                                Activar
+                            {% elif current_lang == 'zh' %}
+                                启用
+                            {% else %}
+                                Activate
+                            {% endif %}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
     </div>
-{% endif %}
-                                </div>
-
-{% if service.duration_minutes %}
-    <div style="font-size: .85rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">
-        ⏱ {{ service.duration_minutes }} min service
-    </div>
-{% endif %}
-
-{% if service.availability_notes %}
-    <div style="font-size:.85rem; color:#64748b; margin-bottom:8px;">
-        📅 {{ service.availability_notes }}
-    </div>
-{% endif %}
-
-                                <p class="service-card-description">
-                                    {% if service.description %}
-                                        {{ service.description }}
-{% else %}
-    {% if service.pricing_type == "hourly" %}
-        Time-based service tailored to your needs.
-    {% elif service.pricing_type == "quote" %}
-        Custom service — details provided after request.
-    {% else %}
-        Professional fixed-price service ready to book.
-    {% endif %}
-                                    {% endif %}
-                                </p>
-
-                                <div class="service-card-footer">
-                                    <div class="service-card-meta">
-    {% if service.pricing_type == "hourly" %}
-        Billed hourly. Final total depends on time required.
-    {% elif service.pricing_type == "quote" %}
-        Pricing provided after reviewing request details.
-    {% else %}
-        Flat rate service with clear upfront pricing.
-    {% endif %}
-</div>
-                                        {% if current_lang == 'es' %}
-                                            Visible para tu negocio y listo para usarse en la experiencia del cliente.
-                                        {% elif current_lang == 'zh' %}
-                                            可在您的业务中使用，并可用于客户体验展示。
-                                        {% else %}
-                                            Ready for your business and available for client-facing presentation.
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="service-card-actions">
-                                        <a
-                                            href="{{ url_for('services_page', lang=current_lang, edit=service.id) }}"
-                                            class="services-btn services-btn-secondary"
-                                        >
-                                            {{ t('edit', current_lang) }}
-                                        </a>
-
-                                        {% if service.is_active %}
-                                            <form class="service-inline-form" method="POST" action="{{ url_for('deactivate_service_route', service_id=service.id, lang=current_lang) }}">
-                                                <input type="hidden" name="lang" value="{{ current_lang }}">
-                                                <button type="submit" class="services-btn services-btn-danger">
-                                                    {% if current_lang == 'es' %}
-                                                        Desactivar
-                                                    {% elif current_lang == 'zh' %}
-                                                        停用
-                                                    {% else %}
-                                                        Deactivate
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-                                        {% else %}
-                                            <form class="service-inline-form" method="POST" action="{{ url_for('activate_service_route', service_id=service.id, lang=current_lang) }}">
-                                                <input type="hidden" name="lang" value="{{ current_lang }}">
-                                                <button type="submit" class="services-btn services-btn-neutral">
-                                                    {% if current_lang == 'es' %}
-                                                        Activar
-                                                    {% elif current_lang == 'zh' %}
-                                                        启用
-                                                    {% else %}
-                                                        Activate
-                                                    {% endif %}
-                                                </button>
-                                            </form>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
+</article>
                     {% endfor %}
                 </div>
             {% else %}
