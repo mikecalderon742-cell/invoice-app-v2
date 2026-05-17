@@ -7,7 +7,6 @@
 html, body {
     height: 100%;
     overflow: hidden;
-    touch-action: none;
 }
 
 .messages-shell {
@@ -22,7 +21,7 @@ html, body {
 
     overflow: hidden;
 
-    touch-action: none; /* 🔥 stops parent scrolling */
+    touch-action: pan-y;
 
     background:
         radial-gradient(circle at top left, #38bdf8 0%, transparent 40%),
