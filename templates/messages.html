@@ -764,6 +764,21 @@ box.scrollTo({
 // ==========================
 // APPEND MESSAGE
 // ==========================
+function formatMessageTime(value) {
+    if (!value) return "";
+
+    const parsed = new Date(value);
+
+    if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit"
+        });
+    }
+
+    return String(value).replace(/^0/, "");
+}
+
 function appendMessage(msg) {
     const box = document.getElementById("chatMessages");
 
@@ -777,11 +792,12 @@ function appendMessage(msg) {
     }
 
     bubble.innerHTML = `
-    ${msg.message_text}
-    <div class="timestamp">
-        ${msg.created_at ? msg.created_at.replace(/^0/, "") : ""}
-    </div>
-`;
+        ${msg.message_text}
+        <div class="timestamp">
+            ${formatMessageTime(msg.created_at)}
+        </div>
+    `;
+
     box.appendChild(bubble);
 }
 
