@@ -11,7 +11,7 @@ html, body {
 
 .messages-shell {
     position: fixed;
-    top: 80px;
+    top: 64px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -25,7 +25,7 @@ html, body {
 
     background:
         radial-gradient(circle at 18% 8%,
-            rgba(34,211,238,0.72) 0%,
+            rgba(34,211,238,0.42) 0%,
             rgba(34,211,238,0.34) 22%,
             transparent 46%),
 
@@ -297,14 +297,14 @@ html, body {
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,0.18),
-            rgba(255,255,255,0.065)
+            rgba(17,24,39,0.82),
+            rgba(15,23,42,0.72)
         );
 
-    border: 1px solid rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.08);
 
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 
     transition:
         transform 0.16s ease,
@@ -313,8 +313,8 @@ html, body {
         box-shadow 0.16s ease;
 
     box-shadow:
-        0 14px 34px rgba(0,0,0,0.28),
-        inset 0 1px 0 rgba(255,255,255,0.16);
+        0 10px 24px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .convo-avatar,
@@ -326,16 +326,6 @@ html, body {
 }
 
 .convo-avatar {
-    background:
-        linear-gradient(
-            135deg,
-            #4facfe,
-            #6366f1
-        );
-
-    box-shadow:
-        0 0 24px rgba(79,172,254,0.30);
-
     color: white;
 
     display: flex;
@@ -344,6 +334,23 @@ html, body {
 
     font-weight: 700;
     font-size: 16px;
+}
+
+/* COLOR VARIATIONS */
+.convo-item-wrapper:nth-child(4n+1) .convo-avatar {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+
+.convo-item-wrapper:nth-child(4n+2) .convo-avatar {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+
+.convo-item-wrapper:nth-child(4n+3) .convo-avatar {
+    background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.convo-item-wrapper:nth-child(4n+4) .convo-avatar {
+    background: linear-gradient(135deg, #ea580c, #f97316);
 }
 
 .convo-avatar-img {
