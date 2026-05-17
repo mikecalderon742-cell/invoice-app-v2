@@ -332,91 +332,36 @@ html, body {
          onclick="openConversation({{ convo.id }}, this)"
          data-name="{{ convo.display_name }}">
 
-        <div style="display:flex; align-items:center; gap:12px; width:100%;">
+        <div class="convo-card">
 
-<!-- Avatar -->
-{% if convo.logo_url and convo.logo_url != "None" %}
-    <img src="{{ convo.logo_url }}" style="
-        width:44px;
-        height:44px;
-        border-radius:50%;
-        object-fit:cover;
-        flex-shrink:0;
-    ">
-{% else %}
-    <div style="
-width:44px;
-height:44px;
-border-radius:50%;
-background: linear-gradient(135deg,#38bdf8,#2563eb);
-box-shadow: 0 6px 18px rgba(37,99,235,0.35);
-        color:white;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-weight:600;
-        flex-shrink:0;
-    ">
-        {{ convo.display_name[0]|upper }}
-    </div>
-{% endif %}
-            <!-- Content -->
-            <div style="flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center;">
-
-                <div style="min-width:0;">
-<div style="
-    font-weight:600;
-font-size:14px;
-letter-spacing:-0.01em;
-    color:white;
-
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    max-width:180px;
-">
-    {{ convo.display_name }}
-</div>
-
-                    <div style="
-                        font-size:13px;
-                        color:rgba(255,255,255,0.55);
-                        white-space:nowrap;
-                        overflow:hidden;
-                        text-overflow:ellipsis;
-                    ">
-                        {{ convo.last_message or "No messages yet" }}
-                    </div>
+            {% if convo.logo_url and convo.logo_url != "None" %}
+                <img src="{{ convo.logo_url }}" class="convo-avatar-img" alt="{{ convo.display_name }}">
+            {% else %}
+                <div class="convo-avatar">
+                    {{ convo.display_name[0]|upper }}
                 </div>
+            {% endif %}
 
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-left:10px;">
+            <div class="convo-content">
+
+                <div class="convo-top">
+                    <span class="convo-name">{{ convo.display_name }}</span>
 
                     {% if convo.last_message_time %}
-                    <div style="font-size:11px; color:rgba(255,255,255,0.5);
-font-size:10px;">
-                        {{ convo.last_message_time }}
-                    </div>
+                        <span class="convo-time">{{ convo.last_message_time }}</span>
                     {% endif %}
+                </div>
+
+                <div class="convo-bottom">
+                    <div class="convo-preview">
+                        {{ convo.last_message or "No messages yet" }}
+                    </div>
 
                     {% if convo.unread_count > 0 %}
-                    <div data-badge style="
-                        min-width:18px;
-                        height:18px;
-                        border-radius:999px;
-                        background: linear-gradient(135deg,#38bdf8,#2563eb);
-                        box-shadow: 0 4px 12px rgba(37,99,235,0.45);
-                        color:white;
-                        font-size:11px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-weight:600;
-                        padding:0 6px;
-                    ">
-                        {{ convo.unread_count }}
-                    </div>
+                        <span data-badge class="unread-badge">
+                            {{ convo.unread_count }}
+                        </span>
                     {% endif %}
-
                 </div>
 
             </div>
