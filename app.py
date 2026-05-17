@@ -1916,7 +1916,11 @@ def get_conversation_messages(conversation_id: int):
         messages.append({
             "sender_user_id": sender_user_id,
             "message_text": message_text,
-            "created_at": created_at,
+            "created_at": (
+                created_at.strftime("%I:%M %p").lstrip("0")
+                if created_at
+                else ""
+            ),
         })
 
     return messages
