@@ -35,6 +35,21 @@
     gap: 18px;
   }
 
+  .edit-shell,
+  .edit-shell * {
+    box-sizing: border-box;
+  }
+
+  .edit-shell {
+    width: 100%;
+    max-width: min(940px, 100%);
+    overflow: hidden;
+  }
+
+  .edit-shell * {
+    min-width: 0;
+  }
+
   .edit-topbar {
     display: flex;
     justify-content: space-between;
@@ -357,6 +372,46 @@
     gap: 10px;
     margin-top: 24px;
     flex-wrap: wrap;
+  }
+
+  @media (max-width: 760px) {
+    .edit-topbar,
+    .edit-services-strip-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .edit-topbar .quick-actions,
+    .edit-services-strip .quick-actions {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .edit-topbar .quick-actions .btn,
+    .edit-services-strip .quick-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .edit-subcopy,
+    .edit-services-copy,
+    .edit-section-sub {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .edit-services-title {
+      font-size: 24px;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
+
+    .edit-table {
+      min-width: 560px;
+    }
   }
 
   @media (max-width: 760px) {
