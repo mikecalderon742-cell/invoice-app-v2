@@ -78,6 +78,46 @@ html, body {
     margin-bottom: 10px;
 }
 
+.messages-search-wrap {
+    padding: 0 0 12px;
+}
+
+.messages-search {
+    width: 100%;
+    height: 44px;
+
+    padding: 0 16px;
+
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.10);
+
+    background: rgba(255,255,255,0.10);
+    color: white;
+
+    font-size: 15px;
+    outline: none;
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 8px 20px rgba(0,0,0,0.16);
+}
+
+.messages-search::placeholder {
+    color: rgba(255,255,255,0.48);
+}
+
+.messages-search:focus {
+    border-color: rgba(56,189,248,0.45);
+    background: rgba(255,255,255,0.14);
+
+    box-shadow:
+        0 0 0 3px rgba(56,189,248,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
 .convo-item {
     cursor: pointer;
     width: 100%;
@@ -465,7 +505,17 @@ html, body {
 <div class="messages-shell">
 
     <div class="convo-list">
-        <div class="convo-header">Conversations</div>
+        <div class="convo-header">Messages</div>
+
+<div class="messages-search-wrap">
+    <input
+        id="conversationSearch"
+        class="messages-search"
+        type="text"
+        placeholder="Search conversations..."
+        autocomplete="off"
+    >
+</div>
 
 {% for convo in conversations %}
 <div class="convo-item-wrapper">
@@ -551,6 +601,24 @@ html, body {
 const CURRENT_USER_ID = {{ current_user.id }};
 
 let currentConversationId = null;
+
+const conversationSearch = document.getElementById("conversationSearch");
+
+if (conversationSearch) {
+    conversationSearch.addEventListener("input", () => {
+        const searchTerm = conversationSearch.value.trim().toLowerCase();
+
+        document.querySelectorAll(".convo-item-wrapper").forEach(wrapper => {
+            const item = wrapper.querySelector(".convo-item");
+            const name = item?.dataset?.name?.toLowerCase() || "";
+            const preview = wrapper.querySelector(".convo-preview")?.innerText?.toLowerCase() || "";
+
+            const matches = name.includes(searchTerm) || preview.includes(searchTerm);
+
+            wrapper.style.display = matches ? "block" : "none";
+        });
+    });
+}
 
 // ==========================
 // OPEN CONVERSATION
