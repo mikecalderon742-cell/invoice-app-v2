@@ -619,15 +619,15 @@ body.dark .autism-ribbon {
                 Create Invoice
             {% endif %}
         </a>
-        <a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}
-                Historial de facturas
-            {% elif lang == 'zh' %}
-                发票历史
-            {% else %}
-                Invoice History
-            {% endif %}
-        </a>
+<a href="/invoices{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+    {% if lang == 'es' %}
+        Panel principal
+    {% elif lang == 'zh' %}
+        仪表板
+    {% else %}
+        Dashboard
+    {% endif %}
+</a>
         <a href="/client/dashboard{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}
                 Panel de cliente
@@ -646,15 +646,15 @@ body.dark .autism-ribbon {
                 Clients
             {% endif %}
         </a>
-        <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
-            {% if lang == 'es' %}
-                Servicios
-            {% elif lang == 'zh' %}
-                服务
-            {% else %}
-                Services
-            {% endif %}
-        </a>
+<a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
+    {% if lang == 'es' %}
+        Anuncios
+    {% elif lang == 'zh' %}
+        列表
+    {% else %}
+        Listings
+    {% endif %}
+</a>
         <a href="/search{% if lang %}?lang={{ lang }}{% endif %}" class="sidebar-link">
             {% if lang == 'es' %}
                 Buscar
@@ -897,14 +897,14 @@ body.dark .autism-ribbon {
                 </a>
 
                 <a href="/services{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
-                    {% if lang == 'es' %}
-                        Servicios
-                    {% elif lang == 'zh' %}
-                        服务
-                    {% else %}
-                        Services
-                    {% endif %}
-                </a>
+    {% if lang == 'es' %}
+        Anuncios
+    {% elif lang == 'zh' %}
+        列表
+    {% else %}
+        Listings
+    {% endif %}
+</a>
 
                 <a href="/business-search{% if lang %}?lang={{ lang }}{% endif %}" class="nav-primary-link">
                     {% if lang == 'es' %}
