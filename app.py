@@ -2251,8 +2251,10 @@ def messages_page():
             c.business_user_id,
             c.client_user_id,
             c.created_at,
-            bu.email,
-            cu.email,
+            bu.email AS business_email,
+            cu.email AS client_email,
+            bp.business_name,
+            sr.client_name,
             m.message_text,
             m.created_at,
             COALESCE(um.unread_count, 0) AS unread_count
@@ -2260,6 +2262,8 @@ def messages_page():
 
         LEFT JOIN users bu ON bu.id = c.business_user_id
         LEFT JOIN users cu ON cu.id = c.client_user_id
+        LEFT JOIN business_profile bp ON bp.user_id = c.business_user_id
+        LEFT JOIN service_requests sr ON sr.id = c.service_request_id
 
         LEFT JOIN LATERAL (
             SELECT message_text, created_at
@@ -2312,11 +2316,13 @@ def messages_page():
 
         business_email = row[4] or "Business"
         client_email = row[5] or "Client"
+        business_name = row[6] or business_email
+        client_name = row[7] or client_email
 
         if user_id == business_id:
-            display_name = client_email
+            display_name = client_name
         else:
-            display_name = business_email
+            display_name = business_name
 
         conversations.append({
             "id": convo_id,
@@ -2324,9 +2330,9 @@ def messages_page():
             "business_user_id": business_id,
             "client_user_id": client_id,
             "created_at": row[3],
-            "last_message": row[6] or "",
-            "last_message_time": row[7],
-            "unread_count": row[8] or 0,
+            "last_message": row[8] or "",
+            "last_message_time": row[9],
+            "unread_count": row[10] or 0,
         })
 
     cur.close()

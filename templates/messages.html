@@ -125,22 +125,24 @@ html, body {
 }
 
 /* INTERACTION (CLEAN + CONSISTENT) */
-.convo-item:hover .convo-card {
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .convo-item:hover .convo-card {
+        transform: translateY(-2px);
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,0.24),
-            rgba(255,255,255,0.08)
-        );
+        background:
+            linear-gradient(
+                135deg,
+                rgba(255,255,255,0.24),
+                rgba(255,255,255,0.08)
+            );
 
-    border: 1px solid rgba(255,255,255,0.22);
+        border: 1px solid rgba(255,255,255,0.22);
 
-    box-shadow:
-        0 18px 42px rgba(0,0,0,0.32),
-        0 0 24px rgba(56,189,248,0.14),
-        inset 0 1px 0 rgba(255,255,255,0.18);
+        box-shadow:
+            0 18px 42px rgba(0,0,0,0.32),
+            0 0 24px rgba(56,189,248,0.14),
+            inset 0 1px 0 rgba(255,255,255,0.18);
+    }
 }
 
 .convo-item:active .convo-card {
@@ -184,6 +186,30 @@ html, body {
 }
 
 /* HEADER */
+.chat-back-btn {
+    width: 38px;
+    height: 38px;
+
+    border: none;
+    border-radius: 999px;
+
+    background: linear-gradient(135deg, #f97316, #fb923c);
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+    font-weight: 800;
+
+    box-shadow: 0 8px 18px rgba(249,115,22,0.32);
+}
+
+.chat-back-btn:active {
+    transform: scale(0.94);
+}
+
 .chat-header {
     display: flex;
     align-items: center;
@@ -576,7 +602,7 @@ html, body {
     <div class="chat-panel" style="display:none;">
 
         <div class="chat-header">
-            <button onclick="goBackToList()">←</button>
+            <button class="chat-back-btn" onclick="goBackToList()">←</button>
             <div class="chat-avatar" id="chatAvatar"></div>
             <div style="display:flex; flex-direction:column;">
     <div id="chatHeaderName" style="font-weight:600;"></div>
