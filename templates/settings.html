@@ -1222,7 +1222,11 @@
 
                         <div class="brand-preview">
                             <div class="brand-preview-card">
-                                <div class="brand-preview-top">
+                                <div
+                                    id="brand_preview_top"
+                                    class="brand-preview-top"
+                                    style="background: linear-gradient(135deg, {{ profile.brand_color or '#020617' }}, {{ profile.accent_color or '#3A8BFF' }});"
+                                >
                                     <div class="brand-preview-top-inner">
                                         <div class="brand-logo-box">
 
@@ -1235,7 +1239,7 @@
 {% endif %}
                                         </div>
                                         <div>
-                                            <div class="brand-preview-name">{{ profile.business_name or "BillBeam" }}</div>
+                                            <div id="brand_preview_name" class="brand-preview-name">{{ profile.business_name or "BillBeam" }}</div>
                                             <div class="brand-preview-sub">
                                                 {% if lang == 'es' %}Vista previa de marca{% else %}Brand preview{% endif %}
                                             </div>
@@ -1248,13 +1252,13 @@
                                         <span class="brand-preview-label">
                                             {% if lang == 'es' %}Correo{% else %}Email{% endif %}
                                         </span>
-                                        <strong>{{ profile.email or "billing@yourbusiness.com" }}</strong>
+                                        <strong id="brand_preview_email">{{ profile.email or "billing@yourbusiness.com" }}</strong>
                                     </div>
                                     <div class="brand-preview-stat">
                                         <span class="brand-preview-label">
                                             {% if lang == 'es' %}Sitio web{% else %}Website{% endif %}
                                         </span>
-                                        <strong>{{ profile.website or "yourbusiness.com" }}</strong>
+                                        <strong id="brand_preview_website">{{ profile.website or "yourbusiness.com" }}</strong>
                                     </div>
                                     <div class="brand-preview-stat">
                                         <span class="brand-preview-label">
@@ -1267,22 +1271,22 @@
 
                             <div class="color-swatches">
                                 <div class="swatch-row">
-                                    <div class="swatch-chip" style="background: {{ profile.brand_color }};"></div>
+                                    <div id="brand_color_swatch" class="swatch-chip" style="background: {{ profile.brand_color or '#020617' }};"></div>
                                     <div class="swatch-meta">
                                         <div class="swatch-title">
                                             {% if lang == 'es' %}Color principal{% else %}Primary color{% endif %}
                                         </div>
-                                        <div class="swatch-code">{{ profile.brand_color }}</div>
+                                        <div id="brand_color_code" class="swatch-code">{{ profile.brand_color or '#020617' }}</div>
                                     </div>
                                 </div>
 
                                 <div class="swatch-row">
-                                    <div class="swatch-chip" style="background: {{ profile.accent_color }};"></div>
+                                    <div id="accent_color_swatch" class="swatch-chip" style="background: {{ profile.accent_color or '#3A8BFF' }};"></div>
                                     <div class="swatch-meta">
                                         <div class="swatch-title">
                                             {% if lang == 'es' %}Color secundario{% else %}Secondary color{% endif %}
                                         </div>
-                                        <div class="swatch-code">{{ profile.accent_color }}</div>
+                                        <div id="accent_color_code" class="swatch-code">{{ profile.accent_color or '#3A8BFF' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -1351,7 +1355,7 @@
   Cancel
 {% endif %}
                 </a>
-                <button type="submit" class="btn btn-brand">
+                <button type="submit" class="btn btn-brand" id="save_settings_button">
                     {% if lang == 'es' %}
   Guardar configuración
 {% elif lang == 'zh' %}
@@ -2073,5 +2077,126 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const businessNameInput = document.getElementById("business_name");
+    const emailInput = document.getElementById("email");
+    const websiteInput = document.getElementById("website");
+    const brandColorInput = document.getElementById("brand_color");
+    const brandColorPicker = document.getElementById("brand_color_picker");
+    const accentColorInput = document.getElementById("accent_color");
+    const accentColorPicker = document.getElementById("accent_color_picker");
+
+    const previewTop = document.getElementById("brand_preview_top");
+    const previewName = document.getElementById("brand_preview_name");
+    const previewEmail = document.getElementById("brand_preview_email");
+    const previewWebsite = document.getElementById("brand_preview_website");
+    const brandSwatch = document.getElementById("brand_color_swatch");
+    const brandCode = document.getElementById("brand_color_code");
+    const accentSwatch = document.getElementById("accent_color_swatch");
+    const accentCode = document.getElementById("accent_color_code");
+
+    const saveButton = document.getElementById("save_settings_button");
+
+    function safeHex(value, fallback) {
+        const clean = (value || "").trim();
+        return /^#[0-9A-Fa-f]{6}$/.test(clean) ? clean : fallback;
+    }
+
+    function updateBrandPreview() {
+        const brandColor = safeHex(brandColorInput ? brandColorInput.value : "", "#020617");
+        const accentColor = safeHex(accentColorInput ? accentColorInput.value : "", "#3A8BFF");
+
+        if (previewName && businessNameInput) {
+            previewName.textContent = businessNameInput.value.trim() || "BillBeam";
+        }
+
+        if (previewEmail && emailInput) {
+            previewEmail.textContent = emailInput.value.trim() || "billing@yourbusiness.com";
+        }
+
+        if (previewWebsite && websiteInput) {
+            previewWebsite.textContent = websiteInput.value.trim() || "yourbusiness.com";
+        }
+
+        if (previewTop) {
+            previewTop.style.background = "linear-gradient(135deg, " + brandColor + ", " + accentColor + ")";
+        }
+
+        if (brandSwatch) {
+            brandSwatch.style.background = brandColor;
+        }
+
+        if (brandCode) {
+            brandCode.textContent = brandColor;
+        }
+
+        if (accentSwatch) {
+            accentSwatch.style.background = accentColor;
+        }
+
+        if (accentCode) {
+            accentCode.textContent = accentColor;
+        }
+    }
+
+    [businessNameInput, emailInput, websiteInput, brandColorInput, accentColorInput].forEach(function (input) {
+        if (input) {
+            input.addEventListener("input", updateBrandPreview);
+        }
+    });
+
+    if (brandColorPicker && brandColorInput) {
+        brandColorPicker.addEventListener("input", function () {
+            brandColorInput.value = brandColorPicker.value;
+            updateBrandPreview();
+        });
+    }
+
+    if (accentColorPicker && accentColorInput) {
+        accentColorPicker.addEventListener("input", function () {
+            accentColorInput.value = accentColorPicker.value;
+            updateBrandPreview();
+        });
+    }
+
+    if (brandColorInput && brandColorPicker) {
+        brandColorInput.addEventListener("input", function () {
+            if (/^#[0-9A-Fa-f]{6}$/.test(brandColorInput.value.trim())) {
+                brandColorPicker.value = brandColorInput.value.trim();
+            }
+            updateBrandPreview();
+        });
+    }
+
+    if (accentColorInput && accentColorPicker) {
+        accentColorInput.addEventListener("input", function () {
+            if (/^#[0-9A-Fa-f]{6}$/.test(accentColorInput.value.trim())) {
+                accentColorPicker.value = accentColorInput.value.trim();
+            }
+            updateBrandPreview();
+        });
+    }
+
+    const profileForm = saveButton ? saveButton.closest("form") : null;
+
+    if (profileForm && saveButton) {
+        profileForm.addEventListener("submit", function () {
+            saveButton.disabled = true;
+
+            if (!saveButton.dataset.originalText) {
+                saveButton.dataset.originalText = saveButton.textContent.trim();
+            }
+
+            saveButton.textContent = "Saving...";
+            saveButton.style.opacity = "0.78";
+            saveButton.style.pointerEvents = "none";
+        });
+    }
+
+    updateBrandPreview();
+});
+</script>
 
 {% endblock %}
