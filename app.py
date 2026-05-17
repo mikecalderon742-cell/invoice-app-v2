@@ -2405,6 +2405,7 @@ def messages_page():
             bu.email AS business_email,
             cu.email AS client_email,
             bp.business_name,
+            cp.display_name,
             sr.client_name,
             m.message_text,
             m.created_at,
@@ -2413,8 +2414,14 @@ def messages_page():
 
         LEFT JOIN users bu ON bu.id = c.business_user_id
         LEFT JOIN users cu ON cu.id = c.client_user_id
-        LEFT JOIN business_profile bp ON bp.user_id = c.business_user_id
-        LEFT JOIN service_requests sr ON sr.id = c.service_request_id
+        LEFT JOIN business_profile bp
+            ON bp.user_id = c.business_user_id
+
+        LEFT JOIN client_profiles cp
+            ON cp.user_id = c.client_user_id
+
+        LEFT JOIN service_requests sr
+            ON sr.id = c.service_request_id
 
         LEFT JOIN LATERAL (
             SELECT message_text, created_at
@@ -2467,8 +2474,17 @@ def messages_page():
 
         business_email = row[4] or "Business"
         client_email = row[5] or "Client"
+
         business_name = row[6] or business_email
-        client_name = row[7] or client_email
+
+        client_profile_name = row[7]
+        service_request_client_name = row[8]
+
+        client_name = (
+            client_profile_name
+            or service_request_client_name
+            or client_email
+        )
 
         if user_id == business_id:
             display_name = client_name
@@ -2481,13 +2497,13 @@ def messages_page():
             "business_user_id": business_id,
             "client_user_id": client_id,
             "created_at": row[3],
-            "last_message": row[8] or "",
+            "last_message": row[9] or "",
             "last_message_time": (
-                row[9].strftime("%I:%M %p").lstrip("0")
-                if row[9]
+                row[10].strftime("%I:%M %p").lstrip("0")
+                if row[10]
                 else ""
             ),
-            "unread_count": row[10] or 0,
+            "unread_count": row[11] or 0,
         })
 
     cur.close()
