@@ -2331,7 +2331,11 @@ def messages_page():
             "client_user_id": client_id,
             "created_at": row[3],
             "last_message": row[8] or "",
-            "last_message_time": row[9],
+            "last_message_time": (
+                row[9].strftime("%I:%M %p").lstrip("0")
+                if row[9]
+                else ""
+            ),
             "unread_count": row[10] or 0,
         })
 
@@ -2380,7 +2384,11 @@ def messages_page():
                         "id": r[0],
                         "sender_user_id": r[1],
                         "message_text": r[2],
-                        "created_at": r[3],
+                        "created_at": (
+                            r[3].strftime("%I:%M %p").lstrip("0")
+                            if r[3]
+                            else ""
+                         ),
                     }
                     for r in rows
                 ]
