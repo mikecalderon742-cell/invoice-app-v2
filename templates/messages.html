@@ -35,13 +35,13 @@ html, body {
     flex: 1;
     overflow-y: auto;
 
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
     touch-action: pan-y;
 
     -webkit-overflow-scrolling: touch;
 
     margin: 0;
-    padding-bottom: 20px;
+    padding: 0 12px 24px;
 
     border-radius: 0;
     background: transparent;
@@ -61,51 +61,29 @@ html, body {
 }
 
 .convo-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-    padding: 16px;
-
     cursor: pointer;
-
     width: 100%;
-
-    background: rgba(255,255,255,0.06);
-
-    border-radius: 18px;
-
-    transition: all 0.18s ease;
-
-    backdrop-filter: blur(20px);
-
-    border: none;
-
-    box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+    transition: transform 0.18s ease;
 }
 
 /* INTERACTION (CLEAN + CONSISTENT) */
-.convo-item:hover {
-    background: rgba(255,255,255,0.09);
+.convo-item:hover .convo-card {
+    background: rgba(30, 41, 59, 0.86);
+    transform: translateY(-1px);
 }
 
-.convo-item:active {
-    transform: scale(0.96);
-    background: rgba(255,255,255,0.12);
+.convo-item:active .convo-card {
+    transform: scale(0.985);
+    background: rgba(30, 41, 59, 0.92);
 }
 
 /* ROW SPACING */
 .convo-item-wrapper {
-    padding: 6px 12px;
-}
+    position: relative;
+    overflow: hidden;
 
-/* SUBTLE DIVIDER BETWEEN ROWS */
-.convo-item-wrapper:not(:last-child)::after {
-    content: "";
-    display: block;
-    height: 1px;
-    margin: 6px 12px 0;
-    background: rgba(255,255,255,0.04);
+    margin: 10px 0;
+    border-radius: 16px;
 }
 
 /* RIGHT PANEL */
@@ -272,11 +250,111 @@ html, body {
     font-weight: 600;
 }
 
-.convo-item-wrapper {
-    position: relative;
-    overflow: hidden;
+.convo-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
 
+    width: 100%;
+
+    padding: 14px 16px;
+
+    background: rgba(15, 23, 42, 0.62);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 16px;
+
+    transition: background 0.15s ease, transform 0.15s ease;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+
+.convo-avatar,
+.convo-avatar-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.convo-avatar {
+    background: linear-gradient(135deg, #3A8BFF, #6366F1);
+    box-shadow: 0 6px 16px rgba(58,139,255,0.28);
+
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.convo-avatar-img {
+    object-fit: cover;
+}
+
+.convo-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.convo-top,
+.convo-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.convo-name {
+    font-weight: 650;
+    font-size: 15px;
+    color: #ffffff;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.convo-time {
+    flex-shrink: 0;
+
+    font-size: 11px;
+    color: rgba(255,255,255,0.48);
+}
+
+.convo-preview {
+    min-width: 0;
+
+    font-size: 13px;
+    color: rgba(255,255,255,0.62);
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unread-badge {
+    flex-shrink: 0;
+
+    min-width: 20px;
+    height: 20px;
+
+    padding: 0 7px;
+    border-radius: 999px;
+
+    background: #3A8BFF;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    box-shadow: 0 4px 12px rgba(58,139,255,0.35);
 }
 
 .delete-btn {
