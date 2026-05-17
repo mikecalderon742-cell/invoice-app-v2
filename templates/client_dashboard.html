@@ -1742,6 +1742,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
 async function savePrefs() {
+  const originalText = saveBtn ? saveBtn.innerText : "";
+
+  const savingText = "{{ 'Guardando...' if lang == 'es' else ('正在保存...' if lang == 'zh' else 'Saving...') }}";
+  const savedText = "{{ 'Guardado ✓' if lang == 'es' else ('已保存 ✓' if lang == 'zh' else 'Saved ✓') }}";
+  const localSavedText = "{{ 'Guardado en este dispositivo' if lang == 'es' else ('已保存在此设备' if lang == 'zh' else 'Saved on this device') }}";
+  const fallbackText = "{{ 'Guardar preferencias' if lang == 'es' else ('保存偏好' if lang == 'zh' else 'Save Preferences') }}";
+
   const localPayload = {
     displayName: (displayNameInput && displayNameInput.value.trim()) || defaults.displayName,
     vibe: getSelectedValue(vibeButtons, defaults.vibe),
@@ -1754,6 +1761,11 @@ async function savePrefs() {
 
   localStorage.setItem(storageKey, JSON.stringify(localPayload));
   updatePreview();
+
+  if (saveBtn) {
+    saveBtn.innerText = savingText;
+    saveBtn.disabled = true;
+  }
 
   const backendPayload = {
     display_name: localPayload.displayName,
@@ -1775,10 +1787,27 @@ async function savePrefs() {
     });
 
     if (!res.ok) {
-      console.warn("Client profile backend save failed");
+      throw new Error("Backend save failed");
     }
+
+    if (saveBtn) {
+      saveBtn.innerText = savedText;
+    }
+
   } catch (e) {
     console.warn("Client profile backend unavailable", e);
+
+    if (saveBtn) {
+      saveBtn.innerText = localSavedText;
+    }
+
+  } finally {
+    if (saveBtn) {
+      setTimeout(() => {
+        saveBtn.innerText = originalText || fallbackText;
+        saveBtn.disabled = false;
+      }, 1400);
+    }
   }
 }
 
@@ -1832,13 +1861,6 @@ function loadPrefs() {
   avatarSkinToneButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
       setActive(avatarSkinToneButtons, btnSafeSkinTone(btn), "avatarSkinTone");
-      updatePreview();
-    });
-  });
-
-  avatarToneButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
-      setActive(avatarToneButtons, btn.dataset.avatarTone, "avatarTone");
       updatePreview();
     });
   });
