@@ -658,33 +658,50 @@ async function deleteConversation(convoId, el) {
 
 document.querySelectorAll(".convo-item").forEach(item => {
     let startX = 0;
+    let startY = 0;
+    let isHorizontalSwipe = false;
 
-item.addEventListener("touchstart", e => {
-    e.stopPropagation(); // 🔥 stops nav from being affected
-    startX = e.touches[0].clientX;
-});
+    item.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isHorizontalSwipe = false;
+    }, { passive: true });
 
-item.addEventListener("touchmove", e => {
-    e.stopPropagation(); // 🔥 CRITICAL FIX
-    e.preventDefault();   //
+    item.addEventListener("touchmove", e => {
+        const moveX = e.touches[0].clientX;
+        const moveY = e.touches[0].clientY;
 
-    let moveX = e.touches[0].clientX;
-    let diff = startX - moveX;
+        const diffX = startX - moveX;
+        const diffY = startY - moveY;
 
-    const deleteBtn = item.parentElement.querySelector(".delete-btn");
+        const deleteBtn = item.parentElement.querySelector(".delete-btn");
 
-    if (diff > 50) {
-        item.style.transform = "translateX(-80px)";
-        deleteBtn.style.opacity = "1";
-        deleteBtn.style.pointerEvents = "auto";
-    }
+        if (Math.abs(diffY) > Math.abs(diffX)) {
+            return;
+        }
 
-    if (diff < 0) {
-        item.style.transform = "translateX(0)";
-        deleteBtn.style.opacity = "0";
-        deleteBtn.style.pointerEvents = "none";
-    }
-});
+        if (Math.abs(diffX) > 24) {
+            isHorizontalSwipe = true;
+        }
+
+        if (!isHorizontalSwipe) {
+            return;
+        }
+
+        e.preventDefault();
+
+        if (diffX > 50) {
+            item.style.transform = "translateX(-80px)";
+            deleteBtn.style.opacity = "1";
+            deleteBtn.style.pointerEvents = "auto";
+        }
+
+        if (diffX < -20) {
+            item.style.transform = "translateX(0)";
+            deleteBtn.style.opacity = "0";
+            deleteBtn.style.pointerEvents = "none";
+        }
+    }, { passive: false });
 
     item.addEventListener("touchend", () => {
         const deleteBtn = item.parentElement.querySelector(".delete-btn");
