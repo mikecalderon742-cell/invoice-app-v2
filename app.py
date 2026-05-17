@@ -2048,6 +2048,128 @@ def client_login():
     return render_template("client_login.html")
 
 
+@app.route("/api/client-profile", methods=["GET", "POST"])
+@login_required
+def client_profile_api():
+    user = get_current_user()
+    user_id = user["id"]
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # -------------------------
+        # SAVE PROFILE
+        # -------------------------
+        if request.method == "POST":
+            data = request.get_json(force=True) or {}
+
+            display_name = (data.get("display_name") or "").strip()
+            avatar_emoji = (data.get("avatar_emoji") or "").strip()
+            avatar_skin_tone = (data.get("avatar_skin_tone") or "").strip()
+            avatar_tone = (data.get("avatar_tone") or "").strip()
+            vibe = (data.get("vibe") or "").strip()
+            preferred_view = (data.get("preferred_view") or "").strip()
+            home_preference = (data.get("home_preference") or "").strip()
+
+            cur.execute(
+                """
+                INSERT INTO client_profiles (
+                    user_id,
+                    display_name,
+                    avatar_emoji,
+                    avatar_skin_tone,
+                    avatar_tone,
+                    vibe,
+                    preferred_view,
+                    home_preference,
+                    updated_at
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (user_id)
+                DO UPDATE SET
+                    display_name = EXCLUDED.display_name,
+                    avatar_emoji = EXCLUDED.avatar_emoji,
+                    avatar_skin_tone = EXCLUDED.avatar_skin_tone,
+                    avatar_tone = EXCLUDED.avatar_tone,
+                    vibe = EXCLUDED.vibe,
+                    preferred_view = EXCLUDED.preferred_view,
+                    home_preference = EXCLUDED.home_preference,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    user_id,
+                    display_name,
+                    avatar_emoji,
+                    avatar_skin_tone,
+                    avatar_tone,
+                    vibe,
+                    preferred_view,
+                    home_preference,
+                ),
+            )
+
+            conn.commit()
+
+            return jsonify({
+                "success": True
+            })
+
+        # -------------------------
+        # LOAD PROFILE
+        # -------------------------
+        cur.execute(
+            """
+            SELECT
+                display_name,
+                avatar_emoji,
+                avatar_skin_tone,
+                avatar_tone,
+                vibe,
+                preferred_view,
+                home_preference
+            FROM client_profiles
+            WHERE user_id = %s
+            LIMIT 1
+            """,
+            (user_id,),
+        )
+
+        row = cur.fetchone()
+
+        if not row:
+            return jsonify({
+                "success": True,
+                "profile": None
+            })
+
+        return jsonify({
+            "success": True,
+            "profile": {
+                "display_name": row[0] or "",
+                "avatar_emoji": row[1] or "",
+                "avatar_skin_tone": row[2] or "",
+                "avatar_tone": row[3] or "",
+                "vibe": row[4] or "",
+                "preferred_view": row[5] or "",
+                "home_preference": row[6] or "",
+            }
+        })
+
+    except Exception as e:
+        logger.warning("Client profile API failed: %s", e)
+
+        return jsonify({
+            "success": False
+        }), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 @app.route("/client/dashboard")
 @login_required
 def client_dashboard():

@@ -1741,45 +1741,96 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function savePrefs() {
-    const payload = {
-      displayName: (displayNameInput && displayNameInput.value.trim()) || defaults.displayName,
-      vibe: getSelectedValue(vibeButtons, defaults.vibe),
-      view: getSelectedValue(viewButtons, defaults.view),
-      home: homeSelect ? homeSelect.value : defaults.home,
-      avatarEmoji: getAvatarEmojiValue(),
-      avatarSkinTone: getAvatarSkinToneValue(),
-      avatarTone: getAvatarToneValue()
-    };
+async function savePrefs() {
+  const payload = {
+    display_name: (displayNameInput && displayNameInput.value.trim()) || defaults.displayName,
+    vibe: getSelectedValue(vibeButtons, defaults.vibe),
+    preferred_view: getSelectedValue(viewButtons, defaults.view),
+    home_preference: homeSelect ? homeSelect.value : defaults.home,
+    avatar_emoji: getAvatarEmojiValue(),
+    avatar_skin_tone: getAvatarSkinToneValue(),
+    avatar_tone: getAvatarToneValue()
+  };
+
+  try {
+    await fetch("/api/client-profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
     localStorage.setItem(storageKey, JSON.stringify(payload));
+
+    updatePreview();
+
+  } catch (e) {
+    console.error("Profile save failed", e);
+  }
+}
+
+async function loadPrefs() {
+  try {
+    const res = await fetch("/api/client-profile");
+    const data = await res.json();
+
+    if (!data.success || !data.profile) {
+      updatePreview();
+      return;
+    }
+
+    const prefs = data.profile;
+
+    if (displayNameInput && prefs.display_name) {
+      displayNameInput.value = prefs.display_name;
+    }
+
+    if (homeSelect && prefs.home_preference) {
+      homeSelect.value = prefs.home_preference;
+    }
+
+    setActive(
+      vibeButtons,
+      prefs.vibe || defaults.vibe,
+      "vibe"
+    );
+
+    setActive(
+      viewButtons,
+      prefs.preferred_view || defaults.view,
+      "view"
+    );
+
+    setActive(
+      avatarEmojiButtons,
+      prefs.avatar_emoji || defaults.avatarEmoji,
+      "avatarEmoji"
+    );
+
+    setActive(
+      avatarSkinToneButtons,
+      (
+        prefs.avatar_skin_tone !== undefined
+          ? prefs.avatar_skin_tone
+          : defaults.avatarSkinTone
+      ),
+      "avatarSkinTone"
+    );
+
+    setActive(
+      avatarToneButtons,
+      prefs.avatar_tone || defaults.avatarTone,
+      "avatarTone"
+    );
+
+    updatePreview();
+
+  } catch (e) {
+    console.error("Profile load failed", e);
     updatePreview();
   }
-
-  function loadPrefs() {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) {
-        updatePreview();
-        return;
-      }
-
-      const prefs = JSON.parse(raw);
-
-      if (displayNameInput && prefs.displayName) displayNameInput.value = prefs.displayName;
-      if (homeSelect && prefs.home) homeSelect.value = prefs.home;
-
-      setActive(vibeButtons, prefs.vibe || defaults.vibe, "vibe");
-      setActive(viewButtons, prefs.view || defaults.view, "view");
-      setActive(avatarEmojiButtons, prefs.avatarEmoji || defaults.avatarEmoji, "avatarEmoji");
-      setActive(avatarSkinToneButtons, (prefs.avatarSkinTone !== undefined ? prefs.avatarSkinTone : defaults.avatarSkinTone), "avatarSkinTone");
-      setActive(avatarToneButtons, prefs.avatarTone || defaults.avatarTone, "avatarTone");
-
-      updatePreview();
-    } catch (e) {
-      updatePreview();
-    }
-  }
+}
 
   vibeButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
