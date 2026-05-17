@@ -941,6 +941,31 @@ def init_db():
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS client_profiles (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL UNIQUE,
+            display_name TEXT,
+            avatar_emoji TEXT,
+            avatar_skin_tone TEXT,
+            avatar_tone TEXT,
+            vibe TEXT,
+            preferred_view TEXT,
+            home_preference TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS client_profiles_user_idx
+        ON client_profiles(user_id);
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS services (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
