@@ -170,8 +170,24 @@ html, body {
     right: 0;
     bottom: 0;
 
-    background: rgba(15,23,42,0.95);
+    background:
+        radial-gradient(circle at top left,
+            rgba(56,189,248,0.16) 0%,
+            transparent 34%),
+
+        radial-gradient(circle at bottom right,
+            rgba(99,102,241,0.18) 0%,
+            transparent 38%),
+
+        linear-gradient(
+            180deg,
+            #0f172a 0%,
+            #132238 48%,
+            #182b45 100%
+        );
+
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 
     padding-bottom: env(safe-area-inset-bottom);
     padding-top: 80px;
@@ -298,15 +314,16 @@ html, body {
 }
 
 .timestamp {
-    font-size: 10px;
-
-    color: rgba(255,255,255,0.50);
-
     margin-top: 6px;
 
-    text-align: right;
+    font-size: 11px;
+    font-weight: 500;
+
+    color: rgba(255,255,255,0.58);
 
     letter-spacing: 0.01em;
+
+    text-align: right;
 }
 
 /* INPUT */
@@ -762,7 +779,7 @@ function appendMessage(msg) {
     bubble.innerHTML = `
     ${msg.message_text}
     <div class="timestamp">
-        ${msg.created_at || ""}
+        ${msg.created_at ? msg.created_at.replace(/^0/, "") : ""}
     </div>
 `;
     box.appendChild(bubble);
@@ -784,7 +801,10 @@ async function sendMessage() {
     appendMessage({
         message_text: text,
         sender_user_id: CURRENT_USER_ID,
-        created_at: "now"
+        created_at: new Date().toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit'
+        })
     });
 
     // keep scroll pinned
