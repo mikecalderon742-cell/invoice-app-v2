@@ -29,10 +29,10 @@
 
 <style>
   .edit-shell {
-    max-width: 1040px;
+    max-width: 940px;
     margin: 0 auto;
     display: grid;
-    gap: 20px;
+    gap: 18px;
   }
 
   .edit-topbar {
@@ -51,9 +51,9 @@
   .edit-title-wrap h1 {
     margin: 0;
     font-family: "Space Grotesk", sans-serif;
-    font-size: clamp(30px, 4vw, 42px);
-    line-height: 0.98;
-    letter-spacing: -0.04em;
+    font-size: clamp(26px, 3.2vw, 36px);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
     background: linear-gradient(90deg, #3A8BFF, #FCDC2A);
     -webkit-background-clip: text;
     color: transparent;
@@ -154,7 +154,7 @@
   }
 
   .edit-main-card {
-    padding: 24px;
+    padding: 20px;
   }
 
   .edit-status-banner {
@@ -251,7 +251,7 @@
 
   .edit-table {
     width: 100%;
-    min-width: 760px;
+    min-width: 640px;
     border-collapse: separate;
     border-spacing: 0;
   }
@@ -360,8 +360,22 @@
   }
 
   @media (max-width: 760px) {
-    .edit-main-card {
-      padding: 18px;
+    .edit-shell {
+      gap: 16px;
+    }
+
+    .edit-main-card,
+    .edit-services-strip {
+      padding: 16px;
+      border-radius: 22px;
+    }
+
+    .edit-title-wrap h1 {
+      font-size: clamp(24px, 7vw, 32px);
+    }
+
+    .edit-status-banner {
+      padding: 13px 14px;
     }
 
     .edit-actions .btn {
